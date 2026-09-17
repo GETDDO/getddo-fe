@@ -1,0 +1,49 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# build output
+dist
+dist-ssr
+build
+
+# testing
+coverage
+.nyc_output
+
+# env (.env.example은 키만 있는 템플릿이므로 커밋 대상)
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# editor / IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# os
+.DS_Store
+Thumbs.db
+
+# msw (생성되는 서비스워커 백업 파일)
+public/mockServiceWorker.js.bak
+
+# vite
+*.local

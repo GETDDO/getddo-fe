@@ -1,0 +1,42 @@
+{
+    "compilerOptions": {
+        "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+        "target": "ES2022",
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        "module": "esnext",
+        "types": ["vite/client", "vitest/globals"],
+        "allowArbitraryExtensions": true,
+        "skipLibCheck": true,
+
+        /* Bundler mode */
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "resolveJsonModule": true,
+        "verbatimModuleSyntax": true,
+        "moduleDetection": "force",
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "react-jsx",
+
+        /* Linting */
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "erasableSyntaxOnly": true,
+        "noFallthroughCasesInSwitch": true,
+        "forceConsistentCasingInFileNames": true,
+        "noUncheckedIndexedAccess": true,
+
+        /* FSD 경로 alias — TS6에서 baseUrl이 deprecated되어 paths는 상대경로로 작성 */
+        "paths": {
+            "@/*": ["./src/*"],
+            "@app/*": ["./src/app/*"],
+            "@pages/*": ["./src/pages/*"],
+            "@widgets/*": ["./src/widgets/*"],
+            "@features/*": ["./src/features/*"],
+            "@entities/*": ["./src/entities/*"],
+            "@shared/*": ["./src/shared/*"]
+        }
+    },
+    "include": ["src"]
+}

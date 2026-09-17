@@ -1,0 +1,98 @@
+# 기여 가이드
+
+이 문서는 브랜치 전략, 커밋 컨벤션, PR 절차 등 협업 프로세스의 상세 기준입니다.
+코드 작성 규칙(FSD, 상태관리, 스타일)은 [AGENTS.md](./AGENTS.md)를 참고하세요.
+
+## 개발 환경 준비
+
+```bash
+npm install                      # 의존성 설치 (prepare 스크립트가 husky 훅을 자동 설치)
+cp .env.example .env.development # 환경변수 생성
+npm run dev                      # 개발 서버 (VITE_ENABLE_MSW=true면 MSW 목업으로 시작)
+```
+
+## 브랜치 전략
+
+| 브랜치            | 용도                                               |
+| ----------------- | -------------------------------------------------- |
+| `main`            | 배포/시연 가능한 안정 버전. 직접 push·커밋 금지    |
+| `dev`             | 개발 통합 브랜치. 직접 push·커밋 금지, PR로만 머지 |
+| `<타입>/<Jira키>` | 실제 작업 브랜치. `dev`에서 분기                   |
+
+작업 브랜치 생성:
+
+```bash
+git checkout dev && git pull origin dev
+git checkout -b feat/GD-21        # 타입: feat | fix | refactor | chore | docs
+```
+
+- Jira 이슈 키는 **대문자**로 유지한다 (`feat/gd-21` ❌ → `feat/GD-21` ⭕)
+- 한 브랜치 = 한 이슈. 여러 이슈를 섞지 않는다
+
+## 커밋 컨벤션
+
+Conventional Commits + 팀 확장 타입. `commit-msg` 훅의 commitlint가 형식을 강제한다.
+
+```
+<타입>: <제목>
+<타입>(<스코프>): <제목>
+```
+
+| 타입                         | 용도                                 |
+| ---------------------------- | ------------------------------------ |
+| `feat`                       | 새 기능                              |
+| `fix`                        | 버그 수정                            |
+| `docs`                       | 문서만 변경                          |
+| `style`                      | 포맷·세미콜론 등 동작 변경 없는 수정 |
+| `refactor`                   | 리팩토링 (기능 변경 없음)            |
+| `test`                       | 테스트 추가·수정                     |
+| `chore`                      | 설정·의존성·빌드 외 잡무             |
+| `design`                     | UI/스타일 변경                       |
+| `comment`                    | 주석 추가·수정                       |
+| `rename`                     | 파일/변수 이름 변경                  |
+| `remove`                     | 코드·파일 삭제                       |
+| `!HOTFIX`                    | 긴급 수정                            |
+| `build` `ci` `perf` `revert` | 빌드/CI/성능/되돌리기                |
+
+예시:
+
+```
+feat: 응모 버튼에 멱등키 헤더 적용
+fix(ticket): 월 만료일 표시 오류 수정
+chore: eslint-plugin-perfectionist로 import 정렬 강제
+```
+
+주의: 제목은 소문자 또는 한글로 시작해야 한다 (대문자 시작은 `subject-case` 규칙에 걸림).
+
+## 커밋 전 자동 검사
+
+`pre-commit` 훅이 lint-staged를 실행한다:
+
+- `*.{ts,tsx}` → `eslint --fix` + `prettier --write`
+- `*.{json,md,css}` → `prettier --write`
+
+훅에서 실패한 변경은 커밋되지 않으므로, 수정 후 다시 stage·커밋한다.
+
+## PR 절차
+
+1. 작업 브랜치를 push하고 `dev` 대상으로 PR 생성
+2. PR 템플릿(`.github/pull_request_template.md`)의 항목을 모두 채운다 — 관련 이슈, 작업 내용, 테스트 결과, 리뷰 포인트, 체크리스트
+3. CI(`format:check` → `lint` → `test:ci` → `build`) 통과 확인
+4. 최소 1명 리뷰 승인 후 **Squash and Merge**
+5. 머지 후 작업 브랜치 삭제, 로컬 `dev` 업데이트
+
+## 로컬 검증 명령
+
+PR 전에 CI와 동일한 검사를 로컬에서 돌린다:
+
+```bash
+npm run format:check
+npm run lint
+npm run test:ci
+npm run build
+```
+
+## AI 에이전트와 함께 작업할 때
+
+- 에이전트에게 작업을 시키기 전 `AGENTS.md`를 읽도록 한다 — FSD 규칙, 금지사항, 검증 명령이 들어 있다
+- 에이전트가 만든 변경도 동일하게 lint·CI·리뷰를 거친다
