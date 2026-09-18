@@ -24,7 +24,7 @@ export const apiClient = axios.create({
     withCredentials: true,
 });
 
-// FE-BE 에러 코드 체계가 확정되면(기획서 9.3절) 이 인터셉터에 공통 매핑을 추가한다
+// FE-BE 에러 코드 체계가 확정되면(기획서 '프론트엔드 연동 계약') 이 인터셉터에 공통 매핑을 추가한다
 apiClient.interceptors.response.use(
     (response) => response,
     (error: AxiosError<ApiErrorBody>) => {

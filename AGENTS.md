@@ -10,6 +10,12 @@
 - 백엔드는 별도 레포 — API가 준비되기 전까지 MSW로 목업한다
 - Node 24.x / npm
 
+## 참조 문서
+
+- 도메인 용어·판단 기준: `docs/CONTEXT.md` — 응모/응모권/추첨 모델 작업, UTC↔KST 시간 규칙, 멱등키 필요 여부를 판단할 때 읽는다
+- 아키텍처 결정 이력: `docs/adr/` — 기존 결정을 변경하거나 결정의 이유를 확인할 때 해당 ADR을 읽는다
+- 기획 원문: `docs/spec/` — 코드 주석의 "기획서 N.N절" 참조나 불명확한 요구사항을 확인할 때 읽는다
+
 ## 아키텍처 — FSD (Feature-Sliced Design)
 
 레이어는 위에서 아래로만 참조 가능하며, ESLint(`eslint-plugin-boundaries`)가 커밋·CI에서 기계적으로 강제한다.

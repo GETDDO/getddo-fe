@@ -95,4 +95,6 @@ npm run build
 ## AI 에이전트와 함께 작업할 때
 
 - 에이전트에게 작업을 시키기 전 `AGENTS.md`를 읽도록 한다 — FSD 규칙, 금지사항, 검증 명령이 들어 있다
+- 도메인 판단(멱등키 필요 여부, 시간 규칙 등)이 필요한 작업은 `docs/CONTEXT.md`를 함께 읽게 한다
+- Claude Code 사용 시 PR 전에 `fsd-reviewer` 서브에이전트(`.claude/agents/fsd-reviewer.md`)로 교차 검증할 수 있다 — 구현한 에이전트가 아닌 새 컨텍스트의 리뷰어가 도구가 못 잡는 항목을 검수한다
 - 에이전트가 만든 변경도 동일하게 lint·CI·리뷰를 거친다
