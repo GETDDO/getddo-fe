@@ -8,6 +8,7 @@ import { MissionListPage } from '@pages/mission-list';
 import { MyEntriesPage } from '@pages/my-entries';
 import { MyTicketsPage } from '@pages/my-tickets';
 import { MyPage } from '@pages/mypage';
+import { UiGalleryPage } from '@pages/ui-gallery';
 
 export const userRoutes: RouteObject[] = [
     { path: '/', element: <EventListPage /> },
@@ -18,4 +19,5 @@ export const userRoutes: RouteObject[] = [
     { path: '/my-tickets', element: <MyTicketsPage /> },
     { path: '/my-entries', element: <MyEntriesPage /> },
     { path: '/mypage', element: <MyPage /> },
+    { path: '/ui-gallery', element: <UiGalleryPage /> },
 ];
