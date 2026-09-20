@@ -1,5 +1,5 @@
 import { formatKst } from '@shared/lib/date';
-import { Badge } from '@shared/ui/badge';
+import { cn } from '@shared/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@shared/ui/card';
 
 import type { Event } from '../model/types';
@@ -16,9 +16,16 @@ export function EventCard({ event }: { event: Event }) {
         <Card>
             <CardHeader className="flex-row items-center justify-between">
                 <CardTitle>{event.title}</CardTitle>
-                <Badge variant={event.status === 'open' ? 'default' : 'secondary'}>
+                <span
+                    className={cn(
+                        'text-caption rounded-sm px-2 py-0.5',
+                        event.status === 'open'
+                            ? 'bg-brand-soft text-fg-brand'
+                            : 'bg-surface-sunken text-fg-secondary',
+                    )}
+                >
                     {STATUS_LABEL[event.status]}
-                </Badge>
+                </span>
             </CardHeader>
             <CardContent>
                 <p className="text-muted-foreground text-sm">{event.description}</p>
