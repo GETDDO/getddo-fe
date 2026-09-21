@@ -1,1 +1,1 @@
-export {};
+export { TicketBalanceWidget } from './ui/TicketBalanceWidget';
