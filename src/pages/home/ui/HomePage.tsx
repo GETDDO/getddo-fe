@@ -34,7 +34,7 @@ export function HomePage() {
             {resultEvents.length > 0 && (
                 <section className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-subhead text-fg-primary">발표 내역·결과</h2>
+                        <h2 className="text-subhead text-fg-primary">발표 대기·결과</h2>
                         <Link
                             to="/events"
                             className="text-fg-primary text-body-sm flex items-center gap-0.5"

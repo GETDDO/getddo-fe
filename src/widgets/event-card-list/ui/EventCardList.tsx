@@ -44,7 +44,7 @@ export function EventCardList({
                 <p className="text-fg-tertiary text-body-sm">{emptyMessage}</p>
             )}
             {events.length > 0 && (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {events.map((event) => (
                         <Link key={event.id} to={`/events/${event.id}`} className="block">
                             <EventCard event={event} />
