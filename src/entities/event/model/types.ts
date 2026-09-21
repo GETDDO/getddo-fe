@@ -14,6 +14,10 @@ export const eventSchema = z.object({
     requiredTickets: z.number().int().nonnegative(),
     prizeName: z.string(),
     winnerCount: z.number().int().positive(),
+    // 실시간 응모 현황 — CONTEXT.md: 당첨 확률은 노출 금지, 아래 지표까지만 표시 가능
+    participantCount: z.number().int().nonnegative().nullable().optional(),
+    usedTicketCount: z.number().int().nonnegative().nullable().optional(),
+    myEntryCount: z.number().int().nonnegative().nullable().optional(),
 });
 
 export type EventStatus = z.infer<typeof eventStatusSchema>;

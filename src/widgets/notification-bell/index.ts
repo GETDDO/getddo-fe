@@ -1,1 +1,1 @@
-export {};
+export { NotificationBell } from './ui/NotificationBell';
