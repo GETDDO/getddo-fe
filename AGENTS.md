@@ -12,9 +12,20 @@
 
 ## 참조 문서
 
+공용 정책의 원본은 공용 명세 저장소 `getddo-spec`이다 (로컬에서는 이 레포와 같은 디렉터리의 `../getddo-spec/`). 이 레포의 문서와 내용이 충돌하면 getddo-spec의 확정 내용을 우선한다.
+
+- 기능 요구사항·구현 범위: `../getddo-spec/00-requirements/` — 새 화면·기능을 만들거나 구현/보류/제외 여부를 판단할 때 `functional-requirements.md`와 `scope.md`를 읽는다
+- 도메인 용어·정책: `../getddo-spec/02-domain/` — 용어는 `glossary.md`, 이벤트·응모권·응모·추첨·출석·미션·게임·알림 정책은 도메인별 파일. 상태 전이, 보상·차감 조건, 추첨·발표 규칙을 구현할 때 읽는다
+- 공용 결정(ADR): `../getddo-spec/03-decisions/` — 프론트·백엔드 공통으로 적용되는 결정과 그 이유. 정책 해석이 필요하거나 공용 결정을 바꾸려 할 때 읽는다
+- 미결정 정책: `../getddo-spec/00-requirements/pending-decisions.md` — 여기 있는 항목과 각 문서의 미확정 표시는 임의로 확정해 코드에 반영하지 않는다
+- 공통 협업 규칙 원본: `../getddo-spec/01-conventions/` — 이 파일의 브랜치·커밋·PR 요약과 충돌하면 원본을 따른다
+
+이 레포 내부 문서:
+
 - 도메인 용어·판단 기준: `docs/CONTEXT.md` — 응모/응모권/추첨 모델 작업, UTC↔KST 시간 규칙, 멱등키 필요 여부를 판단할 때 읽는다
-- 아키텍처 결정 이력: `docs/adr/` — 기존 결정을 변경하거나 결정의 이유를 확인할 때 해당 ADR을 읽는다
-- 기획 원문: `docs/spec/` — 코드 주석의 "기획서 N.N절" 참조나 불명확한 요구사항을 확인할 때 읽는다
+- 디자인 토큰 명세: `docs/DESIGN-SYSTEM.md` — 색·타이포·radius·shadow 토큰의 의미와 용도를 확인할 때 읽는다. 토큰 값의 원천은 `src/app/styles/tokens.css`다
+- 아키텍처 결정 이력: `docs/adr/` — FE 전용 기술 결정을 변경하거나 결정의 이유를 확인할 때 해당 ADR을 읽는다
+- 기획 맥락: `docs/product-context.md` — 페르소나·유저플로우·타겟층·비기능 요구사항 등 spec에 없는 기획 원문 발췌. 정책 관련 표현이 getddo-spec과 다르면 getddo-spec을 우선한다
 
 ## 아키텍처 — FSD (Feature-Sliced Design)
 
@@ -57,7 +68,7 @@ app → pages → widgets → features → entities → shared
 
 - shadcn/ui 컴포넌트(`@shared/ui/*`)를 우선 사용한다
 - 300줄을 넘는 컴포넌트는 분할을 검토하고, 반복되는 UI는 공통 컴포넌트로 추출한다
-- 색상은 시맨틱 토큰(`bg-primary`, `text-muted-foreground`)을 쓰고 임의 색상(`bg-blue-500`)을 쓰지 않는다
+- 색상은 토큰(`bg-primary`, `bg-brand-primary`, `text-fg-secondary` 등)을 쓰고 임의 색상(`bg-blue-500`, hex 하드코딩)을 쓰지 않는다 — 토큰 목록은 `docs/DESIGN-SYSTEM.md`, 값의 원천은 `src/app/styles/tokens.css`다
 
 ### API 호출
 
@@ -137,4 +148,4 @@ npm run build         # tsc -b && vite build
 - 테스트를 삭제해서 빌드를 통과시키지 않는다
 - `.env*` 파일에 실제 비밀값을 넣거나 커밋하지 않는다 (`.env.example`만 커밋)
 - `main`에 직접 커밋하지 않는다
-- 요구사항이 불명확하면 추측하지 않는다 — 기획 문서와 기존 코드를 먼저 확인하고, 없으면 팀에 질문한다
+- 요구사항이 불명확하면 추측하지 않는다 — `../getddo-spec/`의 요구사항·도메인 문서와 기존 코드를 먼저 확인하고, 미확정이면 팀에 질문한다

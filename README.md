@@ -1,7 +1,7 @@
 # GETDDO — LG유플러스 응모 이벤트 플랫폼 (Frontend)
 
 가상 사용자 기반 응모/추첨 이벤트 플랫폼의 프론트엔드 레포지토리입니다.
-상세 기획은 `docs/spec/LG유플러스_응모이벤트플랫폼_기획서.md`를 참고하세요.
+요구사항·도메인 정책의 원본은 공용 명세 저장소 `getddo-spec`이며, 기획 맥락은 `docs/product-context.md`를 참고하세요.
 
 ## 기술 스택
 
@@ -76,7 +76,8 @@ npm run build
 - [CLAUDE.md](./CLAUDE.md) — Claude Code 진입점. AGENTS.md를 임포트하는 포인터 파일
 - [docs/CONTEXT.md](./docs/CONTEXT.md) — 도메인 용어집과 판단 기준 (시간 규칙, 멱등키 대상, 임시 계약)
 - [docs/adr/](./docs/adr/README.md) — 아키텍처 결정 기록 (FSD, MSW, 상태관리 분리 등)
-- [docs/spec/](./docs/spec/README.md) — 기획서·요구사항 원문
+- [docs/product-context.md](./docs/product-context.md) — 기획 맥락 (페르소나·유저플로우·비기능 요구사항)
+- `../getddo-spec/` — 공용 명세 저장소 (요구사항·도메인 정책·공용 ADR의 원본)
 
 ## 팀원
 
