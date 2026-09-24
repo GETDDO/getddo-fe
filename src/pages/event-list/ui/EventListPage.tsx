@@ -8,7 +8,7 @@ import { cn } from '@shared/lib/utils';
 
 import type { EventFilter } from '../model/event-filters';
 
-import { EVENT_FILTERS, PAGE_SIZE, RECOMMENDED_COUNT } from '../model/event-filters';
+import { EVENT_FILTERS, PAGE_SIZE } from '../model/event-filters';
 import { EventListCard } from './EventListCard';
 import { EventPagination } from './EventPagination';
 
@@ -28,9 +28,11 @@ export function EventListPage() {
     const [page, setPage] = useState(1);
 
     const openEvents = (events ?? []).filter((event) => event.status === 'open');
-    const recommendedEvents = openEvents.slice(0, RECOMMENDED_COUNT);
+    // 응모권을 차감해 응모하는 이벤트와 응모권 없이 참여하는 이벤트를 나눠 보여준다
+    const ticketEvents = openEvents.filter((event) => event.requiredTickets > 0);
+    const freeEvents = openEvents.filter((event) => event.requiredTickets === 0);
     // 최신순 = 시작일 내림차순 (ISO 8601 UTC 문자열이라 문자열 비교로 정렬 가능)
-    const filteredEvents = openEvents
+    const filteredEvents = freeEvents
         .filter((event) => filter === '전체' || (event.tags ?? []).includes(filter))
         .sort((a, b) => b.startsAt.localeCompare(a.startsAt));
     const totalPages = Math.max(1, Math.ceil(filteredEvents.length / PAGE_SIZE));
@@ -47,17 +49,26 @@ export function EventListPage() {
             <h1 className="text-title-1 text-fg-primary">진행 중 이벤트</h1>
 
             <section className="mt-10 flex flex-col gap-6">
-                <h2 className="text-subhead text-fg-primary">추천 이벤트</h2>
+                <div className="flex flex-col gap-1">
+                    <h2 className="text-subhead text-fg-primary">응모권 이벤트</h2>
+                    <p className="text-body-sm text-fg-tertiary">모은 응모권을 사용해 응모해요</p>
+                </div>
                 {status}
-                {!isPending && !isError && recommendedEvents.length === 0 && (
-                    <p className="text-fg-tertiary text-body-sm">진행 중인 이벤트가 없습니다.</p>
+                {!isPending && !isError && ticketEvents.length === 0 && (
+                    <p className="text-fg-tertiary text-body-sm">
+                        진행 중인 응모권 이벤트가 없습니다.
+                    </p>
                 )}
-                {recommendedEvents.length > 0 && <EventGrid events={recommendedEvents} />}
+                {ticketEvents.length > 0 && <EventGrid events={ticketEvents} />}
             </section>
 
             <hr className="border-border-default my-20" />
 
             <section className="flex flex-col gap-6">
+                <div className="flex flex-col gap-1">
+                    <h2 className="text-subhead text-fg-primary">무료 응모 이벤트</h2>
+                    <p className="text-body-sm text-fg-tertiary">응모권 없이 참여할 수 있어요</p>
+                </div>
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex flex-wrap items-center gap-2">
                         {EVENT_FILTERS.map((item) => (
