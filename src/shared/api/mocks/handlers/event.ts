@@ -14,6 +14,8 @@ const mockEvents = [
         title: '5G 프리미어 가입 감사 이벤트',
         description: '응모권 1장으로 참여하는 추첨 이벤트',
         bannerImageUrl: null,
+        // 상세 화면 본문 이미지 — 실제 URL은 백엔드 연동 후 들어온다. 로컬에서 확인하려면 임의의 이미지 URL을 넣으면 된다
+        detailImageUrl: null,
         startsAt: '2026-09-01T00:00:00Z',
         endsAt: '2026-09-30T14:59:59Z',
         status: 'open',

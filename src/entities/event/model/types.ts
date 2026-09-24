@@ -7,7 +7,11 @@ export const eventSchema = z.object({
     id: z.string(),
     title: z.string(),
     description: z.string(),
+    // 목록 카드 썸네일 (가로형)
     bannerImageUrl: z.string().nullable(),
+    // 상세 화면 본문 이미지 — 이벤트마다 디자이너가 만드는 세로로 긴 한 장. 썸네일과 비율·용도가 달라 분리했다.
+    // TODO: 필드명·형식·용량 제한은 백엔드와 미합의 (docs/CONTEXT.md "배너 이미지 형식·용량 제한 — 담당자 확정 대기")
+    detailImageUrl: z.string().nullable().optional(),
     startsAt: z.iso.datetime(),
     endsAt: z.iso.datetime(),
     status: eventStatusSchema,
