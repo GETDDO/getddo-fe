@@ -26,6 +26,23 @@ export function toKst(date: Date | string): Date {
     return new Date(d.getTime() + KST_OFFSET_MS);
 }
 
+/** 표시용 "2026-09-01" 형태로 포맷한다 (KST 기준 달력 날짜) */
+export function formatYmd(date: string): string {
+    const d = toKst(date);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+}
+
+/** KST 달력 날짜 기준 D-day를 계산한다 (마감 당일 = D-0, 표시용 — 마감 판정에는 사용하지 않는다) */
+export function kstDayDiff(endIso: string, now: Date): number {
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const end = toKst(endIso);
+    const n = toKst(now);
+    const endDay = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate());
+    const nowDay = Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate());
+    return Math.round((endDay - nowDay) / DAY_MS);
+}
+
 /** 두 시각이 KST 기준으로 같은 날짜인지 비교한다 */
 export function isSameKstDate(a: Date | string, b: Date | string): boolean {
     const ka = toKst(a);
