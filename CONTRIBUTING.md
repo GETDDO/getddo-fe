@@ -55,6 +55,8 @@ Conventional Commits + 팀 확장 타입. `commit-msg` 훅의 commitlint가 형�
 | `!HOTFIX`                    | 긴급 수정                            |
 | `build` `ci` `perf` `revert` | 빌드/CI/성능/되돌리기                |
 
+`build` `ci` `perf` `revert`는 공용 원본(`../getddo-spec/01-conventions/commit.md`)에 없는 이 레포의 확장 타입이며, `commitlint.config.js`의 `type-enum`이 허용한다.
+
 예시:
 
 ```

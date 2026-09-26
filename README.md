@@ -41,7 +41,7 @@ src/
 ## 시작하기
 
 ```bash
-# 1. 패키지 설치 (Node 24 권장)
+# 1. 패키지 설치 (Node >= 20.19, 24.x 권장)
 npm install
 
 # 2. 환경변수 설정
@@ -75,13 +75,7 @@ npm run build
 - [AGENTS.md](./AGENTS.md) — 코드 작성 규칙 (FSD 의존 방향, 상태관리 기준, 금지사항). 팀원과 AI 에이전트 공용
 - [CLAUDE.md](./CLAUDE.md) — Claude Code 진입점. AGENTS.md를 임포트하는 포인터 파일
 - [docs/CONTEXT.md](./docs/CONTEXT.md) — 도메인 용어집과 판단 기준 (시간 규칙, 멱등키 대상, 임시 계약)
+- [docs/DESIGN-SYSTEM.md](./docs/DESIGN-SYSTEM.md) — 디자인 토큰 명세 (색·타이포·radius·shadow). 토큰 값의 원천은 `src/app/styles/tokens.css`
 - [docs/adr/](./docs/adr/README.md) — 아키텍처 결정 기록 (FSD, MSW, 상태관리 분리 등)
 - [docs/product-context.md](./docs/product-context.md) — 기획 맥락 (페르소나·유저플로우·비기능 요구사항)
 - `../getddo-spec/` — 공용 명세 저장소 (요구사항·도메인 정책·공용 ADR의 원본)
-
-## 팀원
-
-| 이름   | 담당 영역     |
-| ------ | ------------- |
-| [이름] | [담당 도메인] |
-| [이름] | [담당 도메인] |

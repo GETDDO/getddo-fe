@@ -8,7 +8,7 @@
 - LG유플러스 응모 이벤트 플랫폼 프론트엔드 (가상 사용자 기반 응모/추첨 이벤트)
 - 기술 스택: TypeScript, React 19, Vite 8, React Router 7, TanStack Query, Zustand, Redux Toolkit, TailwindCSS v4, shadcn/ui, React Hook Form + Zod
 - 백엔드는 별도 레포 — API가 준비되기 전까지 MSW로 목업한다
-- Node 24.x / npm
+- Node >= 20.19 (`package.json` `engines` 기준, 24.x 권장) / npm
 
 ## 참조 문서
 
@@ -118,6 +118,8 @@ Conventional Commits + 팀 확장 타입. `commit-msg` 훅의 commitlint가 강�
 ```
 
 허용 타입: `feat` `fix` `docs` `style` `refactor` `test` `chore` `design` `comment` `rename` `remove` `!HOTFIX` `build` `ci` `perf` `revert`
+
+공용 원본(`../getddo-spec/01-conventions/commit.md`)에 없는 `build` `ci` `perf` `revert`는 이 레포의 확장 타입으로, `commitlint.config.js`의 `type-enum`이 허용한다.
 
 ## PR 규칙
 
