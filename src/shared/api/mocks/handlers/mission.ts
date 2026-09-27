@@ -13,6 +13,14 @@ const mockMissions = [
         status: 'available',
     },
     { id: 'msn-2', title: '5G 퀴즈 풀기', type: 'quiz', rewardTickets: 2, status: 'available' },
+    { id: 'msn-3', title: '브랜드 퀴즈', type: 'quiz', rewardTickets: 1, status: 'available' },
+    {
+        id: 'msn-4',
+        title: '9월 신규고객 웰컴 선물 증정!',
+        type: 'survey',
+        rewardTickets: 1,
+        status: 'completed',
+    },
 ];
 
 export const missionHandlers = [
