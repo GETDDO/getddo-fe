@@ -228,7 +228,7 @@ const mockEvents = [
     },
     {
         id: 'evt-004',
-        title: '닌텐도 스위치 2 타임 래플',
+        title: '닌텐도 스위치 2',
         description:
             '딱 1명에게 닌텐도 스위치 2를 드려요. 응모권을 많이 쓸수록 당첨 기회가 커져요.',
         bannerImageUrl: null,
@@ -246,7 +246,7 @@ const mockEvents = [
     },
     {
         id: 'evt-101',
-        title: '에어팟 프로 3 타임 래플',
+        title: '에어팟 프로 3',
         description: '노이즈 캔슬링으로 소문난 그 이어폰. 응모권 2장으로 참여할 수 있어요.',
         bannerImageUrl: null,
         startsAt: kstAt(0, 16),
@@ -263,7 +263,7 @@ const mockEvents = [
     },
     {
         id: 'evt-102',
-        title: '무너 인형 세트 타임 래플',
+        title: '무너 인형 세트',
         description:
             '무너와 친구들 인형 4종 세트를 드려요. 이번 시즌에만 만들어진 한정 수량이에요.',
         bannerImageUrl: null,
@@ -281,7 +281,7 @@ const mockEvents = [
     },
     {
         id: 'evt-103',
-        title: '아이패드 에어 M3 타임 래플',
+        title: '아이패드 에어 M3',
         description: '오늘 저녁 8시에 열리는 한 시간짜리 래플이에요. 알림을 켜두면 놓치지 않아요.',
         bannerImageUrl: null,
         startsAt: kstAt(0, 20),
@@ -298,7 +298,7 @@ const mockEvents = [
     },
     {
         id: 'evt-104',
-        title: '무너 캐릭터 키링 세트 타임 래플',
+        title: '무너 키링 세트',
         description: '가방에 달기 좋은 무너 키링 6종 세트. 응모권 1장으로 참여할 수 있어요.',
         bannerImageUrl: null,
         startsAt: kstAt(0, 21),
@@ -315,7 +315,7 @@ const mockEvents = [
     },
     {
         id: 'evt-105',
-        title: 'LG 스탠바이미 2 타임 래플',
+        title: 'LG 스탠바이미 2',
         description: '움직이는 스크린으로 유명한 그 제품이에요. 하루 한 번만 열립니다.',
         bannerImageUrl: null,
         startsAt: kstAt(0, 22),
@@ -332,7 +332,7 @@ const mockEvents = [
     },
     {
         id: 'evt-106',
-        title: '갤럭시 워치8 타임 래플',
+        title: '갤럭시 워치8',
         description: '어제 오전에 열렸던 한 시간짜리 래플이에요.',
         bannerImageUrl: null,
         startsAt: kstAt(-1, 11),
@@ -349,7 +349,7 @@ const mockEvents = [
     },
     {
         id: 'evt-107',
-        title: '무너 시즌 굿즈 박스 타임 래플',
+        title: '무너 굿즈 박스',
         description: '머그컵·스티커·에코백이 들어간 시즌 굿즈 박스를 드렸어요.',
         bannerImageUrl: null,
         startsAt: kstAt(-1, 13),
@@ -366,7 +366,7 @@ const mockEvents = [
     },
     {
         id: 'evt-108',
-        title: '다이슨 에어랩 타임 래플',
+        title: '다이슨 에어랩',
         description: '응모권 3장으로 참여했던 한 시간짜리 래플이에요.',
         bannerImageUrl: null,
         startsAt: kstAt(-1, 15),
@@ -383,7 +383,7 @@ const mockEvents = [
     },
     {
         id: 'evt-109',
-        title: '소니 WH-1000XM6 타임 래플',
+        title: '소니 WH-1000XM6',
         description: '추첨이 끝나 당첨자가 발표된 래플이에요.',
         bannerImageUrl: null,
         startsAt: kstAt(-1, 17),
@@ -400,7 +400,7 @@ const mockEvents = [
     },
     {
         id: 'evt-110',
-        title: '무너 한정 담요 타임 래플',
+        title: '무너 한정 담요',
         description: '겨울 시즌 한정으로 만든 무너 담요를 드렸어요.',
         bannerImageUrl: null,
         startsAt: kstAt(-1, 19),
@@ -417,7 +417,7 @@ const mockEvents = [
     },
     {
         id: 'evt-111',
-        title: '스타벅스 럭키백 타임 래플',
+        title: '스타벅스 럭키백',
         description: '텀블러와 원두가 들어간 럭키백을 드렸어요.',
         bannerImageUrl: null,
         startsAt: kstAt(-1, 21),
