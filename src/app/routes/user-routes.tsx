@@ -11,6 +11,7 @@ import { MyEntriesPage } from '@pages/my-entries';
 import { MyTicketsPage } from '@pages/my-tickets';
 import { MyPage } from '@pages/mypage';
 import { TimeRafflePage } from '@pages/time-raffle';
+import { TimeRaffleDetailPage } from '@pages/time-raffle-detail';
 import { UiGalleryPage } from '@pages/ui-gallery';
 
 export const userRoutes: RouteObject[] = [
@@ -19,6 +20,7 @@ export const userRoutes: RouteObject[] = [
         children: [
             { path: '/', element: <HomePage /> },
             { path: '/time-raffle', element: <TimeRafflePage /> },
+            { path: '/time-raffle/:id', element: <TimeRaffleDetailPage /> },
             { path: '/events', element: <EventListPage /> },
             { path: '/events/:id', element: <EventDetailPage /> },
             { path: '/attendance', element: <AttendancePage /> },

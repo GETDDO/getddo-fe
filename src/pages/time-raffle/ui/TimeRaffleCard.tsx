@@ -75,7 +75,7 @@ export function TimeRaffleCard({ event }: { event: Event }) {
                 {/* 마감·오픈 예정 래플은 디자인상 비활성 버튼으로 상태를 알린다 */}
                 {isOpen ? (
                     <Button asChild variant="secondary" size="lg" className="w-full">
-                        <Link to={`/events/${event.id}`}>응모하기</Link>
+                        <Link to={`/time-raffle/${event.id}`}>응모하기</Link>
                     </Button>
                 ) : (
                     <Button
