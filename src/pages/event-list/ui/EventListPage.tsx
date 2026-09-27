@@ -27,7 +27,10 @@ export function EventListPage() {
     const [filter, setFilter] = useState<EventFilter>('전체');
     const [page, setPage] = useState(1);
 
-    const openEvents = (events ?? []).filter((event) => event.status === 'open');
+    // 타임래플은 전용 화면(/time-raffle)에서 다루므로 이벤트 목록에서는 뺀다
+    const openEvents = (events ?? []).filter(
+        (event) => event.status === 'open' && !event.isTimeRaffle,
+    );
     // 응모권을 차감해 응모하는 이벤트와 응모권 없이 참여하는 이벤트를 나눠 보여준다
     const ticketEvents = openEvents.filter((event) => event.requiredTickets > 0);
     const freeEvents = openEvents.filter((event) => event.requiredTickets === 0);
