@@ -15,6 +15,9 @@ export const eventSchema = z.object({
     startsAt: z.iso.datetime(),
     endsAt: z.iso.datetime(),
     status: eventStatusSchema,
+    // 정해진 시간에만 열리는 한정 굿즈 래플 — 타임래플 화면에만 노출하고 이벤트 목록에서는 뺀다.
+    // TODO: 이벤트 유형 구분 방식은 백엔드와 미합의 (getddo-spec 02-domain/event.md에 유형 정의 없음)
+    isTimeRaffle: z.boolean().optional(),
     requiredTickets: z.number().int().nonnegative(),
     // 카드 태그 칩 (예: "멤버십 혜택") — 없으면 칩 미노출
     tags: z.array(z.string()).optional(),
