@@ -55,6 +55,8 @@ export interface AttendanceMonthDay {
     /** 달력에 표시할 일(1~31) */
     day: number;
     isToday: boolean;
+    /** 아직 오지 않은 날 — 오늘 이후 */
+    isFuture: boolean;
     checked: boolean;
 }
 
@@ -77,6 +79,8 @@ export function buildAttendanceMonth(
             date,
             day: index + 1,
             isToday,
+            // YYYY-MM-DD 문자열은 사전순이 곧 날짜순이다
+            isFuture: date > today,
             checked: checked.has(date) || (isToday && checkedToday),
         };
     });
@@ -85,4 +89,19 @@ export function buildAttendanceMonth(
 /** 출석 기준일(YYYY-MM-DD)이 연속 출석 보상일인지 — 보상 단계 일수는 관리자 정책에서 받는다 */
 export function isStreakBonusDate(date: string, bonusDays: ReadonlySet<number>): boolean {
     return bonusDays.has(Number(date.slice(8, 10)));
+}
+
+/**
+ * 보상일에 보여줄 캐릭터 번호를 고른다.
+ * 달마다 시작 순서를 섞되(같은 달은 항상 같은 결과), 한 달 안의 보상일끼리는 겹치지 않게 차례로 배정한다
+ */
+export function pickBonusMascotIndex(
+    date: string,
+    bonusDays: ReadonlySet<number>,
+    count: number,
+): number {
+    const month = date.slice(0, 7);
+    const seed = [...month].reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) % 9973, 7);
+    const order = [...bonusDays].sort((a, b) => a - b).indexOf(Number(date.slice(8, 10)));
+    return (seed + Math.max(order, 0)) % count;
 }

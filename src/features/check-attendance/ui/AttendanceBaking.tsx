@@ -12,7 +12,8 @@ export function AttendanceBaking({ compact = false }: { compact?: boolean }) {
             role="status"
             className={cn(
                 'bg-play-yellow-soft flex items-center justify-center rounded-lg',
-                compact ? 'h-10 shrink-0 gap-2 px-4' : 'h-12 w-full gap-3',
+                // 펼친 출석판에서는 출석하기 버튼과 같은 너비(w-32)
+                compact ? 'h-10 w-32 shrink-0 gap-2' : 'h-12 w-full gap-3',
             )}
         >
             <span className={compact ? 'size-6' : 'size-8'}>

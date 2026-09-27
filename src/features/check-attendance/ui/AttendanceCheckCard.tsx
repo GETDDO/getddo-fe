@@ -20,11 +20,23 @@ import { AttendanceWeekStrip } from './AttendanceWeekStrip';
 // 버튼 기본 text-sm이 남지 않도록 important로 덮는다
 const LARGE_BUTTON_CLASS = 'text-body-bold! font-semibold h-12 w-full';
 
+// 공용 Button(secondary)의 기본 호버·누름은 디자인 시스템과 달라(임의 호버색, 누름색 없음, 누를 때 1px 내려감)
+// action/neutral 기본·호버·누름 토큰으로 덮고(테마와 상관없이 고정), 내려가는 움직임은 끄고, 손가락 커서를 쓴다
+const NEUTRAL_BUTTON_STATE =
+    'bg-action-neutral cursor-pointer hover:bg-action-neutral-hover active:bg-action-neutral-pressed active:not-aria-[haspopup]:translate-y-0';
+
 /** 굽는 연출을 최소한 이만큼은 보여준다 — 응답이 빨라도 모션이 깜빡이고 끝나지 않게 */
 const BAKING_MIN_MS = 1500;
 
-/** 정책을 아직 못 받았거나 실패했을 때 쓰는 보상 단계 — getddo-spec 출석 규칙의 초기 설정 */
-const DEFAULT_BONUS_DAYS: ReadonlySet<number> = new Set([7, 14, 28]);
+/** 펼친 출석판 머리의 출석 버튼·완료 표시·굽는 중 표시가 모두 같은 너비를 쓰도록 고정한다 */
+const COMPACT_CHECK_WIDTH = 'w-32';
+
+/** 정책을 아직 못 받았거나 실패했을 때 쓰는 보상 단계(일 → 추가 응모권) — getddo-spec 출석 규칙의 초기 설정 */
+const DEFAULT_BONUS_REWARDS: ReadonlyMap<number, number> = new Map([
+    [7, 1],
+    [14, 3],
+    [28, 7],
+]);
 
 // 공용 cn은 커스텀 글자 토큰(text-caption 등)과 색 토큰(text-fg-*)을 같은 그룹으로 보고 앞의 것을 지우므로 cn 없이 이어 붙인다
 function AttendanceStat({
@@ -66,10 +78,11 @@ export function AttendanceCheckCard({
     const { data: status, isPending, isError } = useAttendanceStatus();
     const checkAttendance = useCheckAttendance();
     const { data: policy } = useAttendancePolicy();
-    // 연속 출석 보상일은 관리자가 여러 개 설정할 수 있어 정책에서 받는다
-    const bonusDays = policy
-        ? new Set(policy.streakBonuses.map((bonus) => bonus.days))
-        : DEFAULT_BONUS_DAYS;
+    // 연속 출석 보상일과 추가 응모권 수는 관리자가 여러 개 설정할 수 있어 정책에서 받는다
+    const bonusRewards: ReadonlyMap<number, number> = policy
+        ? new Map(policy.streakBonuses.map((bonus) => [bonus.days, bonus.rewardTickets]))
+        : DEFAULT_BONUS_REWARDS;
+    const bonusDays: ReadonlySet<number> = new Set(bonusRewards.keys());
     // features에서는 app/virtual-clock을 참조할 수 없다 — 출석 판정은 서버가 하고, 여기서는 표시용 날짜 계산에만 쓴다
     const [now] = useState(() => new Date());
     const today = toAttendanceDate(now);
@@ -97,13 +110,15 @@ export function AttendanceCheckCard({
     const compactCheckButton = baking ? (
         <AttendanceBaking compact />
     ) : status?.checkedToday ? (
-        <span className="bg-surface-disabled text-fg-disabled text-body-sm-bold flex h-10 shrink-0 items-center rounded-lg px-4">
+        <span
+            className={`bg-surface-disabled text-fg-disabled text-body-sm-bold flex h-10 shrink-0 items-center justify-center rounded-lg ${COMPACT_CHECK_WIDTH}`}
+        >
             오늘 출석 완료
         </span>
     ) : (
         <Button
             variant="secondary"
-            className="text-body-sm-bold! h-10 shrink-0 px-5 font-semibold"
+            className={`text-body-sm-bold! h-10 shrink-0 font-semibold ${COMPACT_CHECK_WIDTH} ${NEUTRAL_BUTTON_STATE}`}
             onClick={() => void handleCheck()}
         >
             출석하기
@@ -125,7 +140,7 @@ export function AttendanceCheckCard({
     ) : (
         <Button
             variant="secondary"
-            className={LARGE_BUTTON_CLASS}
+            className={`${LARGE_BUTTON_CLASS} ${NEUTRAL_BUTTON_STATE}`}
             onClick={() => void handleCheck()}
         >
             출석하기
@@ -173,7 +188,7 @@ export function AttendanceCheckCard({
                         <button
                             type="button"
                             onClick={() => onExpandedChange(false)}
-                            className="text-body-sm text-fg-primary flex shrink-0 items-center"
+                            className="text-body-sm text-fg-primary flex shrink-0 cursor-pointer items-center"
                         >
                             접기
                             <ChevronUp className="size-5" />
@@ -183,7 +198,7 @@ export function AttendanceCheckCard({
                     <button
                         type="button"
                         onClick={() => onExpandedChange(true)}
-                        className="text-body-sm text-fg-primary flex items-center self-end"
+                        className="text-body-sm text-fg-primary flex cursor-pointer items-center self-end"
                     >
                         펼쳐보기
                         <ChevronRight className="size-5" />
@@ -204,6 +219,7 @@ export function AttendanceCheckCard({
                         <AttendanceMonthGrid
                             days={buildAttendanceMonth(shownDates, shownCheckedToday, now)}
                             bonusDays={bonusDays}
+                            bonusRewards={bonusRewards}
                             revealDate={revealDate}
                         />
                     ) : (

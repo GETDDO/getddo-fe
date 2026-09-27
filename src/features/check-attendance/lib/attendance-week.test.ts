@@ -3,6 +3,7 @@ import {
     buildAttendanceWeek,
     countMonthlyAttendance,
     isStreakBonusDate,
+    pickBonusMascotIndex,
 } from './attendance-week';
 
 // 2026-09-27 08:00 KST = 2026-09-26 23:00 UTC → 출석 기준일은 아직 9/26
@@ -45,7 +46,9 @@ describe('buildAttendanceMonth', () => {
         const month = buildAttendanceMonth(['2026-09-01', '2026-08-31'], true, afterReset);
         expect(month).toHaveLength(30);
         expect(month[0]).toMatchObject({ date: '2026-09-01', day: 1, checked: true });
-        expect(month[26]).toMatchObject({ day: 27, isToday: true, checked: true });
+        expect(month[26]).toMatchObject({ day: 27, isToday: true, checked: true, isFuture: false });
+        expect(month[25]).toMatchObject({ day: 26, isFuture: false });
+        expect(month[27]).toMatchObject({ day: 28, isFuture: true });
         expect(month.filter((day) => day.checked)).toHaveLength(2);
     });
 
@@ -60,5 +63,22 @@ describe('isStreakBonusDate', () => {
         expect(isStreakBonusDate('2026-09-05', bonusDays)).toBe(true);
         expect(isStreakBonusDate('2026-09-20', bonusDays)).toBe(true);
         expect(isStreakBonusDate('2026-09-07', bonusDays)).toBe(false);
+    });
+});
+
+describe('pickBonusMascotIndex', () => {
+    const bonusDays = new Set([7, 14, 28]);
+
+    it('같은 날짜는 항상 같은 캐릭터를 고른다', () => {
+        expect(pickBonusMascotIndex('2026-09-14', bonusDays, 4)).toBe(
+            pickBonusMascotIndex('2026-09-14', bonusDays, 4),
+        );
+    });
+
+    it('한 달 안의 보상일끼리는 캐릭터가 겹치지 않는다', () => {
+        const picked = ['2026-09-07', '2026-09-14', '2026-09-28'].map((date) =>
+            pickBonusMascotIndex(date, bonusDays, 4),
+        );
+        expect(new Set(picked).size).toBe(3);
     });
 });

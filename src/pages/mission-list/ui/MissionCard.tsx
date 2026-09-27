@@ -46,7 +46,8 @@ export function MissionCard({ mission }: { mission: Mission }) {
             ) : (
                 <Button
                     variant="secondary"
-                    className="text-body-bold! h-10 w-full font-semibold"
+                    // 디자인 시스템 action/neutral 호버·누름 색, 누를 때 내려가지 않게, 손가락 커서
+                    className="text-body-bold! bg-action-neutral hover:bg-action-neutral-hover active:bg-action-neutral-pressed h-10 w-full cursor-pointer font-semibold active:not-aria-[haspopup]:translate-y-0"
                     // TODO: 설문·퀴즈 풀이 화면과 라우트가 생기면 해당 화면으로 이동한다
                     onClick={() => toast.info(`${copy.action} 화면은 준비 중이에요.`)}
                 >
