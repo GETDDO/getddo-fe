@@ -2,7 +2,7 @@
 
 > 출처: Figma `최종 융합 프로젝트` 파일 › **01 Design System** 페이지 (`01 COLOR`, `02 Type`, `03 Radius & Shadow` 섹션)
 > 용도: AI 에이전트가 프론트엔드 개발 시 참고하는 디자인 토큰 명세서. 값의 실제 원천은 별도 `tokens.css`이며, 이 문서는 그 값의 의미와 용도를 설명한다.
-> 기준일: 2026-09-19 (Figma 최신 상태)
+> 기준일: 2026-09-27 (Figma 최신 상태)
 
 ---
 
@@ -11,7 +11,7 @@
 1. **하드코딩 금지**: 컴포넌트 코드에 `#E6007E` 같은 hex 값을 직접 쓰지 말고, 반드시 아래 토큰명(`brand/primary` 등)에 매핑된 CSS 변수·디자인 토큰을 통해 참조한다.
 2. **의미(semantic) 우선**: 같은 색이어도 "무엇에 쓰는가"에 따라 다른 토큰명을 쓴다.
 3. **관리자 전용 vs 사용자 전용 구분**: `status/*`, `chart/*`는 관리자(운영자) 화면 전용, `play/*`는 사용자(응모자) 사이트 전용.
-4. **값의 원천**: 이 문서의 모든 값은 Figma 도형에 실제로 바인딩된 Variable/Effect 값을 기준으로 작성했다 (캔버스에 사람이 손으로 적어둔 hex 텍스트 라벨이 아님). 라벨과 실제 값이 다른 항목은 맨 아래 부록에 모아뒀다.
+4. **값의 원천**: 이 문서의 모든 값은 Figma 도형에 실제로 바인딩된 Variable/Effect 값을 기준으로 작성했다 (캔버스에 사람이 손으로 적어둔 hex 텍스트 라벨이 아님). 2026-09-27 기준으로 캔버스 라벨과 실제 값은 모두 일치한다.
 
 ---
 
@@ -29,7 +29,7 @@
 
 ### 2) Action — Neutral (무채색 버튼/모달 확인)
 
-_(Figma 원본 섹션 라벨은 "Foreground"인데 실제 토큰은 `action/*`이며 7번 Foreground 섹션과 이름이 중복되어 있다.)_
+_(Figma 원본 섹션 라벨은 "2. Button — 버튼"이며, 토큰 이름은 `action/*`이다.)_
 
 | Token                    | Hex       | 용도                        |
 | ------------------------ | --------- | --------------------------- |
@@ -65,6 +65,7 @@ _(Figma 원본 섹션 라벨은 "Foreground"인데 실제 토큰은 `action/*`�
 | `surface/elevated` | `#FFFFFF`                    | 모달, 드롭다운, 토스트     |
 | `surface/sunken`   | `#F1F3F5`                    | 인풋 배경, 테이블 헤더     |
 | `surface/pressed`  | `#E4E7EA`                    | 탭·아이템 눌림 상태        |
+| `surface/disabled` | `#E9EBEE`                    | 비활성 버튼 채움           |
 | `surface/overlay`  | `#12161B` (50%, `#12161B80`) | 모달 딤(dim) 처리          |
 
 ### 6) Border
@@ -99,35 +100,35 @@ _(Figma 원본 섹션 라벨은 "Foreground"인데 실제 토큰은 `action/*`�
 
 ### 9) Status — 관리자 전용
 
-| Token                  | Hex       | 용도                  |
-| ---------------------- | --------- | --------------------- |
-| `status/pending`       | `#F1F3F5` | 검토 대기 뱃지 배경   |
-| `status/active`        | `#E7F0FE` | 진행 중 뱃지 배경     |
-| `status/revision`      | `#FBF0D9` | 보완 요청 뱃지 배경   |
-| `status/approved`      | `#E6F5EE` | 승인 뱃지 배경        |
-| `status/rejected`      | `#FBEBEE` | 반려 뱃지 배경        |
-| `status/pending-text`  | `#4B525C` | 검토 대기 뱃지 텍스트 |
-| `status/active-text`   | `#1D4ED8` | 진행 중 뱃지 텍스트   |
-| `status/revision-text` | `#B45309` | 보완 요청 뱃지 텍스트 |
-| `status/approved-text` | `#0B6549` | 승인 뱃지 텍스트      |
-| `status/rejected-text` | `#A8354A` | 반려 뱃지 텍스트      |
+| Token                  | Hex       | 용도                                              |
+| ---------------------- | --------- | ------------------------------------------------- |
+| `status/pending`       | `#F1F3F5` | 검토 대기 뱃지 배경                               |
+| `status/active`        | `#E7F0FE` | 진행 중 뱃지 배경                                 |
+| `status/revision`      | `#FBF0D9` | 보완 요청 뱃지 배경                               |
+| `status/approved`      | `#E6F5EE` | 승인 뱃지 배경                                    |
+| `status/rejected`      | `#FBEBEE` | 반려 뱃지 배경                                    |
+| `status/pending-text`  | `#4B525C` | 검토 대기 뱃지 텍스트                             |
+| `status/active-text`   | `#1D4ED8` | 진행 중 뱃지 텍스트                               |
+| `status/revision-text` | `#B45309` | 보완 요청 뱃지 텍스트                             |
+| `status/approved-text` | `#0B6549` | 승인 뱃지 텍스트                                  |
+| `status/rejected-text` | `#D92D20` | 반려 뱃지 텍스트 (`semantic/error-strong` 재사용) |
 
 ### 10) Chart — 관리자 전용
 
-| Token             | Hex       | 용도                      |
-| ----------------- | --------- | ------------------------- |
-| `chart/line`      | `#14A378` | 현재 기간 선 (2px)        |
-| `chart/point`     | `#0F8560` | 강조 포인트               |
-| `chart/compare`   | `#CDD2D8` | 지난 기간 선 (1.5px 점선) |
-| `chart/grid`      | `#F1F3F5` | 가로 격자선               |
-| `chart/axis`      | `#9AA1AB` | 축 라벨                   |
-| `chart/highlight` | `#E04F5F` | 이상치, 어뷰징 탐지       |
+| Token             | Hex       | 용도                                         |
+| ----------------- | --------- | -------------------------------------------- |
+| `chart/line`      | `#E6007E` | 현재 기간 선 (2px, `brand/primary` 재사용)   |
+| `chart/point`     | `#BC0066` | 강조 포인트 (`brand/primary-pressed` 재사용) |
+| `chart/compare`   | `#CDD2D8` | 지난 기간 선 (1.5px 점선)                    |
+| `chart/grid`      | `#F1F3F5` | 가로 격자선                                  |
+| `chart/axis`      | `#9AA1AB` | 축 라벨                                      |
+| `chart/highlight` | `#F59E0B` | 이상치, 어뷰징 탐지                          |
 
 ### 11) Gradient
 
-| Token                 | 값                                                            | 용도                                                                |
-| --------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `gradient/chart-area` | `linear-gradient(180deg, #E6007E 22%, rgba(31,190,142,0) 0%)` | 차트 전용 (두 번째 stop은 투명도 0%라 색상 자체는 화면에 영향 없음) |
+| Token                 | 값                                                                         | 용도                                                                                                |
+| --------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `gradient/chart-area` | `linear-gradient(180deg, rgba(230,0,126,0) 0%, rgba(230,0,126,0.22) 100%)` | 차트 영역 채움 전용 — `brand/primary`가 위에서 투명(0%)으로 시작해 아래로 22% 불투명도까지 진해진다 |
 
 ### 미정 사항
 

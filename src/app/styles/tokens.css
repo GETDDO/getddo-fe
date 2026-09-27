@@ -36,6 +36,7 @@
     --color-surface-elevated: #ffffff;
     --color-surface-sunken: #f1f3f5;
     --color-surface-pressed: #e4e7ea;
+    --color-surface-disabled: #e9ebee;
     --color-surface-overlay: #12161b80;
 
     /* Border */
@@ -69,16 +70,20 @@
     --color-status-active-text: #1d4ed8;
     --color-status-revision-text: #b45309;
     --color-status-approved-text: #0b6549;
-    --color-status-rejected-text: #a8354a;
+    --color-status-rejected-text: #d92d20;
 
     /* Chart — 관리자 전용 */
-    --color-chart-line: #14a378;
-    --color-chart-point: #0f8560;
+    --color-chart-line: #e6007e;
+    --color-chart-point: #bc0066;
     --color-chart-compare: #cdd2d8;
     --color-chart-grid: #f1f3f5;
     --color-chart-axis: #9aa1ab;
-    --color-chart-highlight: #e04f5f;
-    --background-image-chart-area: linear-gradient(180deg, #e6007e 22%, rgb(31 190 142 / 0) 0%);
+    --color-chart-highlight: #f59e0b;
+    --background-image-chart-area: linear-gradient(
+        180deg,
+        rgb(230 0 126 / 0) 0%,
+        rgb(230 0 126 / 0.22) 100%
+    );
 
     /* Radius — spec 고정값 */
     --radius-sm: 4px;
