@@ -140,9 +140,9 @@ export function TicketHistoryCard({
                                         )}
                                         <li
                                             style={freshIds.has(item.id) ? undefined : enterDelay}
-                                            // 방금 받은 내역 강조 — status/active-text 8% 배경을 위아래로 4px 들여 그려 구분선에 닿지 않게 하고, 끝나면 서서히 사라진다
+                                            // 방금 받은 내역 강조 — play/yellow-soft 배경을 위아래로 4px 들여 그려 구분선에 닿지 않게 하고, 끝나면 서서히 사라진다
                                             className={cn(
-                                                'before:bg-status-active-text/8 relative isolate flex items-center justify-between gap-4 p-4 before:absolute before:inset-x-0 before:inset-y-1 before:-z-10 before:rounded-lg before:transition-opacity before:duration-700',
+                                                'before:bg-play-yellow-soft relative isolate flex items-center justify-between gap-4 p-4 before:absolute before:inset-x-0 before:inset-y-1 before:-z-10 before:rounded-lg before:transition-opacity before:duration-700',
                                                 freshIds.has(item.id)
                                                     ? 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-3 before:opacity-100 motion-safe:duration-500'
                                                     : `before:opacity-0 ${enter}`,
