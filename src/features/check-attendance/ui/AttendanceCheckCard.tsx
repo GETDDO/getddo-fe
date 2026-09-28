@@ -160,26 +160,13 @@ export function AttendanceCheckCard({
         <div
             className={cn(
                 'bg-surface-page border-border-default flex flex-col rounded-2xl border p-4 shadow-md',
-                // 펼칠 때만 카드 높이가 부드럽게 늘어난다 (interpolate-size 지원 브라우저). 접을 때는 높이를 바로 맞추고 내용만 부드럽게 나타난다
-                expanded
-                    ? 'h-auto [interpolate-size:allow-keywords] motion-safe:transition-[height] motion-safe:duration-300'
-                    : 'h-75',
+                // 펼치기·접기는 애니메이션 없이 바로 바뀐다 (화면 전체 움직임을 줄이기 위해)
+                expanded ? 'h-auto' : 'h-75',
                 className,
             )}
         >
-            {/*
-              펼침·접힘이 바뀌면 안쪽 내용(통계·버튼·출석판)을 새로 그리며 살짝 미끄러져 나타나게 한다.
-              나중에 이 사이에 출석 스프라이트 애니메이션이 들어갈 자리다
-            */}
-            <div
-                key={expanded ? 'expanded' : 'collapsed'}
-                className={cn(
-                    'motion-safe:animate-in motion-safe:fade-in flex flex-1 flex-col motion-safe:duration-300',
-                    expanded
-                        ? 'motion-safe:slide-in-from-top-2 gap-4'
-                        : 'motion-safe:slide-in-from-bottom-2 justify-between',
-                )}
-            >
+            {/* 나중에 펼치기 전에 출석 스프라이트 애니메이션이 들어갈 자리다 */}
+            <div className={cn('flex flex-1 flex-col', expanded ? 'gap-4' : 'justify-between')}>
                 {expanded ? (
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
