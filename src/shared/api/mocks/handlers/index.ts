@@ -8,6 +8,7 @@ import { gameHandlers } from './game';
 import { missionHandlers } from './mission';
 import { notificationHandlers } from './notification';
 import { ticketHandlers } from './ticket';
+import { virtualUserHandlers } from './virtual-users';
 
 export const handlers = [
     ...abuseHandlers,
@@ -20,4 +21,5 @@ export const handlers = [
     ...missionHandlers,
     ...notificationHandlers,
     ...ticketHandlers,
+    ...virtualUserHandlers,
 ];

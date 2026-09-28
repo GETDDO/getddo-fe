@@ -1,7 +1,8 @@
 import { CircleUserRound } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
 
+import { useSessionStore } from '@entities/user';
 import { cn } from '@shared/lib/utils';
 import { NotificationBell } from '@widgets/notification-bell';
 
@@ -10,6 +11,7 @@ import { USER_NAV_ITEMS } from './user-nav-items';
 export function UserLayout() {
     const navRef = useRef<HTMLElement>(null);
     const { pathname } = useLocation();
+    const user = useSessionStore((state) => state.user);
     const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
 
     // NavLink가 활성 시 자동으로 붙이는 aria-current="page"로 대상을 찾아 위치를 측정한다
@@ -29,6 +31,11 @@ export function UserLayout() {
         window.addEventListener('resize', update);
         return () => window.removeEventListener('resize', update);
     }, [pathname]);
+
+    // 가상 사용자 미선택 상태에서는 로그인 화면으로 보낸다 (시연 로그인 흐름)
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
 
     return (
         <div className="bg-surface-page flex min-h-screen flex-col">

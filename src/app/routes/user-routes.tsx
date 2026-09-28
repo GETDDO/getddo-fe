@@ -6,6 +6,7 @@ import { EventDetailPage } from '@pages/event-detail';
 import { EventListPage } from '@pages/event-list';
 import { GameHubPage } from '@pages/game-hub';
 import { HomePage } from '@pages/home';
+import { LoginPage } from '@pages/login';
 import { MissionListPage } from '@pages/mission-list';
 import { MyEntriesPage } from '@pages/my-entries';
 import { MyTicketsPage } from '@pages/my-tickets';
@@ -15,6 +16,7 @@ import { TimeRaffleDetailPage } from '@pages/time-raffle-detail';
 import { UiGalleryPage } from '@pages/ui-gallery';
 
 export const userRoutes: RouteObject[] = [
+    { path: '/login', element: <LoginPage /> },
     {
         element: <UserLayout />,
         children: [
