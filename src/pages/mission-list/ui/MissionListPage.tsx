@@ -1,4 +1,5 @@
-import { useLayoutEffect, useState } from 'react';
+import { MotionConfig, motion } from 'framer-motion';
+import { useEffect, useLayoutEffect, useState } from 'react';
 
 import { useMissionList } from '@entities/mission';
 import { AttendanceCheckCard } from '@features/check-attendance';
@@ -11,10 +12,38 @@ import { TicketHistoryCard } from './TicketHistoryCard';
 
 const CONTAINER = 'mx-auto w-full max-w-300 px-6';
 
+/** 출석 카드 펼침 여부 — 새로고침해도 유지하도록 이 탭의 세션 저장소에 둔다 */
+const ATTENDANCE_EXPANDED_KEY = 'getddo:attendance-expanded';
+
+// 개인 정보 보호 모드 등에서는 저장소 접근이 막힐 수 있어, 실패하면 접힌 상태로 시작한다
+function readAttendanceExpanded() {
+    try {
+        return sessionStorage.getItem(ATTENDANCE_EXPANDED_KEY) === 'true';
+    } catch {
+        return false;
+    }
+}
+
+/** 스크롤로 화면에 들어오면 한 번 살짝 올라오며 나타난다 (order가 클수록 늦게) */
+const riseInView = (order: number) => ({
+    initial: { opacity: 0, y: 24 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, amount: 0.2 },
+    transition: { duration: 0.45, delay: order * 0.06, ease: [0.22, 1, 0.36, 1] as const },
+});
+
 export function MissionListPage() {
     const { data: missions, isPending, isError } = useMissionList();
     // 출석 카드를 펼치면(펼쳐보기·출석 완료) 출석 카드가 넓어지고 응모권 내역 카드가 좁아진다
-    const [attendanceExpanded, setAttendanceExpanded] = useState(false);
+    const [attendanceExpanded, setAttendanceExpanded] = useState(readAttendanceExpanded);
+
+    useEffect(() => {
+        try {
+            sessionStorage.setItem(ATTENDANCE_EXPANDED_KEY, String(attendanceExpanded));
+        } catch {
+            // 저장하지 못해도 화면 동작에는 영향이 없다
+        }
+    }, [attendanceExpanded]);
 
     // 다른 화면에서 스크롤을 내린 채 들어와도 맨 위에서 시작한다
     useLayoutEffect(() => {
@@ -66,30 +95,41 @@ export function MissionListPage() {
                 </div>
             </div>
 
-            <section className={`${CONTAINER} mt-20 flex flex-col gap-6`}>
-                <SectionHeader
-                    title="설문 · 퀴즈"
-                    caption="미션마다 한 번만 응모권을 받을 수 있어요."
-                />
-                {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
-                {isError && (
-                    <p className="text-body-sm text-destructive">
-                        미션 목록을 불러오지 못했습니다.
-                    </p>
-                )}
-                {missions?.length === 0 && (
-                    <p className="text-body-sm text-fg-tertiary">
-                        지금 참여할 수 있는 미션이 없어요.
-                    </p>
-                )}
-                {missions && missions.length > 0 && (
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {missions.map((mission) => (
-                            <MissionCard key={mission.id} mission={mission} />
-                        ))}
-                    </div>
-                )}
-            </section>
+            {/* 설문·퀴즈 — 스크롤해 보이면 제목, 카드 순서로 올라온다 (동작 줄이기 설정이면 끔) */}
+            <MotionConfig reducedMotion="user">
+                <section className={`${CONTAINER} mt-20 flex flex-col gap-6`}>
+                    <motion.div {...riseInView(0)}>
+                        <SectionHeader
+                            title="설문 · 퀴즈"
+                            caption="미션마다 한 번만 응모권을 받을 수 있어요."
+                        />
+                    </motion.div>
+                    {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+                    {isError && (
+                        <p className="text-body-sm text-destructive">
+                            미션 목록을 불러오지 못했습니다.
+                        </p>
+                    )}
+                    {missions?.length === 0 && (
+                        <p className="text-body-sm text-fg-tertiary">
+                            지금 참여할 수 있는 미션이 없어요.
+                        </p>
+                    )}
+                    {missions && missions.length > 0 && (
+                        <div className="flex flex-col gap-4">
+                            {missions.map((mission, index) => (
+                                // 위 카드부터 차례로 올라온다 (앞쪽 4장까지만 간격을 둔다)
+                                <motion.div
+                                    key={mission.id}
+                                    {...riseInView(1 + Math.min(index, 3))}
+                                >
+                                    <MissionCard mission={mission} />
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
+                </section>
+            </MotionConfig>
         </main>
     );
 }
