@@ -1,11 +1,19 @@
 import { motion } from 'framer-motion';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { cn } from '@shared/lib/utils';
 
 import type { AttendanceMonthDay } from '../lib/attendance-week';
+import type { TodayRevealStage } from './AttendanceTodayReveal';
 
 import { isStreakBonusDate } from '../lib/attendance-week';
+import {
+    REVEAL_BAKE_MS,
+    REVEAL_HIT_AT,
+    REVEAL_LAND_MS,
+    REVEAL_SHAKE_MS,
+} from '../model/attendance-motion';
+import { AttendanceTodayReveal } from './AttendanceTodayReveal';
 import { BATTER_MASCOT, DIZZY_MASCOT, getAttendanceMascot } from './mascots';
 
 /** 이 시간 안에 이만큼 누르면 타코야끼가 어지러워한다 */
@@ -30,14 +38,43 @@ export function AttendanceMonthGrid({
     bonusDays,
     bonusRewards,
     revealDate,
+    onRevealEnd,
 }: {
     days: AttendanceMonthDay[];
     bonusDays: ReadonlySet<number>;
     /** 보상일(일) → 추가로 주는 응모권 수 */
     bonusRewards?: ReadonlyMap<number, number>;
-    /** 방금 출석한 날 — 판 위에 타코야끼가 톡 올라오는 연출을 준다 */
+    /** 방금 출석한 날 — 반죽이 구워지다가 타코야끼가 휘리릭 찍히는 연출을 준다 */
     revealDate?: string | null;
+    /** 오늘 칸 연출이 끝났을 때 — 다시 펼쳐도 연출이 반복되지 않도록 부모가 revealDate를 지운다 */
+    onRevealEnd?: () => void;
 }) {
+    // 오늘 칸 연출 단계: 굽기 → 떨어져 찍힘 → 끝(찍히는 순간 판 전체가 한 번 흔들린다)
+    const [revealStage, setRevealStage] = useState<TodayRevealStage | 'done'>(() =>
+        revealDate ? 'baking' : 'done',
+    );
+    const [shaking, setShaking] = useState(false);
+
+    useEffect(() => {
+        if (!revealDate) return;
+        const landAt = REVEAL_BAKE_MS;
+        const hitAt = REVEAL_BAKE_MS + REVEAL_LAND_MS * REVEAL_HIT_AT;
+        const doneAt = REVEAL_BAKE_MS + REVEAL_LAND_MS;
+        const timers = [
+            setTimeout(() => setRevealStage('landing'), landAt),
+            setTimeout(() => setShaking(true), hitAt),
+            setTimeout(() => setRevealStage('done'), doneAt),
+            setTimeout(
+                () => {
+                    setShaking(false);
+                    onRevealEnd?.();
+                },
+                Math.max(doneAt, hitAt + REVEAL_SHAKE_MS),
+            ),
+        ];
+        return () => timers.forEach(clearTimeout);
+    }, [revealDate, onRevealEnd]);
+
     const [flips, setFlips] = useState<Record<string, number>>({});
     const [dizzy, setDizzy] = useState<ReadonlySet<string>>(() => new Set());
     const [recovering, setRecovering] = useState<ReadonlySet<string>>(() => new Set());
@@ -67,7 +104,12 @@ export function AttendanceMonthGrid({
     };
 
     return (
-        <ol className="bg-surface-canvas grid w-full grid-cols-8 gap-x-1.5 gap-y-3 rounded-lg p-4 sm:gap-x-4">
+        // 타코야끼가 찍히는 순간 판 전체가 좌우로 두세 번 흔들리다 멈춘다
+        <motion.ol
+            animate={shaking ? { x: [0, -6, 6, -4, 4, -2, 0] } : { x: 0 }}
+            transition={{ duration: shaking ? REVEAL_SHAKE_MS / 1000 : 0 }}
+            className="bg-surface-canvas grid w-full grid-cols-8 gap-x-1.5 gap-y-3 rounded-lg p-4 sm:gap-x-4"
+        >
             {days.map((day) => {
                 const isBonus = isStreakBonusDate(day.date, bonusDays);
                 const bonusTickets = isBonus ? bonusRewards?.get(day.day) : undefined;
@@ -102,7 +144,13 @@ export function AttendanceMonthGrid({
                                 )}
                             </span>
                         )}
-                        {day.checked || isBonus ? (
+                        {day.date === revealDate && revealStage !== 'done' ? (
+                            <AttendanceTodayReveal
+                                stage={revealStage}
+                                day={day.day}
+                                mascotSrc={mascot.src}
+                            />
+                        ) : day.checked || isBonus ? (
                             <button
                                 type="button"
                                 disabled={!day.checked}
@@ -110,12 +158,8 @@ export function AttendanceMonthGrid({
                                     day.checked ? `${day.day}일 타코야끼 뒤집기` : undefined
                                 }
                                 onClick={(event) => handlePress(day.date, event.timeStamp)}
-                                className={cn(
-                                    // 판(최대 56px)의 86% = 48px — 좁은 화면에서는 판에 맞춰 함께 줄어든다
-                                    'focus-visible:ring-border-focus relative size-[86%] rounded-full [perspective:320px] focus-visible:ring-2 focus-visible:outline-none enabled:cursor-pointer',
-                                    day.date === revealDate &&
-                                        'motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:spin-in-45 motion-safe:fade-in motion-safe:duration-700',
-                                )}
+                                // 판(최대 56px)의 86% = 48px — 좁은 화면에서는 판에 맞춰 함께 줄어든다
+                                className="focus-visible:ring-border-focus relative size-[86%] rounded-full [perspective:320px] focus-visible:ring-2 focus-visible:outline-none enabled:cursor-pointer"
                             >
                                 {/*
                                   원래 타코야끼와 어지러운 타코야끼를 겹쳐 두고 투명도로 바꾼다.
@@ -180,6 +224,6 @@ export function AttendanceMonthGrid({
                     </li>
                 );
             })}
-        </ol>
+        </motion.ol>
     );
 }

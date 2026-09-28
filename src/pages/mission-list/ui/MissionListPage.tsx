@@ -2,7 +2,11 @@ import { MotionConfig, motion } from 'framer-motion';
 import { useEffect, useLayoutEffect, useState } from 'react';
 
 import { useMissionList } from '@entities/mission';
-import { AttendanceCheckCard } from '@features/check-attendance';
+import {
+    ATTENDANCE_WIDEN_MS,
+    AttendanceCheckCard,
+    type AttendanceExpandOptions,
+} from '@features/check-attendance';
 import { cn } from '@shared/lib/utils';
 import { GameRail } from '@widgets/game-rail';
 
@@ -37,6 +41,21 @@ export function MissionListPage() {
     // 출석 카드를 펼치면(펼쳐보기·출석 완료) 출석 카드가 넓어지고 응모권 내역 카드가 좁아진다
     const [attendanceExpanded, setAttendanceExpanded] = useState(readAttendanceExpanded);
 
+    // 출석 카드를 펼치고 접을 때 두 카드의 열 너비가 부드럽게 바뀐다
+    const [widening, setWidening] = useState(false);
+    const handleAttendanceExpandedChange = (
+        expanded: boolean,
+        options?: AttendanceExpandOptions,
+    ) => {
+        setAttendanceExpanded(expanded);
+        setWidening(!!options?.animate);
+    };
+    useEffect(() => {
+        if (!widening) return;
+        const timer = setTimeout(() => setWidening(false), ATTENDANCE_WIDEN_MS + 50);
+        return () => clearTimeout(timer);
+    }, [widening]);
+
     useEffect(() => {
         try {
             sessionStorage.setItem(ATTENDANCE_EXPANDED_KEY, String(attendanceExpanded));
@@ -65,13 +84,20 @@ export function MissionListPage() {
                             ? 'lg:grid-cols-[885fr_300fr]'
                             : 'lg:grid-cols-[393fr_791fr]',
                     )}
+                    style={
+                        widening
+                            ? {
+                                  transition: `grid-template-columns ${ATTENDANCE_WIDEN_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+                              }
+                            : undefined
+                    }
                 >
                     <section className="flex min-w-0 flex-col gap-6">
                         {/* 출석 기준일은 00:00 UTC(09:00 KST)에 바뀐다 — getddo-spec 출석 규칙 */}
                         <SectionHeader title="출석체크" caption="하루 1회 · 오전 9시 초기화" />
                         <AttendanceCheckCard
                             expanded={attendanceExpanded}
-                            onExpandedChange={setAttendanceExpanded}
+                            onExpandedChange={handleAttendanceExpandedChange}
                         />
                     </section>
                     <section className="flex min-w-0 flex-col gap-6">
