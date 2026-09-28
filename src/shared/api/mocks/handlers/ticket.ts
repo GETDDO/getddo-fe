@@ -22,6 +22,20 @@ const ticketHistory = [
         createdAt: '2026-09-16T09:30:00Z',
     },
     {
+        id: 'th-15',
+        type: 'refund',
+        amount: 2,
+        reason: '이벤트 취소 응모권 반환',
+        createdAt: '2026-09-16T05:00:00Z',
+    },
+    {
+        id: 'th-16',
+        type: 'revoke',
+        amount: -1,
+        reason: '부정 획득 응모권 회수',
+        createdAt: '2026-09-15T07:00:00Z',
+    },
+    {
         id: 'th-3',
         type: 'earn',
         amount: 1,
@@ -97,6 +111,14 @@ const ticketHistory = [
         amount: 1,
         reason: '매일 출석체크 리워드',
         createdAt: '2026-09-02T00:20:00Z',
+    },
+    {
+        // 9월 1일 00:00 KST — 8월분 지급 응모권의 월 경계 만료
+        id: 'th-17',
+        type: 'expire',
+        amount: -2,
+        reason: '응모권 월 만료',
+        createdAt: '2026-08-31T15:00:00Z',
     },
     {
         id: 'th-14',
