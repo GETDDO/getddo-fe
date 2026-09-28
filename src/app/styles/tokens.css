@@ -157,54 +157,54 @@
  */
 .dark {
     /* Brand — soft 배경만 다크용으로, 본체는 동일 */
-    --color-brand-soft: #3d1529;
+    --color-brand-soft: #46203a;
 
-    /* Action — 다크에서는 한 단계 밝은 무채색 버튼 (텍스트는 fg-on-brand #fff 유지) */
+    /* Action — 다크에서는 선언된 중립 램프(#343a42→#4b525c)의 밝은 무채색 버튼 (텍스트는 fg-on-brand #fff 유지) */
     --color-action-neutral: #343a42;
-    --color-action-neutral-hover: #454d58;
-    --color-action-neutral-pressed: #272e38;
+    --color-action-neutral-hover: #4b525c;
+    --color-action-neutral-pressed: #262b33;
 
     /* Ticket — soft 배경만 다크용 */
-    --color-ticket-accent: #3a2f14;
+    --color-ticket-accent: #453815;
 
     /* Play — soft 파스텔 배경만 다크용 (일러스트 본체 색은 유지) */
-    --color-play-yellow-soft: #3a2f14;
-    --color-play-pink-soft: #3d1529;
-    --color-play-lavender-soft: #241b3d;
+    --color-play-yellow-soft: #453815;
+    --color-play-pink-soft: #46203a;
+    --color-play-lavender-soft: #2d2347;
 
-    /* Surface */
-    --color-surface-page: #12161b;
-    --color-surface-canvas: #191e25;
-    --color-surface-elevated: #1f242b;
-    --color-surface-sunken: #1a1f26;
-    --color-surface-pressed: #272e38;
-    --color-surface-disabled: #232932;
+    /* Surface — 라이트의 fg/action 중립 램프(#1f242b 계열)에 앵커해 한 단계 밝은 다크 */
+    --color-surface-page: #1f242b;
+    --color-surface-canvas: #1a1e24;
+    --color-surface-elevated: #2b323c;
+    --color-surface-sunken: #232930;
+    --color-surface-pressed: #343a42;
+    --color-surface-disabled: #262b33;
     --color-surface-overlay: #000000b3;
 
     /* Border */
-    --color-border-default: #2a313a;
-    --color-border-strong: #3a424c;
+    --color-border-default: #343a42;
+    --color-border-strong: #4b525c;
     --color-border-brand-subtle: #7a1550;
 
     /* Foreground — fg-brand는 다크 배경 대비를 위해 밝은 핑크로 */
     --color-fg-primary: #f4f5f7;
     --color-fg-secondary: #cdd2d8;
     --color-fg-tertiary: #9aa1ab;
-    --color-fg-disabled: #5c636d;
+    --color-fg-disabled: #6b727c;
     --color-fg-brand: #ff4da3;
 
     /* Semantic */
     --color-semantic-success: #23b586;
-    --color-semantic-success-soft: #0e3a2c;
+    --color-semantic-success-soft: #124536;
     --color-semantic-error: #f97066;
     --color-semantic-error-strong: #ff8a80;
 
     /* Status — 관리자 전용 뱃지 */
-    --color-status-pending: #272e38;
-    --color-status-active: #172c4d;
-    --color-status-revision: #3a2a12;
-    --color-status-approved: #0e3a2c;
-    --color-status-rejected: #3d1a18;
+    --color-status-pending: #343a42;
+    --color-status-active: #1d3a63;
+    --color-status-revision: #453815;
+    --color-status-approved: #124536;
+    --color-status-rejected: #4d2620;
     --color-status-pending-text: #cdd2d8;
     --color-status-active-text: #93c5fd;
     --color-status-revision-text: #fbbf24;
@@ -213,7 +213,7 @@
 
     /* Chart */
     --color-chart-compare: #4b525c;
-    --color-chart-grid: #232932;
+    --color-chart-grid: #2b323c;
     --color-chart-axis: #6b727c;
     --background-image-chart-area: linear-gradient(
         180deg,
