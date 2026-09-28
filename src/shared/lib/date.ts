@@ -54,6 +54,12 @@ export function isSameKstDate(a: Date | string, b: Date | string): boolean {
     );
 }
 
+/** 다음 달 1일 00:00 KST 시각 — 월 경계에 만료하는 항목(응모권 등)의 만료 일시 표시용 */
+export function kstNextMonthStart(now: Date): Date {
+    const k = toKst(now);
+    return new Date(Date.UTC(k.getUTCFullYear(), k.getUTCMonth() + 1, 1) - KST_OFFSET_MS);
+}
+
 /** 남은 밀리초를 "HH:MM:SS" 형태의 카운트다운 문자열로 변환한다 (표시용 — 마감 판정에는 사용하지 않는다) */
 export function formatCountdown(remainingMs: number): string {
     const totalSeconds = Math.max(0, Math.floor(remainingMs / 1000));

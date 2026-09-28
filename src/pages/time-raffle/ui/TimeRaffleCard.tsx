@@ -75,15 +75,19 @@ export function TimeRaffleCard({ event }: { event: Event }) {
                 {/* 마감·오픈 예정 래플은 디자인상 비활성 버튼으로 상태를 알린다 */}
                 {isOpen ? (
                     <Button asChild variant="secondary" size="lg" className="w-full">
-                        <Link to={`/time-raffle/${event.id}`}>응모하기</Link>
+                        <Link to={`/time-raffle/${event.id}`}>
+                            <span className="text-body-bold">응모하기</span>
+                        </Link>
                     </Button>
                 ) : (
                     <Button
                         disabled
                         size="lg"
-                        className="bg-surface-disabled text-fg-disabled w-full disabled:opacity-100"
+                        className="bg-surface-disabled w-full disabled:opacity-100"
                     >
-                        {event.status === 'upcoming' ? '오픈 예정' : '마감'}
+                        <span className="text-body-bold text-fg-disabled">
+                            {event.status === 'upcoming' ? '오픈 예정' : '마감'}
+                        </span>
                     </Button>
                 )}
             </div>

@@ -78,16 +78,20 @@ export function TimeRaffleDetailPage() {
                                 variant="secondary"
                                 disabled={!canEnter}
                                 onClick={() => setConfirmOpen(true)}
-                                className="text-body-bold h-12 w-full"
+                                className="h-12 w-full"
                             >
-                                {canEnter ? '응모하기' : '응모 한도 도달'}
+                                <span className="text-body-bold">
+                                    {canEnter ? '응모하기' : '응모 한도 도달'}
+                                </span>
                             </Button>
                         ) : (
                             <Button
                                 disabled
-                                className="bg-surface-disabled text-fg-disabled text-body-bold h-12 w-full disabled:opacity-100"
+                                className="bg-surface-disabled h-12 w-full disabled:opacity-100"
                             >
-                                {STATUS_LABEL[event.status]}
+                                <span className="text-body-bold text-fg-disabled">
+                                    {STATUS_LABEL[event.status]}
+                                </span>
                             </Button>
                         )
                     }

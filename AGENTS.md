@@ -107,6 +107,9 @@ app → pages → widgets → features → entities → shared
 - `dev` — 개발 통합 브랜치
 - 작업 브랜치 — `dev`에서 생성, `<타입>/<Jira 이슈 키>` 형식, Jira 키는 대문자 유지
     - `feat/GD-123`, `fix/GD-45`, `refactor/GD-67`, `chore/GD-1`, `docs/GD-12`
+- Jira 연동으로 이슈 키의 브랜치가 원격에 자동 생성될 수 있다. 작업 브랜치를 만들기 전에 `git fetch` 후 `git ls-remote --heads origin '*/<Jira 키>'`(또는 `git branch -r`)로 동일 키의 원격 브랜치가 있는지 확인한다
+    - 이미 있으면 새로 만들지 않고 해당 브랜치를 체크아웃(`git switch <브랜치>`)해 이어서 작업하고, `dev`보다 뒤처져 있으면 `dev`를 머지해 동기화한다
+    - 원격에 없을 때만 `dev`에서 새로 생성한다
 
 ## 커밋 컨벤션
 
