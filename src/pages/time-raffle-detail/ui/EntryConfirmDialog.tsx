@@ -59,17 +59,13 @@ export function EntryConfirmDialog({
                     <DialogClose asChild>
                         <Button
                             variant="outline"
-                            className="bg-surface-sunken border-border-default text-fg-primary text-body-bold hover:bg-surface-pressed h-10 flex-1"
+                            className="bg-surface-sunken border-border-default hover:bg-surface-pressed h-10 flex-1"
                         >
-                            취소
+                            <span className="text-body-bold text-fg-primary">취소</span>
                         </Button>
                     </DialogClose>
-                    <Button
-                        variant="secondary"
-                        className="text-body-bold h-10 flex-1"
-                        onClick={onConfirm}
-                    >
-                        응모하기
+                    <Button variant="secondary" className="h-10 flex-1" onClick={onConfirm}>
+                        <span className="text-body-bold">응모하기</span>
                     </Button>
                 </div>
             </DialogContent>
