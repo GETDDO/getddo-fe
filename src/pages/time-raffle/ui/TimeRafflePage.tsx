@@ -50,12 +50,10 @@ export function TimeRafflePage() {
                     <TimeRaffleHero
                         event={featured}
                         cta={
-                            <Button
-                                asChild
-                                variant="secondary"
-                                className="text-body-bold h-12 w-full"
-                            >
-                                <Link to={`/time-raffle/${featured.id}`}>응모하러 가기</Link>
+                            <Button asChild variant="secondary" className="h-12 w-full">
+                                <Link to={`/time-raffle/${featured.id}`}>
+                                    <span className="text-body-bold">응모하러 가기</span>
+                                </Link>
                             </Button>
                         }
                     />
