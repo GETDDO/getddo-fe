@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 
 import { useMissionList } from '@entities/mission';
 import { AttendanceCheckCard } from '@features/check-attendance';
 import { cn } from '@shared/lib/utils';
+import { GameRail } from '@widgets/game-rail';
 
-import { GameSection } from './GameSection';
 import { MissionCard } from './MissionCard';
 import { SectionHeader } from './SectionHeader';
 import { TicketHistoryCard } from './TicketHistoryCard';
@@ -16,6 +16,11 @@ export function MissionListPage() {
     // 출석 카드를 펼치면(펼쳐보기·출석 완료) 출석 카드가 넓어지고 응모권 내역 카드가 좁아진다
     const [attendanceExpanded, setAttendanceExpanded] = useState(false);
 
+    // 다른 화면에서 스크롤을 내린 채 들어와도 맨 위에서 시작한다
+    useLayoutEffect(() => {
+        window.scrollTo({ top: 0 });
+    }, []);
+
     return (
         <main className="flex flex-col pt-20 pb-28">
             <div className={CONTAINER}>
@@ -26,7 +31,7 @@ export function MissionListPage() {
 
                 <div
                     className={cn(
-                        'mt-7.5 grid gap-x-4 gap-y-10 transition-[grid-template-columns] duration-300',
+                        'mt-7.5 grid gap-x-4 gap-y-10',
                         attendanceExpanded
                             ? 'lg:grid-cols-[885fr_300fr]'
                             : 'lg:grid-cols-[393fr_791fr]',
@@ -54,7 +59,10 @@ export function MissionListPage() {
             */}
             <div className="bg-surface-canvas @container mt-20 overflow-x-clip py-10 [--rail-inset:max(1.5rem,calc((100cqw-75rem)/2+1.5rem))] [--ticket-punch-bg:var(--color-surface-canvas)]">
                 <div className={CONTAINER}>
-                    <GameSection />
+                    <GameRail
+                        title="게임"
+                        caption="게임마다 하루 한 번 응모권을 받을 수 있어요. 매일 오전 9시 초기화"
+                    />
                 </div>
             </div>
 

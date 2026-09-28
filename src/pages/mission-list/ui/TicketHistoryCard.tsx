@@ -4,10 +4,10 @@ import { Fragment, useState } from 'react';
 import { useTicketBalance, useTicketHistory } from '@entities/ticket';
 import { formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
+import { useCountUp } from '@shared/lib/use-count-up';
 import { cn } from '@shared/lib/utils';
 
 import { summarizeMonthlyTickets } from '../lib/monthly-ticket-summary';
-import { useCountUp } from '../lib/use-count-up';
 import { useFreshIds } from '../lib/use-fresh-ids';
 
 function SummaryItem({ label, value }: { label: string; value: number | undefined }) {
@@ -81,32 +81,46 @@ export function TicketHistoryCard({
                     )}
                     {history && history.length > 0 && (
                         <ul>
-                            {history.map((item, index) => (
-                                <Fragment key={item.id}>
-                                    {index > 0 && (
-                                        <li aria-hidden className="bg-border-default h-px" />
-                                    )}
-                                    <li
-                                        className={cn(
-                                            'flex items-center justify-between gap-4 rounded-lg p-4 transition-colors duration-700',
-                                            freshIds.has(item.id) &&
-                                                'bg-ticket-accent motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-3 motion-safe:duration-500',
+                            {history.map((item, index) => {
+                                // 처음 보일 때 내역 줄이 위에서부터 차례로 살짝 올라온다 (보이는 앞쪽 8줄까지만 간격을 둔다)
+                                const enter =
+                                    'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 motion-safe:fill-mode-both';
+                                const enterDelay = {
+                                    animationDelay: `${Math.min(index, 8) * 50}ms`,
+                                };
+                                return (
+                                    <Fragment key={item.id}>
+                                        {index > 0 && (
+                                            <li
+                                                aria-hidden
+                                                className={cn('bg-border-default h-px', enter)}
+                                                style={enterDelay}
+                                            />
                                         )}
-                                    >
-                                        <div className="flex min-w-0 flex-col gap-1">
-                                            <p className="text-body-sm-bold text-fg-primary truncate">
-                                                {item.reason}
-                                            </p>
-                                            <p className="text-caption text-fg-tertiary">
-                                                {formatKst(item.createdAt)}
-                                            </p>
-                                        </div>
-                                        <span className="text-body-bold text-fg-primary shrink-0">
-                                            {item.amount > 0 ? `+${item.amount}` : item.amount}
-                                        </span>
-                                    </li>
-                                </Fragment>
-                            ))}
+                                        <li
+                                            style={freshIds.has(item.id) ? undefined : enterDelay}
+                                            className={cn(
+                                                'flex items-center justify-between gap-4 rounded-lg p-4 transition-colors duration-700',
+                                                freshIds.has(item.id)
+                                                    ? 'bg-ticket-accent motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-3 motion-safe:duration-500'
+                                                    : enter,
+                                            )}
+                                        >
+                                            <div className="flex min-w-0 flex-col gap-1">
+                                                <p className="text-body-sm-bold text-fg-primary truncate">
+                                                    {item.reason}
+                                                </p>
+                                                <p className="text-caption text-fg-tertiary">
+                                                    {formatKst(item.createdAt)}
+                                                </p>
+                                            </div>
+                                            <span className="text-body-bold text-fg-primary shrink-0">
+                                                {item.amount > 0 ? `+${item.amount}` : item.amount}
+                                            </span>
+                                        </li>
+                                    </Fragment>
+                                );
+                            })}
                         </ul>
                     )}
                 </div>
