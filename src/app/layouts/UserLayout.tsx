@@ -1,8 +1,8 @@
-import { CircleUserRound } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
 
 import { useSessionStore } from '@entities/user';
+import { VirtualUserSwitcher } from '@features/switch-virtual-user';
 import { cn } from '@shared/lib/utils';
 import { NotificationBell } from '@widgets/notification-bell';
 
@@ -78,9 +78,7 @@ export function UserLayout() {
                     </nav>
                     <div className="flex items-center gap-4">
                         <NotificationBell />
-                        <NavLink to="/mypage" aria-label="마이페이지">
-                            <CircleUserRound className="text-fg-primary size-6" />
-                        </NavLink>
+                        <VirtualUserSwitcher />
                     </div>
                 </div>
             </header>

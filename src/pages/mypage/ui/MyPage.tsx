@@ -1,18 +1,11 @@
 import { CircleUserRound, Repeat } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 import { useSessionStore } from '@entities/user';
+import { VirtualUserSwitcher } from '@features/switch-virtual-user';
 import { Button } from '@shared/ui/button';
 
 export function MyPage() {
-    const navigate = useNavigate();
     const user = useSessionStore((state) => state.user);
-    const signOut = useSessionStore((state) => state.signOut);
-
-    const handleSwitch = () => {
-        signOut();
-        void navigate('/login', { replace: true });
-    };
 
     return (
         <main className="mx-auto flex w-full max-w-300 flex-col gap-10 px-6 pt-20 pb-28">
@@ -38,10 +31,14 @@ export function MyPage() {
                         </div>
                     </div>
                 )}
-                <Button variant="outline" className="self-start" onClick={handleSwitch}>
-                    <Repeat className="size-4" />
-                    가상 사용자 전환
-                </Button>
+                <VirtualUserSwitcher
+                    trigger={
+                        <Button variant="outline" className="self-start">
+                            <Repeat className="size-4" />
+                            가상 사용자 전환
+                        </Button>
+                    }
+                />
             </section>
         </main>
     );
