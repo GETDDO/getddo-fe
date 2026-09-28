@@ -1,5 +1,6 @@
+import { MotionConfig, motion } from 'framer-motion';
 import { ChevronRight, ChevronUp } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 
 import { cn } from '@shared/lib/utils';
@@ -13,6 +14,7 @@ import {
     toAttendanceDate,
 } from '../lib/attendance-week';
 import { AttendanceBaking } from './AttendanceBaking';
+import { AttendanceBakingStage, BAKING_SPRITE_SRC } from './AttendanceBakingStage';
 import { AttendanceMonthGrid } from './AttendanceMonthGrid';
 import { AttendanceWeekStrip } from './AttendanceWeekStrip';
 
@@ -26,8 +28,8 @@ const LARGE_BUTTON_CLASS = 'text-body-bold! font-semibold h-12 w-full';
 const NEUTRAL_BUTTON_STATE =
     'bg-action-neutral cursor-pointer hover:bg-action-neutral-hover active:bg-action-neutral-pressed active:not-aria-[haspopup]:translate-y-0';
 
-/** 굽는 연출을 최소한 이만큼은 보여준다 — 응답이 빨라도 모션이 깜빡이고 끝나지 않게 */
-const BAKING_MIN_MS = 1500;
+/** 굽기 스프라이트 재생 시간 — 응답이 빨라도 이만큼은 보여주고 끝나면 출석판을 펼친다 */
+const BAKING_MIN_MS = 1600;
 
 /** 펼친 출석판 머리의 출석 버튼·완료 표시·굽는 중 표시가 모두 같은 너비를 쓰도록 고정한다 */
 const COMPACT_CHECK_WIDTH = 'w-32';
@@ -38,6 +40,28 @@ const DEFAULT_BONUS_REWARDS: ReadonlyMap<number, number> = new Map([
     [14, 3],
     [28, 7],
 ]);
+
+/** 카드 안 요소가 위에서부터 차례로 살짝 올라오며 나타난다 (order가 클수록 늦게) */
+function Rise({
+    order,
+    className,
+    children,
+}: {
+    order: number;
+    className?: string;
+    children: ReactNode;
+}) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: order * 0.06, ease: [0.22, 1, 0.36, 1] }}
+            className={className}
+        >
+            {children}
+        </motion.div>
+    );
+}
 
 // 공용 cn은 커스텀 글자 토큰(text-caption 등)과 색 토큰(text-fg-*)을 같은 그룹으로 보고 앞의 것을 지우므로 cn 없이 이어 붙인다
 function AttendanceStat({
@@ -90,7 +114,13 @@ export function AttendanceCheckCard({
     const [baking, setBaking] = useState(false);
     const [revealDate, setRevealDate] = useState<string | null>(null);
 
-    // 굽기 연출(버튼 자리) → 출석판 펼치기 → 오늘 칸에 특별 타코야끼가 올라오는 순서로 보여준다
+    // 출석하기를 누른 순간 스프라이트가 늦게 떠서 깜빡이지 않도록 미리 불러 둔다
+    useEffect(() => {
+        const image = new Image();
+        image.src = BAKING_SPRITE_SRC;
+    }, []);
+
+    // 굽기 스프라이트(카드 전체 또는 출석판 자리) → 출석판 펼치기 → 오늘 칸에 타코야끼가 올라오는 순서로 보여준다
     const handleCheck = async () => {
         setBaking(true);
         try {
@@ -132,9 +162,7 @@ export function AttendanceCheckCard({
         : (status?.checkedDates ?? []);
     const shownCheckedToday = !!status?.checkedToday && !baking;
 
-    const checkButton = baking ? (
-        <AttendanceBaking />
-    ) : status?.checkedToday ? (
+    const checkButton = status?.checkedToday ? (
         <span className="bg-surface-disabled text-fg-disabled text-body-bold flex h-12 w-full items-center justify-center rounded-lg">
             오늘 출석 완료
         </span>
@@ -157,71 +185,110 @@ export function AttendanceCheckCard({
     );
 
     return (
-        <div
-            className={cn(
-                'bg-surface-page border-border-default flex flex-col rounded-2xl border p-4 shadow-md',
-                // 펼치기·접기는 애니메이션 없이 바로 바뀐다 (화면 전체 움직임을 줄이기 위해)
-                expanded ? 'h-auto' : 'h-75',
-                className,
-            )}
-        >
-            {/* 나중에 펼치기 전에 출석 스프라이트 애니메이션이 들어갈 자리다 */}
-            <div className={cn('flex flex-1 flex-col', expanded ? 'gap-4' : 'justify-between')}>
-                {expanded ? (
-                    <div className="flex items-start justify-between gap-4">
-                        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-                            {stats}
-                            {status && compactCheckButton}
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => onExpandedChange(false)}
-                            className="text-body-sm text-fg-primary flex shrink-0 cursor-pointer items-center"
-                        >
-                            접기
-                            <ChevronUp className="size-5" />
-                        </button>
-                    </div>
+        // 운영체제의 동작 줄이기 설정을 켠 사용자에게는 요소 등장 효과를 끈다
+        <MotionConfig reducedMotion="user">
+            <div
+                className={cn(
+                    'bg-surface-page border-border-default flex flex-col rounded-2xl border p-4 shadow-md',
+                    // 펼치기·접기 자체는 높이·폭 애니메이션 없이 바로 바뀐다
+                    expanded ? 'h-auto' : 'h-75',
+                    className,
+                )}
+            >
+                {!expanded && baking ? (
+                    // 접힌 카드에서 출석하기 — 카드 전체가 굽기 장면으로 바뀌었다가 끝나면 출석판이 펼쳐진다
+                    <AttendanceBakingStage durationMs={BAKING_MIN_MS} className="flex-1" />
                 ) : (
-                    <button
-                        type="button"
-                        onClick={() => onExpandedChange(true)}
-                        className="text-body-sm text-fg-primary flex cursor-pointer items-center self-end"
+                    <div
+                        className={cn(
+                            'flex flex-1 flex-col',
+                            expanded ? 'gap-4' : 'justify-between',
+                        )}
                     >
-                        펼쳐보기
-                        <ChevronRight className="size-5" />
-                    </button>
-                )}
+                        {expanded ? (
+                            <Rise order={0} className="flex items-start justify-between gap-4">
+                                <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                                    {stats}
+                                    {status && compactCheckButton}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => onExpandedChange(false)}
+                                    className="text-body-sm text-fg-primary flex shrink-0 cursor-pointer items-center"
+                                >
+                                    접기
+                                    <ChevronUp className="size-5" />
+                                </button>
+                            </Rise>
+                        ) : (
+                            // 펼쳐보기 버튼은 제자리에 그대로 둔다 (등장 효과 없음)
+                            <div className="self-end">
+                                <button
+                                    type="button"
+                                    onClick={() => onExpandedChange(true)}
+                                    className="text-body-sm text-fg-primary flex cursor-pointer items-center"
+                                >
+                                    펼쳐보기
+                                    <ChevronRight className="size-5" />
+                                </button>
+                            </div>
+                        )}
 
-                {isPending && (
-                    <p className="text-body-sm text-fg-tertiary self-center">불러오는 중…</p>
-                )}
-                {isError && (
-                    <p className="text-body-sm text-destructive self-center">
-                        출석 정보를 불러오지 못했습니다.
-                    </p>
-                )}
+                        {isPending && (
+                            <p className="text-body-sm text-fg-tertiary self-center">
+                                불러오는 중…
+                            </p>
+                        )}
+                        {isError && (
+                            <p className="text-body-sm text-destructive self-center">
+                                출석 정보를 불러오지 못했습니다.
+                            </p>
+                        )}
 
-                {status &&
-                    (expanded ? (
-                        <AttendanceMonthGrid
-                            days={buildAttendanceMonth(shownDates, shownCheckedToday, now)}
-                            bonusDays={bonusDays}
-                            bonusRewards={bonusRewards}
-                            revealDate={revealDate}
-                        />
-                    ) : (
-                        <>
-                            <div className="p-4">{stats}</div>
-                            <AttendanceWeekStrip
-                                week={buildAttendanceWeek(shownDates, shownCheckedToday, now)}
-                                bonusDays={bonusDays}
-                            />
-                            {checkButton}
-                        </>
-                    ))}
+                        {status &&
+                            (expanded ? (
+                                baking ? (
+                                    // 펼친 출석판에서 출석하기 — 출석판 자리만 굽기 장면으로 바뀐다
+                                    <AttendanceBakingStage
+                                        durationMs={BAKING_MIN_MS}
+                                        className="bg-surface-canvas min-h-80 rounded-lg"
+                                    />
+                                ) : (
+                                    <Rise order={1}>
+                                        <AttendanceMonthGrid
+                                            days={buildAttendanceMonth(
+                                                shownDates,
+                                                shownCheckedToday,
+                                                now,
+                                            )}
+                                            bonusDays={bonusDays}
+                                            bonusRewards={bonusRewards}
+                                            revealDate={revealDate}
+                                        />
+                                    </Rise>
+                                )
+                            ) : (
+                                <>
+                                    <Rise order={1} className="p-4">
+                                        {stats}
+                                    </Rise>
+                                    <Rise order={2}>
+                                        <AttendanceWeekStrip
+                                            week={buildAttendanceWeek(
+                                                shownDates,
+                                                shownCheckedToday,
+                                                now,
+                                            )}
+                                            bonusDays={bonusDays}
+                                        />
+                                    </Rise>
+                                    <Rise order={3}>{checkButton}</Rise>
+                                </>
+                            ))}
+                    </div>
+                )}
             </div>
-        </div>
+        </MotionConfig>
     );
 }
 
