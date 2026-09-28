@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { useMissionList } from '@entities/mission';
 import { AttendanceCheckCard } from '@features/check-attendance';
 import { cn } from '@shared/lib/utils';
-import { TicketBalanceWidget } from '@widgets/ticket-balance-widget';
 
+import { GameSection } from './GameSection';
 import { MissionCard } from './MissionCard';
 import { SectionHeader } from './SectionHeader';
 import { TicketHistoryCard } from './TicketHistoryCard';
@@ -48,19 +48,13 @@ export function MissionListPage() {
             </div>
 
             {/*
-              회색 띠 위에서는 티켓 펀칭 구멍도 띠 배경색으로 맞춘다.
-              카드 목록은 왼쪽은 콘텐츠 시작선에서 자르고, 오른쪽만 화면 끝까지 열어 스크롤한다(피그마).
+              게임 섹션 — 회색 띠 위에 놓이므로 티켓 구멍도 띠 배경색으로 맞춘다.
+              카드 목록은 왼쪽은 콘텐츠 시작선에서 자르고 오른쪽만 화면 끝까지 열어 스크롤한다(피그마).
               오른쪽으로 늘릴 폭(--rail-inset)은 100cqw로 띠 너비를 재서 스크롤바 폭 오차 없이 계산한다
             */}
             <div className="bg-surface-canvas @container mt-20 overflow-x-clip py-10 [--rail-inset:max(1.5rem,calc((100cqw-75rem)/2+1.5rem))] [--ticket-punch-bg:var(--color-surface-canvas)]">
                 <div className={CONTAINER}>
-                    <TicketBalanceWidget
-                        sortCompletedLast
-                        hideMoreLink
-                        // 호버로 떠오르는 카드와 그림자가 잘리지 않게 위아래 여백을 두고 같은 만큼 당긴다
-                        railClassName="-mr-(--rail-inset) pr-(--rail-inset) -my-3 py-3"
-                        cardClassName="h-90 w-66.25 sm:w-66.25 lg:w-66.25 transition-[translate] duration-200 motion-safe:hover:-translate-y-1"
-                    />
+                    <GameSection />
                 </div>
             </div>
 
