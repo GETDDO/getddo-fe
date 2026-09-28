@@ -1,11 +1,11 @@
+import type { ReactNode } from 'react';
+
 import { Clock, Gift, Ticket, UsersRound } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 import type { Event } from '@entities/event';
 
 import { formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
-import { Button } from '@shared/ui/button';
 
 const TIME_ONLY: Intl.DateTimeFormatOptions = {
     hour: '2-digit',
@@ -13,8 +13,14 @@ const TIME_ONLY: Intl.DateTimeFormatOptions = {
     hour12: false,
 };
 
-/** 타임래플 대표 카드 — 마감이 가장 임박한 진행 중 래플 하나를 크게 노출한다 */
-export function TimeRaffleHero({ event }: { event: Event }) {
+interface TimeRaffleHeroProps {
+    event: Event;
+    /** 하단 CTA — 목록에서는 상세로 보내는 링크, 상세에서는 상태별 응모 버튼이 들어온다 */
+    cta: ReactNode;
+}
+
+/** 타임래플 대표 카드 — 목록의 최상단과 상세 화면 상단에서 같은 모양으로 쓴다 */
+export function TimeRaffleHero({ event, cta }: TimeRaffleHeroProps) {
     const stats = [
         {
             key: 'participants',
@@ -80,9 +86,7 @@ export function TimeRaffleHero({ event }: { event: Event }) {
                     ))}
                 </div>
 
-                <Button asChild variant="secondary" className="text-body-bold h-12 w-full">
-                    <Link to={`/events/${event.id}`}>응모하러 가기</Link>
-                </Button>
+                {cta}
             </div>
         </article>
     );
