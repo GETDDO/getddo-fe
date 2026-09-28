@@ -14,10 +14,10 @@ export function AdminLayout() {
 
     return (
         <div className="bg-surface-canvas flex min-h-screen">
-            <aside className="border-border bg-fg-primary flex w-60 shrink-0 flex-col border-r">
+            <aside className="border-border bg-surface-inverse flex w-60 shrink-0 flex-col border-r">
                 <div className="border-border flex h-16 items-center gap-2 border-b px-5">
                     <img src="/logo.png" alt="logo" className="h-46px w-46px" />
-                    <span className="text-title-3 text-fg-on-brand">
+                    <span className="text-title-3 text-fg-inverse">
                         U <span className="text-fg-brand">+</span> GETDDO
                     </span>
                 </div>
@@ -31,7 +31,7 @@ export function AdminLayout() {
                                 cn(
                                     'text-subhead flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors',
                                     isActive
-                                        ? 'bg-fg-secondary text-fg-on-brand'
+                                        ? 'bg-surface-inverse-muted text-fg-inverse'
                                         : 'text-fg-secondary hover:bg-surface-sunken',
                                 )
                             }

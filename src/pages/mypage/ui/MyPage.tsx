@@ -1,6 +1,7 @@
 import { CircleUserRound, Repeat } from 'lucide-react';
 
 import { useSessionStore } from '@entities/user';
+import { AppearanceSettings } from '@features/appearance-settings';
 import { VirtualUserSwitcher } from '@features/switch-virtual-user';
 import { Button } from '@shared/ui/button';
 
@@ -20,7 +21,7 @@ export function MyPage() {
                             <div className="flex items-center gap-2">
                                 <span className="text-title-3 text-fg-primary">{user.name}</span>
                                 {user.role === 'admin' && (
-                                    <span className="bg-brand-primary text-surface-page rounded-md px-2 py-0.5 text-xs font-medium">
+                                    <span className="bg-brand-primary text-fg-on-brand rounded-md px-2 py-0.5 text-xs font-medium">
                                         관리자
                                     </span>
                                 )}
@@ -40,6 +41,8 @@ export function MyPage() {
                     }
                 />
             </section>
+
+            <AppearanceSettings />
         </main>
     );
 }

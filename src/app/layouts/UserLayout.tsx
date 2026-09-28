@@ -85,7 +85,7 @@ export function UserLayout() {
             <div className="flex-1">
                 <Outlet />
             </div>
-            <footer className="bg-fg-primary text-fg-on-brand">
+            <footer className="bg-surface-inverse text-fg-inverse">
                 <div className="mx-auto flex w-full max-w-300 flex-col gap-2 px-6 py-10">
                     <p className="text-title-3">U+ GETDDO</p>
                     <p className="text-caption text-fg-tertiary">
