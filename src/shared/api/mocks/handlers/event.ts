@@ -24,6 +24,22 @@ function kstAt(dayOffset: number, hour: number): string {
     ).toISOString();
 }
 
+// 상세 화면 안내 문단 — 추첨·차감 정책은 모든 래플이 같아서 공통으로 쓴다
+const DRAW_PARAGRAPH =
+    '마감 직후 추첨이 자동으로 진행되며, 당첨자에게는 개별 알림톡과 무료 직배송 서비스를 지원합니다. 중복 응모는 가능하지만, 당첨 확률은 표시하지 않으며 응모권 사용 여부와 참여 횟수에 따라 당첨 기회가 달라질 수 있습니다.';
+const TICKET_PARAGRAPH =
+    '1회 응모 시 필요한 수량만 차감되며, 중복 요청 시 이중 차감되지 않습니다. 보유 응모권이 부족하면 응모가 제한되며, 응모권 사용 여부와 참여 횟수에 따라 당첨 기회가 달라질 수 있습니다.';
+
+/** 타임래플 상세 화면 안내 — 첫 문단과 상품 구성만 이벤트마다 다르다 */
+function raffleDetail(intro: string, prizeComposition: string) {
+    return {
+        paragraphs: [intro, DRAW_PARAGRAPH, TICKET_PARAGRAPH],
+        prizeComposition,
+        shippingSchedule: '당첨자 발표 후 3 영업일 이내 일괄 발송',
+        membershipNote: '일반/멤버십 구분에 따라 응모 가중치 적용',
+    };
+}
+
 // requiredTickets > 0 은 모은 응모권을 차감해 응모하는 이벤트, 0 은 응모권 없이 참여하는 이벤트다.
 // 이벤트 목록 화면이 이 값으로 위·아래 섹션을 가른다.
 // isTimeRaffle 이 true 면 타임래플 화면에만 노출하고 이벤트 목록에서는 뺀다.
@@ -218,6 +234,10 @@ const mockEvents = [
         endsAt: HERO_ENDS_AT,
         status: 'open',
         isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '본 무너(MOONO) 스페셜 패키지는 오직 U+GETDDO 타임래플 멤버들을 위해 수작업으로 소량 커스텀 제작된 초한정판 굿즈입니다. 무너 고유의 핫핑크 아이덴티티에 세련된 메탈릭 코팅이 더해져 희소성을 강조했습니다.',
+            '무너 커스텀 메탈릭 피규어 1종 + 아크릴 디스플레이 케이스 + 인증 카드',
+        ),
         requiredTickets: 1,
         tags: ['한정 굿즈'],
         prizeName: '무너 한정 굿즈 세트',
@@ -236,6 +256,10 @@ const mockEvents = [
         endsAt: kstAt(0, 22),
         status: 'open',
         isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '정해진 한 시간 동안만 열리는 래플입니다. 국내 정식 발매 구성 그대로, 개봉하지 않은 새 제품을 단 한 분께 드립니다.',
+            '닌텐도 스위치 2 본체 + 조이콘 2 + 전용 캐리 파우치',
+        ),
         requiredTickets: 1,
         tags: ['디지털기기'],
         prizeName: '닌텐도 스위치 2',
@@ -253,6 +277,10 @@ const mockEvents = [
         endsAt: kstAt(0, 22),
         status: 'open',
         isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '소음이 많은 출퇴근길에서도 몰입할 수 있는 노이즈 캔슬링 이어폰입니다. 정품 등록까지 마친 새 제품으로 보내드립니다.',
+            '에어팟 프로 3 본체 + 충전 케이스 + 실리콘 팁 3종',
+        ),
         requiredTickets: 2,
         tags: ['디지털기기'],
         prizeName: '에어팟 프로 3',
@@ -271,6 +299,10 @@ const mockEvents = [
         endsAt: kstAt(0, 22),
         status: 'open',
         isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '무너와 친구들을 한 번에 만날 수 있는 인형 세트입니다. 이번 시즌 생산분으로만 구성했고 추가 제작 계획은 없습니다.',
+            '무너와 친구들 인형 4종 + 전용 보관 파우치',
+        ),
         requiredTickets: 1,
         tags: ['한정 굿즈'],
         prizeName: '무너 인형 4종 세트',
@@ -288,6 +320,10 @@ const mockEvents = [
         endsAt: kstAt(0, 21),
         status: 'upcoming',
         isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '필기와 영상 작업을 한 대로 끝낼 수 있는 태블릿입니다. 정품 스마트 폴리오를 함께 드립니다.',
+            '아이패드 에어 M3 11형 128GB + 정품 스마트 폴리오',
+        ),
         requiredTickets: 3,
         tags: ['디지털기기'],
         prizeName: '아이패드 에어 M3',
@@ -305,6 +341,10 @@ const mockEvents = [
         endsAt: kstAt(0, 22),
         status: 'upcoming',
         isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '가방이나 파우치에 달기 좋은 무너 키링 6종 세트입니다. 컬렉터 카드가 함께 들어갑니다.',
+            '무너 아크릴 키링 6종 + 컬렉터 카드',
+        ),
         requiredTickets: 1,
         tags: ['한정 굿즈'],
         prizeName: '무너 키링 6종 세트',
@@ -322,6 +362,10 @@ const mockEvents = [
         endsAt: kstAt(0, 23),
         status: 'upcoming',
         isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '자리를 옮겨 가며 볼 수 있는 무빙 스크린입니다. 전용 스탠드까지 함께 드립니다.',
+            'LG 스탠바이미 2 본체 + 전용 무빙 스탠드',
+        ),
         requiredTickets: 3,
         tags: ['디지털기기'],
         prizeName: 'LG 스탠바이미 2',
@@ -339,6 +383,10 @@ const mockEvents = [
         endsAt: kstAt(-1, 12),
         status: 'closed',
         isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '운동과 수면 기록을 함께 챙길 수 있는 스마트워치입니다. 추가 스트랩을 함께 드렸습니다.',
+            '갤럭시 워치8 40mm + 추가 스트랩 1종',
+        ),
         requiredTickets: 2,
         tags: ['디지털기기'],
         prizeName: '갤럭시 워치8',
@@ -356,6 +404,10 @@ const mockEvents = [
         endsAt: kstAt(-1, 14),
         status: 'closed',
         isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '무너 시즌 굿즈를 한 상자에 담았습니다. 머그컵과 에코백은 이번 시즌에만 제작된 구성입니다.',
+            '무너 머그컵 + 스티커 팩 + 에코백',
+        ),
         requiredTickets: 1,
         tags: ['한정 굿즈'],
         prizeName: '무너 시즌 굿즈 박스',
@@ -373,6 +425,10 @@ const mockEvents = [
         endsAt: kstAt(-1, 16),
         status: 'closed',
         isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '열 손상을 줄이며 스타일링할 수 있는 멀티 스타일러입니다. 전용 케이스를 함께 드렸습니다.',
+            '다이슨 에어랩 멀티 스타일러 + 전용 케이스',
+        ),
         requiredTickets: 3,
         tags: ['한정 굿즈'],
         prizeName: '다이슨 에어랩',
@@ -390,6 +446,10 @@ const mockEvents = [
         endsAt: kstAt(-1, 18),
         status: 'drawn',
         isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '업계 최고 수준의 노이즈 캔슬링 헤드폰입니다. 장거리 이동에 쓸 수 있는 항공 어댑터를 함께 드렸습니다.',
+            '소니 WH-1000XM6 본체 + 하드 케이스 + 항공 어댑터',
+        ),
         requiredTickets: 2,
         tags: ['디지털기기'],
         prizeName: '소니 WH-1000XM6',
@@ -407,6 +467,10 @@ const mockEvents = [
         endsAt: kstAt(-1, 20),
         status: 'drawn',
         isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '겨울 시즌 한정으로 제작한 무너 극세사 담요입니다. 보관 파우치가 함께 들어갑니다.',
+            '무너 극세사 담요 1종 + 보관 파우치',
+        ),
         requiredTickets: 1,
         tags: ['한정 굿즈'],
         prizeName: '무너 한정 담요',
@@ -424,6 +488,10 @@ const mockEvents = [
         endsAt: kstAt(-1, 22),
         status: 'drawn',
         isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '텀블러와 원두를 함께 담은 럭키백입니다. 리유저블 컵이 함께 들어갑니다.',
+            '스타벅스 텀블러 + 드립백 원두 세트 + 리유저블 컵',
+        ),
         requiredTickets: 1,
         tags: ['한정 굿즈'],
         prizeName: '스타벅스 럭키백',

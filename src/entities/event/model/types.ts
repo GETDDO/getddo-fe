@@ -18,6 +18,16 @@ export const eventSchema = z.object({
     // 정해진 시간에만 열리는 한정 굿즈 래플 — 타임래플 화면에만 노출하고 이벤트 목록에서는 뺀다.
     // TODO: 이벤트 유형 구분 방식은 백엔드와 미합의 (getddo-spec 02-domain/event.md에 유형 정의 없음)
     isTimeRaffle: z.boolean().optional(),
+    // 타임래플 상세 화면의 안내 문구 — 운영자가 이벤트마다 작성하는 값이라 계산으로 만들 수 없다.
+    // TODO: 필드 구성은 백엔드와 미합의. 없으면 상세 화면이 기본값으로 대체한다.
+    raffleDetail: z
+        .object({
+            paragraphs: z.array(z.string()),
+            prizeComposition: z.string(),
+            shippingSchedule: z.string(),
+            membershipNote: z.string(),
+        })
+        .optional(),
     requiredTickets: z.number().int().nonnegative(),
     // 카드 태그 칩 (예: "멤버십 혜택") — 없으면 칩 미노출
     tags: z.array(z.string()).optional(),

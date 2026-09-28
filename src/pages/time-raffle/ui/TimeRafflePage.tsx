@@ -1,4 +1,7 @@
+import { Link } from 'react-router-dom';
+
 import { useEventList } from '@entities/event';
+import { Button } from '@shared/ui/button';
 
 import { TimeRaffleHero } from './TimeRaffleHero';
 import { TimeRaffleSection } from './TimeRaffleSection';
@@ -43,7 +46,20 @@ export function TimeRafflePage() {
                     정해진 시간에만 열리는 한정 굿즈 래플입니다. 응모권을 사용해 당첨 기회를
                     높이세요.
                 </p>
-                {featured && <TimeRaffleHero event={featured} />}
+                {featured && (
+                    <TimeRaffleHero
+                        event={featured}
+                        cta={
+                            <Button
+                                asChild
+                                variant="secondary"
+                                className="text-body-bold h-12 w-full"
+                            >
+                                <Link to={`/time-raffle/${featured.id}`}>응모하러 가기</Link>
+                            </Button>
+                        }
+                    />
+                )}
             </div>
 
             <div className="mt-20 flex flex-col gap-20">
