@@ -18,6 +18,7 @@ import { AttendanceWeekStrip } from './AttendanceWeekStrip';
 
 // shared/ui/button의 cn이 커스텀 타이포 토큰(text-body-bold)을 text-sm과 같은 그룹으로 인식하지 못해,
 // 버튼 기본 text-sm이 남지 않도록 important로 덮는다
+// 디자인 시스템 버튼 크기는 Small 36 · Medium 40 · Large 48 고정 (Medium·Large 글자 16px SemiBold)
 const LARGE_BUTTON_CLASS = 'text-body-bold! font-semibold h-12 w-full';
 
 // 공용 Button(secondary)의 기본 호버·누름은 디자인 시스템과 달라(임의 호버색, 누름색 없음, 누를 때 1px 내려감)
@@ -111,14 +112,14 @@ export function AttendanceCheckCard({
         <AttendanceBaking compact />
     ) : status?.checkedToday ? (
         <span
-            className={`bg-surface-disabled text-fg-disabled text-body-sm-bold flex h-10 shrink-0 items-center justify-center rounded-lg ${COMPACT_CHECK_WIDTH}`}
+            className={`bg-surface-disabled text-fg-disabled text-body-bold flex h-10 shrink-0 items-center justify-center rounded-lg ${COMPACT_CHECK_WIDTH}`}
         >
             오늘 출석 완료
         </span>
     ) : (
         <Button
             variant="secondary"
-            className={`text-body-sm-bold! h-10 shrink-0 font-semibold ${COMPACT_CHECK_WIDTH} ${NEUTRAL_BUTTON_STATE}`}
+            className={`text-body-bold! h-10 shrink-0 font-semibold ${COMPACT_CHECK_WIDTH} ${NEUTRAL_BUTTON_STATE}`}
             onClick={() => void handleCheck()}
         >
             출석하기

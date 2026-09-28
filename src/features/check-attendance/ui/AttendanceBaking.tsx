@@ -21,7 +21,10 @@ export function AttendanceBaking({ compact = false }: { compact?: boolean }) {
                     <img src={BASIC_MASCOT.src} alt="" className={cn('size-full object-contain')} />
                 </span>
             </span>
-            <span className="text-body-sm-bold text-fg-primary">타코야끼 굽는 중…</span>
+            {/* Medium(40)·Large(48) 버튼 자리라 글자는 16px. 작은 자리(128px)에서는 넘치지 않게 문구를 줄인다 */}
+            <span className="text-body-bold text-fg-primary whitespace-nowrap">
+                {compact ? '굽는 중…' : '타코야끼 굽는 중…'}
+            </span>
         </div>
     );
 }

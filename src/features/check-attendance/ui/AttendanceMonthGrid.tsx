@@ -22,7 +22,7 @@ const RECOVER_MS = 700;
  *   · 출석하지 않은 날(지난날·오늘·앞으로 올 날): 흐린 회색 반죽 + 날짜 — 모든 칸이 반죽에서 시작한다
  *   · 숫자가 있는 칸 = 아직 채우지 못한 날, 숫자 없이 캐릭터만 있는 칸 = 출석한 날
  * - 연속 출석 보상일(관리자 정책)은 보상 캐릭터 (출석 전 회색 → 출석하면 원본)
- * - 판 위쪽에 작은 태그를 단다: 오늘은 가운데 '오늘'(응모권 노랑), 보상일은 오른쪽 위 '+N'(옅은 회색, 추가 응모권 수)
+ * - 판 오른쪽 위에 작은 태그를 단다: '오늘'(응모권 노랑), 보상일 '+N'(옅은 회색). 둘 다면 한 알약으로 이어 붙인다
  * - 출석한 타코야끼를 누르면 뒤집히고, 너무 많이 누르면 잠깐 어지러워했다가 스르르 돌아온다
  */
 export function AttendanceMonthGrid({
@@ -81,22 +81,25 @@ export function AttendanceMonthGrid({
                         aria-current={day.isToday ? 'date' : undefined}
                         className="bg-border-default relative flex aspect-square w-full max-w-14 items-center justify-center justify-self-center rounded-full shadow-[inset_0_3px_6px_0_rgb(18_22_27_/_0.1)]"
                     >
-                        {/* 오늘 태그 — 판 위쪽 가운데에 걸친다 (응모권 노랑) */}
-                        {day.isToday && (
+                        {/*
+                          판 오른쪽 위 태그 — 오늘(응모권 노랑)과 보상일 추가 응모권 수(옅은 회색).
+                          둘 다 있는 날은 겹치지 않게 한 알약 모양으로 이어 붙인다 (왼쪽 오늘, 오른쪽 +N)
+                        */}
+                        {(day.isToday || bonusTickets != null) && (
                             <span
                                 aria-hidden
-                                className="bg-ticket-primary text-ticket-on text-caption pointer-events-none absolute -top-2 left-1/2 z-10 -translate-x-1/2 rounded-full px-1.5 leading-4 whitespace-nowrap shadow-sm"
+                                className="text-caption pointer-events-none absolute -top-2 -right-1 z-10 flex overflow-hidden rounded-full leading-4 whitespace-nowrap shadow-sm"
                             >
-                                오늘
-                            </span>
-                        )}
-                        {/* 보상일 태그 — 판 오른쪽 위에 붙는다 (옅은 회색, 추가 응모권 수) */}
-                        {bonusTickets != null && (
-                            <span
-                                aria-hidden
-                                className="bg-border-strong text-fg-secondary text-caption pointer-events-none absolute -top-2 -right-1 z-10 rounded-full px-1.5 leading-4 whitespace-nowrap"
-                            >
-                                +{bonusTickets}
+                                {day.isToday && (
+                                    <span className="bg-ticket-primary text-ticket-on px-1.5">
+                                        오늘
+                                    </span>
+                                )}
+                                {bonusTickets != null && (
+                                    <span className="bg-border-strong text-fg-secondary px-1.5">
+                                        +{bonusTickets}
+                                    </span>
+                                )}
                             </span>
                         )}
                         {day.checked || isBonus ? (
