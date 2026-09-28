@@ -1,3 +1,4 @@
+import { abuseHandlers } from './abuse';
 import { attendanceHandlers } from './attendance';
 import { bannerHandlers } from './banner';
 import { drawHandlers } from './draw';
@@ -9,6 +10,7 @@ import { notificationHandlers } from './notification';
 import { ticketHandlers } from './ticket';
 
 export const handlers = [
+    ...abuseHandlers,
     ...attendanceHandlers,
     ...bannerHandlers,
     ...drawHandlers,
