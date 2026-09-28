@@ -1,1 +1,1 @@
-export { useAttendanceStatus } from './queries';
+export { useAttendancePolicy, useAttendanceStatus, useCheckAttendance } from './queries';
