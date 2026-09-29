@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 
+import { VirtualClockTicker } from '@features/control-virtual-clock';
 import { cn } from '@shared/lib/utils';
 
 import { ADMIN_NAV_ITEMS } from '../model/nav-items';
@@ -53,6 +54,7 @@ export function AdminLayout() {
             <div className="flex min-w-0 flex-1 flex-col">
                 <header className="border-border bg-surface-elevated flex h-16 items-center border-b px-8">
                     <h1 className="text-title-3">{current?.label ?? '관리자'}</h1>
+                    <VirtualClockTicker className="ml-auto hidden md:flex" />
                 </header>
                 {/* 사이드바가 숨겨지는 md 미만에서는 가로 스크롤 탭으로 같은 이동 경로를 제공한다 */}
                 <nav
