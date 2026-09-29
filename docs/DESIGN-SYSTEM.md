@@ -148,7 +148,7 @@ _(Figma 원본 섹션 라벨은 "2. Button — 버튼"이며, 토큰 이름은 `
 
 ### 화면 설정 (마이페이지)
 
-- 테마: `next-themes`가 `localStorage`에 유지 — 시스템/라이트/다크 중 선택, 기본은 시스템을 따른다.
+- 테마: `next-themes`가 `localStorage`에 유지 — 시스템/라이트/다크 중 선택, 기본은 라이트다 (`defaultTheme="light"` — OS 다크가 자동 적용되지 않는다).
 - 큰글씨 모드: `html[data-text-scale='large']`로 루트 `font-size`를 120%로 올린다 — rem 기반 유틸리티에 자동 적용되고, 상태는 `getddo-ui-settings` persist 스토어에 유지된다.
 
 ### 미정 사항

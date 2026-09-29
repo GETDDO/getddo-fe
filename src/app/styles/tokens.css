@@ -37,12 +37,15 @@
     --color-surface-sunken: #f1f3f5;
     --color-surface-pressed: #e4e7ea;
     --color-surface-disabled: #e9ebee;
-    --color-surface-overlay: #12161b80;
+    --color-surface-overlay: rgb(from var(--color-ink) r g b / 0.5);
 
     /* Inverse — 라이트·다크 공통으로 어두운 크롬(푸터·관리자 사이드바)에 쓰는 고정값. 테마에 따라 뒤집히지 않는다 */
     --color-surface-inverse: #1f242b;
     --color-surface-inverse-muted: #343a42;
     --color-fg-inverse: #f4f5f7;
+
+    /* Ink — 그림자·오버레이에 쓰는 고정 검정. 다크에서도 어두움을 유지해야 하므로 테마로 뒤집지 않는다 */
+    --color-ink: #12161b;
 
     /* Border */
     --color-border-default: #e4e7ea;
@@ -97,10 +100,16 @@
     --radius-xl: 12px;
     --radius-2xl: 16px;
 
-    /* Shadow */
-    --shadow-md: 0 4px 6px rgb(18 22 27 / 0.08), 0 2px 4px rgb(18 22 27 / 0.06);
-    --shadow-lg: 0 10px 15px rgb(18 22 27 / 0.08), 0 4px 6px rgb(18 22 27 / 0.06);
-    --shadow-xl: 0 4px 25px rgb(18 22 27 / 0.1), 0 8px 10px rgb(18 22 27 / 0.06);
+    /* Shadow — 색은 ink 토큰 참조로 단일화 */
+    --shadow-md:
+        0 4px 6px rgb(from var(--color-ink) r g b / 0.08),
+        0 2px 4px rgb(from var(--color-ink) r g b / 0.06);
+    --shadow-lg:
+        0 10px 15px rgb(from var(--color-ink) r g b / 0.08),
+        0 4px 6px rgb(from var(--color-ink) r g b / 0.06);
+    --shadow-xl:
+        0 4px 25px rgb(from var(--color-ink) r g b / 0.1),
+        0 8px 10px rgb(from var(--color-ink) r g b / 0.06);
 
     /* Font */
     --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, 'Segoe UI', sans-serif;
@@ -221,8 +230,14 @@
         rgb(255 77 163 / 0.22) 100%
     );
 
-    /* Shadow — 다크 배경에서는 더 진한 그림자 */
-    --shadow-md: 0 4px 6px rgb(0 0 0 / 0.4), 0 2px 4px rgb(0 0 0 / 0.3);
-    --shadow-lg: 0 10px 15px rgb(0 0 0 / 0.4), 0 4px 6px rgb(0 0 0 / 0.3);
-    --shadow-xl: 0 4px 25px rgb(0 0 0 / 0.5), 0 8px 10px rgb(0 0 0 / 0.3);
+    /* Shadow — 다크 배경에서는 더 진한 그림자 (색은 동일하게 ink 참조) */
+    --shadow-md:
+        0 4px 6px rgb(from var(--color-ink) r g b / 0.4),
+        0 2px 4px rgb(from var(--color-ink) r g b / 0.3);
+    --shadow-lg:
+        0 10px 15px rgb(from var(--color-ink) r g b / 0.4),
+        0 4px 6px rgb(from var(--color-ink) r g b / 0.3);
+    --shadow-xl:
+        0 4px 25px rgb(from var(--color-ink) r g b / 0.5),
+        0 8px 10px rgb(from var(--color-ink) r g b / 0.3);
 }

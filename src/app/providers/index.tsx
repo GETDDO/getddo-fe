@@ -27,7 +27,7 @@ export function AppProviders() {
     return (
         <QueryClientProvider client={queryClient}>
             <ReduxProvider store={store}>
-                <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
                     <VirtualClockProvider>
                         <TextScaleSync />
                         <RouterProvider router={router} />
