@@ -24,7 +24,11 @@ function parseKstLocal(value: string): Date | null {
     if (!m) return null;
     const [ys, mos, ds, hs, mis] = m.slice(1);
     if (!ys || !mos || !ds || !hs || !mis) return null;
-    const at = new Date(Date.UTC(+ys, +mos - 1, +ds, +hs, +mis) - KST_OFFSET_MS);
+    // Date.UTC는 연도 0–99를 1900+n으로 해석하므로 setUTCFullYear로 입력 연도를 그대로 둔다
+    const d = new Date(0);
+    d.setUTCFullYear(+ys, +mos - 1, +ds);
+    d.setUTCHours(+hs, +mis, 0, 0);
+    const at = new Date(d.getTime() - KST_OFFSET_MS);
     return Number.isNaN(at.getTime()) ? null : at;
 }
 
