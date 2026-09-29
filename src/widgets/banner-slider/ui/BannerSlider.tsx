@@ -32,6 +32,12 @@ export function BannerSlider({
     // 마감 판정이 아닌 화면 표시 전용 카운트다운이므로 가상 시계의 시각을 쓴다
     const clock = useVirtualClock();
     const [now, setNow] = useState(() => clock.now());
+    // 가상 시계 오버라이드가 바뀌면 렌더 단계에서 즉시 갱신한다 (effect setState는 lint 금지)
+    const [lastClock, setLastClock] = useState(clock);
+    if (lastClock !== clock) {
+        setLastClock(clock);
+        setNow(clock.now());
+    }
 
     useEffect(() => {
         const timer = setInterval(() => setNow(clock.now()), 1000);
