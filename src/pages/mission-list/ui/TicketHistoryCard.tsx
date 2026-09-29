@@ -5,6 +5,7 @@ import { useTicketBalance, useTicketHistory } from '@entities/ticket';
 import { formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { cn } from '@shared/lib/utils';
+import { useVirtualClock } from '@shared/lib/virtual-clock';
 
 import { summarizeMonthlyTickets } from '../lib/monthly-ticket-summary';
 import { useCountUp } from '../lib/use-count-up';
@@ -32,8 +33,9 @@ export function TicketHistoryCard({
 }) {
     const { data: balance } = useTicketBalance();
     const { data: history, isPending, isError } = useTicketHistory();
-    // pages에서는 app/virtual-clock을 참조할 수 없다 — 이번 달 판정은 표시용이므로 마운트 시각을 쓴다
-    const [now] = useState(() => new Date());
+    // 이번 달 판정은 표시용이므로 마운트 시각을 쓴다
+    const clock = useVirtualClock();
+    const [now] = useState(() => clock.now());
     const monthly = history ? summarizeMonthlyTickets(history, now) : undefined;
     // 출석 등으로 응모권을 받으면 숫자가 굴러 올라가고, 새 내역이 위에서 들어오며 잠깐 강조된다
     const balanceDisplay = useCountUp(balance?.balance);

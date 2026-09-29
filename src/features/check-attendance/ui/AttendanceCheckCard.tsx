@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { cn } from '@shared/lib/utils';
+import { useVirtualClock } from '@shared/lib/virtual-clock';
 import { Button } from '@shared/ui/button';
 
 import { useAttendancePolicy, useAttendanceStatus, useCheckAttendance } from '../api/queries';
@@ -84,8 +85,9 @@ export function AttendanceCheckCard({
         ? new Map(policy.streakBonuses.map((bonus) => [bonus.days, bonus.rewardTickets]))
         : DEFAULT_BONUS_REWARDS;
     const bonusDays: ReadonlySet<number> = new Set(bonusRewards.keys());
-    // features에서는 app/virtual-clock을 참조할 수 없다 — 출석 판정은 서버가 하고, 여기서는 표시용 날짜 계산에만 쓴다
-    const [now] = useState(() => new Date());
+    // 출석 판정은 서버가 하고, 여기서는 표시용 날짜 계산에만 쓴다
+    const clock = useVirtualClock();
+    const [now] = useState(() => clock.now());
     const today = toAttendanceDate(now);
     const [baking, setBaking] = useState(false);
     const [revealDate, setRevealDate] = useState<string | null>(null);

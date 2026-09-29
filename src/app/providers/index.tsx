@@ -7,7 +7,7 @@ import { useUiSettingsStore } from '@shared/lib/ui-settings';
 import { Toaster } from '@shared/ui/sonner';
 
 import { router } from '../routes';
-import { VirtualClockProvider } from '../virtual-clock';
+import { VirtualClockProvider } from './VirtualClockProvider';
 
 // 큰글씨 모드 — 스토어 값을 html data-text-scale 속성에 동기화 (globals.css에서 스케일 적용)
 function TextScaleSync() {

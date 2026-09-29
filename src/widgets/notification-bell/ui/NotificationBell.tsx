@@ -5,13 +5,14 @@ import {
     useMarkNotificationRead,
     useNotificationList,
 } from '@entities/notification';
+import { useVirtualClock } from '@shared/lib/virtual-clock';
 import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
 
 export function NotificationBell() {
     const { data: notifications } = useNotificationList();
     const { mutate: markRead } = useMarkNotificationRead();
-    // FSD 경계상 app/virtual-clock은 widgets에서 참조할 수 없다 — 알림 목록의 상대 시간 표시 전용이라 실제 시각을 직접 쓴다
-    const now = new Date();
+    // 알림 목록의 상대 시간 표시 전용이다
+    const now = useVirtualClock().now();
 
     const unreadCount = notifications?.filter((notification) => !notification.read).length ?? 0;
 
