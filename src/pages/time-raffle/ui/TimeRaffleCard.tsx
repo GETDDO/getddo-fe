@@ -6,6 +6,7 @@ import type { Event } from '@entities/event';
 
 import { formatKst, isSameKstDate } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
+import { useVirtualClock } from '@shared/lib/virtual-clock';
 import { Button } from '@shared/ui/button';
 
 const TIME_ONLY: Intl.DateTimeFormatOptions = {
@@ -19,8 +20,9 @@ const MONTH_DAY: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric' };
 const CHIP = 'text-caption bg-surface-sunken text-fg-secondary rounded-full px-2.5 py-0.5';
 
 export function TimeRaffleCard({ event }: { event: Event }) {
-    // pages에서는 app/virtual-clock을 참조할 수 없다 — '오늘' 판정이 아니라 오픈 시각 표기 전용이므로 마운트 시각을 쓴다
-    const [now] = useState(() => new Date());
+    // '오늘' 판정이 아니라 오픈 시각 표기 전용이므로 마운트 시각을 쓴다
+    const clock = useVirtualClock();
+    const [now] = useState(() => clock.now());
 
     const isOpen = event.status === 'open';
     const openTime = formatKst(event.startsAt, TIME_ONLY);

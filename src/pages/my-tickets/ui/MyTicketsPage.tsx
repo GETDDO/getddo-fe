@@ -3,14 +3,15 @@ import { Ticket } from 'lucide-react';
 import { TicketHistoryItem, useTicketBalance, useTicketHistory } from '@entities/ticket';
 import { formatKst, kstNextMonthStart } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
+import { useVirtualClock } from '@shared/lib/virtual-clock';
 
 export function MyTicketsPage() {
     const { data: balance, isPending: balancePending, isError: balanceError } = useTicketBalance();
     const { data: history, isPending: historyPending, isError: historyError } = useTicketHistory();
 
-    // pages에서는 app/virtual-clock을 참조할 수 없다 — 만료 일시 표시 전용이므로 마운트 시각을 쓴다
     // 일반 지급분의 만료 시각은 다음 달 1일 00:00 KST (getddo-spec ticket.md)
-    const expiryAt = kstNextMonthStart(new Date());
+    const clock = useVirtualClock();
+    const expiryAt = kstNextMonthStart(clock.now());
     const expiryLabel = `${formatKst(expiryAt, { month: 'long', day: 'numeric' })} 00:00(KST)`;
     const sortedHistory = [...(history ?? [])].sort((a, b) =>
         b.createdAt.localeCompare(a.createdAt),

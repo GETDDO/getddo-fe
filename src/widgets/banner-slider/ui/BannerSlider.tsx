@@ -9,6 +9,7 @@ import type { Event } from '@entities/event';
 
 import { useEventList } from '@entities/event';
 import { formatCountdown } from '@shared/lib/date';
+import { useVirtualClock } from '@shared/lib/virtual-clock';
 import { Button } from '@shared/ui/button';
 
 const AUTO_SLIDE_MS = 5000;
@@ -28,13 +29,14 @@ export function BannerSlider({
     const [manualPaused, setManualPaused] = useState(false);
     // 동작 줄이기 설정 사용자에게는 자동 슬라이드를 켜지 않는다
     const reduceMotion = useReducedMotion();
-    // FSD 경계상 app/virtual-clock은 widgets에서 참조할 수 없다 — 마감 판정이 아닌 화면 표시 전용 카운트다운이므로 여기서는 실제 시각을 직접 쓴다
-    const [now, setNow] = useState(() => new Date());
+    // 마감 판정이 아닌 화면 표시 전용 카운트다운이므로 가상 시계의 시각을 쓴다
+    const clock = useVirtualClock();
+    const [now, setNow] = useState(() => clock.now());
 
     useEffect(() => {
-        const timer = setInterval(() => setNow(new Date()), 1000);
+        const timer = setInterval(() => setNow(clock.now()), 1000);
         return () => clearInterval(timer);
-    }, []);
+    }, [clock]);
 
     const slides = useMemo(
         () =>

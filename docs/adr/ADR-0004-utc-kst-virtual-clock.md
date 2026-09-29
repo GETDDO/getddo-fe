@@ -11,7 +11,7 @@
 
 - 서버와는 UTC ISO 8601 문자열로만 주고받는다
 - 화면 표시와 날짜 비교는 `shared/lib/date`의 KST 함수(`formatKst`, `isSameKstDate`)로만 처리한다
-- 시간 판정 로직의 "지금"은 `useVirtualClock().now()`(`app/virtual-clock`)에서 가져온다 — 관리자가 `setOverride`로 시각을 오버라이드할 수 있다
+- 시간 판정 로직의 "지금"은 `useVirtualClock().now()`에서 가져온다 — 관리자가 `setOverride`로 시각을 오버라이드할 수 있다 (2026-09-29 이동: `app/virtual-clock` → `shared/lib/virtual-clock.tsx` — FSD 경계상 `app`에 두면 하위 레이어가 사용할 수 없었다)
 - **업무 기준일·기준월은 KST(Asia/Seoul)다** — 출석·게임 보상은 매일 00:00 KST에, 연속 출석·응모권 귀속월·만료는 매월 1일 00:00 KST 경계로 초기화된다 (공용 명세 "공통 시간 기준과 화면 표시", `../getddo-spec/00-requirements/functional-requirements.md`). 저장·비교는 UTC, 표시·관리자 입력 해석은 KST다
 - 마감·발표 판정은 서버 책임이다 — 클라이언트 시각으로 마감·발표 여부를 판정해 요청을 막거나 결과를 노출하지 않는다. 발표 카운트다운은 서버 발표 예정 시각 기준이다
 
