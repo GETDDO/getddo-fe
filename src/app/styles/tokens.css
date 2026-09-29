@@ -37,7 +37,15 @@
     --color-surface-sunken: #f1f3f5;
     --color-surface-pressed: #e4e7ea;
     --color-surface-disabled: #e9ebee;
-    --color-surface-overlay: #12161b80;
+    --color-surface-overlay: rgb(from var(--color-ink) r g b / 0.5);
+
+    /* Inverse — 라이트·다크 공통으로 어두운 크롬(푸터·관리자 사이드바)에 쓰는 고정값. 테마에 따라 뒤집히지 않는다 */
+    --color-surface-inverse: #1f242b;
+    --color-surface-inverse-muted: #343a42;
+    --color-fg-inverse: #f4f5f7;
+
+    /* Ink — 그림자·오버레이에 쓰는 고정 검정. 다크에서도 어두움을 유지해야 하므로 테마로 뒤집지 않는다 */
+    --color-ink: #12161b;
 
     /* Border */
     --color-border-default: #e4e7ea;
@@ -92,10 +100,16 @@
     --radius-xl: 12px;
     --radius-2xl: 16px;
 
-    /* Shadow */
-    --shadow-md: 0 4px 6px rgb(18 22 27 / 0.08), 0 2px 4px rgb(18 22 27 / 0.06);
-    --shadow-lg: 0 10px 15px rgb(18 22 27 / 0.08), 0 4px 6px rgb(18 22 27 / 0.06);
-    --shadow-xl: 0 4px 25px rgb(18 22 27 / 0.1), 0 8px 10px rgb(18 22 27 / 0.06);
+    /* Shadow — 색은 ink 토큰 참조로 단일화 */
+    --shadow-md:
+        0 4px 6px rgb(from var(--color-ink) r g b / 0.08),
+        0 2px 4px rgb(from var(--color-ink) r g b / 0.06);
+    --shadow-lg:
+        0 10px 15px rgb(from var(--color-ink) r g b / 0.08),
+        0 4px 6px rgb(from var(--color-ink) r g b / 0.06);
+    --shadow-xl:
+        0 4px 25px rgb(from var(--color-ink) r g b / 0.1),
+        0 8px 10px rgb(from var(--color-ink) r g b / 0.06);
 
     /* Font */
     --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, 'Segoe UI', sans-serif;
@@ -143,4 +157,87 @@
     --text-caption: 0.75rem;
     --text-caption--line-height: 1.125rem;
     --text-caption--font-weight: 500;
+}
+
+/*
+ * Dark 토큰 값 — 시맨틱 변수(--background 등)는 :root에서 var(--color-*) 참조라
+ * 여기서 --color-*만 재정의하면 globals.css의 시맨틱 매핑이 자동으로 따라간다.
+ * 브랜드·차트 강조색은 라이트와 동일하게 유지하고, 배경·전경·보더·soft 계열만 어둡게 재지정한다.
+ */
+.dark {
+    /* Brand — soft 배경만 다크용으로, 본체는 동일 */
+    --color-brand-soft: #46203a;
+
+    /* Action — 다크에서는 선언된 중립 램프(#343a42→#4b525c)의 밝은 무채색 버튼 (텍스트는 fg-on-brand #fff 유지) */
+    --color-action-neutral: #343a42;
+    --color-action-neutral-hover: #4b525c;
+    --color-action-neutral-pressed: #262b33;
+
+    /* Ticket — soft 배경만 다크용 */
+    --color-ticket-accent: #453815;
+
+    /* Play — soft 파스텔 배경만 다크용 (일러스트 본체 색은 유지) */
+    --color-play-yellow-soft: #453815;
+    --color-play-pink-soft: #46203a;
+    --color-play-lavender-soft: #2d2347;
+
+    /* Surface — 라이트의 fg/action 중립 램프(#1f242b 계열)에 앵커해 한 단계 밝은 다크 */
+    --color-surface-page: #1f242b;
+    --color-surface-canvas: #1a1e24;
+    --color-surface-elevated: #2b323c;
+    --color-surface-sunken: #232930;
+    --color-surface-pressed: #343a42;
+    --color-surface-disabled: #262b33;
+    --color-surface-overlay: #000000b3;
+
+    /* Border */
+    --color-border-default: #343a42;
+    --color-border-strong: #4b525c;
+    --color-border-brand-subtle: #7a1550;
+
+    /* Foreground — fg-brand는 다크 배경 대비를 위해 밝은 핑크로 */
+    --color-fg-primary: #f4f5f7;
+    --color-fg-secondary: #cdd2d8;
+    --color-fg-tertiary: #9aa1ab;
+    --color-fg-disabled: #6b727c;
+    --color-fg-brand: #ff4da3;
+
+    /* Semantic */
+    --color-semantic-success: #23b586;
+    --color-semantic-success-soft: #124536;
+    --color-semantic-error: #f97066;
+    --color-semantic-error-strong: #ff8a80;
+
+    /* Status — 관리자 전용 뱃지 */
+    --color-status-pending: #343a42;
+    --color-status-active: #1d3a63;
+    --color-status-revision: #453815;
+    --color-status-approved: #124536;
+    --color-status-rejected: #4d2620;
+    --color-status-pending-text: #cdd2d8;
+    --color-status-active-text: #93c5fd;
+    --color-status-revision-text: #fbbf24;
+    --color-status-approved-text: #34d399;
+    --color-status-rejected-text: #f97066;
+
+    /* Chart */
+    --color-chart-compare: #4b525c;
+    --color-chart-grid: #2b323c;
+    --color-chart-axis: #6b727c;
+    --background-image-chart-area: linear-gradient(
+        180deg,
+        rgb(255 77 163 / 0) 0%,
+        rgb(255 77 163 / 0.22) 100%
+    );
+
+    /* Shadow — 다크 배경에서는 더 진한 그림자 (색은 동일하게 ink 참조) */
+    --shadow-md:
+        0 4px 6px rgb(from var(--color-ink) r g b / 0.4),
+        0 2px 4px rgb(from var(--color-ink) r g b / 0.3);
+    --shadow-lg:
+        0 10px 15px rgb(from var(--color-ink) r g b / 0.4),
+        0 4px 6px rgb(from var(--color-ink) r g b / 0.3);
+    --shadow-xl:
+        0 4px 25px rgb(from var(--color-ink) r g b / 0.5),
+        0 8px 10px rgb(from var(--color-ink) r g b / 0.3);
 }

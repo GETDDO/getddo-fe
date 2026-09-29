@@ -237,11 +237,11 @@ export function TicketBalanceWidget({
                         <div className="border-border-default relative -mx-4 mt-auto border-t border-dashed">
                             <span
                                 aria-hidden
-                                className="border-border-default absolute top-0 -left-px h-4 w-2 -translate-y-1/2 rounded-r-full border border-l-0 bg-(--ticket-punch-bg,var(--color-surface-page)) shadow-[inset_-2px_0_3px_-1px_rgb(18_22_27_/_0.12)]"
+                                className="border-border-default absolute top-0 -left-px h-4 w-2 -translate-y-1/2 rounded-r-full border border-l-0 bg-(--ticket-punch-bg,var(--color-surface-page)) shadow-[inset_-2px_0_3px_-1px_rgb(from_var(--color-ink)_r_g_b_/_0.12)]"
                             />
                             <span
                                 aria-hidden
-                                className="border-border-default absolute top-0 -right-px h-4 w-2 -translate-y-1/2 rounded-l-full border border-r-0 bg-(--ticket-punch-bg,var(--color-surface-page)) shadow-[inset_2px_0_3px_-1px_rgb(18_22_27_/_0.12)]"
+                                className="border-border-default absolute top-0 -right-px h-4 w-2 -translate-y-1/2 rounded-l-full border border-r-0 bg-(--ticket-punch-bg,var(--color-surface-page)) shadow-[inset_2px_0_3px_-1px_rgb(from_var(--color-ink)_r_g_b_/_0.12)]"
                             />
                             <div className="flex items-center justify-between gap-2 px-4 pt-3">
                                 <span className="text-fg-tertiary text-caption">응모권</span>

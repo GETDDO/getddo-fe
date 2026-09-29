@@ -80,7 +80,7 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                                     <span className="text-body-sm-bold text-fg-primary flex items-center gap-1.5">
                                         {user.name}
                                         {user.role === 'admin' && (
-                                            <span className="bg-brand-primary text-surface-page rounded px-1.5 py-0.5 text-xs font-medium">
+                                            <span className="bg-brand-primary text-fg-on-brand rounded px-1.5 py-0.5 text-xs font-medium">
                                                 관리자
                                             </span>
                                         )}

@@ -79,7 +79,7 @@ export function AttendanceMonthGrid({
                         key={day.date}
                         aria-label={`${day.day}일 ${day.checked ? '출석' : '미출석'}${isBonus ? `, 연속 출석 보상일${bonusTickets != null ? ` 응모권 ${bonusTickets}장 추가` : ''}` : ''}`}
                         aria-current={day.isToday ? 'date' : undefined}
-                        className="bg-border-default relative flex aspect-square w-full max-w-14 items-center justify-center justify-self-center rounded-full shadow-[inset_0_3px_6px_0_rgb(18_22_27_/_0.1)]"
+                        className="bg-border-default relative flex aspect-square w-full max-w-14 items-center justify-center justify-self-center rounded-full shadow-[inset_0_3px_6px_0_rgb(from_var(--color-ink)_r_g_b_/_0.1)]"
                     >
                         {/*
                           판 오른쪽 위 태그 — 오늘(응모권 노랑)과 보상일 추가 응모권 수(옅은 회색).
@@ -146,7 +146,7 @@ export function AttendanceMonthGrid({
                                         src={mascot.src}
                                         alt=""
                                         className={cn(
-                                            'absolute inset-0 size-full object-contain drop-shadow-[0_2px_2px_rgb(18_22_27_/_0.18)] transition-opacity duration-700 ease-out',
+                                            'absolute inset-0 size-full object-contain drop-shadow-[0_2px_2px_rgb(from_var(--color-ink)_r_g_b_/_0.18)] transition-opacity duration-700 ease-out',
                                             !day.checked && 'opacity-50 grayscale',
                                             isDizzy && 'opacity-0',
                                         )}
@@ -157,7 +157,7 @@ export function AttendanceMonthGrid({
                                             alt=""
                                             aria-hidden
                                             className={cn(
-                                                'absolute inset-0 size-full object-contain drop-shadow-[0_2px_2px_rgb(18_22_27_/_0.18)] transition-opacity duration-500 ease-out',
+                                                'absolute inset-0 size-full object-contain drop-shadow-[0_2px_2px_rgb(from_var(--color-ink)_r_g_b_/_0.18)] transition-opacity duration-500 ease-out',
                                                 isDizzy ? 'opacity-100' : 'opacity-0',
                                             )}
                                         />

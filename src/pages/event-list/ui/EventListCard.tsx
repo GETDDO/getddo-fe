@@ -36,7 +36,7 @@ export function EventListCard({ event }: { event: Event }) {
                             </span>
                         ))}
                         {hasDDay && (
-                            <span className="bg-brand-primary border-brand-primary text-surface-page text-caption rounded-full border px-3 py-0.5">
+                            <span className="bg-brand-primary border-brand-primary text-fg-on-brand text-caption rounded-full border px-3 py-0.5">
                                 D-{dDay}
                             </span>
                         )}

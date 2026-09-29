@@ -35,7 +35,7 @@ export function AdminAbuseReviewPage() {
                             className={cn(
                                 'text-body-sm rounded-lg px-3 py-1.5 transition-colors',
                                 filter === value
-                                    ? 'bg-fg-primary text-fg-on-brand font-medium'
+                                    ? 'bg-surface-inverse text-fg-inverse font-medium'
                                     : 'text-fg-secondary hover:bg-surface-sunken',
                             )}
                         >
