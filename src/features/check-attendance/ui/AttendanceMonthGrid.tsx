@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { cn } from '@shared/lib/utils';
 
@@ -42,6 +42,13 @@ export function AttendanceMonthGrid({
     const [dizzy, setDizzy] = useState<ReadonlySet<string>>(() => new Set());
     const [recovering, setRecovering] = useState<ReadonlySet<string>>(() => new Set());
     const clicks = useRef<Record<string, number[]>>({});
+    // 어지러움→복귀 예약 타이머 — 언마운트 후 setState를 막기 위해 전부 추적한다
+    const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+    useEffect(() => {
+        const pending = timers.current;
+        return () => pending.forEach((t) => clearTimeout(t));
+    }, []);
 
     // 누른 시각은 클릭 이벤트의 발생 시각(timeStamp)을 쓴다
     const handlePress = (date: string, now: number) => {
@@ -59,11 +66,13 @@ export function AttendanceMonthGrid({
             next.delete(date);
             return next;
         };
-        setTimeout(() => {
-            setDizzy(without);
-            setRecovering((prev) => new Set(prev).add(date));
-            setTimeout(() => setRecovering(without), RECOVER_MS);
-        }, DIZZY_DURATION_MS);
+        timers.current.push(
+            setTimeout(() => {
+                setDizzy(without);
+                setRecovering((prev) => new Set(prev).add(date));
+                timers.current.push(setTimeout(() => setRecovering(without), RECOVER_MS));
+            }, DIZZY_DURATION_MS),
+        );
     };
 
     return (

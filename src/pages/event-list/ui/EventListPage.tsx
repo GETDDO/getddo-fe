@@ -74,7 +74,7 @@ export function EventListPage() {
                                     setPage(1);
                                 }}
                                 className={cn(
-                                    'bg-surface-page text-caption rounded-full border px-3 py-1',
+                                    'bg-surface-page text-caption focus-visible:ring-border-focus rounded-full border px-3 py-1 focus-visible:ring-2 focus-visible:outline-none',
                                     item === filter
                                         ? 'border-brand-primary text-brand-primary'
                                         : 'border-border-strong text-fg-tertiary',

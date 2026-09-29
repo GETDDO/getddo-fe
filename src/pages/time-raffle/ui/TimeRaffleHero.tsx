@@ -39,8 +39,8 @@ export function TimeRaffleHero({ event, cta }: TimeRaffleHeroProps) {
     ];
 
     return (
-        <article className="bg-surface-page border-border-brand flex min-h-95 items-center gap-5 rounded-2xl border p-4 shadow-md">
-            <div className="bg-surface-canvas flex-[0_0_488px] self-stretch overflow-hidden rounded-2xl">
+        <article className="bg-surface-page border-border-brand flex flex-col items-center gap-5 rounded-2xl border p-4 shadow-md lg:min-h-95 lg:flex-row">
+            <div className="bg-surface-canvas h-48 w-full self-stretch overflow-hidden rounded-2xl lg:h-auto lg:w-auto lg:flex-[0_0_488px]">
                 {event.bannerImageUrl ? (
                     <img src={event.bannerImageUrl} alt="" className="size-full object-cover" />
                 ) : (

@@ -1,7 +1,6 @@
 import { Moon, Sun, SunMoon } from 'lucide-react';
-import { useTheme } from 'next-themes';
 
-import { useUiSettingsStore } from '@shared/lib/ui-settings';
+import { useUiSettingsStore, type Theme } from '@shared/lib/ui-settings';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
@@ -13,7 +12,8 @@ const THEME_OPTIONS = [
 ] as const;
 
 export function AppearanceSettings() {
-    const { theme, setTheme } = useTheme();
+    const theme = useUiSettingsStore((state) => state.theme);
+    const setTheme = useUiSettingsStore((state) => state.setTheme);
     const textScale = useUiSettingsStore((state) => state.textScale);
     const setTextScale = useUiSettingsStore((state) => state.setTextScale);
     const isLargeText = textScale === 'large';
@@ -27,7 +27,7 @@ export function AppearanceSettings() {
                     <p className="text-body-bold text-fg-primary">테마</p>
                     <p className="text-body-sm text-fg-tertiary">화면 색상 모드를 선택합니다.</p>
                 </div>
-                <Select value={theme ?? 'system'} onValueChange={setTheme}>
+                <Select value={theme} onValueChange={(value) => setTheme(value as Theme)}>
                     <SelectTrigger className="w-36" aria-label="테마 선택">
                         <SelectValue />
                     </SelectTrigger>

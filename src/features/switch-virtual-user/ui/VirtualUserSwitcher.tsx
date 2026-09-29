@@ -27,7 +27,7 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                 className={
                     trigger
                         ? undefined
-                        : 'text-fg-primary relative flex size-6 items-center justify-center'
+                        : 'text-fg-primary focus-visible:ring-border-focus relative flex size-6 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none'
                 }
             >
                 {trigger ?? <CircleUserRound className="size-6" />}
@@ -67,7 +67,7 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                                     }
                                 }}
                                 className={cn(
-                                    'hover:bg-surface-sunken flex items-center gap-3 rounded-lg p-2.5 text-left transition-colors',
+                                    'hover:bg-surface-sunken focus-visible:bg-surface-sunken flex items-center gap-3 rounded-lg p-2.5 text-left transition-colors focus-visible:outline-none',
                                     isCurrent && 'cursor-default',
                                 )}
                             >

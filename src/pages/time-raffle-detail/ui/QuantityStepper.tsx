@@ -1,4 +1,4 @@
-import { cn } from 'cn';
+import { cn } from '@shared/lib/utils';
 
 const STEP_BUTTON =
     'border-border-strong text-body-bold flex size-8 items-center justify-center rounded-lg border disabled:cursor-not-allowed';

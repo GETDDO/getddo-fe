@@ -1,4 +1,3 @@
-import { cn } from 'cn';
 import { Gift } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -6,6 +5,7 @@ import { Link } from 'react-router-dom';
 import type { Event } from '@entities/event';
 
 import { formatKst, isSameKstDate } from '@shared/lib/date';
+import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
 
 const TIME_ONLY: Intl.DateTimeFormatOptions = {

@@ -5,15 +5,17 @@ import {
     OctagonXIcon,
     Loader2Icon,
 } from 'lucide-react';
-import { useTheme } from 'next-themes';
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
 
+import { useUiSettingsStore } from '@shared/lib/ui-settings';
+
 const Toaster = ({ ...props }: ToasterProps) => {
-    const { theme = 'system' } = useTheme();
+    // sonner가 'system'을 자체 처리하므로 스토어 값을 그대로 넘긴다
+    const theme = useUiSettingsStore((state) => state.theme);
 
     return (
         <Sonner
-            theme={theme as ToasterProps['theme']}
+            theme={theme}
             className="toaster group"
             icons={{
                 success: <CircleCheckIcon className="size-4" />,
