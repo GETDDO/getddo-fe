@@ -12,7 +12,7 @@
 "재시도·중복 클릭으로 같은 부작용이 두 번 생기면 안 되는 POST"에는 `shared/lib/idempotency-key`의 `createIdempotencyKey()`로 생성한 키를 헤더에 붙인다.
 
 - 현재 대상: `POST /events/:eventId/entries`(응모 — 사용·미사용 이벤트 모두)
-- 헤더명·생성 주체·전달 방식은 FE-BE 미합의 — 임시로 `X-Idempotency-Key`를 쓰며, 합의 시 공통 상수로 승격한다
+- 헤더명·생성 주체·전달 방식은 임시로 `X-Idempotency-Key`를 쓰며, 합의 시 공통 상수로 승격한다 (2026-09-29 추가: `getddo-spec` `05-api/common.md` 초안이 `Idempotency-Key` 헤더와 같은 키 재시도·409 충돌 규칙을 제안했다 — 확정 시 헤더명을 교체한다)
 - 조회(GET)와 이미 멱등인 요청에는 붙이지 않는다
 
 ## 결과
