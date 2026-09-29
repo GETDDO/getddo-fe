@@ -19,7 +19,7 @@ export function NotificationBell() {
         <Popover>
             <PopoverTrigger
                 aria-label="알림"
-                className="text-fg-primary relative flex size-6 items-center justify-center"
+                className="text-fg-primary focus-visible:ring-border-focus relative flex size-6 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
             >
                 <Bell className="size-6" />
                 {unreadCount > 0 && (
@@ -32,7 +32,7 @@ export function NotificationBell() {
                     {unreadCount > 0 && (
                         <button
                             type="button"
-                            className="text-fg-tertiary text-caption"
+                            className="text-fg-tertiary text-caption focus-visible:ring-border-focus hover:text-fg-primary rounded-sm focus-visible:ring-2 focus-visible:outline-none"
                             onClick={() => {
                                 notifications
                                     ?.filter((notification) => !notification.read)

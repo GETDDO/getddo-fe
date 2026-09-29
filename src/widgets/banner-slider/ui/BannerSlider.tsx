@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
-import { ChevronLeft, ChevronRight, Clock, Flame } from 'lucide-react';
+import { useReducedMotion } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Clock, Flame, Pause, Play } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -21,7 +22,12 @@ export function BannerSlider({
 }) {
     const { data: events, isPending, isError } = useEventList();
     const [index, setIndex] = useState(0);
-    const [paused, setPaused] = useState(false);
+    // 정지 조건을 축별로 분리한다 — 포커스가 안에 있는데 마우스만 빠져나가도 재생이 재개되지 않게
+    const [hovered, setHovered] = useState(false);
+    const [focused, setFocused] = useState(false);
+    const [manualPaused, setManualPaused] = useState(false);
+    // 동작 줄이기 설정 사용자에게는 자동 슬라이드를 켜지 않는다
+    const reduceMotion = useReducedMotion();
     // FSD 경계상 app/virtual-clock은 widgets에서 참조할 수 없다 — 마감 판정이 아닌 화면 표시 전용 카운트다운이므로 여기서는 실제 시각을 직접 쓴다
     const [now, setNow] = useState(() => new Date());
 
@@ -39,13 +45,16 @@ export function BannerSlider({
         [events],
     );
 
+    const autoplayStopped =
+        slides.length <= 1 || hovered || focused || manualPaused || reduceMotion === true;
+
     useEffect(() => {
-        if (slides.length <= 1 || paused) {
+        if (autoplayStopped) {
             return;
         }
         const timer = setInterval(() => setIndex((i) => (i + 1) % slides.length), AUTO_SLIDE_MS);
         return () => clearInterval(timer);
-    }, [slides.length, paused]);
+    }, [slides.length, autoplayStopped]);
 
     const safeIndex = Math.min(index, Math.max(slides.length - 1, 0));
 
@@ -60,13 +69,20 @@ export function BannerSlider({
     return (
         <section
             className="flex flex-col gap-3"
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            onFocusCapture={() => setFocused(true)}
+            onBlurCapture={(e) => {
+                // 포커스가 섹션 안의 다른 요소로 옮겨갈 때는 유지한다
+                if (!e.currentTarget.contains(e.relatedTarget)) {
+                    setFocused(false);
+                }
+            }}
         >
             {/* 모든 슬라이드를 한 줄로 나열 — 트랙 높이가 가장 큰 슬라이드로 고정돼 전환 중 크기 변환이 없고 transform만 애니메이션된다 */}
             <div className="overflow-hidden rounded-2xl">
                 <div
-                    className="flex transition-transform duration-500 ease-out"
+                    className="flex ease-out motion-safe:transition-transform motion-safe:duration-500"
                     style={{ transform: `translateX(-${safeIndex * 100}%)` }}
                 >
                     {slides.map((event) => {
@@ -79,7 +95,7 @@ export function BannerSlider({
                                 <div className="flex items-start justify-between gap-6">
                                     <div className="flex flex-col gap-4">
                                         {/* 디자인상 카운트다운 pill이 배너 왼쪽 가장자리에 붙은 탭 형태 — 음수 마진으로 패딩을 상쇄하고 왼쪽 radius를 제거해 가장자리에 평평하게 붙인다 */}
-                                        <span className="bg-surface-page text-fg-primary text-body-sm-bold -ml-8 flex w-fit items-center gap-1.5 rounded-r-full py-2 pr-3 pl-8 shadow-md sm:-ml-10 sm:pl-10">
+                                        <span className="bg-surface-page text-fg-primary text-body-sm-bold -ml-8 flex w-fit items-center gap-1.5 rounded-r-full py-2 pr-3 pl-8 tabular-nums shadow-md sm:-ml-10 sm:pl-10">
                                             <Clock className="size-4" />
                                             마감까지 {formatCountdown(remainingMs)}
                                         </span>
@@ -129,11 +145,11 @@ export function BannerSlider({
                             type="button"
                             aria-label="이전 이벤트"
                             onClick={() => setIndex((i) => (i - 1 + slides.length) % slides.length)}
-                            className="text-fg-primary flex size-6 items-center justify-center"
+                            className="text-fg-primary focus-visible:ring-border-focus flex size-6 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
                         >
                             <ChevronLeft className="size-5" />
                         </button>
-                        <span className="text-caption text-fg-primary">
+                        <span className="text-caption text-fg-primary tabular-nums">
                             {String(safeIndex + 1).padStart(2, '0')} /{' '}
                             {String(slides.length).padStart(2, '0')}
                         </span>
@@ -141,9 +157,25 @@ export function BannerSlider({
                             type="button"
                             aria-label="다음 이벤트"
                             onClick={() => setIndex((i) => (i + 1) % slides.length)}
-                            className="text-fg-primary flex size-6 items-center justify-center"
+                            className="text-fg-primary focus-visible:ring-border-focus flex size-6 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
                         >
                             <ChevronRight className="size-5" />
+                        </button>
+                        {/* 무한 자동 슬라이드는 hover/focus 외에 명시적 정지 수단이 필요하다 (WCAG 2.2.2) */}
+                        <button
+                            type="button"
+                            aria-label={
+                                manualPaused ? '자동 슬라이드 재생' : '자동 슬라이드 일시정지'
+                            }
+                            aria-pressed={manualPaused}
+                            onClick={() => setManualPaused((v) => !v)}
+                            className="text-fg-primary focus-visible:ring-border-focus ml-1 flex size-6 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
+                        >
+                            {manualPaused ? (
+                                <Play className="size-4" />
+                            ) : (
+                                <Pause className="size-4" />
+                            )}
                         </button>
                     </div>
                 </div>

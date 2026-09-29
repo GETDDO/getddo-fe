@@ -20,7 +20,7 @@ export function EventPagination({
                 aria-label="이전 페이지"
                 disabled={page <= 1}
                 onClick={() => onPageChange(page - 1)}
-                className="text-fg-tertiary disabled:opacity-50"
+                className="text-fg-tertiary enabled:hover:bg-surface-sunken focus-visible:ring-border-focus rounded-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
             >
                 <ChevronLeft className="size-5" />
             </button>
@@ -31,8 +31,10 @@ export function EventPagination({
                     aria-current={p === page ? 'page' : undefined}
                     onClick={() => onPageChange(p)}
                     className={cn(
-                        'text-body-sm-bold rounded-sm px-3 py-2 leading-4',
-                        p === page ? 'bg-surface-canvas text-fg-primary' : 'text-fg-tertiary',
+                        'text-body-sm-bold focus-visible:ring-border-focus rounded-sm px-3 py-2 leading-4 focus-visible:ring-2 focus-visible:outline-none',
+                        p === page
+                            ? 'bg-surface-canvas text-fg-primary'
+                            : 'text-fg-tertiary hover:bg-surface-sunken',
                     )}
                 >
                     {p}
@@ -43,7 +45,7 @@ export function EventPagination({
                 aria-label="다음 페이지"
                 disabled={page >= totalPages}
                 onClick={() => onPageChange(page + 1)}
-                className="text-fg-tertiary disabled:opacity-50"
+                className="text-fg-tertiary enabled:hover:bg-surface-sunken focus-visible:ring-border-focus rounded-sm focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
             >
                 <ChevronRight className="size-5" />
             </button>

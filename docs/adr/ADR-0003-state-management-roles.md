@@ -23,3 +23,7 @@
 - 새 상태를 추가할 때 먼저 위 표의 어느 행에 속하는지 판단한다
 - 서버 데이터를 Zustand/Redux에 복사하지 않는다 — 캐시는 TanStack Query가 소유한다
 - 비용: 도구가 4개라 신규 팀원의 학습 부담이 있다. 대신 각 도구의 책임이 겹치지 않는다
+
+## 이력
+
+- 2026-09-29: 슬라이스가 하나도 없는 빈 Redux store가 매 로드 `Store does not have a valid reducer` 오류를 내서 `ReduxProvider`·`store.ts`를 제거했다. 첫 슬라이스를 도입할 때 Provider를 함께 되살린다 (의존성은 package.json에 유지).

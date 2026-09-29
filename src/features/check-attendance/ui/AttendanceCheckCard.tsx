@@ -188,8 +188,9 @@ export function AttendanceCheckCard({
                         </div>
                         <button
                             type="button"
+                            aria-expanded="true"
                             onClick={() => onExpandedChange(false)}
-                            className="text-body-sm text-fg-primary flex shrink-0 cursor-pointer items-center"
+                            className="text-body-sm text-fg-primary focus-visible:ring-border-focus flex shrink-0 cursor-pointer items-center rounded-sm focus-visible:ring-2 focus-visible:outline-none"
                         >
                             접기
                             <ChevronUp className="size-5" />
@@ -198,8 +199,9 @@ export function AttendanceCheckCard({
                 ) : (
                     <button
                         type="button"
+                        aria-expanded="false"
                         onClick={() => onExpandedChange(true)}
-                        className="text-body-sm text-fg-primary flex cursor-pointer items-center self-end"
+                        className="text-body-sm text-fg-primary focus-visible:ring-border-focus flex cursor-pointer items-center self-end rounded-sm focus-visible:ring-2 focus-visible:outline-none"
                     >
                         펼쳐보기
                         <ChevronRight className="size-5" />

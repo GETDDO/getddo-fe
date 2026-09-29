@@ -159,12 +159,19 @@
     --text-caption--font-weight: 500;
 }
 
+/* 네이티브 컨트롤·스크롤바가 테마를 따르도록 color-scheme을 명시한다 */
+:root {
+    color-scheme: light;
+}
+
 /*
  * Dark 토큰 값 — 시맨틱 변수(--background 등)는 :root에서 var(--color-*) 참조라
  * 여기서 --color-*만 재정의하면 globals.css의 시맨틱 매핑이 자동으로 따라간다.
  * 브랜드·차트 강조색은 라이트와 동일하게 유지하고, 배경·전경·보더·soft 계열만 어둡게 재지정한다.
  */
 .dark {
+    color-scheme: dark;
+
     /* Brand — soft 배경만 다크용으로, 본체는 동일 */
     --color-brand-soft: #46203a;
 

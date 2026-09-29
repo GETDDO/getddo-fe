@@ -14,9 +14,9 @@ export function AdminLayout() {
 
     return (
         <div className="bg-surface-canvas flex min-h-screen">
-            <aside className="border-border bg-surface-inverse flex w-60 shrink-0 flex-col border-r">
+            <aside className="border-border bg-surface-inverse hidden w-60 shrink-0 flex-col border-r md:flex">
                 <div className="border-border flex h-16 items-center gap-2 border-b px-5">
-                    <img src="/logo.png" alt="logo" className="h-46px w-46px" />
+                    <img src="/favicon.svg" alt="" className="size-[46px]" />
                     <span className="text-title-3 text-fg-inverse">
                         U <span className="text-fg-brand">+</span> GETDDO
                     </span>
@@ -54,7 +54,36 @@ export function AdminLayout() {
                 <header className="border-border bg-surface-elevated flex h-16 items-center border-b px-8">
                     <h1 className="text-title-3">{current?.label ?? '관리자'}</h1>
                 </header>
-                <main className="flex-1 pt-5 pl-10">
+                {/* 사이드바가 숨겨지는 md 미만에서는 가로 스크롤 탭으로 같은 이동 경로를 제공한다 */}
+                <nav
+                    aria-label="관리자 메뉴"
+                    className="border-border bg-surface-elevated flex items-center gap-1 overflow-x-auto border-b px-3 py-2 md:hidden"
+                >
+                    {ADMIN_NAV_ITEMS.map(({ to, label, end }) => (
+                        <NavLink
+                            key={to}
+                            to={to}
+                            end={end}
+                            className={({ isActive }) =>
+                                cn(
+                                    'text-body-sm rounded-lg px-3 py-1.5 whitespace-nowrap transition-colors',
+                                    isActive
+                                        ? 'bg-surface-inverse text-fg-inverse font-medium'
+                                        : 'text-fg-secondary hover:bg-surface-sunken',
+                                )
+                            }
+                        >
+                            {label}
+                        </NavLink>
+                    ))}
+                    <NavLink
+                        to="/"
+                        className="text-body-sm text-fg-tertiary hover:bg-surface-sunken ml-auto rounded-lg px-3 py-1.5 whitespace-nowrap transition-colors"
+                    >
+                        사용자 화면으로
+                    </NavLink>
+                </nav>
+                <main className="flex-1 p-4 md:pt-5 md:pr-0 md:pl-10">
                     <Outlet />
                 </main>
             </div>

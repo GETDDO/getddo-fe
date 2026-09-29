@@ -25,8 +25,8 @@ interface RaffleDetailHeroProps {
 /** 상세 화면 대표 카드 — 목록 히어로와 달리 이미지가 카드에 꽉 차고, 현황은 칩으로 줄어든다 */
 export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHeroProps) {
     return (
-        <article className="bg-surface-page border-border-brand flex h-95 items-center gap-5 overflow-hidden rounded-2xl border">
-            <div className="bg-surface-canvas h-full w-130 shrink-0">
+        <article className="bg-surface-page border-border-brand flex flex-col items-center overflow-hidden rounded-2xl border lg:min-h-95 lg:flex-row lg:gap-5">
+            <div className="bg-surface-canvas h-48 w-full self-stretch lg:h-auto lg:w-130 lg:shrink-0">
                 {event.bannerImageUrl ? (
                     <img src={event.bannerImageUrl} alt="" className="size-full object-cover" />
                 ) : (
@@ -36,7 +36,7 @@ export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHe
                 )}
             </div>
 
-            <div className="flex h-full min-w-0 flex-1 flex-col justify-between px-4 py-5">
+            <div className="flex h-full min-w-0 flex-1 flex-col justify-between gap-5 px-4 py-5">
                 <div className="flex flex-col gap-5">
                     <div className="flex flex-wrap items-center gap-2">
                         <span className="bg-brand-primary text-fg-on-brand text-caption rounded-full px-3 py-1">
