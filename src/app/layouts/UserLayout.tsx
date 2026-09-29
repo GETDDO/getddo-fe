@@ -3,6 +3,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
 
 import { useSessionStore } from '@entities/user';
+import { VirtualClockTicker } from '@features/control-virtual-clock';
 import { VirtualUserSwitcher } from '@features/switch-virtual-user';
 import { cn } from '@shared/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
@@ -116,6 +117,7 @@ export function UserLayout() {
                         </PopoverContent>
                     </Popover>
                     <div className="ml-auto flex items-center gap-4">
+                        <VirtualClockTicker className="hidden lg:flex" />
                         <NotificationBell />
                         <VirtualUserSwitcher />
                     </div>

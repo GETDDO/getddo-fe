@@ -5,6 +5,8 @@ export interface VirtualClockValue {
     now: () => Date;
     /** 관리자 시간 여행용 오버라이드. null을 넣으면 실제 시각으로 복귀 */
     setOverride: (at: Date | null) => void;
+    /** 현재 적용 중인 오버라이드 시각. 없으면 null */
+    override: Date | null;
     isOverridden: boolean;
 }
 
