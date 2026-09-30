@@ -5,22 +5,33 @@ import { env } from '@shared/config/env';
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
 /**
- * 지금 이후로 오는 가장 가까운 stepMinutes 경계 시각.
+ * 데모용 상대 시각을 브라우저 세션에 한 번만 정해 두고 재사용한다.
  *
- * Date.now() + n분으로 잡으면 페이지를 새로 열 때마다 마감이 그만큼 뒤로 밀려서
+ * Date.now() + n으로 매번 계산하면 페이지를 새로 열 때마다 마감이 그만큼 뒤로 밀려서
  * 카운트다운이 리셋된다 — docs/CONTEXT.md가 금지하는 동작이다.
- * 벽시계 경계에 붙여 두면 어느 시점에 새로고침해도 같은 값이 나오고 시간이 실제로 줄어든다.
+ * 벽시계 경계에 붙이는 방법도 경계를 넘는 순간 한 칸 밀리므로, 세션에 저장해 고정한다.
  */
-function nextBoundary(stepMinutes: number): string {
-    const stepMs = stepMinutes * 60 * 1000;
-    const next = Math.ceil(Date.now() / stepMs) * stepMs;
-    // 정확히 경계에 걸리면 남은 시간이 0이 되므로 한 칸 뒤로 보낸다
-    return new Date(next <= Date.now() ? next + stepMs : next).toISOString();
+function sessionFixedTime(key: string, offsetMs: number): string {
+    const storageKey = `getddo-mock-${key}`;
+    try {
+        const saved = sessionStorage.getItem(storageKey);
+        if (saved) return saved;
+    } catch {
+        // 저장소를 쓸 수 없는 환경(테스트 등)에서는 매번 계산한다
+    }
+
+    const value = new Date(Date.now() + offsetMs).toISOString();
+    try {
+        sessionStorage.setItem(storageKey, value);
+    } catch {
+        // 저장에 실패해도 이번 로드 동안은 같은 값을 쓴다
+    }
+    return value;
 }
 
-// 홈 화면 "오늘의 타임 래플" 배너 데모용 — 설명대로 정시에 닫히는 한 시간짜리 래플
-const HERO_ENDS_AT = nextBoundary(60);
-const UPCOMING_OPENS_AT = nextBoundary(3 * 60);
+// 홈 화면 "오늘의 타임 래플" 배너 데모용 — 세션이 유지되는 동안 마감 시각이 움직이지 않는다
+const HERO_ENDS_AT = sessionFixedTime('hero-ends-at', 60 * 60 * 1000);
+const UPCOMING_OPENS_AT = sessionFixedTime('upcoming-opens-at', 3 * 60 * 60 * 1000);
 
 /**
  * KST 기준 dayOffset일 뒤 hour시의 UTC ISO 문자열.

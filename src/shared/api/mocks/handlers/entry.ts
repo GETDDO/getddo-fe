@@ -10,6 +10,26 @@ const api = (path: string) => `${env.apiBaseUrl}${path}`;
 /** ADR-010 — 가중치 적용 이벤트는 사용자·이벤트별 누적 5장까지만 쓸 수 있다 */
 const ENTRY_TICKET_LIMIT = 5;
 
+interface EntryResponse {
+    id: string;
+    eventId: string;
+    ticketsUsed: number;
+    status: string;
+    createdAt: string;
+}
+
+interface AcceptedEntry {
+    eventId: string;
+    ticketsUsed: number;
+    body: EntryResponse;
+}
+
+/**
+ * 이미 접수한 멱등키 — 같은 키로 다시 들어오면 차감하지 않고 처음 결과를 그대로 돌려준다.
+ * 키만 있는지 확인하고 끝내면 재시도할 때마다 응모권이 또 빠져나간다.
+ */
+const acceptedByKey = new Map<string, AcceptedEntry>();
+
 export const entryHandlers = [
     http.get(api('/entries/me'), () =>
         HttpResponse.json([
@@ -34,8 +54,30 @@ export const entryHandlers = [
         }
 
         const eventId = String(params.eventId);
-        const body = (await request.json().catch(() => null)) as { ticketsUsed?: number } | null;
-        const ticketsUsed = Math.max(1, Math.trunc(body?.ticketsUsed ?? 1));
+        const body = (await request.json().catch(() => null)) as { ticketsUsed?: unknown } | null;
+        const ticketsUsed = body?.ticketsUsed;
+        // 숫자가 아닌 값을 임의로 1장으로 바꾸면 NaN이 그대로 잔액에 더해진다 — 받은 값을 그대로 검증한다
+        if (typeof ticketsUsed !== 'number' || !Number.isInteger(ticketsUsed) || ticketsUsed < 0) {
+            return HttpResponse.json(
+                { code: 'INVALID_TICKETS_USED', message: '사용할 응모권 수가 올바르지 않습니다' },
+                { status: 400 },
+            );
+        }
+
+        const accepted = acceptedByKey.get(idempotencyKey);
+        if (accepted) {
+            // 같은 키에 다른 내용이 오면 재시도가 아니라 다른 요청이다
+            if (accepted.eventId !== eventId || accepted.ticketsUsed !== ticketsUsed) {
+                return HttpResponse.json(
+                    {
+                        code: 'IDEMPOTENCY_KEY_CONFLICT',
+                        message: '같은 멱등키로 다른 응모를 보낼 수 없습니다',
+                    },
+                    { status: 409 },
+                );
+            }
+            return HttpResponse.json(accepted.body, { status: 200 });
+        }
 
         const event = findMockEvent(eventId);
         if (!event) {
@@ -60,17 +102,19 @@ export const entryHandlers = [
         }
 
         recordMockEventEntry(event, ticketsUsed);
-        recordMockTicketGrant(-ticketsUsed, `${event.title} 응모`);
+        if (ticketsUsed > 0) {
+            recordMockTicketGrant(-ticketsUsed, `${event.title} 응모`);
+        }
 
-        return HttpResponse.json(
-            {
-                id: `entry-${Date.now()}`,
-                eventId,
-                ticketsUsed,
-                status: 'applied',
-                createdAt: new Date().toISOString(),
-            },
-            { status: 201 },
-        );
+        const responseBody: EntryResponse = {
+            id: `entry-${Date.now()}`,
+            eventId,
+            ticketsUsed,
+            status: 'applied',
+            createdAt: new Date().toISOString(),
+        };
+        acceptedByKey.set(idempotencyKey, { eventId, ticketsUsed, body: responseBody });
+
+        return HttpResponse.json(responseBody, { status: 201 });
     }),
 ];
