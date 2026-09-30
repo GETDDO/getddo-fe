@@ -4,6 +4,7 @@ import { UserLayout } from '@app/layouts/UserLayout';
 import { AttendancePage } from '@pages/attendance';
 import { EventDetailPage } from '@pages/event-detail';
 import { EventListPage } from '@pages/event-list';
+import { GameDetailPage } from '@pages/game-detail';
 import { GameHubPage } from '@pages/game-hub';
 import { HomePage } from '@pages/home';
 import { LoginPage } from '@pages/login';
@@ -27,6 +28,7 @@ export const userRoutes: RouteObject[] = [
             { path: '/events/:id', element: <EventDetailPage /> },
             { path: '/attendance', element: <AttendancePage /> },
             { path: '/missions', element: <MissionListPage /> },
+            { path: '/missions/games/:gameId', element: <GameDetailPage /> },
             { path: '/games', element: <GameHubPage /> },
             { path: '/my-tickets', element: <MyTicketsPage /> },
             { path: '/my-entries', element: <MyEntriesPage /> },
