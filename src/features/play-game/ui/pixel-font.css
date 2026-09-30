@@ -1,0 +1,11 @@
+/*
+ * 갈무리11 굵게 — 게임 화면의 도트 글꼴 (Galmuri, SIL Open Font License 1.1, assets/fonts/Galmuri-OFL.txt)
+ * 게임 화면에서만 쓰므로 굵게 한 가지만 넣었다
+ */
+@font-face {
+    font-family: 'Galmuri11';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../assets/fonts/Galmuri11-Bold.woff2') format('woff2');
+}
