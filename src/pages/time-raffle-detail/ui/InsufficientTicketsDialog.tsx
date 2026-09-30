@@ -1,3 +1,5 @@
+import type { RefObject } from 'react';
+
 import { Link } from 'react-router-dom';
 
 import { Button } from '@shared/ui/button';
@@ -13,14 +15,25 @@ import {
 interface InsufficientTicketsDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    /** 닫은 뒤 포커스를 되돌릴 요소 — 트리거 없이 상태로 여는 모달이라 Radix가 포커스를 body로 떨어뜨린다 */
+    returnFocusTo?: RefObject<HTMLElement | null>;
 }
 
 /** 고른 수량보다 보유 응모권이 적을 때 안내한다 — 응모는 접수하지 않고 적립 경로만 알려준다 */
-export function InsufficientTicketsDialog({ open, onOpenChange }: InsufficientTicketsDialogProps) {
+export function InsufficientTicketsDialog({
+    open,
+    onOpenChange,
+    returnFocusTo,
+}: InsufficientTicketsDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
                 showCloseButton={false}
+                onCloseAutoFocus={(event) => {
+                    if (!returnFocusTo?.current) return;
+                    event.preventDefault();
+                    returnFocusTo.current.focus();
+                }}
                 className="bg-surface-page border-border-default gap-6 rounded-2xl border p-6 shadow-md ring-0 sm:max-w-120 sm:p-8"
             >
                 <DialogHeader className="gap-2">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import type { Event } from '@entities/event';
@@ -35,6 +35,8 @@ export function TimeRaffleDetailPage() {
     const [quantity, setQuantity] = useState(1);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [shortfallOpen, setShortfallOpen] = useState(false);
+    // 모달을 닫으면 방금 누른 응모 버튼으로 포커스를 되돌린다
+    const entryButtonRef = useRef<HTMLButtonElement>(null);
 
     if (isPending) {
         return (
@@ -79,6 +81,7 @@ export function TimeRaffleDetailPage() {
                     cta={
                         isOpen ? (
                             <Button
+                                ref={entryButtonRef}
                                 variant="secondary"
                                 disabled={!canEnter}
                                 onClick={() =>
@@ -113,13 +116,18 @@ export function TimeRaffleDetailPage() {
                 title={event.title}
                 quantity={quantity}
                 balance={ticket?.balance ?? null}
+                returnFocusTo={entryButtonRef}
                 onConfirm={() => {
                     // TODO: 실제 응모 요청은 GD-25 「응모 페이지 프론트 화면 개발」에서 features/enter-event로 붙인다
                     setConfirmOpen(false);
                 }}
             />
 
-            <InsufficientTicketsDialog open={shortfallOpen} onOpenChange={setShortfallOpen} />
+            <InsufficientTicketsDialog
+                open={shortfallOpen}
+                onOpenChange={setShortfallOpen}
+                returnFocusTo={entryButtonRef}
+            />
         </main>
     );
 }

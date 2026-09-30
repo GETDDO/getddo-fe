@@ -1,3 +1,5 @@
+import type { RefObject } from 'react';
+
 import { Button } from '@shared/ui/button';
 import {
     Dialog,
@@ -17,6 +19,8 @@ interface EntryConfirmDialogProps {
     /** 지금 보유 중인 응모권 — 잔액을 못 불러왔으면 null */
     balance: number | null;
     onConfirm: () => void;
+    /** 닫은 뒤 포커스를 되돌릴 요소 — 트리거 없이 상태로 여는 모달이라 Radix가 포커스를 body로 떨어뜨린다 */
+    returnFocusTo?: RefObject<HTMLElement | null>;
 }
 
 export function EntryConfirmDialog({
@@ -26,11 +30,17 @@ export function EntryConfirmDialog({
     quantity,
     balance,
     onConfirm,
+    returnFocusTo,
 }: EntryConfirmDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
                 showCloseButton={false}
+                onCloseAutoFocus={(event) => {
+                    if (!returnFocusTo?.current) return;
+                    event.preventDefault();
+                    returnFocusTo.current.focus();
+                }}
                 className="bg-surface-page border-border-default gap-6 rounded-2xl border p-6 shadow-md ring-0 sm:max-w-120 sm:p-8"
             >
                 <DialogHeader className="gap-2">
