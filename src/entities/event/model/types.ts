@@ -15,6 +15,9 @@ export const eventSchema = z.object({
     startsAt: z.iso.datetime(),
     endsAt: z.iso.datetime(),
     status: eventStatusSchema,
+    // 이벤트 목록 상단 '추천 이벤트' 노출 여부 — 운영자가 고르는 값이라 계산으로 만들 수 없다.
+    // TODO: 추천 선정 방식은 백엔드와 미합의 (getddo-spec 02-domain/event.md에 정의 없음)
+    isRecommended: z.boolean().optional(),
     // 정해진 시간에만 열리는 한정 굿즈 래플 — 타임래플 화면에만 노출하고 이벤트 목록에서는 뺀다.
     // TODO: 이벤트 유형 구분 방식은 백엔드와 미합의 (getddo-spec 02-domain/event.md에 유형 정의 없음)
     isTimeRaffle: z.boolean().optional(),

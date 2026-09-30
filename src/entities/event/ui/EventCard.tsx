@@ -2,6 +2,7 @@ import { Gift } from 'lucide-react';
 import { useState } from 'react';
 
 import { toKst } from '@shared/lib/date';
+import { useVirtualClock } from '@shared/lib/virtual-clock';
 import { Card } from '@shared/ui/card';
 
 import type { Event } from '../model/types';
@@ -25,8 +26,9 @@ function kstDayDiff(endIso: string, now: Date): number {
 }
 
 export function EventCard({ event }: { event: Event }) {
-    // FSD 경계상 app/virtual-clock은 entities에서 참조할 수 없다 — 마감 판정이 아닌 D-day 표시 전용이므로 마운트 시각을 쓴다
-    const [now] = useState(() => new Date());
+    // 마감 판정이 아닌 D-day 표시 전용이므로 마운트 시각을 쓴다
+    const clock = useVirtualClock();
+    const [now] = useState(() => clock.now());
     const dDay = event.status === 'open' ? kstDayDiff(event.endsAt, now) : null;
 
     return (

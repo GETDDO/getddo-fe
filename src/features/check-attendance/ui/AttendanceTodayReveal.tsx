@@ -54,7 +54,7 @@ export function AttendanceTodayReveal({
                 <motion.img
                     src={mascotSrc}
                     alt=""
-                    className="absolute inset-0 size-full object-contain drop-shadow-[0_2px_2px_rgb(18_22_27_/_0.18)]"
+                    className="absolute inset-0 size-full object-contain drop-shadow-[0_2px_2px_rgb(from_var(--color-ink)_r_g_b_/_0.18)]"
                     style={{ originY: 1 }}
                     initial={{ opacity: 0, y: -40 }}
                     animate={{

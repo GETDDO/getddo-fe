@@ -46,7 +46,7 @@ export function LoginPage() {
                                 onClick={() => handleSelect(user)}
                                 className={cn(
                                     'bg-surface-page border-border-default flex w-full items-center gap-4 rounded-2xl border p-5 text-left',
-                                    'hover:border-fg-brand transition-colors',
+                                    'hover:border-fg-brand focus-visible:border-fg-brand transition-colors focus-visible:outline-none',
                                 )}
                             >
                                 {user.role === 'admin' ? (
@@ -60,7 +60,7 @@ export function LoginPage() {
                                             {user.name}
                                         </span>
                                         {user.role === 'admin' && (
-                                            <span className="bg-brand-primary text-surface-page rounded-md px-2 py-0.5 text-xs font-medium">
+                                            <span className="bg-brand-primary text-fg-on-brand rounded-md px-2 py-0.5 text-xs font-medium">
                                                 관리자
                                             </span>
                                         )}

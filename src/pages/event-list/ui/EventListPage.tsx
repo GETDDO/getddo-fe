@@ -31,11 +31,10 @@ export function EventListPage() {
     const openEvents = (events ?? []).filter(
         (event) => event.status === 'open' && !event.isTimeRaffle,
     );
-    // 응모권을 차감해 응모하는 이벤트와 응모권 없이 참여하는 이벤트를 나눠 보여준다
-    const ticketEvents = openEvents.filter((event) => event.requiredTickets > 0);
-    const freeEvents = openEvents.filter((event) => event.requiredTickets === 0);
+    // 응모권 사용 여부로 나누지 않는다 — 위는 운영자가 고른 추천, 아래는 같은 목록을 카테고리로 거른 것이다
+    const recommendedEvents = openEvents.filter((event) => event.isRecommended);
     // 최신순 = 시작일 내림차순 (ISO 8601 UTC 문자열이라 문자열 비교로 정렬 가능)
-    const filteredEvents = freeEvents
+    const filteredEvents = openEvents
         .filter((event) => filter === '전체' || (event.tags ?? []).includes(filter))
         .sort((a, b) => b.startsAt.localeCompare(a.startsAt));
     const totalPages = Math.max(1, Math.ceil(filteredEvents.length / PAGE_SIZE));
@@ -52,26 +51,17 @@ export function EventListPage() {
             <h1 className="text-title-1 text-fg-primary">진행 중 이벤트</h1>
 
             <section className="mt-10 flex flex-col gap-6">
-                <div className="flex flex-col gap-1">
-                    <h2 className="text-subhead text-fg-primary">응모권 이벤트</h2>
-                    <p className="text-body-sm text-fg-tertiary">모은 응모권을 사용해 응모해요</p>
-                </div>
+                <h2 className="text-subhead text-fg-primary">추천 이벤트</h2>
                 {status}
-                {!isPending && !isError && ticketEvents.length === 0 && (
-                    <p className="text-fg-tertiary text-body-sm">
-                        진행 중인 응모권 이벤트가 없습니다.
-                    </p>
+                {!isPending && !isError && recommendedEvents.length === 0 && (
+                    <p className="text-fg-tertiary text-body-sm">추천 중인 이벤트가 없습니다.</p>
                 )}
-                {ticketEvents.length > 0 && <EventGrid events={ticketEvents} />}
+                {recommendedEvents.length > 0 && <EventGrid events={recommendedEvents} />}
             </section>
 
             <hr className="border-border-default my-20" />
 
             <section className="flex flex-col gap-6">
-                <div className="flex flex-col gap-1">
-                    <h2 className="text-subhead text-fg-primary">무료 응모 이벤트</h2>
-                    <p className="text-body-sm text-fg-tertiary">응모권 없이 참여할 수 있어요</p>
-                </div>
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex flex-wrap items-center gap-2">
                         {EVENT_FILTERS.map((item) => (
@@ -84,7 +74,7 @@ export function EventListPage() {
                                     setPage(1);
                                 }}
                                 className={cn(
-                                    'bg-surface-page text-caption rounded-full border px-3 py-1',
+                                    'bg-surface-page text-caption focus-visible:ring-border-focus rounded-full border px-3 py-1 focus-visible:ring-2 focus-visible:outline-none',
                                     item === filter
                                         ? 'border-brand-primary text-brand-primary'
                                         : 'border-border-strong text-fg-tertiary',

@@ -53,6 +53,7 @@ export function EventDetailPage() {
                 <img
                     src={event.detailImageUrl}
                     alt={`${event.title} 상세 안내`}
+                    loading="lazy"
                     className="mx-auto mt-20 block h-auto w-full max-w-270"
                 />
             )}

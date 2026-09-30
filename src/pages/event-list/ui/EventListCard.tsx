@@ -5,10 +5,12 @@ import { Link } from 'react-router-dom';
 import type { Event } from '@entities/event';
 
 import { formatYmd, kstDayDiff } from '@shared/lib/date';
+import { useVirtualClock } from '@shared/lib/virtual-clock';
 
 export function EventListCard({ event }: { event: Event }) {
-    // pages에서는 app/virtual-clock을 참조할 수 없다 — 마감 판정이 아닌 D-day 표시 전용이므로 마운트 시각을 쓴다
-    const [now] = useState(() => new Date());
+    // 마감 판정이 아닌 D-day 표시 전용이므로 마운트 시각을 쓴다
+    const clock = useVirtualClock();
+    const [now] = useState(() => clock.now());
     const dDay = event.status === 'open' ? kstDayDiff(event.endsAt, now) : null;
     const hasDDay = dDay != null && dDay >= 0;
 
@@ -36,7 +38,7 @@ export function EventListCard({ event }: { event: Event }) {
                             </span>
                         ))}
                         {hasDDay && (
-                            <span className="bg-brand-primary border-brand-primary text-surface-page text-caption rounded-full border px-3 py-0.5">
+                            <span className="bg-brand-primary border-brand-primary text-fg-on-brand text-caption rounded-full border px-3 py-0.5">
                                 D-{dDay}
                             </span>
                         )}
