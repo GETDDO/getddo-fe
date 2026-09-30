@@ -15,6 +15,8 @@ export interface GameContent {
     /** 대표 이미지 위 한 줄 소개 */
     tagline: string;
     heroImage: string | null;
+    /** 대표 이미지가 대표 영역(840:546)보다 넓어 좌우가 잘릴 때 보여줄 기준점 — 기본은 가운데 */
+    heroImagePosition?: string;
     guide: {
         title: string;
         subtitle: string;
@@ -29,16 +31,21 @@ const REWARD_STEP: GameGuideStep = {
     text: '하루 한 번, 플레이하면 응모권 1장을 받아요',
 };
 
-// 게임 종류·규칙은 게임 담당자 확정 전 임시 콘텐츠. 공룡 달리기 안내·대표 이미지(image 76)와 타코야끼 대표 이미지(image 75)는 피그마 기준
+// 게임 종류·규칙은 게임 담당자 확정 전 임시 콘텐츠. 타꼬런 대표 이미지(image 107)와 타코야끼 대표 이미지(image 75)는 피그마 기준
 const CONTENTS: Record<string, GameContent> = {
     'game-dino': {
-        tagline: '장애물을 피해 멀리 달리세요.',
+        tagline: '소스병과 꼬치를 뛰어넘으며 멀리 달리세요.',
         heroImage: '/images/games/takoyaki-run.jpg',
+        // 16:9 이미지라 좌우 약 7%씩 잘린다. 제목(타꼬런)이 오른쪽 끝에 붙어 있어 기준을 오른쪽으로 옮긴다
+        heroImagePosition: '85% 50%',
         guide: {
             title: '달리고, 피하고, 응모권까지',
-            subtitle: '조작은 스페이스바 하나면 끝나요',
+            subtitle: '조작은 점프 하나면 끝나요',
             steps: [
-                { icon: Gamepad2, text: '스페이스바로 점프해서 장애물을 피해요' },
+                {
+                    icon: Gamepad2,
+                    text: '스페이스바나 화면을 눌러 점프해요. 길게 누르면 높이 뛰어요',
+                },
                 { icon: Target, text: '오래 버틸수록 점수가 쭉쭉 올라가요' },
                 REWARD_STEP,
             ],

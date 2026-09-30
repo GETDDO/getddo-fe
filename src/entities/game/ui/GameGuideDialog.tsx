@@ -1,12 +1,4 @@
-import { X } from 'lucide-react';
-
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogTitle,
-} from '@shared/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@shared/ui/dialog';
 
 import type { GameContent } from './game-content';
 
@@ -29,19 +21,10 @@ export function GameGuideDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
-                showCloseButton={false}
                 // 글자색을 fg/primary 토큰으로 고정 — 공용 Dialog의 테마 변수 색은 다크 모드에서 흰색으로 바뀐다
                 className="bg-surface-page border-border-default text-fg-primary flex max-w-[calc(100%-2rem)] flex-col items-center gap-6 rounded-2xl border p-8 shadow-md ring-0 sm:max-w-120"
             >
                 <div className="flex w-full flex-col items-center gap-4">
-                    <div className="flex h-6 w-full justify-end">
-                        <DialogClose
-                            aria-label="닫기"
-                            className="text-fg-secondary hover:text-fg-primary cursor-pointer"
-                        >
-                            <X className="size-6" />
-                        </DialogClose>
-                    </div>
                     {/*
                       공용 DialogTitle·DialogDescription의 기본 글자 스타일 위에 덮어쓴다.
                       공용 cn이 글자 크기 토큰과 색 토큰을 같은 그룹으로 보고 하나를 지우므로, 색은 넘기지 않고

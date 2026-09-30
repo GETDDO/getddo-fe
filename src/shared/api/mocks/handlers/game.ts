@@ -2,6 +2,8 @@ import { http, HttpResponse } from 'msw';
 
 import { env } from '@shared/config/env';
 
+import { recordMockTicketGrant } from './ticket';
+
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
 // 게임 종류는 게임 담당자 확정 전 임시 목록 (getddo-spec 게임 규칙: '타코야끼 만들기'는 후보)
@@ -9,10 +11,10 @@ const api = (path: string) => `${env.apiBaseUrl}${path}`;
 const mockGames = [
     {
         id: 'game-dino',
-        bestScore: 1820,
+        bestScore: 0,
         todayPlayCount: 0,
-        title: '공룡 달리기',
-        description: '장애물을 피해 멀리 달리는 게임',
+        title: '타꼬런',
+        description: '소스병과 꼬치를 뛰어넘으며 멀리 달려요',
         thumbnailUrl: '/images/games/takoyaki-run.jpg',
         rewardedToday: false,
         dailyLimit: 1,
@@ -65,10 +67,34 @@ const mockGames = [
 
 export const gameHandlers = [
     http.get(api('/games'), () => HttpResponse.json(mockGames)),
-    http.post(api('/games/:gameId/play'), ({ params }) =>
-        HttpResponse.json(
-            { gameId: params.gameId, score: 1200, ticketsGranted: 1, remainingPlays: 2 },
+    // 플레이 결과 — 새로고침 전까지 최고점·오늘 플레이·보상 여부를 기억한다.
+    // 게임별 하루 1회 응모권 1장: 오늘 첫 유효 플레이에만 지급한다 (getddo-spec 게임 규칙)
+    http.post(api('/games/:gameId/play'), async ({ params, request }) => {
+        const game = mockGames.find((item) => item.id === params.gameId);
+        if (!game) {
+            return HttpResponse.json(
+                { code: 'GAME_NOT_FOUND', message: '게임을 찾을 수 없습니다' },
+                { status: 404 },
+            );
+        }
+        const { score } = (await request.json()) as { score: number };
+        game.bestScore = Math.max(game.bestScore ?? 0, score);
+        game.todayPlayCount += 1;
+        const ticketsGranted = game.rewardedToday ? 0 : 1;
+        if (ticketsGranted > 0) {
+            game.rewardedToday = true;
+            game.remainingPlays = 0;
+            recordMockTicketGrant(ticketsGranted, `${game.title} 게임 보상`);
+        }
+        return HttpResponse.json(
+            {
+                gameId: game.id,
+                score,
+                bestScore: game.bestScore,
+                todayPlayCount: game.todayPlayCount,
+                ticketsGranted,
+            },
             { status: 201 },
-        ),
-    ),
+        );
+    }),
 ];
