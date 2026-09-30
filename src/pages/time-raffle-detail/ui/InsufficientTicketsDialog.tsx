@@ -1,5 +1,7 @@
 import type { RefObject } from 'react';
 
+import { Link } from 'react-router-dom';
+
 import { Button } from '@shared/ui/button';
 import {
     Dialog,
@@ -10,28 +12,19 @@ import {
     DialogTitle,
 } from '@shared/ui/dialog';
 
-interface EntryConfirmDialogProps {
+interface InsufficientTicketsDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    title: string;
-    /** 이번 응모에 쓰는 응모권 수 */
-    quantity: number;
-    /** 지금 보유 중인 응모권 — 잔액을 못 불러왔으면 null */
-    balance: number | null;
-    onConfirm: () => void;
     /** 닫은 뒤 포커스를 되돌릴 요소 — 트리거 없이 상태로 여는 모달이라 Radix가 포커스를 body로 떨어뜨린다 */
     returnFocusTo?: RefObject<HTMLElement | null>;
 }
 
-export function EntryConfirmDialog({
+/** 고른 수량보다 보유 응모권이 적을 때 안내한다 — 응모는 접수하지 않고 적립 경로만 알려준다 */
+export function InsufficientTicketsDialog({
     open,
     onOpenChange,
-    title,
-    quantity,
-    balance,
-    onConfirm,
     returnFocusTo,
-}: EntryConfirmDialogProps) {
+}: InsufficientTicketsDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
@@ -45,37 +38,27 @@ export function EntryConfirmDialog({
             >
                 <DialogHeader className="gap-2">
                     <DialogTitle className="text-title-3 text-fg-primary">
-                        응모하시겠습니까?
+                        응모권이 부족해요
                     </DialogTitle>
                     <DialogDescription className="text-body text-fg-secondary">
-                        응모권 {quantity}장을 사용하여 {title}에 참여합니다.
+                        출석 체크, 게임 등 미션에 참여하면 응모권을 모을 수 있어요.
                     </DialogDescription>
                 </DialogHeader>
 
-                <dl className="flex flex-col gap-3">
-                    <div className="text-body-bold text-brand-primary flex items-center justify-between">
-                        <dt>응모권 사용</dt>
-                        <dd>{quantity}장</dd>
-                    </div>
-                    <div className="text-body-bold flex items-center justify-between">
-                        <dt className="text-fg-secondary">보유 응모권</dt>
-                        <dd className="text-fg-primary">
-                            {balance == null ? '-' : `${balance}장`}
-                        </dd>
-                    </div>
-                </dl>
-
                 <div className="flex gap-4">
                     <DialogClose asChild>
+                        {/* outline 변형은 다크 전용 배경을 함께 얹어서, 시안대로 테두리만 두려고 ghost를 쓴다 */}
                         <Button
-                            variant="outline"
-                            className="bg-surface-sunken border-border-default hover:bg-surface-pressed h-10 flex-1"
+                            variant="ghost"
+                            className="border-border-strong bg-surface-page hover:bg-surface-sunken h-10 flex-1"
                         >
-                            <span className="text-body-bold text-fg-primary">취소</span>
+                            <span className="text-body-bold text-fg-primary">닫기</span>
                         </Button>
                     </DialogClose>
-                    <Button variant="secondary" className="h-10 flex-1" onClick={onConfirm}>
-                        <span className="text-body-bold">응모하기</span>
+                    <Button asChild variant="secondary" className="h-10 flex-1">
+                        <Link to="/missions">
+                            <span className="text-body-bold">응모권 모으러 가기</span>
+                        </Link>
                     </Button>
                 </div>
             </DialogContent>
