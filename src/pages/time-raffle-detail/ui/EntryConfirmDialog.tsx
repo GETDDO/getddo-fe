@@ -31,7 +31,7 @@ export function EntryConfirmDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
                 showCloseButton={false}
-                className="bg-surface-page border-border-default gap-6 rounded-2xl border p-8 shadow-md ring-0 sm:max-w-120"
+                className="bg-surface-page border-border-default gap-6 rounded-2xl border p-6 shadow-md ring-0 sm:max-w-120 sm:p-8"
             >
                 <DialogHeader className="gap-2">
                     <DialogTitle className="text-title-3 text-fg-primary">
