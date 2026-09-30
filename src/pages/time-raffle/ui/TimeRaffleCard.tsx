@@ -4,16 +4,10 @@ import { Link } from 'react-router-dom';
 
 import type { Event } from '@entities/event';
 
-import { formatKst, isSameKstDate } from '@shared/lib/date';
+import { KST_HOUR_MINUTE, formatKst, isSameKstDate } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { useVirtualClock } from '@shared/lib/virtual-clock';
 import { Button } from '@shared/ui/button';
-
-const TIME_ONLY: Intl.DateTimeFormatOptions = {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-};
 
 const MONTH_DAY: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric' };
 
@@ -25,7 +19,7 @@ export function TimeRaffleCard({ event }: { event: Event }) {
     const [now] = useState(() => clock.now());
 
     const isOpen = event.status === 'open';
-    const openTime = formatKst(event.startsAt, TIME_ONLY);
+    const openTime = formatKst(event.startsAt, KST_HOUR_MINUTE);
     const openDay = isSameKstDate(event.startsAt, now)
         ? '오늘'
         : formatKst(event.startsAt, MONTH_DAY);
@@ -33,11 +27,13 @@ export function TimeRaffleCard({ event }: { event: Event }) {
     return (
         <article
             className={cn(
-                'bg-surface-page flex h-55 gap-4 rounded-2xl border p-4 shadow-md',
+                // 좁은 화면에서는 높이를 내용에 맡긴다 — 220px에 고정하면 줄바꿈이 늘어난 제목·설명이 잘린다
+                'bg-surface-page flex gap-4 rounded-2xl border p-4 shadow-md sm:h-55',
                 isOpen ? 'border-border-brand' : 'border-border-default',
             )}
         >
-            <div className="bg-surface-canvas w-40 shrink-0 self-stretch overflow-hidden rounded-2xl">
+            {/* 이미지가 160px 고정이면 360px 화면에서 본문 칸이 100px대로 남는다 */}
+            <div className="bg-surface-canvas w-28 shrink-0 self-stretch overflow-hidden rounded-2xl sm:w-40">
                 {event.bannerImageUrl ? (
                     <img src={event.bannerImageUrl} alt="" className="size-full object-contain" />
                 ) : (
@@ -49,7 +45,7 @@ export function TimeRaffleCard({ event }: { event: Event }) {
 
             <div className="flex min-w-0 flex-1 flex-col justify-between">
                 <div className="flex flex-col gap-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         {isOpen && (
                             <>
                                 <span className="text-caption bg-brand-primary text-fg-on-brand rounded-full px-2.5 py-0.5">

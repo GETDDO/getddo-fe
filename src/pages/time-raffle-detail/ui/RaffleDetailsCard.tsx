@@ -1,14 +1,8 @@
 import type { Event } from '@entities/event';
 
 import { useTicketBalance } from '@entities/ticket';
-import { formatKst } from '@shared/lib/date';
+import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
-
-const TIME_ONLY: Intl.DateTimeFormatOptions = {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-};
 
 export function RaffleDetailsCard({ event }: { event: Event }) {
     const { data: ticket } = useTicketBalance();
@@ -32,7 +26,7 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
         { label: '배송 일정', value: detail?.shippingSchedule ?? null },
         {
             label: '모집 시각',
-            value: `KST ${formatKst(event.startsAt, TIME_ONLY)} 시작 · KST ${formatKst(event.endsAt, TIME_ONLY)} 마감`,
+            value: `KST ${formatKst(event.startsAt, KST_HOUR_MINUTE)} 시작 · KST ${formatKst(event.endsAt, KST_HOUR_MINUTE)} 마감`,
         },
         { label: '멤버십 자격', value: detail?.membershipNote ?? null },
         {
@@ -61,7 +55,7 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
     ];
 
     return (
-        <section className="bg-surface-page border-border-default flex flex-col gap-6 rounded-2xl border p-8">
+        <section className="bg-surface-page border-border-default flex flex-col gap-6 rounded-2xl border p-5 sm:p-8">
             <h2 className="text-subhead text-fg-primary">이벤트 상세 안내</h2>
 
             <div className="flex flex-col gap-3">
@@ -78,11 +72,12 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
                 {specs
                     .filter((spec) => spec.value != null)
                     .map(({ label, value }) => (
-                        <div key={label} className="flex items-start">
-                            <dt className="text-body-bold text-fg-primary w-40 shrink-0">
+                        // 좁은 화면에서는 위아래로 쌓는다 — 라벨을 160px로 잡으면 값 칸이 90px대로 남는다
+                        <div key={label} className="flex flex-col sm:flex-row sm:items-start">
+                            <dt className="text-body-bold text-fg-primary sm:w-40 sm:shrink-0">
                                 {label}
                             </dt>
-                            <dd className="text-body-bold text-fg-primary min-w-0 flex-1">
+                            <dd className="text-body-bold text-fg-primary min-w-0 sm:flex-1">
                                 {value}
                             </dd>
                         </div>

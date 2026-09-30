@@ -1,12 +1,6 @@
 import type { Event } from '@entities/event';
 
-import { formatKst } from '@shared/lib/date';
-
-const TIME_ONLY: Intl.DateTimeFormatOptions = {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-};
+import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 
 // 운영 정책 고지 — 앞 두 항목만 이벤트 값이 들어가고 나머지는 모든 래플에 공통이다
 const COMMON_RULES = [
@@ -18,7 +12,7 @@ const COMMON_RULES = [
 
 export function RaffleRulesCard({ event }: { event: Event }) {
     const rules = [
-        `KST 기준 ${formatKst(event.startsAt, TIME_ONLY)} 시작 · ${formatKst(event.endsAt, TIME_ONLY)} 마감. 마감 이후에는 추가 응모가 불가하며, 중복 요청 시 이중 차감되지 않습니다.`,
+        `KST 기준 ${formatKst(event.startsAt, KST_HOUR_MINUTE)} 시작 · ${formatKst(event.endsAt, KST_HOUR_MINUTE)} 마감. 마감 이후에는 추가 응모가 불가하며, 중복 요청 시 이중 차감되지 않습니다.`,
         event.requiredTickets === 0
             ? '응모권 없이 참여할 수 있으며, 중복 요청 시 이중으로 접수되지 않습니다.'
             : `1회 응모 시 ${event.requiredTickets}장만 차감되며, 응모권이 부족하면 응모가 제한됩니다.`,
@@ -26,7 +20,7 @@ export function RaffleRulesCard({ event }: { event: Event }) {
     ];
 
     return (
-        <section className="bg-surface-page border-border-default flex flex-col gap-5 rounded-2xl border p-8">
+        <section className="bg-surface-page border-border-default flex flex-col gap-5 rounded-2xl border p-5 sm:p-8">
             <h2 className="text-subhead text-fg-primary">응모 및 추첨 안내</h2>
             <ul className="flex flex-col gap-2.5">
                 {rules.map((rule) => (

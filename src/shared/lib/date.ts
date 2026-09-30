@@ -17,6 +17,17 @@ export function formatKst(
 }
 
 /**
+ * "09:00" 형태로 시·분만 표시하는 formatKst 옵션.
+ * 오픈·마감 시각을 분 단위까지 맞춰 읽어야 하는 타임래플 화면에서 쓴다.
+ * 홈 카드처럼 앞자리 0을 떼고 "9:00"으로 보여야 하는 곳은 hour: 'numeric'을 따로 넘긴다.
+ */
+export const KST_HOUR_MINUTE: Intl.DateTimeFormatOptions = {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+};
+
+/**
  * epoch을 +9시간 이동시킨 Date를 반환한다.
  * 반환값의 UTC 메서드(getUTCFullYear, getUTCHours, getUTCDate 등)가 KST 시각을 가리키므로
  * "KST 기준 같은 날짜인가" 같은 비교에 사용한다. 화면 표시에는 formatKst를 쓸 것.

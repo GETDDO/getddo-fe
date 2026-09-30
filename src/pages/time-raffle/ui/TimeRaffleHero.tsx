@@ -4,14 +4,8 @@ import { Clock, Gift, Ticket, UsersRound } from 'lucide-react';
 
 import type { Event } from '@entities/event';
 
-import { formatKst } from '@shared/lib/date';
+import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
-
-const TIME_ONLY: Intl.DateTimeFormatOptions = {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-};
 
 interface TimeRaffleHeroProps {
     event: Event;
@@ -58,8 +52,8 @@ export function TimeRaffleHero({ event, cta }: TimeRaffleHeroProps) {
                         </span>
                         <span className="bg-surface-sunken text-fg-secondary text-body-sm-bold flex items-center gap-1 rounded-full px-3 py-1">
                             <Clock className="size-4.5" />
-                            {formatKst(event.startsAt, TIME_ONLY)} ~{' '}
-                            {formatKst(event.endsAt, TIME_ONLY)}
+                            {formatKst(event.startsAt, KST_HOUR_MINUTE)} ~{' '}
+                            {formatKst(event.endsAt, KST_HOUR_MINUTE)}
                         </span>
                     </div>
                     <div className="flex flex-col gap-4">
