@@ -7,6 +7,8 @@ import type { Event } from '@entities/event';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 
+import { AnnounceCountdown } from './AnnounceCountdown';
+
 const CHIP = 'text-caption bg-surface-sunken flex items-center gap-2.5 rounded-full px-3 py-1';
 
 interface RaffleDetailHeroProps {
@@ -20,7 +22,13 @@ interface RaffleDetailHeroProps {
 export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHeroProps) {
     return (
         <article className="bg-surface-page border-border-brand flex flex-col items-center overflow-hidden rounded-2xl border lg:min-h-95 lg:flex-row lg:gap-5">
-            <div className="bg-surface-canvas h-48 w-full self-stretch lg:h-auto lg:w-130 lg:shrink-0">
+            {/* 마우스를 올리거나 키보드로 포커스하면 발표까지 남은 시간이 덮인다 */}
+            <div
+                tabIndex={0}
+                role="group"
+                aria-label="상품 이미지 — 당첨자 발표까지 남은 시간"
+                className="bg-surface-canvas focus-visible:ring-border-focus group relative h-48 w-full self-stretch focus-visible:ring-2 focus-visible:outline-none lg:h-auto lg:w-130 lg:shrink-0"
+            >
                 {event.bannerImageUrl ? (
                     <img src={event.bannerImageUrl} alt="" className="size-full object-cover" />
                 ) : (
@@ -28,6 +36,9 @@ export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHe
                         <Gift className="text-fg-disabled size-12" />
                     </div>
                 )}
+                <div className="bg-surface-overlay pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                    <AnnounceCountdown event={event} />
+                </div>
             </div>
 
             <div className="flex h-full min-w-0 flex-1 flex-col justify-between gap-5 px-4 py-5">
