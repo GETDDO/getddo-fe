@@ -9,6 +9,8 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
 
     const detail = event.raffleDetail;
     const entryCount = event.myEntryCount ?? 0;
+    // 한 번에 여러 장을 쓸 수 있어 횟수 × 차감량으로는 실제 사용량이 나오지 않는다
+    const usedTickets = event.myTicketCount ?? entryCount * event.requiredTickets;
     const paragraphs = detail?.paragraphs ?? [event.description];
 
     // 응모 1건당 requiredTickets장이 차감되므로, 총 차감량을 나누면 응모 건수가 된다
@@ -39,7 +41,7 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
         { label: '보유 응모권', value: ticket ? `${formatNumber(ticket.balance)}장` : null },
         {
             label: '이번 이벤트 차감',
-            value: `${formatNumber(entryCount * event.requiredTickets)}장`,
+            value: `${formatNumber(usedTickets)}장`,
         },
         {
             label: '응모자 수',

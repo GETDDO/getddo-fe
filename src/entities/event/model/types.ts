@@ -15,6 +15,10 @@ export const eventSchema = z.object({
     startsAt: z.iso.datetime(),
     endsAt: z.iso.datetime(),
     status: eventStatusSchema,
+    // 당첨자 발표 예정 시각 — ADR-009의 마감 + 5분을 화면에서 더하지 않고 서버 값을 그대로 쓴다.
+    // docs/CONTEXT.md: 발표 카운트다운은 서버가 제공한 발표 예정 시각 기준이어야 새로고침으로 리셋되지 않는다.
+    // TODO: 필드명·제공 여부는 백엔드와 미합의. 없으면 카운트다운을 숨긴다.
+    announceAt: z.iso.datetime().nullable().optional(),
     // 이벤트 목록 상단 '추천 이벤트' 노출 여부 — 운영자가 고르는 값이라 계산으로 만들 수 없다.
     // TODO: 추천 선정 방식은 백엔드와 미합의 (getddo-spec 02-domain/event.md에 정의 없음)
     isRecommended: z.boolean().optional(),
@@ -40,6 +44,10 @@ export const eventSchema = z.object({
     participantCount: z.number().int().nonnegative().nullable().optional(),
     usedTicketCount: z.number().int().nonnegative().nullable().optional(),
     myEntryCount: z.number().int().nonnegative().nullable().optional(),
+    // 내가 이 이벤트에 지금까지 쓴 응모권 수 — 추가 응모로 한도(ADR-010)까지 얼마나 남았는지 계산하는 값.
+    // 한 번에 여러 장을 쓸 수 있어서 myEntryCount × requiredTickets로는 실제 사용량을 알 수 없다.
+    // TODO: 필드명·제공 여부는 백엔드와 미합의. 없으면 myEntryCount × requiredTickets로 근사한다.
+    myTicketCount: z.number().int().nonnegative().nullable().optional(),
 });
 
 export type EventStatus = z.infer<typeof eventStatusSchema>;
