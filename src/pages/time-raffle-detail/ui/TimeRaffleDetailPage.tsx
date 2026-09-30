@@ -8,6 +8,7 @@ import { useTicketBalance } from '@entities/ticket';
 import { Button } from '@shared/ui/button';
 
 import { EntryConfirmDialog } from './EntryConfirmDialog';
+import { InsufficientTicketsDialog } from './InsufficientTicketsDialog';
 import { MyTicketCard } from './MyTicketCard';
 import { QuantityStepper } from './QuantityStepper';
 import { RaffleDetailHero } from './RaffleDetailHero';
@@ -33,6 +34,7 @@ export function TimeRaffleDetailPage() {
     const { data: ticket } = useTicketBalance();
     const [quantity, setQuantity] = useState(1);
     const [confirmOpen, setConfirmOpen] = useState(false);
+    const [shortfallOpen, setShortfallOpen] = useState(false);
 
     if (isPending) {
         return (
@@ -51,11 +53,13 @@ export function TimeRaffleDetailPage() {
     }
 
     const isOpen = event.status === 'open';
-    // 이미 쓴 만큼을 빼고 남은 한도와 보유 잔액 중 작은 쪽까지만 고를 수 있다
+    // 이미 쓴 만큼을 빼고 남은 한도까지 고를 수 있다.
+    // 보유 잔액으로는 막지 않는다 — 여기서 잘라 버리면 부족한 수량을 고를 수 없어 안내 모달을 띄울 일이 없어진다
     const alreadyUsed = (event.myEntryCount ?? 0) * event.requiredTickets;
-    const allowance = Math.max(0, ENTRY_TICKET_LIMIT - alreadyUsed);
-    const maxQuantity = Math.min(allowance, ticket?.balance ?? allowance);
+    const maxQuantity = Math.max(0, ENTRY_TICKET_LIMIT - alreadyUsed);
     const canEnter = isOpen && maxQuantity >= 1;
+    // 잔액을 아직 못 받았으면 부족하다고 단정하지 않고 확인 모달로 보낸다 (최종 판정은 서버 응답)
+    const hasEnoughTickets = ticket == null || ticket.balance >= quantity;
 
     return (
         <main className={CONTAINER}>
@@ -77,7 +81,9 @@ export function TimeRaffleDetailPage() {
                             <Button
                                 variant="secondary"
                                 disabled={!canEnter}
-                                onClick={() => setConfirmOpen(true)}
+                                onClick={() =>
+                                    hasEnoughTickets ? setConfirmOpen(true) : setShortfallOpen(true)
+                                }
                                 className="h-12 w-full"
                             >
                                 <span className="text-body-bold">
@@ -106,12 +112,14 @@ export function TimeRaffleDetailPage() {
                 onOpenChange={setConfirmOpen}
                 title={event.title}
                 quantity={quantity}
-                remaining={ticket ? ticket.balance - quantity : null}
+                balance={ticket?.balance ?? null}
                 onConfirm={() => {
                     // TODO: 실제 응모 요청은 GD-25 「응모 페이지 프론트 화면 개발」에서 features/enter-event로 붙인다
                     setConfirmOpen(false);
                 }}
             />
+
+            <InsufficientTicketsDialog open={shortfallOpen} onOpenChange={setShortfallOpen} />
         </main>
     );
 }

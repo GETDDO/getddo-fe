@@ -14,8 +14,8 @@ interface EntryConfirmDialogProps {
     title: string;
     /** 이번 응모에 쓰는 응모권 수 */
     quantity: number;
-    /** 응모 후 남는 응모권 — 잔액을 못 불러왔으면 null */
-    remaining: number | null;
+    /** 지금 보유 중인 응모권 — 잔액을 못 불러왔으면 null */
+    balance: number | null;
     onConfirm: () => void;
 }
 
@@ -24,7 +24,7 @@ export function EntryConfirmDialog({
     onOpenChange,
     title,
     quantity,
-    remaining,
+    balance,
     onConfirm,
 }: EntryConfirmDialogProps) {
     return (
@@ -48,9 +48,9 @@ export function EntryConfirmDialog({
                         <dd>{quantity}장</dd>
                     </div>
                     <div className="text-body-bold flex items-center justify-between">
-                        <dt className="text-fg-secondary">남은 응모권</dt>
+                        <dt className="text-fg-secondary">보유 응모권</dt>
                         <dd className="text-fg-primary">
-                            {remaining == null ? '-' : `${remaining}장`}
+                            {balance == null ? '-' : `${balance}장`}
                         </dd>
                     </div>
                 </dl>
