@@ -1,5 +1,3 @@
-import { motion } from 'framer-motion';
-
 import { GameTicketCard, useGameList } from '@entities/game';
 import { useDragScroll } from '@shared/lib/use-drag-scroll';
 
@@ -39,31 +37,19 @@ export function GameRail({
                 <p className="text-body-sm text-fg-tertiary">지금 참여할 수 있는 게임이 없어요.</p>
             )}
             {ordered.length > 0 && (
-                // 호버로 떠오르는 카드가 잘리지 않게 위아래 여백을 두고 같은 만큼 당긴다
+                // 호버로 떠오르는 카드와 카드 그림자가 잘리지 않게 위아래·좌우 여백을 두고 같은 만큼 당긴다
                 <div
                     {...dragScroll}
-                    className="-my-3 -mr-(--rail-inset,0px) flex cursor-grab [scrollbar-width:none] gap-4 overflow-x-auto py-3 pr-(--rail-inset,0px) select-none active:cursor-grabbing [&::-webkit-scrollbar]:hidden"
+                    className="-mx-3 -my-3 -mr-[calc(var(--rail-inset,0px)+0.75rem)] flex cursor-grab scroll-px-3 [scrollbar-width:none] gap-4 overflow-x-auto px-3 py-3 pr-[calc(var(--rail-inset,0px)+0.75rem)] select-none active:cursor-grabbing [&::-webkit-scrollbar]:hidden"
                 >
-                    {ordered.map((game, index) => (
-                        // 목록이 화면에 들어오면 왼쪽 카드부터 차례로 올라온다 (한 번만)
-                        <motion.div
-                            key={game.id}
-                            className="shrink-0"
-                            initial={{ opacity: 0, y: 24 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, amount: 0.2 }}
-                            transition={{
-                                duration: 0.45,
-                                delay: index * 0.06,
-                                ease: [0.22, 1, 0.36, 1],
-                            }}
-                        >
+                    {ordered.map((game) => (
+                        <div key={game.id} className="shrink-0">
                             <GameTicketCard
                                 game={game}
                                 href={gameDetailPath(game.id)}
                                 className="transition-[translate] duration-200 motion-safe:hover:-translate-y-1"
                             />
-                        </motion.div>
+                        </div>
                     ))}
                 </div>
             )}

@@ -1,4 +1,3 @@
-import { MotionConfig, motion } from 'framer-motion';
 import { useEffect, useLayoutEffect, useState } from 'react';
 
 import { useMissionList } from '@entities/mission';
@@ -27,14 +26,6 @@ function readAttendanceExpanded() {
         return false;
     }
 }
-
-/** 스크롤로 화면에 들어오면 한 번 살짝 올라오며 나타난다 (order가 클수록 늦게) */
-const riseInView = (order: number) => ({
-    initial: { opacity: 0, y: 24 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, amount: 0.2 },
-    transition: { duration: 0.45, delay: order * 0.06, ease: [0.22, 1, 0.36, 1] as const },
-});
 
 export function MissionListPage() {
     const { data: missions, isPending, isError } = useMissionList();
@@ -108,11 +99,10 @@ export function MissionListPage() {
             </div>
 
             {/*
-              게임 섹션 — 회색 띠 위에 놓이므로 티켓 구멍도 띠 배경색으로 맞춘다.
-              카드 목록은 왼쪽은 콘텐츠 시작선에서 자르고 오른쪽만 화면 끝까지 열어 스크롤한다(피그마).
-              오른쪽으로 늘릴 폭(--rail-inset)은 100cqw로 띠 너비를 재서 스크롤바 폭 오차 없이 계산한다
+              게임 섹션 — 회색 띠 위에 놓인다 (티켓 펀칭은 실제로 도려내서 띠 색이 그대로 비친다).
+              카드 목록은 홈 화면처럼 콘텐츠 폭(최대 1200px) 안에서 자르고 그 안에서 넘긴다
             */}
-            <div className="bg-surface-canvas @container mt-20 overflow-x-clip py-10 [--rail-inset:max(1.5rem,calc((100cqw-75rem)/2+1.5rem))] [--ticket-punch-bg:var(--color-surface-canvas)]">
+            <div className="bg-surface-canvas mt-20 py-10">
                 <div className={CONTAINER}>
                     <GameRail
                         title="게임"
@@ -121,41 +111,31 @@ export function MissionListPage() {
                 </div>
             </div>
 
-            {/* 설문·퀴즈 — 스크롤해 보이면 제목, 카드 순서로 올라온다 (동작 줄이기 설정이면 끔) */}
-            <MotionConfig reducedMotion="user">
-                <section className={`${CONTAINER} mt-20 flex flex-col gap-6`}>
-                    <motion.div {...riseInView(0)}>
-                        <SectionHeader
-                            title="설문 · 퀴즈"
-                            caption="미션마다 한 번만 응모권을 받을 수 있어요."
-                        />
-                    </motion.div>
-                    {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
-                    {isError && (
-                        <p className="text-body-sm text-destructive">
-                            미션 목록을 불러오지 못했습니다.
-                        </p>
-                    )}
-                    {missions?.length === 0 && (
-                        <p className="text-body-sm text-fg-tertiary">
-                            지금 참여할 수 있는 미션이 없어요.
-                        </p>
-                    )}
-                    {missions && missions.length > 0 && (
-                        <div className="flex flex-col gap-4">
-                            {missions.map((mission, index) => (
-                                // 위 카드부터 차례로 올라온다 (앞쪽 4장까지만 간격을 둔다)
-                                <motion.div
-                                    key={mission.id}
-                                    {...riseInView(1 + Math.min(index, 3))}
-                                >
-                                    <MissionCard mission={mission} />
-                                </motion.div>
-                            ))}
-                        </div>
-                    )}
-                </section>
-            </MotionConfig>
+            {/* 설문·퀴즈 */}
+            <section className={`${CONTAINER} mt-20 flex flex-col gap-6`}>
+                <SectionHeader
+                    title="설문 · 퀴즈"
+                    caption="미션마다 한 번만 응모권을 받을 수 있어요."
+                />
+                {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+                {isError && (
+                    <p className="text-body-sm text-destructive">
+                        미션 목록을 불러오지 못했습니다.
+                    </p>
+                )}
+                {missions?.length === 0 && (
+                    <p className="text-body-sm text-fg-tertiary">
+                        지금 참여할 수 있는 미션이 없어요.
+                    </p>
+                )}
+                {missions && missions.length > 0 && (
+                    <div className="flex flex-col gap-4">
+                        {missions.map((mission) => (
+                            <MissionCard key={mission.id} mission={mission} />
+                        ))}
+                    </div>
+                )}
+            </section>
         </main>
     );
 }

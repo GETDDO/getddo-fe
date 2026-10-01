@@ -1,10 +1,15 @@
 import { MotionConfig } from 'framer-motion';
-import { useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { GameGuideDialog, getGameContent, useGameList } from '@entities/game';
-import { GamePlayer, hasGamePlayer, useSubmitGamePlay } from '@features/play-game';
+import {
+    GamePlayer,
+    hasGamePlayer,
+    preloadGamePlayer,
+    useSubmitGamePlay,
+} from '@features/play-game';
 import { GameRail } from '@widgets/game-rail';
 
 import { GameHero } from './GameHero';
@@ -33,6 +38,11 @@ export function GameDetailPage() {
         window.scrollTo({ top: 0 });
     }, [gameId]);
     const game = games?.find((item) => item.id === gameId);
+    // 썸네일 화면에 있는 동안 게임 그림·음악을 미리 받아 두어 게임 시작을 누르면 바로 뜨게 한다
+    const playableGameId = game && hasGamePlayer(game.id) ? game.id : null;
+    useEffect(() => {
+        if (playableGameId) preloadGamePlayer(playableGameId);
+    }, [playableGameId]);
 
     // 플레이 화면이 있는 게임은 대표 영역 자리에서 바로 시작한다
     const startGame = () => {
@@ -108,8 +118,8 @@ export function GameDetailPage() {
                     </div>
                 </div>
 
-                {/* 다른 게임 — 카드 목록은 오른쪽만 화면 끝까지 열어 넘긴다 */}
-                <div className="@container mt-10 overflow-x-clip py-10 [--rail-inset:max(1.5rem,calc((100cqw-75rem)/2+1.5rem))]">
+                {/* 다른 게임 — 홈 화면처럼 카드 목록을 콘텐츠 폭(최대 1200px) 안에서 자르고 그 안에서 넘긴다 */}
+                <div className="mt-10 py-10">
                     <div className={CONTAINER}>
                         <GameRail title="다른 게임" excludeGameId={game.id} />
                     </div>

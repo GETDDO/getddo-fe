@@ -2,15 +2,18 @@ import type { Ref } from 'react';
 
 import exitImage from '../assets/ui/button-exit.png';
 import guideImage from '../assets/ui/button-guide.png';
+import pauseImage from '../assets/ui/button-pause.png';
 import retryImage from '../assets/ui/button-retry.png';
 import startImage from '../assets/ui/button-start.png';
 
-// 피그마 image 109의 도트 버튼 — 글자가 그림에 들어 있어 alt로 이름을 준다
+// 피그마 image 112(게임 시작·게임 방법·다시 하기·나가기)와 image 120(일시정지)의 도트 버튼 — 글자가 그림에 들어 있어 alt로 이름을 준다
 const BUTTONS = {
     start: { image: startImage, label: '게임 시작' },
     guide: { image: guideImage, label: '게임 방법' },
     retry: { image: retryImage, label: '다시 하기' },
     exit: { image: exitImage, label: '나가기' },
+    // 피그마 image 120
+    pause: { image: pauseImage, label: '일시정지' },
 } as const;
 
 export type GameImageButtonKind = keyof typeof BUTTONS;
@@ -36,8 +39,10 @@ export function GameImageButton({
             ref={ref}
             type="button"
             onClick={onClick}
+            // 마우스로 눌러도 초점이 남지 않게 한다 — 남으면 다음 스페이스바가 점프 대신 이 버튼을 다시 누른다
+            onMouseDown={(event) => event.preventDefault()}
             // 키보드 초점은 테두리 대신 올렸을 때처럼 살짝 떠오르고 밝아지는 것으로 보여준다 (그림 버튼에 선이 덧대지지 않게)
-            className={`shrink-0 cursor-pointer rounded-lg transition-[translate,filter] duration-150 outline-none hover:-translate-y-0.5 hover:brightness-105 focus-visible:-translate-y-0.5 focus-visible:brightness-110 active:translate-y-0.5 active:brightness-95 ${size === 'large' ? 'h-12' : 'h-9'}`}
+            className={`shrink-0 cursor-pointer rounded-lg transition-[translate,filter] duration-150 outline-none hover:-translate-y-0.5 hover:brightness-105 focus-visible:-translate-y-0.5 focus-visible:brightness-110 active:translate-y-0.5 active:brightness-95 ${size === 'large' ? 'h-12' : 'h-7 sm:h-9'}`}
         >
             <img src={image} alt={label} draggable={false} className="h-full w-auto" />
         </button>
