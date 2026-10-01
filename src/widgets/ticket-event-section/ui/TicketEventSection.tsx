@@ -56,7 +56,7 @@ export function TicketEventSection({
                             // featured 카드가 행 높이를 결정하고 캐러셀은 그 안에서 늘어난다 — 내용물 높이가 행을 밀지 않도록 absolute로 띄운다
                             <div className="border-border-default bg-surface-page relative self-stretch overflow-hidden rounded-2xl border">
                                 <div className="absolute inset-0 flex flex-col gap-2 overflow-hidden p-4">
-                                    <UpcomingEventCarousel events={upcomingEvents} />
+                                    <UpcomingEventCarousel events={upcomingEvents} fillHeight />
                                 </div>
                             </div>
                         ) : (
@@ -72,8 +72,15 @@ export function TicketEventSection({
 
 const UPCOMING_PAGE_SIZE = 2;
 
-/** 오픈 예정 이벤트 캐러셀 — 한 화면에 2장씩, 좌우 버튼으로 페이지 단위 슬라이드한다 */
-function UpcomingEventCarousel({ events }: { events: Event[] }) {
+/** 오픈 예정 이벤트 캐러셀 — 한 화면에 세로로 2장씩, 좌우 버튼으로 페이지 단위 슬라이드한다 */
+function UpcomingEventCarousel({
+    events,
+    fillHeight = false,
+}: {
+    events: Event[];
+    /** 부모 높이가 정해진 컨테이너(featured 카드 옆)에서 카드를 남은 높이로 늘릴지 여부 — 미지정 컨테이너에서 h-full은 높이를 0으로 붕괴시킨다 */
+    fillHeight?: boolean;
+}) {
     const [page, setPage] = useState(0);
     const totalPages = Math.ceil(events.length / UPCOMING_PAGE_SIZE);
     // 폴링으로 목록이 줄었을 때 현재 페이지가 범위를 벗어나지 않게 보정한다
@@ -89,23 +96,33 @@ function UpcomingEventCarousel({ events }: { events: Event[] }) {
                     </span>
                 )}
             </div>
-            <div className="relative min-h-0 flex-1">
-                <div className="h-full overflow-hidden">
+            <div className={cn('relative', fillHeight && 'min-h-0 flex-1')}>
+                <div className={cn('overflow-hidden', fillHeight && 'h-full')}>
                     <div
-                        className="flex h-full transition-transform duration-300 ease-out motion-reduce:transition-none"
+                        className={cn(
+                            'flex transition-transform duration-300 ease-out motion-reduce:transition-none',
+                            fillHeight && 'h-full',
+                        )}
                         style={{ transform: `translateX(-${current * 100}%)` }}
                     >
-                        {events.map((event, index) => (
+                        {Array.from({ length: totalPages }, (_, pageIndex) => (
                             <div
-                                key={event.id}
+                                key={pageIndex}
                                 // 화면 밖 슬라이드도 렌더되므로 Tab 포커스·보조 기술 접근을 inert로 차단한다
-                                inert={
-                                    index < current * UPCOMING_PAGE_SIZE ||
-                                    index >= (current + 1) * UPCOMING_PAGE_SIZE
-                                }
-                                className="flex h-full w-1/2 shrink-0 px-1"
+                                inert={pageIndex !== current}
+                                className={cn(
+                                    'flex w-full shrink-0 flex-col gap-2 px-1',
+                                    fillHeight && 'h-full',
+                                )}
                             >
-                                <UpcomingEventCard event={event} />
+                                {events
+                                    .slice(
+                                        pageIndex * UPCOMING_PAGE_SIZE,
+                                        (pageIndex + 1) * UPCOMING_PAGE_SIZE,
+                                    )
+                                    .map((event) => (
+                                        <UpcomingEventCard key={event.id} event={event} />
+                                    ))}
                             </div>
                         ))}
                     </div>
