@@ -92,11 +92,19 @@ function UpcomingEventCarousel({ events }: { events: Event[] }) {
             <div className="relative min-h-0 flex-1">
                 <div className="h-full overflow-hidden">
                     <div
-                        className="flex h-full transition-transform duration-300 ease-out"
+                        className="flex h-full transition-transform duration-300 ease-out motion-reduce:transition-none"
                         style={{ transform: `translateX(-${current * 100}%)` }}
                     >
-                        {events.map((event) => (
-                            <div key={event.id} className="flex h-full w-1/2 shrink-0 px-1">
+                        {events.map((event, index) => (
+                            <div
+                                key={event.id}
+                                // 화면 밖 슬라이드도 렌더되므로 Tab 포커스·보조 기술 접근을 inert로 차단한다
+                                inert={
+                                    index < current * UPCOMING_PAGE_SIZE ||
+                                    index >= (current + 1) * UPCOMING_PAGE_SIZE
+                                }
+                                className="flex h-full w-1/2 shrink-0 px-1"
+                            >
                                 <UpcomingEventCard event={event} />
                             </div>
                         ))}
