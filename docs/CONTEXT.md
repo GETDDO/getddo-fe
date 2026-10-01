@@ -90,6 +90,6 @@
 - 당첨자 마스킹 세부 규칙 — 담당자 결정 대기
 - 마감 + 5분 자동 발표가 장애·정합성 오류로 실패했을 때의 사용자 문구·복구·취소 기준 — 미확정
 - 배너 이미지 형식·용량 제한 — 담당자 확정 대기
-- 사용자 문맥 헤더(`X-User-ID`·`X-User-Membership`)의 공통 처리 위치와 `INACTIVE` 사용자 처리·테스트 사용자 목록·시드 제공 방식 — 담당자 후속 작업 (`pending-decisions.md`의 "사용자 문맥과 알림 API", N01~N03 확정 범위에는 미포함)
+- 사용자 문맥 헤더(`X-User-ID`·`X-User-Membership`)의 공통 처리 위치와 `INACTIVE` 사용자 처리·테스트 사용자 목록·시드 제공 방식 — BE 공통 처리 위치는 담당자 후속 작업 (`pending-decisions.md`의 "사용자 문맥과 알림 API", N01~N03 확정 범위에는 미포함). FE 측 `X-User-ID` 주입은 `src/app/setup/user-context-header.ts`의 `apiClient` 요청 인터셉터가 담당한다
 
 MSW 목업(`shared/api/mocks/handlers/`)은 계약의 임시 구현이다. Zod 스키마(`entities/*/model/`)가 검증 기준이며, 도메인 정책의 원본은 `../getddo-spec/02-domain/`에 있다.

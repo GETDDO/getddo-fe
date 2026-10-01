@@ -10,19 +10,19 @@ export function NotificationItem({
 }: {
     notification: Notification;
     now: Date;
-    onRead?: (id: string) => void;
+    onRead?: (id: string, linkUrl: string | null) => void;
 }) {
     return (
         <button
             type="button"
-            onClick={() => onRead?.(notification.id)}
+            onClick={() => onRead?.(notification.id, notification.linkUrl)}
             className={cn(
                 'flex w-full flex-col items-start gap-1 rounded-lg px-2 py-2 text-left transition-colors',
-                notification.read ? 'bg-transparent' : 'bg-brand-soft',
+                notification.isRead ? 'bg-transparent' : 'bg-brand-soft',
             )}
         >
             <div className="flex items-center gap-1.5">
-                {!notification.read && (
+                {!notification.isRead && (
                     <span className="bg-brand-primary size-1.5 shrink-0 rounded-full" />
                 )}
                 <p className="text-caption text-fg-primary font-semibold">{notification.title}</p>
