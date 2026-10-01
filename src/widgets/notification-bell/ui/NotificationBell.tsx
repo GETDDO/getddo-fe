@@ -61,8 +61,9 @@ export function NotificationBell() {
                             now={now}
                             onRead={(id, linkUrl) => {
                                 markRead(id);
-                                // linkUrl은 서버가 주는 내부 경로만 다룬다 — 외부 URL 이동은 시연 범위 밖
-                                if (linkUrl?.startsWith('/')) {
+                                // linkUrl은 서버가 주는 내부 경로만 다룬다 — '//'로 시작하는
+                                // 프로토콜 상대 URL은 브라우저가 외부 출처로 해석하므로 제외한다
+                                if (linkUrl?.startsWith('/') && !linkUrl.startsWith('//')) {
                                     void navigate(linkUrl);
                                 }
                             }}
