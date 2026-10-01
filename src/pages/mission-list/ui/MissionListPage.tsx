@@ -99,10 +99,10 @@ export function MissionListPage() {
             </div>
 
             {/*
-              게임 섹션 — 회색 띠 위에 놓이므로 티켓 구멍도 띠 배경색으로 맞춘다.
+              게임 섹션 — 회색 띠 위에 놓인다 (티켓 펀칭은 실제로 도려내서 띠 색이 그대로 비친다).
               카드 목록은 홈 화면처럼 콘텐츠 폭(최대 1200px) 안에서 자르고 그 안에서 넘긴다
             */}
-            <div className="bg-surface-canvas mt-20 py-10 [--ticket-punch-bg:var(--color-surface-canvas)]">
+            <div className="bg-surface-canvas mt-20 py-10">
                 <div className={CONTAINER}>
                     <GameRail
                         title="게임"
