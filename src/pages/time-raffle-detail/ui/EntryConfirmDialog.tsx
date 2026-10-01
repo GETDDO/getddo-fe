@@ -19,6 +19,8 @@ interface EntryConfirmDialogProps {
     /** 지금 보유 중인 응모권 — 잔액을 못 불러왔으면 null */
     balance: number | null;
     onConfirm: () => void;
+    /** 접수 요청이 진행 중이면 버튼을 잠근다 — 연타로 중복 요청이 나가지 않게 한다 */
+    pending?: boolean;
     /** 닫은 뒤 포커스를 되돌릴 요소 — 트리거 없이 상태로 여는 모달이라 Radix가 포커스를 body로 떨어뜨린다 */
     returnFocusTo?: RefObject<HTMLElement | null>;
 }
@@ -30,6 +32,7 @@ export function EntryConfirmDialog({
     quantity,
     balance,
     onConfirm,
+    pending = false,
     returnFocusTo,
 }: EntryConfirmDialogProps) {
     return (
@@ -74,8 +77,13 @@ export function EntryConfirmDialog({
                             <span className="text-body-bold text-fg-primary">취소</span>
                         </Button>
                     </DialogClose>
-                    <Button variant="secondary" className="h-10 flex-1" onClick={onConfirm}>
-                        <span className="text-body-bold">응모하기</span>
+                    <Button
+                        variant="secondary"
+                        className="h-10 flex-1"
+                        disabled={pending}
+                        onClick={onConfirm}
+                    >
+                        <span className="text-body-bold">{pending ? '처리 중…' : '응모하기'}</span>
                     </Button>
                 </div>
             </DialogContent>

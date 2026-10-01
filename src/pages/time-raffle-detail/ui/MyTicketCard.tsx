@@ -9,6 +9,8 @@ export function MyTicketCard({ event }: { event: Event }) {
     const { data: ticket } = useTicketBalance();
 
     const entryCount = event.myEntryCount ?? 0;
+    // 한 번에 여러 장을 쓸 수 있어 횟수 × 차감량으로는 실제 사용량이 나오지 않는다
+    const usedTickets = event.myTicketCount ?? entryCount * event.requiredTickets;
     const rows = [
         {
             label: '보유 응모권',
@@ -17,7 +19,7 @@ export function MyTicketCard({ event }: { event: Event }) {
         { label: '이번 이벤트 응모 횟수', value: `${formatNumber(entryCount)} 회` },
         {
             label: '사용된 응모권',
-            value: `${formatNumber(entryCount * event.requiredTickets)} 장`,
+            value: `${formatNumber(usedTickets)} 장`,
         },
     ];
 

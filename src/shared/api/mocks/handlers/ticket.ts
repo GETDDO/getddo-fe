@@ -5,8 +5,7 @@ import { env } from '@shared/config/env';
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
 // 목업 세션 동안 유지되는 응모권 상태 — 출석 등 다른 목업이 지급을 기록하면 잔액·이력에 함께 반영된다
-// 시연용 초기 잔액 — 래플 응모 한도(ADR-010, 누적 5장)보다 낮게 둬야 응모권 부족 안내를 확인할 수 있다
-let balance = 2;
+let balance = 10;
 const ticketHistory = [
     {
         id: 'th-1',
@@ -129,6 +128,11 @@ const ticketHistory = [
         createdAt: '2026-08-31T00:15:00Z',
     },
 ];
+
+/** 응모 목업이 차감 전에 잔액을 확인할 때 쓴다 */
+export function getMockTicketBalance() {
+    return balance;
+}
 
 /** 다른 목업 핸들러(출석 등)에서 응모권 지급을 기록할 때 쓴다 */
 export function recordMockTicketGrant(amount: number, reason: string) {

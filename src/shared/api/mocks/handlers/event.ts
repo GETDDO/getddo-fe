@@ -4,9 +4,34 @@ import { env } from '@shared/config/env';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
-// 홈 화면 "오늘의 타임 래플" 배너 데모용 — 실제 마감 시각과 무관하게 데모 실행 시점 기준으로 카운트다운을 보여준다
-const HERO_ENDS_AT = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-const UPCOMING_OPENS_AT = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString();
+/**
+ * 데모용 상대 시각을 브라우저 세션에 한 번만 정해 두고 재사용한다.
+ *
+ * Date.now() + n으로 매번 계산하면 페이지를 새로 열 때마다 마감이 그만큼 뒤로 밀려서
+ * 카운트다운이 리셋된다 — docs/CONTEXT.md가 금지하는 동작이다.
+ * 벽시계 경계에 붙이는 방법도 경계를 넘는 순간 한 칸 밀리므로, 세션에 저장해 고정한다.
+ */
+function sessionFixedTime(key: string, offsetMs: number): string {
+    const storageKey = `getddo-mock-${key}`;
+    try {
+        const saved = sessionStorage.getItem(storageKey);
+        if (saved) return saved;
+    } catch {
+        // 저장소를 쓸 수 없는 환경(테스트 등)에서는 매번 계산한다
+    }
+
+    const value = new Date(Date.now() + offsetMs).toISOString();
+    try {
+        sessionStorage.setItem(storageKey, value);
+    } catch {
+        // 저장에 실패해도 이번 로드 동안은 같은 값을 쓴다
+    }
+    return value;
+}
+
+// 홈 화면 "오늘의 타임 래플" 배너 데모용 — 세션이 유지되는 동안 마감 시각이 움직이지 않는다
+const HERO_ENDS_AT = sessionFixedTime('hero-ends-at', 60 * 60 * 1000);
+const UPCOMING_OPENS_AT = sessionFixedTime('upcoming-opens-at', 3 * 60 * 60 * 1000);
 
 /**
  * KST 기준 dayOffset일 뒤 hour시의 UTC ISO 문자열.
@@ -62,6 +87,7 @@ const mockEvents = [
         participantCount: 842,
         usedTicketCount: 1290,
         myEntryCount: 1,
+        myTicketCount: 1,
     },
     {
         id: 'evt-002',
@@ -79,6 +105,7 @@ const mockEvents = [
         participantCount: 2310,
         usedTicketCount: 5400,
         myEntryCount: 0,
+        myTicketCount: 0,
     },
     {
         id: 'evt-005',
@@ -95,6 +122,7 @@ const mockEvents = [
         participantCount: null,
         usedTicketCount: null,
         myEntryCount: null,
+        myTicketCount: null,
     },
     {
         id: 'evt-006',
@@ -112,6 +140,7 @@ const mockEvents = [
         participantCount: 4820,
         usedTicketCount: 0,
         myEntryCount: 1,
+        myTicketCount: 0,
     },
     {
         id: 'evt-007',
@@ -128,6 +157,7 @@ const mockEvents = [
         participantCount: 2110,
         usedTicketCount: 0,
         myEntryCount: 0,
+        myTicketCount: 0,
     },
     {
         id: 'evt-010',
@@ -144,6 +174,7 @@ const mockEvents = [
         participantCount: null,
         usedTicketCount: null,
         myEntryCount: null,
+        myTicketCount: null,
     },
     {
         id: 'evt-008',
@@ -160,6 +191,7 @@ const mockEvents = [
         participantCount: 3204,
         usedTicketCount: 4120,
         myEntryCount: 1,
+        myTicketCount: 1,
     },
     {
         id: 'evt-009',
@@ -176,6 +208,7 @@ const mockEvents = [
         participantCount: 1890,
         usedTicketCount: 3560,
         myEntryCount: 0,
+        myTicketCount: 0,
     },
     {
         id: 'evt-011',
@@ -192,6 +225,7 @@ const mockEvents = [
         participantCount: 1540,
         usedTicketCount: 0,
         myEntryCount: 0,
+        myTicketCount: 0,
     },
     {
         id: 'evt-012',
@@ -209,6 +243,7 @@ const mockEvents = [
         participantCount: 980,
         usedTicketCount: 0,
         myEntryCount: 0,
+        myTicketCount: 0,
     },
     {
         id: 'evt-013',
@@ -225,6 +260,7 @@ const mockEvents = [
         participantCount: 640,
         usedTicketCount: 0,
         myEntryCount: 0,
+        myTicketCount: 0,
     },
 
     {
@@ -243,6 +279,7 @@ const mockEvents = [
         participantCount: 1820,
         usedTicketCount: 2640,
         myEntryCount: 1,
+        myTicketCount: 1,
     },
     {
         id: 'evt-202',
@@ -259,6 +296,7 @@ const mockEvents = [
         participantCount: 3120,
         usedTicketCount: 0,
         myEntryCount: 0,
+        myTicketCount: 0,
     },
     {
         id: 'evt-203',
@@ -275,6 +313,7 @@ const mockEvents = [
         participantCount: 1460,
         usedTicketCount: 0,
         myEntryCount: 0,
+        myTicketCount: 0,
     },
     {
         id: 'evt-204',
@@ -292,6 +331,7 @@ const mockEvents = [
         participantCount: 2740,
         usedTicketCount: 3180,
         myEntryCount: 0,
+        myTicketCount: 0,
     },
     {
         id: 'evt-205',
@@ -308,6 +348,7 @@ const mockEvents = [
         participantCount: 1980,
         usedTicketCount: 0,
         myEntryCount: 1,
+        myTicketCount: 0,
     },
     {
         id: 'evt-206',
@@ -325,6 +366,7 @@ const mockEvents = [
         participantCount: 4210,
         usedTicketCount: 8640,
         myEntryCount: 2,
+        myTicketCount: 4,
     },
     {
         id: 'evt-207',
@@ -342,6 +384,7 @@ const mockEvents = [
         participantCount: 3640,
         usedTicketCount: 7120,
         myEntryCount: 0,
+        myTicketCount: 0,
     },
     {
         id: 'evt-208',
@@ -358,6 +401,7 @@ const mockEvents = [
         participantCount: 1230,
         usedTicketCount: 0,
         myEntryCount: 0,
+        myTicketCount: 0,
     },
 
     // ── 타임래플 ── 정해진 시간에만 열리는 한정 굿즈 래플. 전부 응모권을 사용한다.
@@ -365,14 +409,14 @@ const mockEvents = [
         id: 'evt-003',
         title: '무너 한정 굿즈 타임 래플',
         description:
-            '딱 한 시간만 열리는 래플이에요. 응모권 1장으로 참여하고, 마감 직후 바로 추첨 결과를 확인하세요. 이번 달에만 만날 수 있는 무너 굿즈를 추첨으로 드려요.',
+            '무너 캐릭터를 메탈릭 코팅으로 새로 빚은 커스텀 피규어입니다. 아크릴 케이스와 인증 카드를 갖춘 소량 제작분이라 이번 시즌이 지나면 다시 만들지 않습니다.',
         bannerImageUrl: null,
         startsAt: kstAt(0, 18),
         endsAt: HERO_ENDS_AT,
         status: 'open',
         isTimeRaffle: true,
         raffleDetail: raffleDetail(
-            '본 무너(MOONO) 스페셜 패키지는 오직 U+GETDDO 타임래플 멤버들을 위해 수작업으로 소량 커스텀 제작된 초한정판 굿즈입니다. 무너 고유의 핫핑크 아이덴티티에 세련된 메탈릭 코팅이 더해져 희소성을 강조했습니다.',
+            '무너 커스텀 피규어를 메탈릭 코팅으로 마감한 타임래플 전용 구성입니다. 제작 수량이 정해져 있어 이번 회차가 끝나면 추가로 만들지 않습니다.',
             '무너 커스텀 메탈릭 피규어 1종 + 아크릴 디스플레이 케이스 + 인증 카드',
         ),
         requiredTickets: 1,
@@ -382,12 +426,13 @@ const mockEvents = [
         participantCount: 1234,
         usedTicketCount: 6412,
         myEntryCount: 2,
+        myTicketCount: 2,
     },
     {
         id: 'evt-004',
         title: '닌텐도 스위치 2',
         description:
-            '딱 1명에게 닌텐도 스위치 2를 드려요. 응모권을 많이 쓸수록 당첨 기회가 커져요.',
+            '국내 정식 발매 구성 그대로의 미개봉 새 제품입니다. 조이콘 두 개와 전용 캐리 파우치가 함께 들어 있어 받는 날 바로 꺼내 쓸 수 있습니다.',
         bannerImageUrl: null,
         startsAt: kstAt(0, 15),
         endsAt: kstAt(0, 22),
@@ -404,11 +449,13 @@ const mockEvents = [
         participantCount: 1284,
         usedTicketCount: 3102,
         myEntryCount: 2,
+        myTicketCount: 2,
     },
     {
         id: 'evt-101',
         title: '에어팟 프로 3',
-        description: '노이즈 캔슬링으로 소문난 그 이어폰. 응모권 2장으로 참여할 수 있어요.',
+        description:
+            '지하철과 카페의 소음을 눌러 주는 노이즈 캔슬링 이어폰입니다. 실리콘 팁이 세 가지 크기로 들어 있어 귀에 맞는 것을 골라 쓸 수 있습니다.',
         bannerImageUrl: null,
         startsAt: kstAt(0, 16),
         endsAt: kstAt(0, 22),
@@ -425,12 +472,13 @@ const mockEvents = [
         participantCount: 2048,
         usedTicketCount: 5120,
         myEntryCount: 0,
+        myTicketCount: 0,
     },
     {
         id: 'evt-102',
         title: '무너 인형 세트',
         description:
-            '무너와 친구들 인형 4종 세트를 드려요. 이번 시즌에만 만들어진 한정 수량이에요.',
+            '무너와 친구들 네 캐릭터를 인형으로 옮긴 세트입니다. 이번 시즌 생산분만으로 구성했고 추가 제작 계획은 없습니다.',
         bannerImageUrl: null,
         startsAt: kstAt(0, 17),
         endsAt: kstAt(0, 22),
@@ -447,11 +495,13 @@ const mockEvents = [
         participantCount: 3320,
         usedTicketCount: 4180,
         myEntryCount: 1,
+        myTicketCount: 1,
     },
     {
         id: 'evt-103',
         title: '아이패드 에어 M3',
-        description: '오늘 저녁 8시에 열리는 한 시간짜리 래플이에요. 알림을 켜두면 놓치지 않아요.',
+        description:
+            '필기와 영상 편집을 한 대로 소화하는 11형 태블릿입니다. 정품 스마트 폴리오가 함께 들어가 커버와 스탠드로 그대로 쓸 수 있습니다.',
         bannerImageUrl: null,
         startsAt: kstAt(0, 20),
         endsAt: kstAt(0, 21),
@@ -468,11 +518,13 @@ const mockEvents = [
         participantCount: null,
         usedTicketCount: null,
         myEntryCount: null,
+        myTicketCount: null,
     },
     {
         id: 'evt-104',
         title: '무너 키링 세트',
-        description: '가방에 달기 좋은 무너 키링 6종 세트. 응모권 1장으로 참여할 수 있어요.',
+        description:
+            '가방이나 파우치에 달 수 있는 아크릴 키링 여섯 개입니다. 캐릭터마다 표정을 다르게 만들어 모으는 재미를 남겼습니다.',
         bannerImageUrl: null,
         startsAt: kstAt(0, 21),
         endsAt: kstAt(0, 22),
@@ -489,11 +541,13 @@ const mockEvents = [
         participantCount: null,
         usedTicketCount: null,
         myEntryCount: null,
+        myTicketCount: null,
     },
     {
         id: 'evt-105',
         title: 'LG 스탠바이미 2',
-        description: '움직이는 스크린으로 유명한 그 제품이에요. 하루 한 번만 열립니다.',
+        description:
+            '바퀴 달린 스탠드에 올려 방마다 옮겨 가며 보는 화면입니다. 배터리를 내장해 콘센트가 없는 자리에서도 쓸 수 있습니다.',
         bannerImageUrl: null,
         startsAt: kstAt(0, 22),
         endsAt: kstAt(0, 23),
@@ -510,11 +564,13 @@ const mockEvents = [
         participantCount: null,
         usedTicketCount: null,
         myEntryCount: null,
+        myTicketCount: null,
     },
     {
         id: 'evt-106',
         title: '갤럭시 워치8',
-        description: '어제 오전에 열렸던 한 시간짜리 래플이에요.',
+        description:
+            '운동 기록과 수면 추적을 손목에서 한 번에 확인하는 스마트워치입니다. 스트랩이 하나 더 들어 있어 상황에 따라 바꿔 낄 수 있습니다.',
         bannerImageUrl: null,
         startsAt: kstAt(-1, 11),
         endsAt: kstAt(-1, 12),
@@ -531,11 +587,13 @@ const mockEvents = [
         participantCount: 1740,
         usedTicketCount: 3980,
         myEntryCount: 1,
+        myTicketCount: 2,
     },
     {
         id: 'evt-107',
         title: '무너 굿즈 박스',
-        description: '머그컵·스티커·에코백이 들어간 시즌 굿즈 박스를 드렸어요.',
+        description:
+            '머그컵과 에코백, 스티커 팩을 한 상자에 담은 시즌 구성입니다. 머그컵과 에코백은 이번 시즌에만 제작했습니다.',
         bannerImageUrl: null,
         startsAt: kstAt(-1, 13),
         endsAt: kstAt(-1, 14),
@@ -552,11 +610,13 @@ const mockEvents = [
         participantCount: 2960,
         usedTicketCount: 3410,
         myEntryCount: 0,
+        myTicketCount: 0,
     },
     {
         id: 'evt-108',
         title: '다이슨 에어랩',
-        description: '응모권 3장으로 참여했던 한 시간짜리 래플이에요.',
+        description:
+            '고온으로 인한 열 손상을 줄이면서 말리고 마는 멀티 스타일러입니다. 전용 케이스에 헤드를 정리해 두고 쓸 수 있습니다.',
         bannerImageUrl: null,
         startsAt: kstAt(-1, 15),
         endsAt: kstAt(-1, 16),
@@ -573,11 +633,13 @@ const mockEvents = [
         participantCount: 4120,
         usedTicketCount: 9840,
         myEntryCount: 2,
+        myTicketCount: 6,
     },
     {
         id: 'evt-109',
         title: '소니 WH-1000XM6',
-        description: '추첨이 끝나 당첨자가 발표된 래플이에요.',
+        description:
+            '장거리 이동에서도 주변 소음을 눌러 주는 헤드폰입니다. 하드 케이스와 항공 어댑터가 들어 있어 기내에서도 그대로 연결됩니다.',
         bannerImageUrl: null,
         startsAt: kstAt(-1, 17),
         endsAt: kstAt(-1, 18),
@@ -594,11 +656,13 @@ const mockEvents = [
         participantCount: 2280,
         usedTicketCount: 5060,
         myEntryCount: 0,
+        myTicketCount: 0,
     },
     {
         id: 'evt-110',
         title: '무너 한정 담요',
-        description: '겨울 시즌 한정으로 만든 무너 담요를 드렸어요.',
+        description:
+            '겨울 시즌에만 제작한 무너 극세사 담요입니다. 보관 파우치에 접어 넣으면 부피가 줄어 차 안이나 캠핑장에서도 쓰기 좋습니다.',
         bannerImageUrl: null,
         startsAt: kstAt(-1, 19),
         endsAt: kstAt(-1, 20),
@@ -615,11 +679,13 @@ const mockEvents = [
         participantCount: 3610,
         usedTicketCount: 4220,
         myEntryCount: 1,
+        myTicketCount: 1,
     },
     {
         id: 'evt-111',
         title: '스타벅스 럭키백',
-        description: '텀블러와 원두가 들어간 럭키백을 드렸어요.',
+        description:
+            '텀블러와 드립백 원두, 리유저블 컵을 함께 담은 구성입니다. 집과 사무실에 하나씩 두고 번갈아 쓸 수 있게 컵을 두 종류로 넣었습니다.',
         bannerImageUrl: null,
         startsAt: kstAt(-1, 21),
         endsAt: kstAt(-1, 22),
@@ -636,11 +702,49 @@ const mockEvents = [
         participantCount: 1980,
         usedTicketCount: 2340,
         myEntryCount: 0,
+        myTicketCount: 0,
     },
 ];
 
+/** 응모 목업이 한도·잔액을 검사하기 전에 대상 이벤트를 찾을 때 쓴다 */
+export function findMockEvent(eventId: string) {
+    return mockEvents.find((e) => e.id === eventId) ?? null;
+}
+
+/**
+ * 응모 목업이 접수를 확정한 뒤 호출한다 — 내 응모 기록과 실시간 현황 지표를 함께 올린다.
+ * 서버가 보관할 상태를 목업에서 흉내 내는 것이라 응모 핸들러가 아니라 이벤트 데이터 옆에 둔다.
+ */
+export function recordMockEventEntry(
+    event: NonNullable<ReturnType<typeof findMockEvent>>,
+    ticketsUsed: number,
+) {
+    // 같은 사람이 여러 번 응모해도 응모자 수는 한 번만 는다
+    if ((event.myEntryCount ?? 0) === 0) {
+        event.participantCount = (event.participantCount ?? 0) + 1;
+    }
+    event.myEntryCount = (event.myEntryCount ?? 0) + 1;
+    event.myTicketCount = (event.myTicketCount ?? 0) + ticketsUsed;
+    event.usedTicketCount = (event.usedTicketCount ?? 0) + ticketsUsed;
+}
+
+/** ADR-009 — 유형과 무관하게 마감 + 5분 검토 후 자동으로 최초 발표한다 */
+const ANNOUNCE_DELAY_MS = 5 * 60 * 1000;
+
+/**
+ * 발표 예정 시각을 응답에 실어 준다.
+ * 발표 카운트다운은 서버가 준 시각으로 계산해야 새로고침에 리셋되지 않으므로(docs/CONTEXT.md),
+ * 화면에서 마감 + 5분을 더하지 않도록 목업이 서버 몫을 대신 계산한다.
+ */
+function withAnnounceAt<T extends { endsAt: string }>(event: T) {
+    return {
+        ...event,
+        announceAt: new Date(new Date(event.endsAt).getTime() + ANNOUNCE_DELAY_MS).toISOString(),
+    };
+}
+
 export const eventHandlers = [
-    http.get(api('/events'), () => HttpResponse.json(mockEvents)),
+    http.get(api('/events'), () => HttpResponse.json(mockEvents.map(withAnnounceAt))),
     http.get(api('/events/:eventId'), ({ params }) => {
         const event = mockEvents.find((e) => e.id === params.eventId);
         if (!event) {
@@ -649,6 +753,6 @@ export const eventHandlers = [
                 { status: 404 },
             );
         }
-        return HttpResponse.json(event);
+        return HttpResponse.json(withAnnounceAt(event));
     }),
 ];
