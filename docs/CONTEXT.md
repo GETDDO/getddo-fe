@@ -44,6 +44,14 @@
 - 이벤트 등록과 경품·당첨 인원 등록은 함께 성공하거나 함께 실패한다 — 경품 없이 이벤트만 등록되지 않는다. 같은 등수에는 한 종류의 경품만 등록한다
 - 시작 전이며 진행 예정 상태에서만 수정 가능하다. 중단·취소 상태는 시작 전이라도 수정 불가이고, 시작 시각은 앞당길 수 없다(늦추기만 가능). 진행 중·마감 후에는 수정 불가
 
+## 실시간 응모 현황 갱신
+
+요구사항 원본은 기능 요구사항 7절이다. 갱신 주기와 방식은 구현 담당자 재량으로 위임됐고 `05-api/entry.md`는 E03 재조회 제안과 함께 SSE·WebSocket을 필수로 두지 않는다고 명시한다.
+
+- **30초 폴링**으로 확정했다 — `useEventList`·`useEvent`의 `refetchInterval`이 담당하며, 상세는 추첨 완료(`drawn`)까지 폴링한다 (마감 상태는 결과 발표 전환을 감지해야 한다)
+- **응모 성공 직후 즉시 재조회**는 `useEnterEvent`의 `onSuccess` 무효화(`['events']`·`['tickets']`·`['entries']`)가 담당한다
+- 표시 지표는 `Event`의 `participantCount`·`usedTicketCount`·`myEntryCount`다. E03의 `serverTime`·`mySpentTicketCount`는 초안 전용 필드라 계약 확정 시 전환을 검토한다
+
 ## 시간 규칙 — 반드시 지킬 것
 
 정책 원본은 `../getddo-spec/00-requirements/functional-requirements.md`의 "공통 시간 기준과 화면 표시"다.
