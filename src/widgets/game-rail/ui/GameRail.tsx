@@ -37,10 +37,10 @@ export function GameRail({
                 <p className="text-body-sm text-fg-tertiary">지금 참여할 수 있는 게임이 없어요.</p>
             )}
             {ordered.length > 0 && (
-                // 호버로 떠오르는 카드가 잘리지 않게 위아래 여백을 두고 같은 만큼 당긴다
+                // 호버로 떠오르는 카드와 카드 그림자가 잘리지 않게 위아래·좌우 여백을 두고 같은 만큼 당긴다
                 <div
                     {...dragScroll}
-                    className="-my-3 -mr-(--rail-inset,0px) flex cursor-grab [scrollbar-width:none] gap-4 overflow-x-auto py-3 pr-(--rail-inset,0px) select-none active:cursor-grabbing [&::-webkit-scrollbar]:hidden"
+                    className="-mx-3 -my-3 -mr-[calc(var(--rail-inset,0px)+0.75rem)] flex cursor-grab scroll-px-3 [scrollbar-width:none] gap-4 overflow-x-auto px-3 py-3 pr-[calc(var(--rail-inset,0px)+0.75rem)] select-none active:cursor-grabbing [&::-webkit-scrollbar]:hidden"
                 >
                     {ordered.map((game) => (
                         <div key={game.id} className="shrink-0">
