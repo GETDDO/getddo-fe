@@ -52,14 +52,18 @@ describe('이벤트 목업 핸들러', () => {
         }
     });
 
-    it('시연 플로우를 밟을 수 있도록 각 상태의 타임래플이 지금 하나씩은 있다', async () => {
-        const raffles = (await events()).filter((event) => event.isTimeRaffle);
-        const statuses = new Set(raffles.map((event) => event.status));
+    /*
+     * 시연 데이터는 세션이 시작한 시각을 기준으로 잡혀 있다.
+     * "오늘 몇 시"로 고정하면 늦은 시각에 열었을 때 해당 상태가 통째로 비므로,
+     * 네 상태를 맡는 이벤트가 각각 제 역할을 하는지 지목해서 확인한다.
+     */
+    it('시연 플로우를 밟을 수 있도록 각 상태의 타임래플이 하나씩 있다', async () => {
+        const byId = new Map((await events()).map((event) => [event.id, event]));
 
-        // 진행 중(응모) · 마감(발표 대기) · 발표 완료가 동시에 보여야 흐름을 한 화면에서 확인할 수 있다
-        expect(statuses.has('open'), '진행 중인 래플').toBe(true);
-        expect(statuses.has('closed'), '발표 대기 중인 래플').toBe(true);
-        expect(statuses.has('drawn'), '발표 완료된 래플').toBe(true);
-        expect(statuses.has('upcoming'), '오픈 예정 래플').toBe(true);
+        expect(byId.get('evt-112')?.status, '응모할 수 있는 래플').toBe('open');
+        expect(byId.get('evt-106')?.status, '발표를 기다리는 래플').toBe('closed');
+        expect(byId.get('evt-105')?.status, '아직 열리지 않은 래플').toBe('upcoming');
+        // 어제 끝난 래플이라 시각과 무관하게 항상 발표 완료다
+        expect(byId.get('evt-107')?.status, '발표가 끝난 래플').toBe('drawn');
     });
 });

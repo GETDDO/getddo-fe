@@ -55,6 +55,9 @@ const FLOW_ENDS_AT = sessionFixedTime('flow-ends-at', 3 * MINUTE);
 // 이미 마감돼 발표를 기다리는 래플 — 화면을 열자마자 발표 대기 상태를 볼 수 있다
 const AWAITING_STARTS_AT = sessionFixedTime('awaiting-starts-at', -62 * MINUTE);
 const AWAITING_ENDS_AT = sessionFixedTime('awaiting-ends-at', -2 * MINUTE);
+// 아직 열리지 않은 래플 — 오늘 몇 시 식으로 고정하면 늦은 시각에 데모할 때 오픈 예정이 하나도 남지 않는다
+const PENDING_STARTS_AT = sessionFixedTime('pending-starts-at', 2 * 60 * MINUTE);
+const PENDING_ENDS_AT = sessionFixedTime('pending-ends-at', 3 * 60 * MINUTE);
 
 /**
  * KST 기준 dayOffset일 뒤 hour시의 UTC ISO 문자열.
@@ -572,8 +575,8 @@ const mockEvents = [
         description:
             '바퀴 달린 스탠드에 올려 방마다 옮겨 가며 보는 화면입니다. 배터리를 내장해 콘센트가 없는 자리에서도 쓸 수 있습니다.',
         bannerImageUrl: null,
-        startsAt: kstAt(0, 22),
-        endsAt: kstAt(0, 23),
+        startsAt: PENDING_STARTS_AT,
+        endsAt: PENDING_ENDS_AT,
         status: 'upcoming',
         isTimeRaffle: true,
         raffleDetail: raffleDetail(

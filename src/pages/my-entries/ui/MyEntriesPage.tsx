@@ -6,9 +6,9 @@ import { formatNumber } from '@shared/lib/format';
 export function MyEntriesPage() {
     const { data: entries, isPending, isError } = useMyEntries();
 
-    // 최신 응모가 위로 (ISO 8601 UTC 문자열이라 문자열 비교로 정렬 가능)
-    const sortedEntries = [...(entries ?? [])].sort((a, b) =>
-        b.createdAt.localeCompare(a.createdAt),
+    // 최신 응모가 위로. 같은 초에 소수 초가 있는 값과 없는 값이 섞일 수 있어 문자열이 아닌 시각으로 비교한다
+    const sortedEntries = [...(entries ?? [])].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
     // 취소된 응모는 접수 건수에서 뺀다
     const appliedEntries = sortedEntries.filter((entry) => entry.status === 'applied');
