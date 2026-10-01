@@ -50,7 +50,7 @@
 
 - **30초 폴링**으로 확정했다 — `useEventList`·`useEvent`의 `refetchInterval`이 담당하며, 상세는 추첨 완료(`drawn`)까지 폴링한다 (마감 상태는 결과 발표 전환을 감지해야 한다)
 - **응모 성공 직후 즉시 재조회**는 `useEnterEvent`의 `onSuccess` 무효화(`['events']`·`['tickets']`·`['entries']`)가 담당한다
-- 표시 지표는 `Event`의 `participantCount`·`usedTicketCount`·`myTicketCount`다. E03의 `serverTime`·`mySpentTicketCount`는 초안 전용 필드라 계약 확정 시 전환을 검토한다
+- 표시 지표는 `Event`의 `participantCount`·`usedTicketCount`·`myEntryCount`다. E03의 `serverTime`·`mySpentTicketCount`는 초안 전용 필드라 계약 확정 시 전환을 검토한다
 
 ## 시간 규칙 — 반드시 지킬 것
 
