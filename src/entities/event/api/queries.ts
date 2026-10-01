@@ -26,5 +26,10 @@ export function useEvent(eventId: string) {
             const { data } = await apiClient.get<unknown>(`/events/${eventId}`);
             return eventSchema.parse(data);
         },
+        // 실시간 현황 자동 갱신 (기능 요구사항 7절) — 진행 예정·진행 중만 30초 폴링하고 마감·추첨 완료는 수치가 변하지 않아 멈춘다
+        refetchInterval: (query) => {
+            const status = query.state.data?.status;
+            return status === 'open' || status === 'upcoming' ? 30_000 : false;
+        },
     });
 }
