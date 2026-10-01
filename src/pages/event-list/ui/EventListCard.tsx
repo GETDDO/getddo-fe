@@ -14,10 +14,12 @@ export function EventListCard({ event }: { event: Event }) {
     const dDay = event.status === 'open' ? kstDayDiff(event.endsAt, now) : null;
     const hasDDay = dDay != null && dDay >= 0;
 
+    // 카드 배경이 페이지 배경과 같은 토큰이라 그림자만으로는 경계가 생기지 않는다.
+    // 다크에서는 그 그림자마저 어두운 배경에 묻혀 카드가 통째로 사라져 보이므로 테두리를 둔다.
     return (
         <Link
             to={`/events/${event.id}`}
-            className="bg-surface-page flex h-70 flex-col overflow-hidden rounded-2xl shadow-md"
+            className="bg-surface-page border-border-default flex h-70 flex-col overflow-hidden rounded-2xl border shadow-md"
         >
             {event.bannerImageUrl ? (
                 <img src={event.bannerImageUrl} alt="" className="h-37.5 w-full object-cover" />
