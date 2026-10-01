@@ -26,5 +26,10 @@ export function useEvent(eventId: string) {
             const { data } = await apiClient.get<unknown>(`/events/${eventId}`);
             return eventSchema.parse(data);
         },
+        // 실시간 현황 자동 갱신 (기능 요구사항 7절) — 마감 상태도 결과 발표(closed → drawn) 전환을 감지해야 하므로 추첨 완료 전까지 30초 폴링을 유지한다
+        refetchInterval: (query) => {
+            const status = query.state.data?.status;
+            return status === 'drawn' ? false : 30_000;
+        },
     });
 }

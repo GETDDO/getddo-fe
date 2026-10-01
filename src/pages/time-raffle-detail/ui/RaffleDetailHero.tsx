@@ -59,7 +59,7 @@ export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHe
                             {formatKst(event.startsAt, KST_HOUR_MINUTE)} ~{' '}
                             {formatKst(event.endsAt, KST_HOUR_MINUTE)}
                         </span>
-                        {/* 참여 현황은 담당 범위가 달라 디자인대로 값만 보여주고 갱신 로직은 두지 않는다 */}
+                        {/* 참여 현황 — 이벤트 상세 쿼리가 진행 중 30초 폴링으로 갱신한다 */}
                         {event.participantCount != null && (
                             <span className={`${CHIP} text-fg-primary`}>
                                 <UsersRound className="size-5" />

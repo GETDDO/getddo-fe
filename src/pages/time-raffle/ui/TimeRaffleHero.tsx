@@ -62,7 +62,7 @@ export function TimeRaffleHero({ event, cta }: TimeRaffleHeroProps) {
                     </div>
                 </div>
 
-                {/* 응모자 수·응모권 사용 — 실시간 참여 현황은 담당이 따로 있어 디자인대로 값만 보여주고 갱신 로직은 두지 않는다 */}
+                {/* 응모자 수·응모권 사용 — 실시간 현황은 이벤트 목록·상세 쿼리의 30초 폴링과 응모 성공 시 재조회로 갱신된다 */}
                 <div className="flex gap-3">
                     {stats.map(({ key, label, value, unit, icon: Icon }) => (
                         <div

@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { env } from '@shared/config/env';
 
 import { App } from './App';
+import './setup/user-context-header';
 import './styles/globals.css';
 
 // MSW는 서비스워커 등록이 끝난 뒤 렌더링해야 첫 API 호출도 가로챌 수 있음

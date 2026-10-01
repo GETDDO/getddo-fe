@@ -78,7 +78,7 @@ chore: eslint-plugin-perfectionist로 import 정렬 강제
 
 ## PR 절차
 
-1. 작업 브랜치를 push하고 `dev` 대상으로 PR 생성
+1. 작업 브랜치를 push하고 `dev` 대상으로 PR 생성. 제목은 `[타입] Jira이슈키 제목` 형식을 따른다 (예: `[feat] GD-51 사용자 도메인과 조회 기반 구현`) — GitHub 이슈 번호(`#10`)를 Jira 키 대신 쓰지 않는다
 2. PR 템플릿(`.github/pull_request_template.md`)의 항목을 모두 채운다 — 관련 이슈, 작업 내용, 테스트 결과, 리뷰 포인트, 체크리스트
 3. CI(`format:check` → `lint` → `test:ci` → `build`) 통과 확인
 4. 최소 1명 리뷰 승인 후 **Squash and Merge**
