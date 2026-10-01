@@ -5,7 +5,7 @@ import type { GameContent } from './game-content';
 /**
  * 게임 방법 모달 — 조작·점수·보상 3단계 안내와 이미지, 게임 시작 버튼.
  * 피그마(너비 392, 안내 12px)는 데스크톱에서 작아 보여 한 단계씩 키웠다:
- * 너비 480, 제목 Title 3, 부제 Body, 안내 Body SM, 아이콘 원 36, 이미지 높이 160, 버튼 Large(48)
+ * 너비 480, 제목 Title 3, 부제 Body, 안내 Body SM, 아이콘 원 36, 이미지 비율 314:160, 버튼 Large(48)
  */
 export function GameGuideDialog({
     open,
@@ -55,13 +55,21 @@ export function GameGuideDialog({
                                 <span className="bg-border-default flex size-9 shrink-0 items-center justify-center rounded-full">
                                     <step.icon aria-hidden className="text-fg-primary size-5" />
                                 </span>
-                                <span className="text-body-sm text-fg-primary">{step.text}</span>
+                                {/* 안내 문구의 줄바꿈(\n)을 그대로 살려 문장 단위로 끊어 보여준다 */}
+                                <span className="text-body-sm text-fg-primary whitespace-pre-line">
+                                    {step.text}
+                                </span>
                             </div>
                         </li>
                     ))}
                 </ol>
 
-                <img src={guide.image} alt="" className="h-40 w-full rounded-2xl object-cover" />
+                {/* 피그마 게임 방법 이미지 비율(314:160)을 지켜 장면이 잘리지 않게 한다 */}
+                <img
+                    src={guide.image}
+                    alt=""
+                    className="aspect-[314/160] w-full rounded-2xl object-cover"
+                />
 
                 {/* 디자인 시스템 브랜드 버튼 Large(48): brand/primary 기본·호버·누름 */}
                 <button

@@ -44,6 +44,8 @@ export function useLoopingBgm(src: string) {
     /** 부딪혔을 때 줄이는 배율 — 다시 시작하면 1로 되돌린다 */
     const duckRef = useRef(1);
     const levelRef = useRef(level);
+    /** 게임을 일시정지한 동안에는 탭을 다녀와도 다시 틀지 않는다 */
+    const pausedRef = useRef(false);
 
     // 첫 재생이 늦지 않도록 화면에 들어오면 음원을 미리 받아 둔다 (풀기는 재생할 때)
     const bytesRef = useRef<Promise<ArrayBuffer> | null>(null);
@@ -68,6 +70,7 @@ export function useLoopingBgm(src: string) {
     /** 재생(이미 재생 중이면 원래 음량으로 되돌림) — 입력 처리 안에서 부른다 */
     const play = useCallback(() => {
         duckRef.current = 1;
+        pausedRef.current = false;
         if (!ctxRef.current) {
             const ctx = new AudioContext();
             const gain = ctx.createGain();
@@ -110,6 +113,18 @@ export function useLoopingBgm(src: string) {
         [applyVolume],
     );
 
+    /** 일시정지 — 곡 위치를 그대로 두고 멈춘다 */
+    const pause = useCallback(() => {
+        pausedRef.current = true;
+        void ctxRef.current?.suspend();
+    }, []);
+
+    /** 일시정지한 곳부터 이어서 재생한다 — 입력 처리 안에서 부른다 */
+    const resume = useCallback(() => {
+        pausedRef.current = false;
+        if (sourceRef.current) void ctxRef.current?.resume();
+    }, []);
+
     /** 소리 단계를 바꾼다 (0이면 음소거) */
     const setLevel = useCallback((next: number) => {
         const clamped = Math.min(BGM_MAX_LEVEL, Math.max(0, Math.round(next)));
@@ -128,7 +143,7 @@ export function useLoopingBgm(src: string) {
             const ctx = ctxRef.current;
             if (!ctx) return;
             if (document.hidden) void ctx.suspend();
-            else if (sourceRef.current) void ctx.resume();
+            else if (sourceRef.current && !pausedRef.current) void ctx.resume();
         };
         document.addEventListener('visibilitychange', onVisibility);
         return () => document.removeEventListener('visibilitychange', onVisibility);
@@ -147,5 +162,5 @@ export function useLoopingBgm(src: string) {
         [],
     );
 
-    return { play, duck, level, setLevel };
+    return { play, duck, pause, resume, level, setLevel };
 }

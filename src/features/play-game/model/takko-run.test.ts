@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
     createRun,
+    pauseRun,
     pressJump,
     releaseJump,
+    resumeRun,
     runnerFrame,
     RUNNER_X,
     scoreOf,
@@ -11,7 +13,7 @@ import {
     STAGES,
     stepRun,
 } from './takko-run';
-import { CHARACTER_FRAME } from './takko-run-atlas';
+import { CHARACTER_FRAME, OBSTACLE_SPRITES } from './takko-run-atlas';
 
 const STEP = 1 / 60;
 const run = (seconds: number, state = createRun(), random = () => 0.5) => {
@@ -90,5 +92,61 @@ describe('타꼬런 규칙', () => {
         for (let t = 0; t < 3; t += STEP) stepRun(state, STEP);
         expect(state.stage).toBe(3);
         expect(state.speed).toBeCloseTo(STAGES[2].speed, 0);
+    });
+
+    it('일시정지하면 멈추고 점프도 안 되며, 이어 하면 다시 달린다', () => {
+        const state = createRun();
+        pressJump(state);
+        run(0.5, state, () => 0.99);
+        pauseRun(state);
+        const distance = state.distance;
+        pressJump(state);
+        run(1, state, () => 0.99);
+        expect(state.phase).toBe('paused');
+        expect(state.distance).toBe(distance);
+
+        resumeRun(state);
+        run(0.2, state, () => 0.99);
+        expect(state.phase).toBe('running');
+        expect(state.distance).toBeGreaterThan(distance);
+    });
+
+    it('1스테이지는 높이 90 이하 장애물만, 3스테이지부터는 두 개짜리도 나온다', () => {
+        const stageOne = createRun();
+        pressJump(stageOne);
+        stageOne.nextObstacleAt = 0;
+        for (let i = 0; i < 12; i++) {
+            stageOne.obstacles = [];
+            stageOne.nextObstacleAt = stageOne.distance;
+            stepRun(stageOne, STEP, () => i / 12);
+            for (const obstacle of stageOne.obstacles)
+                expect(obstacle.height).toBeLessThanOrEqual(90);
+        }
+
+        const stageThree = createRun();
+        pressJump(stageThree);
+        stageThree.distance = STAGES[2].fromScore * 10;
+        stageThree.nextObstacleAt = stageThree.distance;
+        // random 0 → 첫 장애물, 두 개짜리 판정 통과(0 < 0.25), 두 번째 장애물
+        stepRun(stageThree, STEP, () => 0);
+        expect(stageThree.stage).toBe(3);
+        expect(stageThree.obstacles).toHaveLength(2);
+    });
+
+    it('스테이지마다 그 스테이지의 장애물 그림만 나온다', () => {
+        const sheets = ['', '', 'stage2Obstacles', 'stage3Obstacles', 'stage4Obstacles'];
+        for (const stage of [2, 3, 4]) {
+            const state = createRun();
+            pressJump(state);
+            state.distance = (STAGES[stage - 1]?.fromScore ?? 0) * 10;
+            for (let i = 0; i < 10; i++) {
+                state.obstacles = [];
+                state.nextObstacleAt = state.distance;
+                stepRun(state, STEP, () => i / 10);
+                for (const obstacle of state.obstacles) {
+                    expect(OBSTACLE_SPRITES[obstacle.sprite]?.sheet).toBe(sheets[stage]);
+                }
+            }
+        }
     });
 });

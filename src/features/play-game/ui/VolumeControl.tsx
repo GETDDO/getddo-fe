@@ -53,8 +53,8 @@ export function VolumeControl({
             aria-label={`${current.label} — 눌러서 ${next.label}`}
             className="flex shrink-0 cursor-pointer flex-col items-center gap-0.5 transition-[translate,filter] duration-150 outline-none hover:-translate-y-0.5 hover:brightness-105 focus-visible:-translate-y-0.5 focus-visible:brightness-110 active:translate-y-0.5"
         >
-            <img src={current.speaker} alt="" draggable={false} className="h-8 w-auto" />
-            <img src={current.gauge} alt="" draggable={false} className="h-4 w-auto" />
+            <img src={current.speaker} alt="" draggable={false} className="h-6 w-auto sm:h-8" />
+            <img src={current.gauge} alt="" draggable={false} className="h-3 w-auto sm:h-4" />
         </button>
     );
 }

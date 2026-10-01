@@ -1,4 +1,10 @@
-import { ATLAS_SCALE, CHARACTER_FRAME, OBSTACLE_SPRITES, pick } from './takko-run-atlas';
+import {
+    ATLAS_SCALE,
+    CHARACTER_FRAME,
+    OBSTACLE_SPRITES,
+    pick,
+    STAGE_OBSTACLE_POOLS,
+} from './takko-run-atlas';
 
 /**
  * 타꼬런 규칙 — 크롬 공룡 달리기처럼 점프로 장애물을 피하며 멀리 달린다.
@@ -27,13 +33,26 @@ const DISTANCE_PER_POINT = 10;
  * 지금은 속도만 다르고, 나중에 배경·장애물 난이도도 스테이지별로 바꿀 예정이다
  */
 export const STAGES = [
-    { fromScore: 0, speed: 420 },
-    { fromScore: 400, speed: 540 },
-    { fromScore: 1000, speed: 660 },
-    { fromScore: 1800, speed: 800 },
+    // 장애물·배경은 스테이지마다 다른 그림 (피그마 image 100~106 / 123~127 / 128~132 / 136·139~143)
+    // 1: 노을 마을, 높이 90 이하 장애물만
+    { fromScore: 0, speed: 420, tallObstacles: false, doubleChance: 0 },
+    // 2: 분홍 노을 축제, 높은 장애물도 나옴
+    { fromScore: 400, speed: 540, tallObstacles: true, doubleChance: 0 },
+    // 3: 밤 골목, 가끔 낮은 장애물 두 개가 붙어서 나옴
+    { fromScore: 1000, speed: 660, tallObstacles: true, doubleChance: 0.25 },
+    // 4: 보랏빛 축제, 두 개짜리가 더 자주
+    { fromScore: 1800, speed: 800, tallObstacles: true, doubleChance: 0.4 },
 ] as const;
+/** 1스테이지에 나오는 장애물의 최대 높이 — 높은 병·꼬치는 2스테이지부터 */
+const EASY_OBSTACLE_MAX_HEIGHT = 90;
+/** 두 개짜리에 쓰는 낮은 장애물의 최대 높이 */
+const LOW_OBSTACLE_MAX_HEIGHT = 80;
+/** 두 개짜리 장애물 사이 틈 — 길게 뛰면 한 번에 넘을 수 있는 폭 */
+const DOUBLE_GAP = 46;
 /** 스테이지가 바뀔 때 새 속도로 따라붙는 빠르기 (1초에 남은 차이의 몇 배만큼) */
 const SPEED_EASE_PER_SECOND = 2.5;
+/** 스테이지가 바뀔 때 배경이 새 그림으로 넘어가는 시간 */
+const THEME_FADE_SECONDS = 1.2;
 
 /** 점수에 맞는 스테이지 (1부터) */
 export function stageForScore(score: number) {
@@ -49,7 +68,7 @@ const RUNNER_HITBOX = { left: 22, right: 22, top: 20, bottom: 8 };
 const OBSTACLE_INSET_X = 0.2;
 const OBSTACLE_INSET_TOP = 0.1;
 
-export type RunPhase = 'ready' | 'running' | 'over';
+export type RunPhase = 'ready' | 'running' | 'paused' | 'over';
 
 export interface Obstacle {
     /** OBSTACLE_SPRITES의 번호 */
@@ -72,6 +91,10 @@ export interface RunState {
     speed: number;
     /** 지금 스테이지 (1부터) */
     stage: number;
+    /** 바로 전 스테이지 — 배경이 이 스테이지에서 지금 스테이지로 서서히 바뀐다 */
+    previousStage: number;
+    /** 배경이 지금 스테이지로 바뀐 정도 (0~1) */
+    themeBlend: number;
     /** 화면이 떠 있던 전체 시간 — 대기 중 흔들림·별 반짝임에 쓴다 */
     elapsed: number;
     obstacles: Obstacle[];
@@ -89,6 +112,8 @@ export function createRun(): RunState {
         distance: 0,
         speed: STAGES[0].speed,
         stage: 1,
+        previousStage: 1,
+        themeBlend: 1,
         elapsed: 0,
         obstacles: [],
         nextObstacleAt: WORLD_WIDTH * 0.6,
@@ -105,7 +130,7 @@ function launch(run: RunState) {
 
 /** 점프 키를 눌렀을 때 — 대기 중이면 출발하며 뛰고, 공중이면 착지 직후 뛰도록 예약한다 */
 export function pressJump(run: RunState) {
-    if (run.phase === 'over') return;
+    if (run.phase === 'over' || run.phase === 'paused') return;
     if (run.phase === 'ready') run.phase = 'running';
     if (onGround(run)) launch(run);
     else run.jumpBuffer = JUMP_BUFFER_SECONDS;
@@ -129,15 +154,30 @@ function overlaps(run: RunState, obstacle: Obstacle) {
     );
 }
 
-function spawnObstacle(run: RunState, random: () => number) {
-    const sprite = Math.floor(random() * OBSTACLE_SPRITES.length);
+const obstacleSize = (sprite: number) => {
     const [, , width, height] = pick(OBSTACLE_SPRITES, sprite).rect;
-    run.obstacles.push({
-        sprite,
-        x: WORLD_WIDTH + 20,
-        width: width * ATLAS_SCALE,
-        height: height * ATLAS_SCALE,
-    });
+    return { width: width * ATLAS_SCALE, height: height * ATLAS_SCALE };
+};
+const isEasy = (sprite: number) => obstacleSize(sprite).height <= EASY_OBSTACLE_MAX_HEIGHT;
+const isLow = (sprite: number) => obstacleSize(sprite).height <= LOW_OBSTACLE_MAX_HEIGHT;
+
+function spawnObstacle(run: RunState, random: () => number) {
+    const stage = pick(STAGES, run.stage - 1);
+    const stagePool = pick(STAGE_OBSTACLE_POOLS, run.stage - 1);
+    const pool = stage.tallObstacles ? stagePool : stagePool.filter(isEasy);
+    const first = pick(pool, Math.floor(random() * pool.length));
+    const firstSize = obstacleSize(first);
+    run.obstacles.push({ sprite: first, x: WORLD_WIDTH + 20, ...firstSize });
+    // 스테이지 3부터는 낮은 장애물 두 개가 붙어서 나오기도 한다
+    if (random() < stage.doubleChance) {
+        const lowPool = stagePool.filter(isLow);
+        const second = pick(lowPool, Math.floor(random() * lowPool.length));
+        run.obstacles.push({
+            sprite: second,
+            x: WORLD_WIDTH + 20 + firstSize.width + DOUBLE_GAP,
+            ...obstacleSize(second),
+        });
+    }
     // 빨라질수록 거리 간격도 넓혀 반응할 시간(약 0.9~1.6초)을 남긴다 — 점프 한 번(약 0.7초)보다는 항상 길다
     run.nextObstacleAt = run.distance + run.speed * (0.65 + random() * 0.7) + 180;
 }
@@ -148,7 +188,13 @@ export function stepRun(run: RunState, dt: number, random: () => number = Math.r
     if (run.phase !== 'running') return false;
 
     // 스테이지를 올리고, 속도는 한 번에 튀지 않게 새 스테이지 속도로 부드럽게 따라붙는다
-    run.stage = stageForScore(scoreOf(run));
+    const nextStage = stageForScore(scoreOf(run));
+    if (nextStage !== run.stage) {
+        run.previousStage = run.stage;
+        run.stage = nextStage;
+        run.themeBlend = 0;
+    }
+    run.themeBlend = Math.min(1, run.themeBlend + dt / THEME_FADE_SECONDS);
     const target = pick(STAGES, run.stage - 1).speed;
     run.speed += (target - run.speed) * Math.min(1, SPEED_EASE_PER_SECOND * dt);
     const moved = run.speed * dt;
@@ -188,4 +234,14 @@ export function runnerFrame(run: RunState): number {
     }
     const steps = CHARACTER_FRAME.run;
     return pick(steps, Math.floor(run.distance / 36));
+}
+
+/** 달리는 중이면 멈춘다 */
+export function pauseRun(run: RunState) {
+    if (run.phase === 'running') run.phase = 'paused';
+}
+
+/** 멈춘 판을 이어서 달린다 */
+export function resumeRun(run: RunState) {
+    if (run.phase === 'paused') run.phase = 'running';
 }
