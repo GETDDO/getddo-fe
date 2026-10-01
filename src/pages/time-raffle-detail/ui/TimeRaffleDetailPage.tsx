@@ -23,12 +23,11 @@ const CONTAINER = 'mx-auto w-full max-w-300 px-6 pt-20 pb-47.5';
 /** ADR-010 — 가중치 적용 이벤트는 사용자·이벤트별 누적 5장까지만 쓸 수 있다 */
 const ENTRY_TICKET_LIMIT = 5;
 
-/** 진행 중이 아닐 때 버튼에 상태를 대신 표시한다 */
-const STATUS_LABEL: Record<Event['status'], string> = {
+/** 응모도 결과 확인도 할 수 없는 상태에서 버튼에 대신 표시하는 문구 */
+const STATUS_LABEL: Record<Exclude<Event['status'], 'drawn'>, string> = {
     open: '응모하기',
     upcoming: '오픈 예정',
     closed: '추첨 진행 중',
-    drawn: '추첨 완료',
 };
 
 export function TimeRaffleDetailPage() {
@@ -104,6 +103,18 @@ export function TimeRaffleDetailPage() {
                                           ? '추가 응모하기'
                                           : '응모하기'}
                                 </span>
+                            </Button>
+                        ) : event.status === 'drawn' ? (
+                            // 발표 여부는 서버가 내려준 status로만 판단한다 —
+                            // 화면의 카운트다운이 0이 됐다고 결과를 열어 주지 않는다 (docs/CONTEXT.md)
+                            <Button
+                                onClick={() => {
+                                    // TODO: 결과 화면은 GD-24 「추첨 결과 페이지 프론트 화면 개발」에서 연결한다
+                                    toast.info('당첨 결과 발표 화면은 준비 중이에요.');
+                                }}
+                                className="h-12 w-full"
+                            >
+                                <span className="text-body-bold">당첨 결과 발표 보기</span>
                             </Button>
                         ) : (
                             <Button
