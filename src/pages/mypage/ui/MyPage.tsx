@@ -1,4 +1,5 @@
-import { CircleUserRound, Repeat } from 'lucide-react';
+import { CircleUserRound, ClipboardList, Repeat, Ticket } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { useSessionStore } from '@entities/user';
 import { AppearanceSettings } from '@features/appearance-settings';
@@ -40,6 +41,22 @@ export function MyPage() {
                         </Button>
                     }
                 />
+            </section>
+
+            <section className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-5">
+                <h2 className="text-subhead text-fg-primary">내 활동</h2>
+                <div className="flex flex-wrap gap-3">
+                    <Button asChild variant="outline">
+                        <Link to="/my-tickets">
+                            <Ticket className="size-4" />내 응모권
+                        </Link>
+                    </Button>
+                    <Button asChild variant="outline">
+                        <Link to="/my-entries">
+                            <ClipboardList className="size-4" />내 응모 내역
+                        </Link>
+                    </Button>
+                </div>
             </section>
 
             <AppearanceSettings />
