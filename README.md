@@ -1,21 +1,49 @@
 # GETDDO — LG유플러스 응모 이벤트 플랫폼 (Frontend)
 
 가상 사용자 기반 응모/추첨 이벤트 플랫폼의 프론트엔드 레포지토리입니다.
-요구사항·도메인 정책의 원본은 공용 명세 저장소 `getddo-spec`이며, 기획 맥락은 `docs/product-context.md`를 참고하세요.
+출석·미션·게임으로 응모권을 적립하고, 유플러스 이벤트 경품 추첨에 응모하는 서비스입니다. 별도 회원가입 없이 미리 등록된 가상 사용자를 선택해 시연합니다.
+
+- 팀: 3조 얻어가유 (8인 — 프론트엔드 3, 백엔드 5)
+- 요구사항·도메인 정책의 원본: [getddo-spec](https://github.com/GETDDO/getddo-spec) (공용 명세 저장소)
+- 백엔드 레포지토리: [getddo-be](https://github.com/GETDDO/getddo-be)
+- 기획 맥락(페르소나·유저플로우·비기능 요구사항): `docs/product-context.md`
+
+## 프로젝트 소개
+
+**왜 만드는가** — 기존 응모·추첨 서비스는 당첨자가 어떤 기준으로 선정됐는지 사용자가 확인할 방법이 없어 결과 발표마다 공정성 논란이 반복됩니다. 이 프로젝트는 **"검증 가능한 공정한 추첨"**을 핵심 원칙으로 삼습니다.
+
+**핵심 설계**
+
+- 추첨 시점의 응모자 명단·응모권 수·가중치·조건을 스냅샷으로 보관해, 관리자가 동일 조건으로 결과를 재현·검증할 수 있습니다
+- 응모권 지급·차감은 수정·삭제 없이 누적 기록하고, 이력 합계와 잔액이 항상 일치하도록 설계합니다
+- 발표 전 결과는 철저히 비공개, 발표 시점에는 마스킹된 당첨자 명단을 공개합니다
+- 어뷰징 의심 건은 자동 배제하지 않고 관리자가 사유를 기록해 결정하며, 당첨 취소·재추첨은 최초 추첨과 연결해 보존합니다
+
+**서비스 흐름**
+
+```text
+출석·미션·게임 → 응모권 적립 → 이벤트 응모(응모권 사용/미사용 두 유형)
+→ 마감 + 5분 검토 → 자동 추첨·발표 → 알림으로 결과 확인
+```
+
+**시연 특징** — 회원가입 없이 가상 사용자를 선택해 진입하고, 관리자 화면의 가상 시계로 발표 시각까지 시간을 이동해 마감→발표 전 과정을 시연할 수 있습니다.
 
 ## 기술 스택
 
-| 구분            | 사용 기술                            |
-| --------------- | ------------------------------------ |
-| 언어/빌드       | TypeScript, React 19, Vite           |
-| 라우팅          | React Router                         |
-| 서버 상태       | TanStack Query                       |
-| 클라이언트 상태 | Zustand, Redux Toolkit               |
-| 스타일          | TailwindCSS v4, shadcn/ui            |
-| 폼/검증         | React Hook Form, Zod                 |
-| 테이블/날짜     | TanStack Table, react-day-picker     |
-| 연출            | GSAP, Framer Motion, canvas-confetti |
-| 테스트/목업     | Vitest, React Testing Library, MSW   |
+| 구분            | 사용 기술                                       |
+| --------------- | ----------------------------------------------- |
+| 언어/빌드       | TypeScript, React 19, Vite 8                    |
+| 라우팅          | React Router 7                                  |
+| 서버 상태       | TanStack Query                                  |
+| HTTP            | Axios (`shared/api/client.ts` 인터셉터)         |
+| 클라이언트 상태 | Zustand                                         |
+| 스타일          | TailwindCSS v4, shadcn/ui                       |
+| 검증            | Zod                                             |
+| 연출            | Framer Motion, sonner(토스트)                   |
+| 테스트/목업     | Vitest, React Testing Library, MSW              |
+| 품질            | ESLint(boundaries), Prettier, Husky, commitlint |
+
+역할이 확정됐지만 아직 미사용: Redux Toolkit(복잡한 전역 플로우), TanStack Table(관리자 테이블), React Hook Form(폼). 설치만 된 미사용 의존성(도입 미정, 사용하려면 팀 합의 필요): GSAP, canvas-confetti, react-day-picker.
 
 ## 폴더 구조 (FSD — Feature-Sliced Design)
 
@@ -38,27 +66,75 @@ src/
 - 슬라이스는 반드시 `index.ts`(공개 API)를 통해서만 import합니다. 내부 파일 직접 import는 ESLint가 차단합니다.
 - `import.meta.env`는 `src/shared/config/env.ts`에서만 접근합니다.
 
+## 구현 현황
+
+백엔드 API는 아직 준비 중이라 화면은 MSW 목업(`VITE_ENABLE_MSW=true`)으로 동작합니다 — 알림을 포함한 모든 데이터가 목업이며, 확정된 계약(N01~N03)부터 목업을 실제 연동으로 전환합니다.
+
+### 구현 완료
+
+사용자 화면:
+
+- 홈 — 배너 슬라이더·이벤트 카드·실시간 참여 현황(30초 자동 갱신, GD-78)·홈 UI/UX 개선 (GD-80)
+- 로그인 — 시연용 가상 사용자 선택·전환 (GD-31)
+- 이벤트 목록·상세 — 추천·카테고리별 구조 (GD-15, GD-16, GD-33). 상세는 정보 표시 전용이며 응모는 타임래플 상세에서만 수행
+- 타임래플 목록·상세 — 응모·추가 응모·멱등키·응모권 부족 안내·발표 카운트다운 (GD-26, GD-27)
+- 미션 — 출석 체크(굽기 스프라이트 연출·월간 출석판)·설문·퀴즈·게임 목록 (GD-23). 설문·퀴즈는 목록만 구현, 제출 플로우는 예정
+- 게임 — 타꼬런 미니게임·게임 상세·방법 모달·배경 음악·스테이지 (GD-28, GD-66, GD-67)
+- 내 응모권 — 잔액·만료 예정·적립/사용 이력 (GD-29)
+- 마이페이지 — 내 활동 링크·가상 사용자 전환·화면 설정 진입
+- 알림 — 헤더 알림 벨(팝오버). 확정 계약 N01~N03 반영: 목록 커서 페이지네이션·개별 읽음·전체 읽음·`X-User-ID` 헤더 (GD-75)
+- 화면 설정 — 다크모드·큰글씨 모드 (GD-34)
+
+관리자 화면:
+
+- 어뷰징 탐지 검토 — 의심 건 조회·참여 허용/제외 처리
+- 가상 시계 제어 — 시간 이동·복귀·헤더 티커 표시 (GD-57)
+
+공통 기반:
+
+- FSD 아키텍처와 ESLint `boundaries`로 의존 방향 기계적 강제
+- MSW 도메인별 목업 + Zod 응답 스키마 검증
+- 가상 시계 인프라 — UTC↔KST 변환, 관리자 시간 여행, 세션 유지 (GD-38)
+- 디자인 토큰·시맨틱 변수 체계 (피그마 값 동기화), 공용 UI 갤러리 (`/ui-gallery`)
+- 응모 등 중복 위험 요청의 멱등키 처리 (`X-Idempotency-Key`)
+
+### 예정 (미구현)
+
+- 출석·게임 허브·내 응모 내역 라우트 페이지 — 스텁 상태. 마이페이지의 '내 응모 내역' 링크가 스텁으로 연결되며, 출석 UI는 미션 페이지에서 동작 중
+- 당첨 결과 표시와 공개 명단 마스킹 (마스킹 세부 규칙 담당자 결정 대기)
+- 미션 수행 제출(설문·퀴즈) 플로우
+- 관리자: 대시보드·이벤트 관리·추첨 실행/재추첨·배너 관리 (스텁 상태)
+- 관리자: 감사 로그 조회, 가상 사용자 관리 — 다른 도메인 API와 마찬가지로 계약 검토 대기 단계
+- 백엔드 실제 API 연동 전환 — 현재 MSW 목업 기준
+
 ## 시작하기
 
 ```bash
 # 1. 패키지 설치 (Node >= 20.19, 24.x 권장)
 npm install
 
-# 2. 환경변수 설정
+# 2. 환경변수 설정 (Windows PowerShell에서는 copy 사용)
 cp .env.example .env.development
 
 # 3. 개발 서버 실행 (MSW 목업 활성화 상태로 시작)
 npm run dev
-
-# 4. 테스트 실행
-npm run test
-
-# 5. 린트 검사
-npm run lint
-
-# 6. 프로덕션 빌드
-npm run build
 ```
+
+검증 명령 (CI와 동일):
+
+```bash
+npm run format:check  # Prettier
+npm run lint          # ESLint — FSD 규칙 포함, 경고 0개 기준
+npm run test:ci       # Vitest (npm run test는 watch 모드)
+npm run build         # tsc -b && vite build
+```
+
+## 시연 방법
+
+- 로그인 화면에서 가상 사용자를 선택해 시작합니다. `admin` 역할을 선택하면 관리자 화면(`/admin`)으로 진입합니다.
+- 추천 동선: 로그인 → 미션 페이지에서 출석으로 응모권 적립 → 타임래플 상세에서 응모 → 관리자 가상 시계로 발표 시각까지 시간 이동 → 카운트다운이 '당첨자 발표 완료'로 바뀌는 것까지 확인 (당첨 결과 화면은 미구현)
+- 헤더 알림 벨은 확정 계약(N01~N03) 기준 목업입니다 — 목록·읽음 처리를 확인할 수 있고, 시연 중 새 알림이 생성되지는 않습니다.
+- 공용 UI 컴포넌트는 `/ui-gallery`에서 확인할 수 있습니다.
 
 ## 환경 변수
 
@@ -78,4 +154,4 @@ npm run build
 - [docs/DESIGN-SYSTEM.md](./docs/DESIGN-SYSTEM.md) — 디자인 토큰 명세 (색·타이포·radius·shadow). 토큰 값의 원천은 `src/app/styles/tokens.css`
 - [docs/adr/](./docs/adr/README.md) — 아키텍처 결정 기록 (FSD, MSW, 상태관리 분리 등)
 - [docs/product-context.md](./docs/product-context.md) — 기획 맥락 (페르소나·유저플로우·비기능 요구사항)
-- `../getddo-spec/` — 공용 명세 저장소 (요구사항·도메인 정책·공용 ADR의 원본)
+- [getddo-spec](https://github.com/GETDDO/getddo-spec) — 공용 명세 저장소 (요구사항·도메인 정책·공용 ADR의 원본)
