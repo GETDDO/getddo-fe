@@ -1,6 +1,9 @@
 import type { TakkoRunImageKey, TakkoRunImages } from './draw-takko-run';
 
+import completeUrl from '../assets/audio/complete.wav';
 import bgmUrl from '../assets/audio/flowerbed_fields.m4a';
+import bellUrl from '../assets/audio/pleasing-bell.wav';
+import jumpUrl from '../assets/audio/slime_jump.wav';
 import characterUrl from '../assets/takko-run/character.png';
 import cloudsUrl from '../assets/takko-run/clouds.png';
 import lanternsUrl from '../assets/takko-run/lanterns.png';
@@ -27,6 +30,13 @@ import starsUrl from '../assets/takko-run/stars.png';
 import townUrl from '../assets/takko-run/town.png';
 
 export const TAKKO_RUN_BGM_URL = bgmUrl;
+
+/** 효과음 — 점프, 스테이지가 바뀔 때, 게임이 끝날 때 */
+export const TAKKO_RUN_SOUNDS = {
+    jump: jumpUrl,
+    stageUp: bellUrl,
+    gameOver: completeUrl,
+} as const;
 
 const IMAGE_SOURCES: Record<TakkoRunImageKey, string> = {
     character: characterUrl,

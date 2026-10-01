@@ -8,6 +8,8 @@ const DEFAULT_LEVEL = 3;
 /** 소리 단계 — 다음에 들어와도 유지되도록 이 브라우저에 기억한다 */
 const LEVEL_KEY = 'getddo:game-bgm-level';
 const FADE_SECONDS = 0.6;
+/** 효과음은 배경 음악보다 또렷하게 들리도록 같은 소리 단계에서 이만큼 크게 낸다 (최대 1) */
+const EFFECT_BOOST = 1.6;
 
 // 개인 정보 보호 모드 등에서는 저장소 접근이 막힐 수 있어, 실패하면 기본 단계로 시작한다
 function readLevel() {
@@ -105,6 +107,49 @@ export function useLoopingBgm(src: string) {
     }, [applyVolume, src]);
 
     /** 음량을 배율만큼 줄인다 (예: 부딪혔을 때 0.3) */
+    /** 효과음 — 배경 음악과 같은 오디오에서 소리 단계를 따라 한 번 낸다 (음소거면 내지 않는다) */
+    const effectBuffersRef = useRef(new Map<string, Promise<AudioBuffer>>());
+    const playEffect = useCallback((url: string) => {
+        const ctx = ctxRef.current;
+        const volume = BGM_VOLUME_STEPS[levelRef.current] ?? 0;
+        if (!ctx || volume === 0 || ctx.state !== 'running') return;
+        let buffer = effectBuffersRef.current.get(url);
+        if (!buffer) {
+            buffer = fetch(url)
+                .then((response) => response.arrayBuffer())
+                .then((bytes) => ctx.decodeAudioData(bytes));
+            effectBuffersRef.current.set(url, buffer);
+        }
+        void buffer
+            .then((decoded) => {
+                if (ctxRef.current !== ctx) return;
+                const source = ctx.createBufferSource();
+                const gain = ctx.createGain();
+                gain.gain.value = Math.min(1, volume * EFFECT_BOOST);
+                source.buffer = decoded;
+                source.connect(gain).connect(ctx.destination);
+                source.start();
+            })
+            .catch(() => {
+                // 효과음을 못 내도 게임은 계속한다
+                effectBuffersRef.current.delete(url);
+            });
+    }, []);
+
+    /** 효과음을 미리 받아 풀어 둔다 — 첫 점프 소리가 늦지 않게 */
+    const preloadEffects = useCallback((urls: readonly string[]) => {
+        const ctx = ctxRef.current;
+        if (!ctx) return;
+        for (const url of urls) {
+            if (effectBuffersRef.current.has(url)) continue;
+            const buffer = fetch(url)
+                .then((response) => response.arrayBuffer())
+                .then((bytes) => ctx.decodeAudioData(bytes));
+            buffer.catch(() => effectBuffersRef.current.delete(url));
+            effectBuffersRef.current.set(url, buffer);
+        }
+    }, []);
+
     const duck = useCallback(
         (ratio: number) => {
             duckRef.current = ratio;
@@ -158,9 +203,10 @@ export function useLoopingBgm(src: string) {
             ctxRef.current = null;
             gainRef.current = null;
             bufferRef.current = null;
+            effectBuffersRef.current.clear();
         },
         [],
     );
 
-    return { play, duck, pause, resume, level, setLevel };
+    return { play, duck, pause, resume, playEffect, preloadEffects, level, setLevel };
 }

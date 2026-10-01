@@ -50,9 +50,18 @@ const LOW_OBSTACLE_MAX_HEIGHT = 80;
 /** 두 개짜리 장애물 사이 틈 — 길게 뛰면 한 번에 넘을 수 있는 폭 */
 const DOUBLE_GAP = 46;
 /** 스테이지가 바뀔 때 새 속도로 따라붙는 빠르기 (1초에 남은 차이의 몇 배만큼) */
-const SPEED_EASE_PER_SECOND = 2.5;
-/** 스테이지가 바뀔 때 배경이 새 그림으로 넘어가는 시간 */
-const THEME_FADE_SECONDS = 1.2;
+const SPEED_EASE_PER_SECOND = 5;
+/** 스테이지가 바뀔 때 새 배경이 오른쪽에서 밀려 들어오는 시간 */
+const THEME_FADE_SECONDS = 0.5;
+
+/** 마지막 스테이지가 시작되는 점수 — 진행도 바의 끝 */
+export const FINAL_STAGE_SCORE = STAGES[3].fromScore;
+
+/** 스테이지 시작점의 진행도 위치 (0~1) */
+export const STAGE_MARKS = STAGES.map((stage) => stage.fromScore / FINAL_STAGE_SCORE);
+
+/** 점수 → 스테이지 진행도 (0~1, 마지막 스테이지에 닿으면 1) */
+export const progressOf = (score: number) => Math.min(1, score / FINAL_STAGE_SCORE);
 
 /** 점수에 맞는 스테이지 (1부터) */
 export function stageForScore(score: number) {
@@ -91,6 +100,8 @@ export interface RunState {
     speed: number;
     /** 지금 스테이지 (1부터) */
     stage: number;
+    /** 지금까지 뛴 횟수 — 점프할 때마다 1씩 늘어 효과음 신호로 쓴다 */
+    jumps: number;
     /** 바로 전 스테이지 — 배경이 이 스테이지에서 지금 스테이지로 서서히 바뀐다 */
     previousStage: number;
     /** 배경이 지금 스테이지로 바뀐 정도 (0~1) */
@@ -112,6 +123,7 @@ export function createRun(): RunState {
         distance: 0,
         speed: STAGES[0].speed,
         stage: 1,
+        jumps: 0,
         previousStage: 1,
         themeBlend: 1,
         elapsed: 0,
@@ -124,6 +136,7 @@ const onGround = (run: RunState) => run.height <= 0 && run.velocity <= 0;
 
 function launch(run: RunState) {
     run.velocity = JUMP_VELOCITY;
+    run.jumps += 1;
     run.airTime = 0;
     run.jumpBuffer = 0;
 }

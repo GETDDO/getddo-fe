@@ -323,10 +323,20 @@ export function drawRun(
 
     // 스테이지 배경 — 바뀌는 중이면 이전 배경 위에 새 배경을 서서히 겹친다
     const current = pick(palette.themes, run.stage - 1);
+    // 스테이지가 바뀌면 새 배경이 오른쪽에서 빠르게 밀려 들어온다 — 새 구역으로 달려 들어가는 느낌
     if (run.themeBlend < 1) {
         drawBackground(ctx, run, pick(palette.themes, run.previousStage - 1), palette, 1);
+        const eased = 1 - (1 - run.themeBlend) ** 3;
+        const edge = WORLD_WIDTH * (1 - eased);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(edge, 0, WORLD_WIDTH - edge, WORLD_HEIGHT);
+        ctx.clip();
+        drawBackground(ctx, run, current, palette, 1);
+        ctx.restore();
+    } else {
+        drawBackground(ctx, run, current, palette, 1);
     }
-    drawBackground(ctx, run, current, palette, run.themeBlend);
     ctx.globalAlpha = 1;
 
     // 장애물 — 바닥을 땅에 살짝 묻는다

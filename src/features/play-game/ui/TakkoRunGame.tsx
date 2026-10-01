@@ -14,12 +14,13 @@ import {
     type TakkoRunImages,
     type TakkoRunPalette,
 } from '../lib/draw-takko-run';
-import { loadTakkoRunImages, TAKKO_RUN_BGM_URL } from '../lib/takko-run-assets';
+import { loadTakkoRunImages, TAKKO_RUN_BGM_URL, TAKKO_RUN_SOUNDS } from '../lib/takko-run-assets';
 import { useLoopingBgm } from '../lib/use-looping-bgm';
 import {
     createRun,
     pauseRun,
     pressJump,
+    progressOf,
     releaseJump,
     resumeRun,
     type RunPhase,
@@ -32,6 +33,7 @@ import { GameImageButton } from './GameImageButton';
 import { PIXEL_FONT } from './pixel-font';
 import { RewardDialog } from './RewardDialog';
 import { ScoreBoard } from './ScoreBoard';
+import { StageProgress } from './StageProgress';
 import { VolumeControl } from './VolumeControl';
 
 /** 부딪힌 직후 누르고 있던 점프 키가 곧바로 '다시 하기'를 누르지 않도록 잠깐 막는다 */
@@ -65,7 +67,7 @@ const COUNTDOWN_STEP_MS = 600;
 /** 이 점수마다 점수판이 반짝인다 */
 const SCORE_MILESTONE = 100;
 /** 스테이지가 오를 때 가운데에 크게 띄워 두는 시간 */
-const STAGE_BANNER_MS = 1600;
+const STAGE_BANNER_MS = 1100;
 
 /**
  * 게임 위에 떠 있는 안내 칩 — 마을 실루엣에서 뽑은 짙은 갈색(--takko-ink)을 반투명하게 깔아 노을 배경과 어우러지게 한다
@@ -103,16 +105,21 @@ export function TakkoRunGame({
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const scoreRef = useRef<HTMLSpanElement>(null);
+    const progressRestRef = useRef<HTMLDivElement>(null);
+    const progressFaceRef = useRef<HTMLDivElement>(null);
     const restartRef = useRef<HTMLButtonElement>(null);
     const runRef = useRef(createRun());
     const overAtRef = useRef(0);
     const bgm = useLoopingBgm(TAKKO_RUN_BGM_URL);
     // 게임 시작을 누르고 게임 화면이 열리면 바로 배경 음악을 튼다 (썸네일 화면에서는 나오지 않는다).
     // 브라우저가 막으면 첫 점프 때 다시 튼다
-    const playBgm = bgm.play;
+    const { play: playBgm, preloadEffects } = bgm;
     useEffect(() => {
         playBgm();
-    }, [playBgm]);
+        preloadEffects(Object.values(TAKKO_RUN_SOUNDS));
+    }, [playBgm, preloadEffects]);
+    /** 마지막으로 소리를 낸 점프 횟수 — 늘어나면 점프음을 낸다 (착지 직전 예약된 점프도 포함) */
+    const jumpsRef = useRef(0);
 
     const [assets, setAssets] = useState<{
         images: TakkoRunImages;
@@ -129,7 +136,9 @@ export function TakkoRunGame({
     const [stageBanner, setStageBanner] = useState<number | null>(null);
     const stageRef = useRef(1);
 
+    const jumpSound = useEffectEvent(() => bgm.playEffect(TAKKO_RUN_SOUNDS.jump));
     const changeStage = useEffectEvent((next: number) => {
+        bgm.playEffect(TAKKO_RUN_SOUNDS.stageUp);
         stageRef.current = next;
         setStage(next);
         setStageBanner(next);
@@ -176,6 +185,7 @@ export function TakkoRunGame({
         overAtRef.current = performance.now();
         // 부딪히면 배경 음악을 작게 줄여 결과 화면에 집중하게 한다
         bgm.duck(0.3);
+        bgm.playEffect(TAKKO_RUN_SOUNDS.gameOver);
         if (!reduceMotion && shakeScope.current) {
             void animateShake(
                 shakeScope.current,
@@ -222,12 +232,19 @@ export function TakkoRunGame({
             const run = runRef.current;
             if (stepRun(run, dt)) finish(scoreOf(run));
             if (run.stage !== stageRef.current) changeStage(run.stage);
+            if (run.jumps > jumpsRef.current) {
+                jumpsRef.current = run.jumps;
+                jumpSound();
+            }
             const milestone = Math.floor(scoreOf(run) / SCORE_MILESTONE);
             if (milestone > milestoneRef.current) {
                 milestoneRef.current = milestone;
                 celebrateMilestone();
             }
             if (scoreRef.current) scoreRef.current.textContent = padScore(scoreOf(run));
+            const progress = `${progressOf(scoreOf(run)) * 100}%`;
+            if (progressRestRef.current) progressRestRef.current.style.left = progress;
+            if (progressFaceRef.current) progressFaceRef.current.style.left = progress;
             drawRun(ctx, run, images, palette);
             frame = requestAnimationFrame(tick);
         };
@@ -277,6 +294,7 @@ export function TakkoRunGame({
         setStageBanner(null);
         setCountdown(null);
         milestoneRef.current = 0;
+        jumpsRef.current = 0;
         bgm.play();
         playRef.current += 1;
         containerRef.current?.focus({ preventScroll: true });
@@ -483,6 +501,17 @@ export function TakkoRunGame({
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* 스테이지 진행도 — 땅 위 아래쪽 가운데, 타코야끼 얼굴이 1→4 스테이지로 달려간다 */}
+            {images && (
+                <div className="pointer-events-none absolute inset-x-[14%] bottom-2 rounded-full bg-(--takko-ink)/60 px-5 py-1 backdrop-blur-sm sm:inset-x-[22%] sm:bottom-3 sm:px-7 sm:py-1.5">
+                    <StageProgress
+                        stage={stage}
+                        restRef={progressRestRef}
+                        faceRef={progressFaceRef}
+                    />
+                </div>
+            )}
 
             {/* 점수판 (image 112) */}
             <div ref={scoreScope} className="absolute top-3 right-3 origin-top-right">
