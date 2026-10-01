@@ -2,6 +2,14 @@ import { http, HttpResponse } from 'msw';
 
 import { env } from '@shared/config/env';
 
+import { mockNow } from '../now';
+
+/**
+ * 이벤트 상태 — entities/event의 eventStatusSchema와 같은 값이다.
+ * shared는 entities를 참조할 수 없어(FSD) 목업 쪽에 따로 적어 둔다.
+ */
+type MockEventStatus = 'upcoming' | 'open' | 'closed' | 'drawn';
+
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
 /**
@@ -29,9 +37,27 @@ function sessionFixedTime(key: string, offsetMs: number): string {
     return value;
 }
 
+const MINUTE = 60 * 1000;
+
 // 홈 화면 "오늘의 타임 래플" 배너 데모용 — 세션이 유지되는 동안 마감 시각이 움직이지 않는다
-const HERO_ENDS_AT = sessionFixedTime('hero-ends-at', 60 * 60 * 1000);
-const UPCOMING_OPENS_AT = sessionFixedTime('upcoming-opens-at', 3 * 60 * 60 * 1000);
+const HERO_STARTS_AT = sessionFixedTime('hero-starts-at', -30 * MINUTE);
+const HERO_ENDS_AT = sessionFixedTime('hero-ends-at', 60 * MINUTE);
+const UPCOMING_OPENS_AT = sessionFixedTime('upcoming-opens-at', 3 * 60 * MINUTE);
+
+/*
+ * 시연 플로우용 시각 — 응모 → 마감 → 발표 대기 → 발표 완료를 몇 분 안에 한 번 돌려보기 위한 것이다.
+ * 세션 시작 시점에 고정되므로 새로고침해도 기준이 밀리지 않고, 시간이 실제로 흐른다.
+ * 더 빨리 보고 싶으면 관리자 가상 시계(/admin/virtual-clock)로 시간을 앞으로 옮기면 된다.
+ */
+// 지금 응모할 수 있고 3분 뒤 마감된다 (발표는 ADR-009에 따라 마감 + 5분)
+const FLOW_STARTS_AT = sessionFixedTime('flow-starts-at', -5 * MINUTE);
+const FLOW_ENDS_AT = sessionFixedTime('flow-ends-at', 3 * MINUTE);
+// 이미 마감돼 발표를 기다리는 래플 — 화면을 열자마자 발표 대기 상태를 볼 수 있다
+const AWAITING_STARTS_AT = sessionFixedTime('awaiting-starts-at', -62 * MINUTE);
+const AWAITING_ENDS_AT = sessionFixedTime('awaiting-ends-at', -2 * MINUTE);
+// 아직 열리지 않은 래플 — 오늘 몇 시 식으로 고정하면 늦은 시각에 데모할 때 오픈 예정이 하나도 남지 않는다
+const PENDING_STARTS_AT = sessionFixedTime('pending-starts-at', 2 * 60 * MINUTE);
+const PENDING_ENDS_AT = sessionFixedTime('pending-ends-at', 3 * 60 * MINUTE);
 
 /**
  * KST 기준 dayOffset일 뒤 hour시의 UTC ISO 문자열.
@@ -78,7 +104,7 @@ const mockEvents = [
         // 상세 화면 본문 이미지 — 실제 URL은 백엔드 연동 후 들어온다. 로컬에서 확인하려면 임의의 이미지 URL을 넣으면 된다
         detailImageUrl: null,
         startsAt: '2026-09-01T00:00:00Z',
-        endsAt: '2026-09-30T14:59:59Z',
+        endsAt: '2026-10-31T14:59:59Z',
         status: 'open',
         requiredTickets: 1,
         tags: ['디지털기기'],
@@ -113,7 +139,7 @@ const mockEvents = [
         description: '응모권 1장으로 참여하는 스타벅스 e카드 추첨 이벤트',
         bannerImageUrl: null,
         startsAt: UPCOMING_OPENS_AT,
-        endsAt: '2026-09-28T14:59:59Z',
+        endsAt: '2026-10-20T14:59:59Z',
         status: 'upcoming',
         requiredTickets: 1,
         tags: ['기프티콘·상품권'],
@@ -131,7 +157,7 @@ const mockEvents = [
         description: '응모권 없이 누구나 참여할 수 있는 데이터 쿠폰 추첨 이벤트',
         bannerImageUrl: null,
         startsAt: '2026-09-01T00:00:00Z',
-        endsAt: '2026-09-30T14:59:59Z',
+        endsAt: '2026-10-31T14:59:59Z',
         status: 'open',
         requiredTickets: 0,
         tags: ['데이터·통신'],
@@ -148,7 +174,7 @@ const mockEvents = [
         description: '응모권 없이 매일 참여할 수 있는 커피 쿠폰 추첨 이벤트',
         bannerImageUrl: null,
         startsAt: '2026-09-01T00:00:00Z',
-        endsAt: '2026-09-30T14:59:59Z',
+        endsAt: '2026-10-31T14:59:59Z',
         status: 'open',
         requiredTickets: 0,
         tags: ['기프티콘·상품권'],
@@ -165,7 +191,7 @@ const mockEvents = [
         description: 'VVIP·VIP 등급 대상 데이터 쿠폰 추첨 이벤트. 응모권 3장이 필요해요.',
         bannerImageUrl: null,
         startsAt: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
-        endsAt: '2026-09-28T14:59:59Z',
+        endsAt: '2026-10-20T14:59:59Z',
         status: 'upcoming',
         requiredTickets: 3,
         tags: ['데이터·통신', '멤버십 혜택'],
@@ -251,7 +277,7 @@ const mockEvents = [
         description: '응모권 없이 참여하는 한정 스트랩 증정 이벤트',
         bannerImageUrl: null,
         startsAt: '2026-09-18T00:00:00Z',
-        endsAt: '2026-09-30T14:59:59Z',
+        endsAt: '2026-10-25T14:59:59Z',
         status: 'open',
         requiredTickets: 0,
         tags: ['한정 굿즈'],
@@ -287,7 +313,7 @@ const mockEvents = [
         description: '응모권 없이 참여하는 배달 쿠폰 추첨 이벤트',
         bannerImageUrl: null,
         startsAt: '2026-09-10T00:00:00Z',
-        endsAt: '2026-09-30T14:59:59Z',
+        endsAt: '2026-10-25T14:59:59Z',
         status: 'open',
         requiredTickets: 0,
         tags: ['기프티콘·상품권'],
@@ -322,7 +348,7 @@ const mockEvents = [
         description: '응모권 1장으로 참여하는 데이터 충전 쿠폰 추첨 이벤트',
         bannerImageUrl: null,
         startsAt: '2026-09-08T00:00:00Z',
-        endsAt: '2026-09-29T14:59:59Z',
+        endsAt: '2026-10-24T14:59:59Z',
         status: 'open',
         requiredTickets: 1,
         tags: ['데이터·통신'],
@@ -411,7 +437,7 @@ const mockEvents = [
         description:
             '무너 캐릭터를 메탈릭 코팅으로 새로 빚은 커스텀 피규어입니다. 아크릴 케이스와 인증 카드를 갖춘 소량 제작분이라 이번 시즌이 지나면 다시 만들지 않습니다.',
         bannerImageUrl: null,
-        startsAt: kstAt(0, 18),
+        startsAt: HERO_STARTS_AT,
         endsAt: HERO_ENDS_AT,
         status: 'open',
         isTimeRaffle: true,
@@ -549,8 +575,8 @@ const mockEvents = [
         description:
             '바퀴 달린 스탠드에 올려 방마다 옮겨 가며 보는 화면입니다. 배터리를 내장해 콘센트가 없는 자리에서도 쓸 수 있습니다.',
         bannerImageUrl: null,
-        startsAt: kstAt(0, 22),
-        endsAt: kstAt(0, 23),
+        startsAt: PENDING_STARTS_AT,
+        endsAt: PENDING_ENDS_AT,
         status: 'upcoming',
         isTimeRaffle: true,
         raffleDetail: raffleDetail(
@@ -572,8 +598,8 @@ const mockEvents = [
         description:
             '운동 기록과 수면 추적을 손목에서 한 번에 확인하는 스마트워치입니다. 스트랩이 하나 더 들어 있어 상황에 따라 바꿔 낄 수 있습니다.',
         bannerImageUrl: null,
-        startsAt: kstAt(-1, 11),
-        endsAt: kstAt(-1, 12),
+        startsAt: AWAITING_STARTS_AT,
+        endsAt: AWAITING_ENDS_AT,
         status: 'closed',
         isTimeRaffle: true,
         raffleDetail: raffleDetail(
@@ -704,6 +730,31 @@ const mockEvents = [
         myEntryCount: 0,
         myTicketCount: 0,
     },
+
+    // ── 시연 플로우용 ── 응모 → 마감 → 발표 대기 → 발표 완료를 몇 분 안에 한 번 돌려보기 위한 래플
+    {
+        id: 'evt-112',
+        title: '무너 시그니처 머그 타임 래플',
+        description:
+            '무너 얼굴을 입체로 올린 도자기 머그입니다. 손잡이 안쪽까지 유약을 입혀 설거지 후에도 물이 고이지 않습니다.',
+        bannerImageUrl: null,
+        startsAt: FLOW_STARTS_AT,
+        endsAt: FLOW_ENDS_AT,
+        status: 'open',
+        isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '무너 시그니처 머그는 타임래플 전용으로 소량 제작한 도자기 머그입니다. 전자레인지와 식기세척기를 모두 쓸 수 있습니다.',
+            '무너 시그니처 머그 1종 + 전용 코스터',
+        ),
+        requiredTickets: 1,
+        tags: ['한정 굿즈'],
+        prizeName: '무너 시그니처 머그',
+        winnerCount: 10,
+        participantCount: 412,
+        usedTicketCount: 530,
+        myEntryCount: 0,
+        myTicketCount: 0,
+    },
 ];
 
 /** 응모 목업이 한도·잔액을 검사하기 전에 대상 이벤트를 찾을 때 쓴다 */
@@ -732,19 +783,42 @@ export function recordMockEventEntry(
 const ANNOUNCE_DELAY_MS = 5 * 60 * 1000;
 
 /**
- * 발표 예정 시각을 응답에 실어 준다.
+ * 응답 시점의 이벤트 상태.
+ *
+ * 목 데이터에 적어 둔 status는 작성 당시의 값이라 시간이 지나면 기간과 어긋난다
+ * (마감일이 지났는데 계속 진행 중으로 남는 식). 서버가 할 일이므로 응답을 만들 때 다시 계산해
+ * 진행 예정 → 진행 중 → 마감(발표 대기) → 발표 완료가 실제로 이어지게 한다.
+ */
+function statusAt(startsAt: string, endsAt: string, now: number): MockEventStatus {
+    const starts = new Date(startsAt).getTime();
+    const ends = new Date(endsAt).getTime();
+
+    if (now < starts) return 'upcoming';
+    if (now < ends) return 'open';
+    // 마감 후 발표까지는 '발표 대기' 구간이다 (ADR-009 — 마감 + 5분 자동 발표)
+    if (now < ends + ANNOUNCE_DELAY_MS) return 'closed';
+    return 'drawn';
+}
+
+/**
+ * 목 이벤트를 응답 모양으로 바꾼다 — 상태를 지금 기준으로 다시 계산하고 발표 예정 시각을 싣는다.
  * 발표 카운트다운은 서버가 준 시각으로 계산해야 새로고침에 리셋되지 않으므로(docs/CONTEXT.md),
  * 화면에서 마감 + 5분을 더하지 않도록 목업이 서버 몫을 대신 계산한다.
  */
-function withAnnounceAt<T extends { endsAt: string }>(event: T) {
+function toResponse<T extends { startsAt: string; endsAt: string }>(event: T, now: number) {
+    const ends = new Date(event.endsAt).getTime();
     return {
         ...event,
-        announceAt: new Date(new Date(event.endsAt).getTime() + ANNOUNCE_DELAY_MS).toISOString(),
+        status: statusAt(event.startsAt, event.endsAt, now),
+        announceAt: new Date(ends + ANNOUNCE_DELAY_MS).toISOString(),
     };
 }
 
 export const eventHandlers = [
-    http.get(api('/events'), () => HttpResponse.json(mockEvents.map(withAnnounceAt))),
+    http.get(api('/events'), () => {
+        const now = mockNow().getTime();
+        return HttpResponse.json(mockEvents.map((event) => toResponse(event, now)));
+    }),
     http.get(api('/events/:eventId'), ({ params }) => {
         const event = mockEvents.find((e) => e.id === params.eventId);
         if (!event) {
@@ -753,6 +827,6 @@ export const eventHandlers = [
                 { status: 404 },
             );
         }
-        return HttpResponse.json(withAnnounceAt(event));
+        return HttpResponse.json(toResponse(event, mockNow().getTime()));
     }),
 ];
