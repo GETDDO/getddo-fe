@@ -117,7 +117,11 @@ export function UserLayout() {
                         </PopoverContent>
                     </Popover>
                     <div className="ml-auto flex items-center gap-4">
-                        <VirtualClockTicker className="hidden lg:flex" />
+                        {/* 가상 시계 조작은 관리자만 — 일반 사용자는 시각 표시만 본다 */}
+                        <VirtualClockTicker
+                            className="hidden lg:flex"
+                            readOnly={user.role !== 'admin'}
+                        />
                         <NotificationBell />
                         <VirtualUserSwitcher />
                     </div>

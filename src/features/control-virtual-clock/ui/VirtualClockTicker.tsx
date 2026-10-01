@@ -17,7 +17,14 @@ const TIME_FORMATTER = new Intl.DateTimeFormat('ko-KR', {
     hour12: true,
 });
 
-export function VirtualClockTicker({ className }: { className?: string }) {
+export function VirtualClockTicker({
+    className,
+    readOnly = false,
+}: {
+    className?: string;
+    /** true면 ± 버튼 없이 시각만 표시한다 (일반 사용자 헤더용) */
+    readOnly?: boolean;
+}) {
     const { now, setOverride, isOverridden } = useVirtualClock();
     // 오버라이드가 없을 때 표시 시각을 실시간으로 갱신한다
     const [, setTick] = useState(0);
@@ -40,7 +47,7 @@ export function VirtualClockTicker({ className }: { className?: string }) {
             )}
             role="timer"
             aria-label={`표시 시각 ${part('dayPeriod')} ${part('hour')}:${part('minute')}:${part('second')}`}
-            title="가상 시계 — 시간/분을 직접 조작할 수 있습니다"
+            title={readOnly ? '가상 시계' : '가상 시계 — 시간/분을 직접 조작할 수 있습니다'}
         >
             <span
                 className={cn(
@@ -50,9 +57,11 @@ export function VirtualClockTicker({ className }: { className?: string }) {
             >
                 {part('dayPeriod')}
             </span>
-            <StepButton label="1시간 빼기" onClick={() => shift(-HOUR_MS)}>
-                <Minus />
-            </StepButton>
+            {!readOnly && (
+                <StepButton label="1시간 빼기" onClick={() => shift(-HOUR_MS)}>
+                    <Minus />
+                </StepButton>
+            )}
             <span
                 className={cn(
                     'w-5 text-center tabular-nums',
@@ -61,13 +70,17 @@ export function VirtualClockTicker({ className }: { className?: string }) {
             >
                 {part('hour')}
             </span>
-            <StepButton label="1시간 더하기" onClick={() => shift(HOUR_MS)}>
-                <Plus />
-            </StepButton>
+            {!readOnly && (
+                <StepButton label="1시간 더하기" onClick={() => shift(HOUR_MS)}>
+                    <Plus />
+                </StepButton>
+            )}
             <span className="text-fg-tertiary">:</span>
-            <StepButton label="10분 빼기" onClick={() => shift(-MINUTE_STEP_MS)}>
-                <Minus />
-            </StepButton>
+            {!readOnly && (
+                <StepButton label="10분 빼기" onClick={() => shift(-MINUTE_STEP_MS)}>
+                    <Minus />
+                </StepButton>
+            )}
             <span
                 className={cn(
                     'w-5 text-center tabular-nums',
@@ -76,9 +89,11 @@ export function VirtualClockTicker({ className }: { className?: string }) {
             >
                 {part('minute')}
             </span>
-            <StepButton label="10분 더하기" onClick={() => shift(MINUTE_STEP_MS)}>
-                <Plus />
-            </StepButton>
+            {!readOnly && (
+                <StepButton label="10분 더하기" onClick={() => shift(MINUTE_STEP_MS)}>
+                    <Plus />
+                </StepButton>
+            )}
             <span className="text-fg-tertiary">:</span>
             <span className="text-fg-tertiary w-5 text-center tabular-nums">{part('second')}</span>
         </div>
