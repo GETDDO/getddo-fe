@@ -24,16 +24,14 @@ const STAGE_COLORS = [
     'var(--color-play-lavender)',
 ];
 
-// 1→2, 2→3, 3→4 구간을 그 스테이지 색으로 칠한 게이지 (구간 사이는 2px 띄워 경계를 보여준다)
-const GAUGE_BACKGROUND = `linear-gradient(to right, ${STAGE_MARKS.slice(0, -1)
-    .map((start, index) => {
-        const end = STAGE_MARKS[index + 1] ?? 1;
-        const color = STAGE_COLORS[index] ?? STAGE_COLORS[0];
-        const gapStart = index > 0 ? 'calc(' + start * 100 + '% + 1px)' : '0%';
-        const gapEnd = index < STAGE_MARKS.length - 2 ? 'calc(' + end * 100 + '% - 1px)' : '100%';
-        return `transparent ${start * 100}%, transparent ${gapStart}, ${color} ${gapStart}, ${color} ${gapEnd}, transparent ${gapEnd}`;
-    })
-    .join(', ')})`;
+// 스테이지마다 한 구간 — 1·2·3·4 스테이지를 각 색으로 칠한 게이지 (구간 사이는 2px 띄워 경계를 보여준다)
+const GAUGE_BACKGROUND = `linear-gradient(to right, ${STAGE_MARKS.map((start, index) => {
+    const end = STAGE_MARKS[index + 1] ?? 1;
+    const color = STAGE_COLORS[index] ?? STAGE_COLORS[0];
+    const gapStart = index > 0 ? 'calc(' + start * 100 + '% + 1px)' : '0%';
+    const gapEnd = index < STAGE_MARKS.length - 1 ? 'calc(' + end * 100 + '% - 1px)' : '100%';
+    return `transparent ${start * 100}%, transparent ${gapStart}, ${color} ${gapStart}, ${color} ${gapEnd}, transparent ${gapEnd}`;
+}).join(', ')})`;
 
 /**
  * 스테이지 진행도 — 숫자 없이 스테이지 색 게이지로만 보여준다. 지나온 구간은 또렷하게, 남은 구간은 흐리게.
@@ -60,16 +58,17 @@ export function StageProgress({
                 {/* 아직 못 간 구간 — 위에 어두운 막을 덮어 흐리게 한다 */}
                 <div
                     ref={restRef}
-                    className="absolute inset-y-0 right-0 left-0 bg-(--takko-ink)/70"
+                    className="absolute inset-0 bg-(--takko-ink)/70 will-change-transform"
                 />
             </div>
             {/* 지금 위치 — 타코야끼 대기 얼굴 */}
-            <div
-                ref={faceRef}
-                aria-hidden
-                className="absolute top-1/2 left-0 -translate-x-1/2 -translate-y-[62%] drop-shadow-md"
-                style={FACE_STYLE}
-            />
+            {/* 길 전체 폭의 틀을 진행도만큼 옮겨, 그 왼쪽 끝에 붙은 얼굴이 따라가게 한다 */}
+            <div ref={faceRef} aria-hidden className="absolute inset-0 will-change-transform">
+                <div
+                    className="absolute top-1/2 left-0 -translate-x-1/2 -translate-y-[62%] drop-shadow-md"
+                    style={FACE_STYLE}
+                />
+            </div>
         </div>
     );
 }

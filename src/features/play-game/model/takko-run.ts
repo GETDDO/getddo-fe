@@ -54,14 +54,17 @@ const SPEED_EASE_PER_SECOND = 5;
 /** 스테이지가 바뀔 때 새 배경이 오른쪽에서 밀려 들어오는 시간 */
 const THEME_FADE_SECONDS = 0.5;
 
-/** 마지막 스테이지가 시작되는 점수 — 진행도 바의 끝 */
-export const FINAL_STAGE_SCORE = STAGES[3].fromScore;
+/**
+ * 진행도 게이지의 끝 점수 — 스테이지 4 구간도 다른 구간처럼 보이도록 스테이지 4 시작(1,800)에서
+ * 스테이지 3 길이(800점)만큼 더 간 2,600점까지 그린다. 그 뒤로는 얼굴이 끝에 머문다
+ */
+export const GAUGE_END_SCORE = STAGES[3].fromScore + (STAGES[3].fromScore - STAGES[2].fromScore);
 
 /** 스테이지 시작점의 진행도 위치 (0~1) */
-export const STAGE_MARKS = STAGES.map((stage) => stage.fromScore / FINAL_STAGE_SCORE);
+export const STAGE_MARKS = STAGES.map((stage) => stage.fromScore / GAUGE_END_SCORE);
 
-/** 점수 → 스테이지 진행도 (0~1, 마지막 스테이지에 닿으면 1) */
-export const progressOf = (score: number) => Math.min(1, score / FINAL_STAGE_SCORE);
+/** 점수 → 진행도 (0~1, 게이지 끝 점수에 닿으면 1) */
+export const progressOf = (score: number) => Math.min(1, score / GAUGE_END_SCORE);
 
 /** 점수에 맞는 스테이지 (1부터) */
 export function stageForScore(score: number) {

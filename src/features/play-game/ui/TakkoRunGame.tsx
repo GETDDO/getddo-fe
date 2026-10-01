@@ -106,6 +106,8 @@ export function TakkoRunGame({
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const scoreRef = useRef<HTMLSpanElement>(null);
     const progressRestRef = useRef<HTMLDivElement>(null);
+    /** 마지막으로 화면에 쓴 점수 */
+    const shownScoreRef = useRef(-1);
     const progressFaceRef = useRef<HTMLDivElement>(null);
     const restartRef = useRef<HTMLButtonElement>(null);
     const runRef = useRef(createRun());
@@ -241,10 +243,16 @@ export function TakkoRunGame({
                 milestoneRef.current = milestone;
                 celebrateMilestone();
             }
-            if (scoreRef.current) scoreRef.current.textContent = padScore(scoreOf(run));
-            const progress = `${progressOf(scoreOf(run)) * 100}%`;
-            if (progressRestRef.current) progressRestRef.current.style.left = progress;
-            if (progressFaceRef.current) progressFaceRef.current.style.left = progress;
+            // 점수·진행도는 값이 바뀔 때만 화면에 쓴다 — 매 프레임 쓰면 레이아웃 계산이 계속 일어난다.
+            // 진행도는 위치(left) 대신 transform으로 옮겨 레이아웃 없이 합성만 하게 한다
+            const score = scoreOf(run);
+            if (score !== shownScoreRef.current) {
+                shownScoreRef.current = score;
+                if (scoreRef.current) scoreRef.current.textContent = padScore(score);
+                const shift = `translateX(${progressOf(score) * 100}%)`;
+                if (progressRestRef.current) progressRestRef.current.style.transform = shift;
+                if (progressFaceRef.current) progressFaceRef.current.style.transform = shift;
+            }
             drawRun(ctx, run, images, palette);
             frame = requestAnimationFrame(tick);
         };
@@ -504,7 +512,7 @@ export function TakkoRunGame({
 
             {/* 스테이지 진행도 — 땅 위 아래쪽 가운데, 타코야끼 얼굴이 1→4 스테이지로 달려간다 */}
             {images && (
-                <div className="pointer-events-none absolute inset-x-[14%] bottom-2 rounded-full bg-(--takko-ink)/60 px-5 py-1 backdrop-blur-sm sm:inset-x-[22%] sm:bottom-3 sm:px-7 sm:py-1.5">
+                <div className="pointer-events-none absolute inset-x-[14%] bottom-2 rounded-full bg-(--takko-ink)/70 px-5 py-1 sm:inset-x-[22%] sm:bottom-3 sm:px-7 sm:py-1.5">
                     <StageProgress
                         stage={stage}
                         restRef={progressRestRef}
