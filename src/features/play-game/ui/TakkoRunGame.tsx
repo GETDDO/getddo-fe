@@ -1,8 +1,9 @@
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { type CSSProperties, useEffect, useEffectEvent, useRef, useState } from 'react';
 
 import { formatNumber } from '@shared/lib/format';
 
+import bgmUrl from '../assets/audio/flowerbed_fields.m4a';
 import characterUrl from '../assets/takko-run/character.png';
 import cloudsUrl from '../assets/takko-run/clouds.png';
 import lanternsUrl from '../assets/takko-run/lanterns.png';
@@ -12,6 +13,10 @@ import skyUrl from '../assets/takko-run/sky.jpg';
 import starsUrl from '../assets/takko-run/stars.png';
 import townUrl from '../assets/takko-run/town.png';
 import newBadge from '../assets/ui/badge-new.png';
+import stage1Badge from '../assets/ui/stage/stage-1.png';
+import stage2Badge from '../assets/ui/stage/stage-2.png';
+import stage3Badge from '../assets/ui/stage/stage-3.png';
+import stage4Badge from '../assets/ui/stage/stage-4.png';
 import {
     createPalette,
     drawRun,
@@ -19,6 +24,7 @@ import {
     type TakkoRunImages,
     type TakkoRunPalette,
 } from '../lib/draw-takko-run';
+import { useLoopingBgm } from '../lib/use-looping-bgm';
 import {
     createRun,
     pressJump,
@@ -32,6 +38,7 @@ import {
 import { GameImageButton } from './GameImageButton';
 import { RewardDialog } from './RewardDialog';
 import { ScoreBoard } from './ScoreBoard';
+import { VolumeControl } from './VolumeControl';
 
 const IMAGE_SOURCES: Record<TakkoRunImageKey, string> = {
     character: characterUrl,
@@ -78,6 +85,11 @@ const isInteractive = (target: EventTarget | null) =>
 
 const padScore = (score: number) => String(score).padStart(5, '0');
 
+/** 스테이지 배지 (피그마 image 118) — 번호 - 1이 순서 */
+const STAGE_BADGES = [stage1Badge, stage2Badge, stage3Badge, stage4Badge];
+/** 스테이지가 오를 때 가운데에 크게 띄워 두는 시간 */
+const STAGE_BANNER_MS = 1600;
+
 /**
  * 게임 위에 떠 있는 안내 칩 — 마을 실루엣에서 뽑은 짙은 갈색(--takko-ink)을 반투명하게 깔아 노을 배경과 어우러지게 한다
  */
@@ -117,6 +129,13 @@ export function TakkoRunGame({
     const restartRef = useRef<HTMLButtonElement>(null);
     const runRef = useRef(createRun());
     const overAtRef = useRef(0);
+    const bgm = useLoopingBgm(bgmUrl);
+    // 게임 시작을 누르고 게임 화면이 열리면 바로 배경 음악을 튼다 (썸네일 화면에서는 나오지 않는다).
+    // 브라우저가 막으면 첫 점프 때 다시 튼다
+    const playBgm = bgm.play;
+    useEffect(() => {
+        playBgm();
+    }, [playBgm]);
 
     const [assets, setAssets] = useState<{
         images: TakkoRunImages;
@@ -128,6 +147,21 @@ export function TakkoRunGame({
     const [lastScore, setLastScore] = useState(0);
     const [best, setBest] = useState(bestScore);
     const [newBest, setNewBest] = useState(false);
+    const [stage, setStage] = useState(1);
+    /** 스테이지가 올랐을 때 가운데에 잠깐 띄우는 배지 번호 */
+    const [stageBanner, setStageBanner] = useState<number | null>(null);
+    const stageRef = useRef(1);
+
+    const changeStage = useEffectEvent((next: number) => {
+        stageRef.current = next;
+        setStage(next);
+        setStageBanner(next);
+    });
+    useEffect(() => {
+        if (stageBanner == null) return;
+        const timer = setTimeout(() => setStageBanner(null), STAGE_BANNER_MS);
+        return () => clearTimeout(timer);
+    }, [stageBanner]);
     /** 이번 판으로 받은 응모권 수 — 제출 응답에 있으면 적립 안내 모달을 한 번 띄운다 */
     const [ticketsGranted, setTicketsGranted] = useState(0);
     const [rewardOpen, setRewardOpen] = useState(false);
@@ -148,6 +182,8 @@ export function TakkoRunGame({
 
     const finish = useEffectEvent((score: number) => {
         overAtRef.current = performance.now();
+        // 부딪히면 배경 음악을 작게 줄여 결과 화면에 집중하게 한다
+        bgm.duck(0.3);
         setPhase('over');
         setLastScore(score);
         setNewBest(score > best);
@@ -186,6 +222,7 @@ export function TakkoRunGame({
             last = now;
             const run = runRef.current;
             if (stepRun(run, dt)) finish(scoreOf(run));
+            if (run.stage !== stageRef.current) changeStage(run.stage);
             if (scoreRef.current) scoreRef.current.textContent = padScore(scoreOf(run));
             drawRun(ctx, run, images, palette);
             frame = requestAnimationFrame(tick);
@@ -201,7 +238,11 @@ export function TakkoRunGame({
         const run = runRef.current;
         if (!images || run.phase === 'over') return;
         pressJump(run);
-        if (phase === 'ready') setPhase('running');
+        if (phase === 'ready') {
+            setPhase('running');
+            // 첫 점프(사용자 입력) 때 배경 음악을 시작한다 — 브라우저는 입력 전 소리를 막는다
+            bgm.play();
+        }
     };
 
     const restart = () => {
@@ -212,6 +253,10 @@ export function TakkoRunGame({
         setPhase('running');
         setNewBest(false);
         setTicketsGranted(0);
+        stageRef.current = 1;
+        setStage(1);
+        setStageBanner(null);
+        bgm.play();
         playRef.current += 1;
         containerRef.current?.focus();
     };
@@ -269,9 +314,37 @@ export function TakkoRunGame({
                 </p>
             )}
 
-            {/* 나가기 — 도트 버튼 Small(36) */}
-            <div className="absolute top-3 left-3">
+            {/* 왼쪽 위 — 나가기(도트 버튼 Small 36)와 그 오른쪽 배경 음악 소리 버튼(image 117, 설정은 이 브라우저에 기억) */}
+            <div className="absolute top-3 left-3 flex items-start gap-3">
                 <GameImageButton kind="exit" size="small" onClick={onExit} />
+                <VolumeControl level={bgm.level} onLevelChange={bgm.setLevel} />
+            </div>
+
+            {/* 지금 스테이지 (image 118) — 좁은 화면에서는 점수판과 겹치지 않게 숨기고, 오를 때 가운데 배지로만 알린다 */}
+            {images && (
+                <img
+                    src={STAGE_BADGES[stage - 1]}
+                    alt={`스테이지 ${stage}`}
+                    className="absolute top-3 left-1/2 hidden h-9 w-auto -translate-x-1/2 sm:block"
+                />
+            )}
+
+            {/* 스테이지가 오르면 가운데에 크게 톡 튀어나왔다 사라진다 */}
+            <div className="pointer-events-none absolute inset-x-0 top-[24%] flex justify-center">
+                <AnimatePresence>
+                    {stageBanner != null && (
+                        <motion.img
+                            key={stageBanner}
+                            src={STAGE_BADGES[stageBanner - 1]}
+                            alt=""
+                            initial={{ opacity: 0, scale: 0.4, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 1.1, y: -10 }}
+                            transition={{ type: 'spring', stiffness: 360, damping: 16 }}
+                            className="h-16 w-auto"
+                        />
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* 점수판 (image 112) */}
@@ -354,6 +427,7 @@ export function TakkoRunGame({
 
             <p aria-live="polite" className="sr-only">
                 {phase === 'over' ? `게임 끝. ${lastScore}점` : ''}
+                {stageBanner != null ? `스테이지 ${stageBanner}` : ''}
             </p>
         </div>
     );

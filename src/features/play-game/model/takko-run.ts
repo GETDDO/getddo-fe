@@ -19,12 +19,30 @@ const JUMP_CUT_VELOCITY = 420;
 /** 착지 직전에 누른 점프를 기억해 두는 시간 */
 const JUMP_BUFFER_SECONDS = 0.12;
 const TAKEOFF_SECONDS = 0.08;
-const START_SPEED = 380;
-const MAX_SPEED = 840;
-/** 1초마다 늘어나는 속도 */
-const SPEED_GAIN = 10;
 /** 점수 1점당 달린 거리 */
 const DISTANCE_PER_POINT = 10;
+
+/**
+ * 스테이지 — 점수가 기준을 넘으면 다음 스테이지로 올라가고 달리는 속도가 빨라진다.
+ * 지금은 속도만 다르고, 나중에 배경·장애물 난이도도 스테이지별로 바꿀 예정이다
+ */
+export const STAGES = [
+    { fromScore: 0, speed: 420 },
+    { fromScore: 400, speed: 540 },
+    { fromScore: 1000, speed: 660 },
+    { fromScore: 1800, speed: 800 },
+] as const;
+/** 스테이지가 바뀔 때 새 속도로 따라붙는 빠르기 (1초에 남은 차이의 몇 배만큼) */
+const SPEED_EASE_PER_SECOND = 2.5;
+
+/** 점수에 맞는 스테이지 (1부터) */
+export function stageForScore(score: number) {
+    let stage = 1;
+    STAGES.forEach((item, index) => {
+        if (score >= item.fromScore) stage = index + 1;
+    });
+    return stage;
+}
 
 // 그림의 투명한 가장자리까지 부딪힌 것으로 치지 않도록 판정 영역을 안쪽으로 줄인다
 const RUNNER_HITBOX = { left: 22, right: 22, top: 20, bottom: 8 };
@@ -52,6 +70,8 @@ export interface RunState {
     jumpBuffer: number;
     distance: number;
     speed: number;
+    /** 지금 스테이지 (1부터) */
+    stage: number;
     /** 화면이 떠 있던 전체 시간 — 대기 중 흔들림·별 반짝임에 쓴다 */
     elapsed: number;
     obstacles: Obstacle[];
@@ -67,7 +87,8 @@ export function createRun(): RunState {
         airTime: 0,
         jumpBuffer: 0,
         distance: 0,
-        speed: START_SPEED,
+        speed: STAGES[0].speed,
+        stage: 1,
         elapsed: 0,
         obstacles: [],
         nextObstacleAt: WORLD_WIDTH * 0.6,
@@ -117,8 +138,8 @@ function spawnObstacle(run: RunState, random: () => number) {
         width: width * ATLAS_SCALE,
         height: height * ATLAS_SCALE,
     });
-    // 빨라질수록 거리 간격도 넓혀 반응할 시간(약 1~2초)을 남긴다
-    run.nextObstacleAt = run.distance + run.speed * (0.8 + random() * 0.8) + 220;
+    // 빨라질수록 거리 간격도 넓혀 반응할 시간(약 0.9~1.6초)을 남긴다 — 점프 한 번(약 0.7초)보다는 항상 길다
+    run.nextObstacleAt = run.distance + run.speed * (0.65 + random() * 0.7) + 180;
 }
 
 /** dt초만큼 진행한다. 이번 진행에서 부딪혀 끝났으면 true */
@@ -126,7 +147,10 @@ export function stepRun(run: RunState, dt: number, random: () => number = Math.r
     run.elapsed += dt;
     if (run.phase !== 'running') return false;
 
-    run.speed = Math.min(MAX_SPEED, run.speed + SPEED_GAIN * dt);
+    // 스테이지를 올리고, 속도는 한 번에 튀지 않게 새 스테이지 속도로 부드럽게 따라붙는다
+    run.stage = stageForScore(scoreOf(run));
+    const target = pick(STAGES, run.stage - 1).speed;
+    run.speed += (target - run.speed) * Math.min(1, SPEED_EASE_PER_SECOND * dt);
     const moved = run.speed * dt;
     run.distance += moved;
 

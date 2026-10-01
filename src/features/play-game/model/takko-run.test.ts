@@ -7,6 +7,8 @@ import {
     runnerFrame,
     RUNNER_X,
     scoreOf,
+    stageForScore,
+    STAGES,
     stepRun,
 } from './takko-run';
 import { CHARACTER_FRAME } from './takko-run-atlas';
@@ -72,5 +74,21 @@ describe('타꼬런 규칙', () => {
         run(10, state);
         expect(state.phase).toBe('over');
         expect(scoreOf(state)).toBeGreaterThan(0);
+    });
+
+    it('점수가 기준을 넘으면 스테이지가 오르고 그 스테이지 속도로 달린다', () => {
+        expect(stageForScore(0)).toBe(1);
+        expect(stageForScore(STAGES[1].fromScore)).toBe(2);
+        expect(stageForScore(99999)).toBe(STAGES.length);
+
+        const state = createRun();
+        pressJump(state);
+        state.height = 0;
+        state.velocity = 0;
+        state.distance = STAGES[2].fromScore * 10;
+        state.nextObstacleAt = Infinity;
+        for (let t = 0; t < 3; t += STEP) stepRun(state, STEP);
+        expect(state.stage).toBe(3);
+        expect(state.speed).toBeCloseTo(STAGES[2].speed, 0);
     });
 });
