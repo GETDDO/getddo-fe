@@ -6,7 +6,8 @@ const api = (path: string) => `${env.apiBaseUrl}${path}`;
 const DEFAULT_SIZE = 20;
 
 // N01~N03 확정 계약(getddo-spec/05-api/notification.md) 기준 목업 — createdAt 내림차순이 기본 상태다
-const notifications = [
+// 원본은 템플릿으로만 쓰고 읽음 상태는 X-User-ID별로 분리한다 (한 사용자의 읽음이 타인 목록을 바꾸지 않도록)
+const initialNotifications = [
     {
         id: '3f4a1b2c-0001-4000-8000-000000000001',
         title: '무너 한정 굿즈 타임 래플 오픈 예정',
@@ -45,21 +46,30 @@ const notifications = [
     },
 ];
 
+type MockNotification = (typeof initialNotifications)[number];
+
+const notificationsByUser = new Map<string, MockNotification[]>();
+
+const getNotificationsForUser = (userId: string): MockNotification[] => {
+    const existing = notificationsByUser.get(userId);
+    if (existing) return existing;
+
+    const created = initialNotifications.map((notification) => ({ ...notification }));
+    notificationsByUser.set(userId, created);
+    return created;
+};
+
 const ok = (data: unknown) =>
     HttpResponse.json({ success: true, code: 'SUCCESS', message: '성공했습니다.', data });
 
 const fail = (status: number, code: string, message: string) =>
     HttpResponse.json({ success: false, code, message, data: null }, { status });
 
-const requireUser = (request: Request) =>
-    request.headers.get('X-User-ID')
-        ? null
-        : fail(401, 'USER_CONTEXT_REQUIRED', '사용자 문맥이 필요합니다.');
-
 export const notificationHandlers = [
     http.get(api('/v1/notifications/me'), ({ request }) => {
-        const denied = requireUser(request);
-        if (denied) return denied;
+        const userId = request.headers.get('X-User-ID');
+        if (!userId) return fail(401, 'USER_CONTEXT_REQUIRED', '사용자 문맥이 필요합니다.');
+        const notifications = getNotificationsForUser(userId);
 
         const url = new URL(request.url);
         const size = Number(url.searchParams.get('size') ?? DEFAULT_SIZE);
@@ -82,8 +92,9 @@ export const notificationHandlers = [
     }),
 
     http.put(api('/v1/notifications/:notificationId/read'), ({ request, params }) => {
-        const denied = requireUser(request);
-        if (denied) return denied;
+        const userId = request.headers.get('X-User-ID');
+        if (!userId) return fail(401, 'USER_CONTEXT_REQUIRED', '사용자 문맥이 필요합니다.');
+        const notifications = getNotificationsForUser(userId);
 
         const target = notifications.find((n) => n.id === params.notificationId);
         if (!target) return fail(404, 'NOTIFICATION-002', '알림을 찾을 수 없습니다.');
@@ -93,8 +104,9 @@ export const notificationHandlers = [
     }),
 
     http.put(api('/v1/notifications/me/read-all'), ({ request }) => {
-        const denied = requireUser(request);
-        if (denied) return denied;
+        const userId = request.headers.get('X-User-ID');
+        if (!userId) return fail(401, 'USER_CONTEXT_REQUIRED', '사용자 문맥이 필요합니다.');
+        const notifications = getNotificationsForUser(userId);
 
         const updatedCount = notifications.filter((n) => !n.isRead).length;
         notifications.forEach((n) => {

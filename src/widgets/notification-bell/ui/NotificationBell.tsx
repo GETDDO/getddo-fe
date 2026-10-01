@@ -12,6 +12,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
 
 export function NotificationBell() {
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useNotificationList();
+    // 미읽음 전체 수는 로드된 페이지와 무관하게 표시해야 하므로 isRead 필터의 totalElements를 별도 조회한다
+    const { data: unreadData } = useNotificationList({ isRead: false, size: 1 });
     const { mutate: markRead } = useMarkNotificationRead();
     const { mutate: markAllRead } = useMarkAllNotificationsRead();
     const navigate = useNavigate();
@@ -19,7 +21,7 @@ export function NotificationBell() {
     const now = useVirtualClock().now();
 
     const notifications = data?.pages.flatMap((page) => page.items) ?? [];
-    const unreadCount = notifications.filter((notification) => !notification.isRead).length;
+    const unreadCount = unreadData?.pages[0]?.totalElements ?? 0;
 
     return (
         <Popover>

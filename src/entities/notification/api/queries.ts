@@ -19,7 +19,7 @@ export function useNotificationList({
     size = 20,
 }: { isRead?: boolean; size?: number } = {}) {
     return useInfiniteQuery({
-        queryKey: [...NOTIFICATION_LIST_KEY, { isRead }],
+        queryKey: [...NOTIFICATION_LIST_KEY, { isRead, size }],
         initialPageParam: undefined as string | undefined,
         queryFn: async ({ pageParam }) => {
             const { data } = await apiClient.get<unknown>(`${V1}/me`, {

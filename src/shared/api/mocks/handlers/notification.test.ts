@@ -83,6 +83,25 @@ describe('알림 목업 핸들러 (N01~N03 확정 계약)', () => {
         expect((noUser.data as Envelope<null>).code).toBe('USER_CONTEXT_REQUIRED');
     });
 
+    it('읽음 상태는 X-User-ID별로 분리된다', async () => {
+        const OTHER = { headers: { 'X-User-ID': 'user-test-3' } };
+
+        await apiClient.put('/v1/notifications/me/read-all', undefined, OTHER);
+
+        const otherUnread = (
+            await apiClient.get('/v1/notifications/me', {
+                ...OTHER,
+                params: { isRead: false },
+                validateStatus: () => true,
+            })
+        ).data as Envelope<NotificationCursor>;
+        expect(otherUnread.data.items).toHaveLength(0);
+
+        // 다른 사용자의 전체 읽음이 내 미읽음 목록에 영향을 주지 않는다
+        const mine = (await list({ isRead: false })).data as Envelope<NotificationCursor>;
+        expect(mine.data.items.length).toBeGreaterThan(0);
+    });
+
     // 읽음 처리는 목업 상태를 변경하므로 파일 내 마지막에 둔다
     it('개별 읽음과 전체 읽음을 처리한다', async () => {
         const { items } = ((await list({ isRead: false })).data as Envelope<NotificationCursor>)
