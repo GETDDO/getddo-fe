@@ -48,7 +48,7 @@
 
 요구사항 원본은 기능 요구사항 7절이다. 갱신 주기와 방식은 구현 담당자 재량으로 위임됐고 `05-api/entry.md`는 E03 재조회 제안과 함께 SSE·WebSocket을 필수로 두지 않는다고 명시한다.
 
-- **30초 폴링**으로 확정했다 — `useEventList`·`useEvent`의 `refetchInterval`이 담당하며, 상세는 진행 예정·진행 중 상태에서만 폴링한다 (마감·추첨 완료는 수치가 고정된다)
+- **30초 폴링**으로 확정했다 — `useEventList`·`useEvent`의 `refetchInterval`이 담당하며, 상세는 추첨 완료(`drawn`)까지 폴링한다 (마감 상태는 결과 발표 전환을 감지해야 한다)
 - **응모 성공 직후 즉시 재조회**는 `useEnterEvent`의 `onSuccess` 무효화(`['events']`·`['tickets']`·`['entries']`)가 담당한다
 - 표시 지표는 `Event`의 `participantCount`·`usedTicketCount`·`myTicketCount`다. E03의 `serverTime`·`mySpentTicketCount`는 초안 전용 필드라 계약 확정 시 전환을 검토한다
 
