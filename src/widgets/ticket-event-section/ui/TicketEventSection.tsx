@@ -72,7 +72,7 @@ export function TicketEventSection({
 
 const UPCOMING_PAGE_SIZE = 2;
 
-/** 오픈 예정 이벤트 캐러셀 — 한 화면에 2장씩, 좌우 버튼으로 페이지 단위 슬라이드한다 */
+/** 오픈 예정 이벤트 캐러셀 — 한 화면에 세로로 2장씩, 좌우 버튼으로 페이지 단위 슬라이드한다 */
 function UpcomingEventCarousel({ events }: { events: Event[] }) {
     const [page, setPage] = useState(0);
     const totalPages = Math.ceil(events.length / UPCOMING_PAGE_SIZE);
@@ -95,17 +95,21 @@ function UpcomingEventCarousel({ events }: { events: Event[] }) {
                         className="flex h-full transition-transform duration-300 ease-out motion-reduce:transition-none"
                         style={{ transform: `translateX(-${current * 100}%)` }}
                     >
-                        {events.map((event, index) => (
+                        {Array.from({ length: totalPages }, (_, pageIndex) => (
                             <div
-                                key={event.id}
+                                key={pageIndex}
                                 // 화면 밖 슬라이드도 렌더되므로 Tab 포커스·보조 기술 접근을 inert로 차단한다
-                                inert={
-                                    index < current * UPCOMING_PAGE_SIZE ||
-                                    index >= (current + 1) * UPCOMING_PAGE_SIZE
-                                }
-                                className="flex h-full w-1/2 shrink-0 px-1"
+                                inert={pageIndex !== current}
+                                className="flex h-full w-full shrink-0 flex-col gap-2 px-1"
                             >
-                                <UpcomingEventCard event={event} />
+                                {events
+                                    .slice(
+                                        pageIndex * UPCOMING_PAGE_SIZE,
+                                        (pageIndex + 1) * UPCOMING_PAGE_SIZE,
+                                    )
+                                    .map((event) => (
+                                        <UpcomingEventCard key={event.id} event={event} />
+                                    ))}
                             </div>
                         ))}
                     </div>
