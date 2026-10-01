@@ -59,19 +59,24 @@ const DEFAULT_BONUS_REWARDS: ReadonlyMap<number, number> = new Map([
     [28, 7],
 ]);
 
-/** 카드 안 요소가 위에서부터 차례로 살짝 올라오며 나타난다 (order가 클수록 늦게) */
+/**
+ * 펼치거나 접은 직후 카드 안 요소가 위에서부터 차례로 살짝 올라오며 나타난다 (order가 클수록 늦게).
+ * 페이지에 처음 들어올 때는 다른 페이지처럼 바로 보여준다 (enter가 false)
+ */
 function Rise({
     order,
+    enter,
     className,
     children,
 }: {
     order: number;
+    enter: boolean;
     className?: string;
     children: ReactNode;
 }) {
     return (
         <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={enter ? { opacity: 0, y: 12 } : false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: order * 0.06, ease: [0.22, 1, 0.36, 1] }}
             className={className}
@@ -135,6 +140,8 @@ export function AttendanceCheckCard({
     const [stageFull, setStageFull] = useState(false);
     // 펼치기: 옆으로 넓어짐(widening) → 아래로 자람 / 접기: 위로 줄어듦(shrinking) → 옆으로 좁아짐
     const [widening, setWidening] = useState(false);
+    // 펼치기·접기를 한 번이라도 했는지 — 그 뒤에만 내용이 차례로 올라온다 (처음 들어올 때는 애니메이션 없음)
+    const [contentEnter, setContentEnter] = useState(false);
     const [shrinking, setShrinking] = useState(false);
     const [narrowing, setNarrowing] = useState(false);
     const [heightAnimating, setHeightAnimating] = useState(false);
@@ -155,6 +162,7 @@ export function AttendanceCheckCard({
      * beforeGrow는 자라기 직전에 같이 바꿀 상태(굽기 장면 끄기 등)를 넣는다
      */
     const expandWithMotion = async (beforeGrow?: () => void) => {
+        setContentEnter(true);
         if (reduceMotion) {
             beforeGrow?.();
             onExpandedChange(true);
@@ -174,6 +182,7 @@ export function AttendanceCheckCard({
 
     // 접기 — 펼친 출석판이 먼저 위로 줄어들고, 다 줄어들면(onAnimationComplete) 옆으로 좁아진다
     const collapseWithMotion = () => {
+        setContentEnter(true);
         if (reduceMotion) {
             onExpandedChange(false);
             return;
@@ -303,7 +312,11 @@ export function AttendanceCheckCard({
                         )}
                     >
                         {showExpanded ? (
-                            <Rise order={0} className="flex items-start justify-between gap-4">
+                            <Rise
+                                order={0}
+                                enter={contentEnter}
+                                className="flex items-start justify-between gap-4"
+                            >
                                 <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                                     {stats}
                                     {status && compactCheckButton}
@@ -353,7 +366,7 @@ export function AttendanceCheckCard({
                                         className="bg-surface-canvas min-h-80 rounded-lg"
                                     />
                                 ) : (
-                                    <Rise order={1}>
+                                    <Rise order={1} enter={contentEnter}>
                                         <AttendanceMonthGrid
                                             days={buildAttendanceMonth(
                                                 shownDates,
@@ -369,10 +382,10 @@ export function AttendanceCheckCard({
                                 )
                             ) : (
                                 <>
-                                    <Rise order={1} className="p-4">
+                                    <Rise order={1} enter={contentEnter} className="p-4">
                                         {stats}
                                     </Rise>
-                                    <Rise order={2}>
+                                    <Rise order={2} enter={contentEnter}>
                                         <AttendanceWeekStrip
                                             week={buildAttendanceWeek(
                                                 shownDates,
@@ -382,7 +395,9 @@ export function AttendanceCheckCard({
                                             bonusDays={bonusDays}
                                         />
                                     </Rise>
-                                    <Rise order={3}>{checkButton}</Rise>
+                                    <Rise order={3} enter={contentEnter}>
+                                        {checkButton}
+                                    </Rise>
                                 </>
                             ))}
                     </motion.div>

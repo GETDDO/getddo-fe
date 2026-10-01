@@ -11,25 +11,9 @@ import { useVirtualClock } from '@shared/lib/virtual-clock';
 import { summarizeMonthlyTickets } from '../lib/monthly-ticket-summary';
 import { useFreshIds } from '../lib/use-fresh-ids';
 
-// 처음 보일 때 위에서부터 차례로 살짝 올라오는 등장 효과 (내역 줄·요약 항목이 함께 쓴다)
-const RISE_IN =
-    'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 motion-safe:fill-mode-both';
-const riseDelay = (order: number) => ({ animationDelay: `${order * 50}ms` });
-
-function SummaryItem({
-    label,
-    value,
-    order,
-}: {
-    label: string;
-    value: number | undefined;
-    order: number;
-}) {
+function SummaryItem({ label, value }: { label: string; value: number | undefined }) {
     return (
-        <p
-            className={`text-caption text-fg-primary whitespace-nowrap ${RISE_IN}`}
-            style={riseDelay(order)}
-        >
+        <p className="text-caption text-fg-primary whitespace-nowrap">
             <span className="text-fg-tertiary">{label} </span>
             <span className="text-body-sm-bold">{value == null ? '-' : formatNumber(value)}</span>장
         </p>
@@ -72,39 +56,12 @@ export function TicketHistoryCard({
                         compact ? 'gap-x-4.5' : 'gap-x-5',
                     )}
                 >
-                    {/* 보유 → 적립 → 사용 순서로 차례로 올라온다 */}
-                    {!compact && (
-                        <Ticket
-                            className={`text-fg-primary size-4.5 ${RISE_IN}`}
-                            style={riseDelay(0)}
-                            aria-hidden
-                        />
-                    )}
-                    <SummaryItem
-                        label={compact ? '보유' : '보유 응모권'}
-                        value={balanceDisplay}
-                        order={0}
-                    />
-                    <span
-                        aria-hidden
-                        className={`bg-border-strong h-4 w-px rounded-full ${RISE_IN}`}
-                        style={riseDelay(1)}
-                    />
-                    <SummaryItem
-                        label={compact ? '적립' : '이번 달 적립'}
-                        value={earnedDisplay}
-                        order={1}
-                    />
-                    <span
-                        aria-hidden
-                        className={`bg-border-strong h-4 w-px rounded-full ${RISE_IN}`}
-                        style={riseDelay(2)}
-                    />
-                    <SummaryItem
-                        label={compact ? '사용' : '이번 달 사용'}
-                        value={monthly?.used}
-                        order={2}
-                    />
+                    {!compact && <Ticket className="text-fg-primary size-4.5" aria-hidden />}
+                    <SummaryItem label={compact ? '보유' : '보유 응모권'} value={balanceDisplay} />
+                    <span aria-hidden className="bg-border-strong h-4 w-px rounded-full" />
+                    <SummaryItem label={compact ? '적립' : '이번 달 적립'} value={earnedDisplay} />
+                    <span aria-hidden className="bg-border-strong h-4 w-px rounded-full" />
+                    <SummaryItem label={compact ? '사용' : '이번 달 사용'} value={monthly?.used} />
                 </div>
 
                 {/*
@@ -127,27 +84,18 @@ export function TicketHistoryCard({
                     {history && history.length > 0 && (
                         <ul>
                             {history.map((item, index) => {
-                                // 보이는 앞쪽 8줄까지만 간격을 둔다
-                                const enter = RISE_IN;
-                                // 요약 세 항목 다음 차례부터 이어서 올라온다
-                                const enterDelay = riseDelay(Math.min(index, 8) + 3);
                                 return (
                                     <Fragment key={item.id}>
                                         {index > 0 && (
-                                            <li
-                                                aria-hidden
-                                                className={cn('bg-border-default h-px', enter)}
-                                                style={enterDelay}
-                                            />
+                                            <li aria-hidden className="bg-border-default h-px" />
                                         )}
                                         <li
-                                            style={freshIds.has(item.id) ? undefined : enterDelay}
                                             // 방금 받은 내역 강조 — play/yellow-soft 배경을 위아래로 4px 들여 그려 구분선에 닿지 않게 하고, 끝나면 서서히 사라진다
                                             className={cn(
                                                 'before:bg-play-yellow-soft relative isolate flex items-center justify-between gap-4 p-4 before:absolute before:inset-x-0 before:inset-y-1 before:-z-10 before:rounded-lg before:transition-opacity before:duration-700',
                                                 freshIds.has(item.id)
                                                     ? 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-3 before:opacity-100 motion-safe:duration-500'
-                                                    : `before:opacity-0 ${enter}`,
+                                                    : 'before:opacity-0',
                                             )}
                                         >
                                             <div className="flex min-w-0 flex-col gap-1">
