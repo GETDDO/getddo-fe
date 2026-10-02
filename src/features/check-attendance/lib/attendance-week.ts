@@ -1,23 +1,25 @@
+import { formatYmd, toKst } from '@shared/lib/date';
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 
 export interface AttendanceDay {
-    /** 출석 기준일(UTC 날짜, YYYY-MM-DD) */
+    /** 출석 기준일(KST 날짜, YYYY-MM-DD) */
     date: string;
     label: string;
     isToday: boolean;
     checked: boolean;
 }
 
-/** 출석 기준일은 00:00 UTC(09:00 KST)에 바뀌므로 UTC 날짜로 키를 만든다 */
+/** 출석 기준일은 00:00 KST에 바뀌므로 KST 날짜로 키를 만든다 (getddo-spec 공통 시간 기준) */
 export function toAttendanceDate(date: Date): string {
-    return date.toISOString().slice(0, 10);
+    return formatYmd(date.toISOString());
 }
 
 /** 오늘을 마지막 칸으로 하는 최근 7일의 출석 여부를 만든다 */
 export function buildAttendanceWeek(
     checkedDates: string[],
-    checkedToday: boolean,
+    attended: boolean,
     now: Date,
 ): AttendanceDay[] {
     const checked = new Set(checkedDates);
@@ -29,28 +31,28 @@ export function buildAttendanceWeek(
         const isToday = date === today;
         return {
             date,
-            label: isToday ? '오늘' : (WEEKDAY_LABELS[day.getUTCDay()] ?? ''),
+            label: isToday ? '오늘' : (WEEKDAY_LABELS[toKst(day).getUTCDay()] ?? ''),
             isToday,
-            checked: checked.has(date) || (isToday && checkedToday),
+            checked: checked.has(date) || (isToday && attended),
         };
     });
 }
 
-/** 이번 달(UTC 기준월) 출석일수 — 연속 출석과 같은 기준월로 센다 */
+/** 이번 달(KST 기준월) 출석일수 — 연속 출석과 같은 기준월로 센다 */
 export function countMonthlyAttendance(
     checkedDates: string[],
-    checkedToday: boolean,
+    attended: boolean,
     now: Date,
 ): number {
     const today = toAttendanceDate(now);
     const month = today.slice(0, 7);
     const dates = new Set(checkedDates.filter((date) => date.startsWith(month)));
-    if (checkedToday) dates.add(today);
+    if (attended) dates.add(today);
     return dates.size;
 }
 
 export interface AttendanceMonthDay {
-    /** 출석 기준일(UTC 날짜, YYYY-MM-DD) */
+    /** 출석 기준일(KST 날짜, YYYY-MM-DD) */
     date: string;
     /** 달력에 표시할 일(1~31) */
     day: number;
@@ -60,20 +62,21 @@ export interface AttendanceMonthDay {
     checked: boolean;
 }
 
-/** 이번 달(UTC 기준월) 1일부터 말일까지의 출석 여부를 만든다 */
+/** 이번 달(KST 기준월) 1일부터 말일까지의 출석 여부를 만든다 */
 export function buildAttendanceMonth(
     checkedDates: string[],
-    checkedToday: boolean,
+    attended: boolean,
     now: Date,
 ): AttendanceMonthDay[] {
     const checked = new Set(checkedDates);
     const today = toAttendanceDate(now);
-    const year = now.getUTCFullYear();
-    const month = now.getUTCMonth();
+    const kstNow = toKst(now);
+    const year = kstNow.getUTCFullYear();
+    const month = kstNow.getUTCMonth();
     const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
 
     return Array.from({ length: lastDay }, (_, index) => {
-        const date = toAttendanceDate(new Date(Date.UTC(year, month, index + 1)));
+        const date = formatYmd(new Date(Date.UTC(year, month, index + 1)).toISOString());
         const isToday = date === today;
         return {
             date,
@@ -81,7 +84,7 @@ export function buildAttendanceMonth(
             isToday,
             // YYYY-MM-DD 문자열은 사전순이 곧 날짜순이다
             isFuture: date > today,
-            checked: checked.has(date) || (isToday && checkedToday),
+            checked: checked.has(date) || (isToday && attended),
         };
     });
 }

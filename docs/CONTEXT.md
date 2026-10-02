@@ -66,9 +66,9 @@
 
 "같은 요청의 재시도와 새로운 요청을 구분한다"는 확정 정책이다 (`../getddo-spec/02-domain/entry.md` — 응모권 미사용 이벤트도 동일).
 
-- 재시도·중복 클릭으로 같은 부작용이 두 번 생기면 안 되는 POST에는 `shared/lib/idempotency-key`의 `createIdempotencyKey()`로 생성한 키를 헤더에 붙인다
-- 현재 대상: `POST /events/:eventId/entries`(응모). 추첨·재추첨·회수 등 새 부수효과 요청에도 같은 판단을 적용한다
-- 헤더명은 spec 공통 계약 초안(`05-api/common.md`, 검토 대기)이 `Idempotency-Key`를 제안한다 — 코드는 임시 `X-Idempotency-Key`를 유지하고, 확정 시 공통 상수로 승격한다
+- 재시도·중복 클릭으로 같은 부작용이 두 번 생기면 안 되는 POST에는 `shared/lib/idempotency-key`의 `createIdempotencyKey()`로 생성한 키를 `IDEMPOTENCY_HEADER` 헤더(`Idempotency-Key`)에 붙인다
+- 작업별 구분은 `05-api/common.md` 초안을 따른다: 응모·미션=멱등키, **출석=사용자·KST 기준일 재처리**, **게임=서버 발급 `playId`**, 알림 읽음=사용자·알림 ID. 추첨·재추첨·회수 등 새 부수효과 요청에도 같은 판단을 적용한다
+- 같은 키·다른 본문의 재요청은 409로 거절하고, 같은 키·같은 본문은 처음 결과를 200으로 돌려준다 (목업 `entry.ts`도 동일하게 동작)
 
 ## 비공개·마스킹 — FE 고유 책임
 
@@ -82,19 +82,20 @@
 
 ## 사용자 역할·시연
 
-`UserRole = 'user' | 'admin'` (`entities/user/model/session.ts`).
+`UserRole = 'USER' | 'ADMIN'` (`entities/user/model/types.ts`) — spec과 BE `UserRole` enum의 대문자 표기를 따른다.
 
 - 로그인 화면의 역할 선택은 **데모 전용**이다. 관리자 권한은 역할 선택만으로 부여되지 않고 서버의 별도 인증을 거친다 (비기능 요구사항 '시연 로그인 및 관리자 보호' — product-context.md)
 - 사용자 역할은 서버가 결정하며, 클라이언트가 보낸 role 값을 신뢰하지 않는다 — 권한 우회용 role 변경 코드를 만들지 않는다
-- MSW 개발 환경에서 세션이 `admin`으로 시작하는 것은 목업상 관리자 화면 확인을 위한 편의 장치다
+- MSW 개발 환경에서 세션이 `ADMIN`으로 시작하는 것은 목업상 관리자 화면 확인을 위한 편의 장치다
 - 관리자는 응모할 수 없다 (임직원 여부는 응모 제한 조건으로 사용하지 않는다 — `getddo-spec` 기능 요구사항)
 
 ## 백엔드 연동 전 임시 상태
 
 합의되지 않은 항목은 임의로 확정해 하드코딩하지 않는다. 미결정 전체 목록은 `../getddo-spec/00-requirements/pending-decisions.md`가 기준이다. 도메인별 API 계약(경로·DTO·오류 코드)은 `../getddo-spec/05-api/`에 있다 — 사용자 알림 N01~N03만 2026-09-30 확정됐고(`05-api/notification.md`) 나머지는 "검토 대기" 단계의 구현 전 제안이므로, 초안과 다르게 만들 이유가 있으면 먼저 합의한다.
 
-- 멱등키 생성 주체·전달 방식 — 헤더명 `Idempotency-Key`를 포함해 `05-api/common.md` 초안으로 제안됨(검토 대기)
+- 멱등키 생성 주체·전달 방식 — 헤더명 `Idempotency-Key`는 `05-api/common.md` 초안을 코드에 선반영했으나 계약 자체는 검토 대기 상태다
 - 에러 코드 체계·페이지네이션 형식 — `05-api/common.md` 초안으로 제안됨(응답 봉투 `success/code/message/data`, `Page<T>`/`Cursor<T>` 형식, 1-base 페이지). 확정 시 `shared/api/client.ts` 인터셉터에 매핑 추가
+- 사용자 문맥 헤더 — spec 권고안은 `X-User-ID` 필수+`X-User-Membership` 선택이고 `X-User-Role`은 받지 않는다고 명시하지만, BE `CurrentUserArgumentResolver`는 `X-User-Role`을 필수로 요구한다. 어느 쪽으로 맞출지 합의 전이며 FE는 `X-User-ID`만 전송한다
 - 당첨자 마스킹 세부 규칙 — 담당자 결정 대기
 - 마감 + 5분 자동 발표가 장애·정합성 오류로 실패했을 때의 사용자 문구·복구·취소 기준 — 미확정
 - 배너 이미지 형식·용량 제한 — 담당자 확정 대기

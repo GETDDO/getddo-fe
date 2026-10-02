@@ -40,7 +40,7 @@ const abuseCases = [
         eventTitle: null,
         rewardSource: 'attendance',
         reason: '출석 지급 자동화 의심',
-        requestSummary: 'POST /attendance/check — 1초 간격 12회 연속',
+        requestSummary: 'POST /attendances — 1초 간격 12회 연속',
         detectedAt: '2026-09-26T22:58:00Z',
         status: 'pending',
         review: null,

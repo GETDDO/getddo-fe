@@ -4,9 +4,16 @@ import { env } from '@shared/config/env';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
-// 목업 세션 동안 유지되는 응모권 상태 — 출석 등 다른 목업이 지급을 기록하면 잔액·이력에 함께 반영된다
-let balance = 10;
-const ticketHistory = [
+interface TicketHistoryItem {
+    id: string;
+    type: string;
+    amount: number;
+    reason: string;
+    createdAt: string;
+}
+
+// 시연용 초기 이력 — 사용자별 상태에 복사본으로 들어간다
+const seedTicketHistory: TicketHistoryItem[] = [
     {
         id: 'th-1',
         type: 'earn',
@@ -129,16 +136,37 @@ const ticketHistory = [
     },
 ];
 
-/** 응모 목업이 차감 전에 잔액을 확인할 때 쓴다 */
-export function getMockTicketBalance() {
-    return balance;
+// 목업 세션 동안 유지되는 응모권 상태 — X-User-ID별로 분리한다.
+// 한 사용자의 출석 보상·응모 차감이 다른 사용자의 잔액·이력에 섞이지 않게 한다
+interface TicketState {
+    balance: number;
+    history: TicketHistoryItem[];
 }
 
-/** 다른 목업 핸들러(출석 등)에서 응모권 지급을 기록할 때 쓴다 */
-export function recordMockTicketGrant(amount: number, reason: string) {
-    balance += amount;
-    ticketHistory.unshift({
-        id: `th-mock-${Date.now()}`,
+const stateByUser = new Map<string, TicketState>();
+
+const userIdOf = (request: Request) => request.headers.get('X-User-ID') ?? 'anonymous';
+
+const stateFor = (userId: string): TicketState => {
+    let state = stateByUser.get(userId);
+    if (!state) {
+        state = { balance: 10, history: [...seedTicketHistory] };
+        stateByUser.set(userId, state);
+    }
+    return state;
+};
+
+/** 응모 목업이 차감 전에 잔액을 확인할 때 쓴다 */
+export function getMockTicketBalance(userId: string) {
+    return stateFor(userId).balance;
+}
+
+/** 다른 목업 핸들러(출석·게임 등)에서 응모권 지급을 기록할 때 쓴다 */
+export function recordMockTicketGrant(userId: string, amount: number, reason: string) {
+    const state = stateFor(userId);
+    state.balance += amount;
+    state.history.unshift({
+        id: `th-mock-${crypto.randomUUID()}`,
         type: amount >= 0 ? 'earn' : 'use',
         amount,
         reason,
@@ -147,11 +175,13 @@ export function recordMockTicketGrant(amount: number, reason: string) {
 }
 
 export const ticketHandlers = [
-    http.get(api('/tickets/balance'), () =>
+    http.get(api('/tickets/balance'), ({ request }) =>
         HttpResponse.json({
-            balance,
+            balance: stateFor(userIdOf(request)).balance,
             expiringThisMonth: 2,
         }),
     ),
-    http.get(api('/tickets/history'), () => HttpResponse.json(ticketHistory)),
+    http.get(api('/tickets/history'), ({ request }) =>
+        HttpResponse.json(stateFor(userIdOf(request)).history),
+    ),
 ];

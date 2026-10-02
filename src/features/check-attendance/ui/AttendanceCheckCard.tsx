@@ -221,7 +221,7 @@ export function AttendanceCheckCard({
     // 펼친 출석판 머리의 작은 출석 버튼 — 이번 달 출석일수 옆에 둔다
     const compactCheckButton = baking ? (
         <AttendanceBaking compact />
-    ) : status?.checkedToday ? (
+    ) : status?.attended ? (
         <Button disabled className={COMPACT_CHECK_WIDTH}>
             오늘 출석 완료
         </Button>
@@ -235,9 +235,9 @@ export function AttendanceCheckCard({
     const shownDates = baking
         ? (status?.checkedDates ?? []).filter((date) => date !== today)
         : (status?.checkedDates ?? []);
-    const shownCheckedToday = !!status?.checkedToday && !baking;
+    const shownCheckedToday = !!status?.attended && !baking;
 
-    const checkButton = status?.checkedToday ? (
+    const checkButton = status?.attended ? (
         <Button disabled size="lg" className="w-full">
             오늘 출석 완료
         </Button>
@@ -249,8 +249,8 @@ export function AttendanceCheckCard({
 
     const stats = status && (
         <AttendanceStatPair
-            streak={status.streak}
-            monthly={countMonthlyAttendance(status.checkedDates, status.checkedToday, now)}
+            streak={status.consecutiveDays}
+            monthly={countMonthlyAttendance(status.checkedDates, status.attended, now)}
             compact={showExpanded}
         />
     );

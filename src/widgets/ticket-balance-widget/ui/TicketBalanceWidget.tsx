@@ -60,7 +60,7 @@ export function TicketBalanceWidget({
                       rewardTickets: 1,
                       href: '/attendance',
                       actionLabel: '출석하러 가기',
-                      completed: attendance.checkedToday,
+                      completed: attendance.attended,
                       thumbnailClass: 'bg-play-lavender-soft',
                       thumbnailIcon: CalendarCheck,
                   },
@@ -108,7 +108,7 @@ export function TicketBalanceWidget({
                 <div className="flex flex-wrap items-center gap-3">
                     <h2 className="text-subhead text-fg-primary">오늘 받을 수 있는 응모권</h2>
                     <span className="text-fg-tertiary text-caption">
-                        출석과 게임 보상은 매일 오전 9시(KST)에 다시 받을 수 있어요.
+                        출석과 게임 보상은 매일 자정(00:00 KST)에 다시 받을 수 있어요.
                     </span>
                 </div>
                 {!hideMoreLink && (

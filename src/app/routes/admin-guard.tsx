@@ -11,7 +11,7 @@ export function AdminGuard({ children }: { children: ReactNode }) {
     if (!user) {
         return <Navigate to="/login" replace />;
     }
-    if (user.role !== 'admin') {
+    if (user.role !== 'ADMIN') {
         return <Navigate to="/" replace />;
     }
     return <>{children}</>;

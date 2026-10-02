@@ -190,7 +190,7 @@ const mockEvents = [
         title: 'VVIP 전용 데이터 쿠폰 래플',
         description: 'VVIP·VIP 등급 대상 데이터 쿠폰 추첨 이벤트. 응모권 3장이 필요해요.',
         bannerImageUrl: null,
-        startsAt: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
+        startsAt: sessionFixedTime('evt-010-starts-at', 5 * 60 * MINUTE),
         endsAt: '2026-10-20T14:59:59Z',
         status: 'upcoming',
         requiredTickets: 3,
@@ -768,15 +768,15 @@ export function findMockEvent(eventId: string) {
  */
 export function recordMockEventEntry(
     event: NonNullable<ReturnType<typeof findMockEvent>>,
-    ticketsUsed: number,
+    ticketCount: number,
 ) {
     // 같은 사람이 여러 번 응모해도 응모자 수는 한 번만 는다
     if ((event.myEntryCount ?? 0) === 0) {
         event.participantCount = (event.participantCount ?? 0) + 1;
     }
     event.myEntryCount = (event.myEntryCount ?? 0) + 1;
-    event.myTicketCount = (event.myTicketCount ?? 0) + ticketsUsed;
-    event.usedTicketCount = (event.usedTicketCount ?? 0) + ticketsUsed;
+    event.myTicketCount = (event.myTicketCount ?? 0) + ticketCount;
+    event.usedTicketCount = (event.usedTicketCount ?? 0) + ticketCount;
 }
 
 /** ADR-009 — 유형과 무관하게 마감 + 5분 검토 후 자동으로 최초 발표한다 */

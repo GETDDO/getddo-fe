@@ -166,7 +166,7 @@ export function UserLayout() {
                         {/* 가상 시계 조작은 관리자만 — 일반 사용자는 시각 표시만 본다 */}
                         <VirtualClockTicker
                             className="hidden lg:flex"
-                            readOnly={user.role !== 'admin'}
+                            readOnly={user.role !== 'ADMIN'}
                         />
                         <NotificationBell />
                         {/* 피그마 홈 — 아바타·이름·멤버십 알약(그림자) + 아래 화살표 */}

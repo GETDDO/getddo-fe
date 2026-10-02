@@ -16,7 +16,7 @@ interface EntryCompleteDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     /** 이번 응모로 쓴 응모권 수 */
-    ticketsUsed: number;
+    deductedTicketCount: number;
     /** 한도까지 더 쓸 수 있는 응모권 수 — 0이면 추가 응모 안내를 빼고 한도 도달로 알린다 */
     remainingAllowance: number;
     /** 닫은 뒤 포커스를 되돌릴 요소 — 트리거 없이 상태로 여는 모달이라 Radix가 포커스를 body로 떨어뜨린다 */
@@ -26,7 +26,7 @@ interface EntryCompleteDialogProps {
 export function EntryCompleteDialog({
     open,
     onOpenChange,
-    ticketsUsed,
+    deductedTicketCount,
     remainingAllowance,
     returnFocusTo,
 }: EntryCompleteDialogProps) {
@@ -49,7 +49,7 @@ export function EntryCompleteDialog({
                         {canEnterMore ? '응모가 접수되었습니다' : '응모가 완료되었습니다'}
                     </DialogTitle>
                     <DialogDescription className="text-body text-fg-secondary">
-                        응모권 {ticketsUsed}장을 사용했어요.{' '}
+                        응모권 {deductedTicketCount}장을 사용했어요.{' '}
                         {canEnterMore
                             ? `${remainingAllowance}장까지 추가로 응모할 수 있어요.`
                             : '이 이벤트에 쓸 수 있는 응모권을 모두 사용했어요.'}
