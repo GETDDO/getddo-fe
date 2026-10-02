@@ -18,7 +18,7 @@ import { RaffleDetailHero } from './RaffleDetailHero';
 import { RaffleDetailsCard } from './RaffleDetailsCard';
 import { RaffleRulesCard } from './RaffleRulesCard';
 
-const CONTAINER = 'mx-auto w-full max-w-300 px-6 pt-20 pb-47.5';
+const CONTAINER = 'mx-auto w-full max-w-312 px-6 pt-20 pb-47.5';
 
 /** ADR-010 — 가중치 적용 이벤트는 사용자·이벤트별 누적 5장까지만 쓸 수 있다 */
 const ENTRY_TICKET_LIMIT = 5;

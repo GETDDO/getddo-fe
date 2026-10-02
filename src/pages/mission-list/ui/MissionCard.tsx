@@ -39,7 +39,7 @@ export function MissionCard({ mission }: { mission: Mission }) {
                 </Button>
             ) : (
                 <Button
-                    // 공용 기본 버튼 Medium(40)
+                    // 공용 기본 버튼 Medium(40) — 테두리 카드 안의 테두리 버튼은 선이 겹쳐 약해 보여 primary를 쓴다
                     className="px-7"
                     // TODO: 설문·퀴즈 풀이 화면과 라우트가 생기면 해당 화면으로 이동한다
                     onClick={() => toast.info(`${copy.action} 화면은 준비 중이에요.`)}

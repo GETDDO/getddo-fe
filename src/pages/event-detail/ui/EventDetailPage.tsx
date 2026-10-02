@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useEvent } from '@entities/event';
 import { formatYmd } from '@shared/lib/date';
 
-const CONTAINER = 'mx-auto w-full max-w-300 px-6 pt-20 pb-28';
+const CONTAINER = 'mx-auto w-full max-w-312 px-6 pt-20 pb-28';
 
 export function EventDetailPage() {
     const { id = '' } = useParams();

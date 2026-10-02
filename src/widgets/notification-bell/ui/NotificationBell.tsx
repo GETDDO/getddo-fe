@@ -34,7 +34,11 @@ export function NotificationBell() {
                     <span className="bg-brand-primary border-surface-page absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2" />
                 )}
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-80">
+            {/* 피그마 홈 알림창(Frame 427318938) — 폭 328, 여백 16, 모서리 16, 옅은 테두리와 떠 있는 그림자 */}
+            <PopoverContent
+                align="end"
+                className="border-border-default w-82 gap-2 rounded-2xl border p-4 shadow-lg ring-0"
+            >
                 <div className="flex items-center justify-between">
                     <p className="text-body-sm-bold text-fg-primary">알림</p>
                     {unreadCount > 0 && (
@@ -48,7 +52,7 @@ export function NotificationBell() {
                     )}
                 </div>
                 <div className="border-border-default border-t" />
-                <div className="flex max-h-80 flex-col gap-1 overflow-y-auto">
+                <div className="flex max-h-80 flex-col gap-2 overflow-y-auto">
                     {notifications.length === 0 && (
                         <p className="text-fg-tertiary text-body-sm py-4 text-center">
                             알림이 없습니다.

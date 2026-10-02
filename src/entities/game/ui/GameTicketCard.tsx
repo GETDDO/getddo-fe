@@ -40,8 +40,8 @@ export function GameTicketCard({
                             </span>
                         )}
                     </div>
-                    {/* 공용 버튼 primary Large(48) */}
-                    <Button asChild size="lg" className="mt-2 w-full">
+                    {/* 공용 버튼 secondary Large(48) — 카드가 놓인 화면의 주 행동(출석 체크·게임 시작)보다 한 단계 낮춘다 */}
+                    <Button asChild variant="secondary" size="lg" className="mt-2 w-full">
                         <Link to={href}>{rewarded ? '한 번 더 하기' : '게임하러 가기'}</Link>
                     </Button>
                 </>

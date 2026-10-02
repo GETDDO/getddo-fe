@@ -18,7 +18,7 @@ export function MyTicketsPage() {
     );
 
     return (
-        <main className="mx-auto flex w-full max-w-300 flex-col gap-10 px-6 pt-20 pb-28">
+        <main className="mx-auto flex w-full max-w-312 flex-col gap-10 px-6 pt-20 pb-28">
             <h1 className="text-title-1 text-fg-primary">내 응모권</h1>
 
             <section className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-5">

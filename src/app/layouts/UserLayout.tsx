@@ -9,6 +9,12 @@ import { cn } from '@shared/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
 import { NotificationBell } from '@widgets/notification-bell';
 
+import certifiedIcon from '../assets/footer/certified.png';
+import headsetIcon from '../assets/footer/headset.png';
+import privacyIcon from '../assets/footer/privacy.png';
+import teamIcon from '../assets/footer/team.png';
+import trophyIcon from '../assets/footer/trophy.png';
+import verifiedIcon from '../assets/footer/verified.png';
 import profileAvatar from '../assets/profile-avatar.png';
 import { USER_NAV_ITEMS } from './user-nav-items';
 
@@ -25,6 +31,16 @@ const FOOTER_LINKS = [
     { label: '명의도용방지서비스' },
     { label: '장애현황' },
     { label: '임직원 Happy Program' },
+];
+
+// 피그마 홈 푸터 하단 — 수상·인증 표시 (아이콘은 장식, 글자로 내용을 전달한다)
+const FOOTER_AWARDS = [
+    { icon: trophyIcon, title: '융합프로젝트 만족도지수', detail: '2026 응모 플랫폼 부문 1위' },
+    { icon: headsetIcon, title: '얻어가유 고객센터', detail: '품질지수 최우수 조 선정' },
+    { icon: teamIcon, title: '한국팀플협회 협업지수', detail: '8인 팀워크혁신상 수상' },
+    { icon: certifiedIcon, title: '한국추첨공정성지수', detail: '공정추첨 우수 플랫폼 선정' },
+    { icon: verifiedIcon, title: '동일 조건 재추첨 검증', detail: '추첨 결과 재현율 100%' },
+    { icon: privacyIcon, title: '당첨자 개인정보 마스킹', detail: '안심 발표 시스템 적용' },
 ];
 
 export function UserLayout() {
@@ -189,31 +205,44 @@ export function UserLayout() {
             </div>
             {/* 피그마 홈 푸터 — 약관 줄, 회사 주소, 고객센터·가입문의, 저작권 (글자 12) */}
             <footer className="bg-surface-inverse text-caption">
-                <div className="mx-auto flex w-full max-w-312 flex-col gap-10 px-6 pt-12.5 pb-35">
-                    <p className="text-border-default flex flex-wrap gap-x-1">
-                        {FOOTER_LINKS.map(({ label, strong }, index) => (
-                            <span key={label} className={strong ? 'font-bold' : undefined}>
-                                {index > 0 && <span className="mr-1 font-medium">|</span>}
-                                {label}
-                            </span>
-                        ))}
-                    </p>
-                    <div className="flex flex-col gap-2">
-                        <p className="text-fg-tertiary">
-                            (주)얻어가유 서울특별시 멀티캠퍼스 선릉위워크
+                <div className="mx-auto flex w-full max-w-312 flex-col gap-10 px-6 pt-12.5 pb-18">
+                    <div className="flex flex-col gap-7.5">
+                        <p className="text-border-default flex flex-wrap gap-x-1">
+                            {FOOTER_LINKS.map(({ label, strong }, index) => (
+                                <span key={label} className={strong ? 'font-bold' : undefined}>
+                                    {index > 0 && <span className="mr-1 font-medium">|</span>}
+                                    {label}
+                                </span>
+                            ))}
                         </p>
-                        <p className="text-fg-tertiary">
-                            <span className="text-border-default font-bold">고객센터</span>{' '}
-                            1588-0000
-                        </p>
-                        <p className="text-fg-tertiary">
-                            <span className="text-border-default font-bold">가입문의</span>{' '}
-                            1588-0000
-                        </p>
-                        <p className="text-fg-tertiary">
-                            Copyright ⓒ U+GETDDO Corp. All Rights Reserved.
-                        </p>
+                        <div className="flex flex-col gap-2">
+                            <p className="text-fg-tertiary">
+                                (주)얻어가유 서울특별시 멀티캠퍼스 선릉위워크
+                            </p>
+                            <p className="text-fg-tertiary">
+                                <span className="text-border-default font-bold">고객센터</span>{' '}
+                                1588-0000
+                            </p>
+                            <p className="text-fg-tertiary">
+                                <span className="text-border-default font-bold">가입문의</span>{' '}
+                                1588-0000
+                            </p>
+                            <p className="text-fg-tertiary">
+                                Copyright ⓒ U+GETDDO Corp. All Rights Reserved.
+                            </p>
+                        </div>
                     </div>
+                    <ul className="flex flex-wrap items-center gap-x-4 gap-y-3">
+                        {FOOTER_AWARDS.map(({ icon, title, detail }) => (
+                            <li key={title} className="flex items-center gap-2">
+                                <img src={icon} alt="" className="h-10 w-12.5 opacity-80" />
+                                <p className="text-fg-tertiary flex flex-col">
+                                    <span>{title}</span>
+                                    <span>{detail}</span>
+                                </p>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
             </footer>
         </div>
