@@ -1,12 +1,11 @@
 import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import { NotificationItem, useNotificationList } from '@entities/notification';
 import {
-    NotificationItem,
     useMarkAllNotificationsRead,
     useMarkNotificationRead,
-    useNotificationList,
-} from '@entities/notification';
+} from '@features/mark-notification-read';
 import { useVirtualClock } from '@shared/lib/virtual-clock';
 import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
 

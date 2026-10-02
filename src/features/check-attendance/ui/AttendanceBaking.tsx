@@ -1,6 +1,6 @@
 import { cn } from '@shared/lib/utils';
 
-import { BASIC_MASCOT } from './mascots';
+import { BASIC_MASCOT } from '../model/mascots';
 
 /**
  * 출석 처리 중 타코야끼 굽는 연출 — 출석하기 버튼 자리에서 보여준다.

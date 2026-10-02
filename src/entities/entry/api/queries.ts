@@ -16,6 +16,8 @@ const myEntryPageSchema = z.object({
 const envelope = <T extends z.ZodTypeAny>(dataSchema: T) =>
     z.object({ success: z.literal(true), data: dataSchema });
 
+export const ENTRIES_KEY = ['entries'] as const;
+
 const ENTRIES_PAGE_SIZE = 50;
 
 /**
@@ -24,7 +26,7 @@ const ENTRIES_PAGE_SIZE = 50;
  */
 export function useMyEntries() {
     return useQuery({
-        queryKey: ['entries', 'me'],
+        queryKey: [...ENTRIES_KEY, 'me'],
         queryFn: async () => {
             const entries = [];
             // 페이지는 1부터 시작한다 (spec 공통 계약)

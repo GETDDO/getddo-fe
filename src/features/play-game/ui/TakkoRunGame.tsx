@@ -14,6 +14,7 @@ import {
     type TakkoRunImages,
     type TakkoRunPalette,
 } from '../lib/draw-takko-run';
+import { PIXEL_FONT } from '../lib/pixel-font';
 import { loadTakkoRunImages, TAKKO_RUN_BGM_URL, TAKKO_RUN_SOUNDS } from '../lib/takko-run-assets';
 import { useLoopingBgm } from '../lib/use-looping-bgm';
 import {
@@ -30,7 +31,6 @@ import {
     WORLD_WIDTH,
 } from '../model/takko-run';
 import { GameImageButton } from './GameImageButton';
-import { PIXEL_FONT } from './pixel-font';
 import { RewardDialog } from './RewardDialog';
 import { ScoreBoard } from './ScoreBoard';
 import { StageProgress } from './StageProgress';

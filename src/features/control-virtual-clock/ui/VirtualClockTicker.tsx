@@ -1,6 +1,7 @@
 import { Minus, Plus } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 
+import { KST_TIME_ZONE } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { useVirtualClock } from '@shared/lib/virtual-clock';
 import { Button } from '@shared/ui/button';
@@ -9,8 +10,9 @@ const HOUR_MS = 3_600_000;
 // 시연 조작 단위는 10분 — 가상 시계 페이지의 "앞으로 이동"과 같은 간격 정책
 const MINUTE_STEP_MS = 10 * 60_000;
 
+// 시·분·초를 각각 다른 스타일로 그리기 위해 파트별 포맷이 필요하다 — timeZone은 date.ts의 상수만 쓴다
 const TIME_FORMATTER = new Intl.DateTimeFormat('ko-KR', {
-    timeZone: 'Asia/Seoul',
+    timeZone: KST_TIME_ZONE,
     hour: 'numeric',
     minute: '2-digit',
     second: '2-digit',

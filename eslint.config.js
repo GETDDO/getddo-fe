@@ -8,12 +8,14 @@ import tseslint from 'typescript-eslint';
 
 const SLICED_LAYERS = ['pages', 'widgets', 'features', 'entities'];
 
-// 슬라이스 내부 파일 직접 import 차단 셀렉터 — index.ts(x)만 공개 API (구 entry-point 규칙의 v7 표현)
+// 슬라이스 내부 파일 직접 import 차단 셀렉터 — 슬라이스 루트의 index.ts(x)만 공개 API다.
+// '*/**'가 하위 폴더의 모든 파일(index.ts 포함)을, '!(index.ts|index.tsx)'가 루트의 index 외 파일을 차단한다.
+// (과거 '**/!(index.ts|index.tsx)'는 ui/index.ts 같은 세그먼트 barrel을 통과시키는 허점이 있었다)
 const DEEP_IMPORT_OF_SLICE = {
     to: {
         element: {
             types: { anyOf: SLICED_LAYERS },
-            fileInternalPath: '**/!(index.ts|index.tsx)',
+            fileInternalPath: ['*/**', '!(index.ts|index.tsx)'],
         },
     },
 };
@@ -32,7 +34,9 @@ const FSD_DEPENDENCY_POLICIES = [
         allow: [
             {
                 to: {
-                    element: { types: { anyOf: ['widgets', 'features', 'entities', 'shared'] } },
+                    element: {
+                        types: { anyOf: ['widgets', 'features', 'entities', 'shared'] },
+                    },
                 },
             },
         ],
@@ -76,6 +80,8 @@ export default tseslint.config(
             'boundaries/include': ['src/**/*.{ts,tsx}'],
             'boundaries/elements': [
                 { type: 'app', pattern: 'src/app/*' },
+                // 더 구체적인 패턴을 먼저 — 관리자 페이지 각각이 독립 슬라이스다 (하위 페이지끼리의 참조도 차단된다)
+                { type: 'pages', pattern: 'src/pages/admin/*' },
                 { type: 'pages', pattern: 'src/pages/*' },
                 { type: 'widgets', pattern: 'src/widgets/*' },
                 { type: 'features', pattern: 'src/features/*' },

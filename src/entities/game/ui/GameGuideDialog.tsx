@@ -1,7 +1,7 @@
 import { Button } from '@shared/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@shared/ui/dialog';
 
-import type { GameContent } from './game-content';
+import type { GameContent } from '../model/game-content';
 
 /**
  * 게임 방법 모달 — 조작·점수·보상 3단계 안내와 이미지, 게임 시작 버튼.

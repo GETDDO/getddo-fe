@@ -4,9 +4,9 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { CalendarCheck, ChevronRight, ClipboardList, Gamepad2, Ticket } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { useAttendanceStatus } from '@entities/attendance';
 import { useGameList } from '@entities/game';
 import { useMissionList } from '@entities/mission';
-import { useAttendanceStatus } from '@features/check-attendance';
 import { useDragScroll } from '@shared/lib/use-drag-scroll';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';

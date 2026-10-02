@@ -1,1 +1,1 @@
-export { useEvent, useEventList } from './queries';
+export { EVENTS_KEY, useEvent, useEventList } from './queries';

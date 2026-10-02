@@ -3,13 +3,14 @@ import { ChevronRight, ChevronUp } from 'lucide-react';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 
+import { useAttendancePolicy, useAttendanceStatus } from '@entities/attendance';
 import { cn } from '@shared/lib/utils';
 import { useVirtualClock } from '@shared/lib/virtual-clock';
 import { Button } from '@shared/ui/button';
 
 import type { AttendanceExpandOptions } from '../model/attendance-motion';
 
-import { useAttendancePolicy, useAttendanceStatus, useCheckAttendance } from '../api/queries';
+import { useCheckAttendance } from '../api/queries';
 import {
     buildAttendanceMonth,
     buildAttendanceWeek,

@@ -1,13 +1,12 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 
-import { VirtualClockContext, type VirtualClockValue } from '@shared/lib/virtual-clock';
-
-// 같은 탭의 새로고침까지 오버라이드를 유지한다 — 새 탭/세션에서는 실제 시각으로 시작한다
-const STORAGE_KEY = 'getddo-virtual-clock-override';
+import { VirtualClockContext, type VirtualClockValue } from './context';
+import { VIRTUAL_CLOCK_STORAGE_KEY } from './storage-key';
 
 function readStoredOverride(): Date | null {
     try {
-        const raw = sessionStorage.getItem(STORAGE_KEY);
+        // 같은 탭의 새로고침까지 오버라이드를 유지한다 — 새 탭/세션에서는 실제 시각으로 시작한다
+        const raw = sessionStorage.getItem(VIRTUAL_CLOCK_STORAGE_KEY);
         if (!raw) return null;
         const at = new Date(raw);
         return Number.isNaN(at.getTime()) ? null : at;
@@ -25,9 +24,9 @@ export function VirtualClockProvider({ children }: { children: ReactNode }) {
     const setOverride = useCallback((at: Date | null) => {
         try {
             if (at) {
-                sessionStorage.setItem(STORAGE_KEY, at.toISOString());
+                sessionStorage.setItem(VIRTUAL_CLOCK_STORAGE_KEY, at.toISOString());
             } else {
-                sessionStorage.removeItem(STORAGE_KEY);
+                sessionStorage.removeItem(VIRTUAL_CLOCK_STORAGE_KEY);
             }
         } catch {
             // 저장에 실패해도 인메모리 오버라이드로 동작한다

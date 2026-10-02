@@ -1,1 +1,1 @@
-export { useMyEntries } from './queries';
+export { ENTRIES_KEY, useMyEntries } from './queries';

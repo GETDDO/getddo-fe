@@ -2,7 +2,7 @@ import { cn } from '@shared/lib/utils';
 
 import type { AttendanceDay } from '../lib/attendance-week';
 
-import { getAttendanceMascot } from './mascots';
+import { getAttendanceMascot } from '../model/mascots';
 
 /**
  * 최근 7일 출석 스트립 — 출석판과 같은 규칙으로 보여준다.

@@ -1,9 +1,9 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 
 import { apiClient } from '@shared/api/client';
 
-import { notificationCursorSchema, notificationReadResultSchema } from '../model/types';
+import { notificationCursorSchema } from '../model/types';
 
 // N01~N03만 /api/v1 확정 — 다른 도메인은 초안이라 전역 베이스 URL은 건드리지 않는다
 const V1 = '/v1/notifications';
@@ -12,7 +12,9 @@ const V1 = '/v1/notifications';
 const envelope = <T extends z.ZodTypeAny>(dataSchema: T) =>
     z.object({ success: z.literal(true), data: dataSchema });
 
-const NOTIFICATION_LIST_KEY = ['notifications', 'list'];
+export const NOTIFICATIONS_KEY = ['notifications'] as const;
+
+const NOTIFICATION_LIST_KEY = [...NOTIFICATIONS_KEY, 'list'] as const;
 
 export function useNotificationList({
     isRead,
@@ -29,33 +31,5 @@ export function useNotificationList({
             return envelope(notificationCursorSchema).parse(data).data;
         },
         getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    });
-}
-
-export function useMarkNotificationRead() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: async (notificationId: string) => {
-            const { data } = await apiClient.put<unknown>(`${V1}/${notificationId}/read`);
-            return envelope(notificationReadResultSchema).parse(data).data;
-        },
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: ['notifications'] });
-        },
-    });
-}
-
-export function useMarkAllNotificationsRead() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: async () => {
-            const { data } = await apiClient.put<unknown>(`${V1}/me/read-all`);
-            return envelope(z.object({ updatedCount: z.number() })).parse(data).data;
-        },
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: ['notifications'] });
-        },
     });
 }

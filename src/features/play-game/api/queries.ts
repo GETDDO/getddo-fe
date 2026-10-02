@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { GAMES_KEY } from '@entities/game';
+import { TICKETS_KEY } from '@entities/ticket';
 import { apiClient } from '@shared/api/client';
 import { createIdempotencyKey, IDEMPOTENCY_HEADER } from '@shared/lib/idempotency-key';
 
@@ -24,8 +26,8 @@ export function useSubmitGamePlay() {
         },
         onSuccess: () => {
             // 최고점·오늘 플레이·오늘 받은 응모권과, 보상으로 바뀐 응모권 잔액·이력을 다시 받아온다
-            void queryClient.invalidateQueries({ queryKey: ['games'] });
-            void queryClient.invalidateQueries({ queryKey: ['tickets'] });
+            void queryClient.invalidateQueries({ queryKey: GAMES_KEY });
+            void queryClient.invalidateQueries({ queryKey: TICKETS_KEY });
         },
     });
 }

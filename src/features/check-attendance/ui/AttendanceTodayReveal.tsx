@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 
 import { REVEAL_BAKE_MS, REVEAL_HIT_AT, REVEAL_LAND_MS } from '../model/attendance-motion';
-import { BATTER_MASCOT } from './mascots';
+import { BATTER_MASCOT } from '../model/mascots';
 
 export type TodayRevealStage = 'baking' | 'landing';
 

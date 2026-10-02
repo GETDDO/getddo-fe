@@ -3,7 +3,9 @@ import { isAxiosError } from 'axios';
 import { useRef } from 'react';
 import { z } from 'zod';
 
-import { entrySchema } from '@entities/entry';
+import { ENTRIES_KEY, entrySchema } from '@entities/entry';
+import { EVENTS_KEY } from '@entities/event';
+import { TICKETS_KEY } from '@entities/ticket';
 import { apiClient } from '@shared/api/client';
 import { createIdempotencyKey, IDEMPOTENCY_HEADER } from '@shared/lib/idempotency-key';
 
@@ -46,9 +48,9 @@ export function useEnterEvent(eventId: string) {
             // Promise를 반환하면 갱신이 끝날 때까지 isPending이 유지된다.
             // 먼저 완료 안내를 열어 버리면 갱신 전 남은 한도로 추가 응모를 시작하게 된다.
             return Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['events'] }),
-                queryClient.invalidateQueries({ queryKey: ['tickets'] }),
-                queryClient.invalidateQueries({ queryKey: ['entries'] }),
+                queryClient.invalidateQueries({ queryKey: EVENTS_KEY }),
+                queryClient.invalidateQueries({ queryKey: TICKETS_KEY }),
+                queryClient.invalidateQueries({ queryKey: ENTRIES_KEY }),
             ]);
         },
         onError: (error) => {

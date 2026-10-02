@@ -13,8 +13,8 @@ import {
     REVEAL_LAND_MS,
     REVEAL_SHAKE_MS,
 } from '../model/attendance-motion';
+import { BATTER_MASCOT, DIZZY_MASCOT, getAttendanceMascot } from '../model/mascots';
 import { AttendanceTodayReveal } from './AttendanceTodayReveal';
-import { BATTER_MASCOT, DIZZY_MASCOT, getAttendanceMascot } from './mascots';
 
 /** 이 시간 안에 이만큼 누르면 타코야끼가 어지러워한다 */
 const DIZZY_CLICKS = 5;

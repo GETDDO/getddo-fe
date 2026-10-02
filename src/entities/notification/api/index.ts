@@ -1,5 +1,1 @@
-export {
-    useMarkAllNotificationsRead,
-    useMarkNotificationRead,
-    useNotificationList,
-} from './queries';
+export { NOTIFICATIONS_KEY, useNotificationList } from './queries';

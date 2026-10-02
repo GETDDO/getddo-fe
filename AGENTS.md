@@ -39,14 +39,22 @@ src/
   widgets/    # 여러 feature/entity를 조합한 화면 블록
   features/   # 사용자 행동 단위 (enter-event, check-attendance, ...)
   entities/   # 도메인 모델 + 기본 표시 UI (event, ticket, user, ...)
-  shared/     # 도메인을 모르는 공통 코드 (ui, api, lib, config, types)
+  shared/     # 도메인을 모르는 공통 코드 (ui, api, lib, config)
 ```
 
 슬라이스 내부는 `ui/`, `model/`, `api/`, `lib/` 하위 폴더 + `index.ts`(공개 API)로 구성한다.
 
+세그먼트 배치 기준:
+
+- `ui/`에는 React 컴포넌트(.tsx)만 둔다 — 정적 데이터·에셋 매핑·상수는 `model/`, 순수 함수·훅·로더는 `lib/`에 둔다
+- 슬라이스 루트 `index.ts`는 세그먼트 index를 `export *`로 연결하고, 세그먼트 `index.ts`는 named export로 공개 항목을 열거한다. 세그먼트 index가 없는 슬라이스(pages 등)는 루트 index가 named export한다
+- 폴더·일반 파일은 kebab-case, React 컴포넌트 파일은 PascalCase. `shared/ui/`만 shadcn 관례(kebab-case.tsx)를 따른다
+
+기타:
+
 - 새 화면을 추가할 때: `pages/<슬라이스>/`를 만들고 `app/routes/user-routes.tsx`(사용자) 또는 `app/routes/admin-routes.tsx`(관리자, `AdminGuard` 적용)에 등록한다. 네비 항목은 `app/layouts/user-nav-items.ts`와 `widgets/admin-layout/model/nav-items.ts`에 있다
-- 관리자 페이지는 `pages/admin/<슬라이스>/`로 중첩한다 — boundaries 패턴상 `pages/admin` 전체가 슬라이스 하나로 처리되므로, admin 하위 페이지끼리의 import는 lint가 막지 않는다. 공유 코드는 하위 페이지에서 직접 참조하지 말고 `widgets/admin-layout` 등으로 내린다
-- `index.ts`가 `export {}`만 있는 슬라이스는 구현 예정 placeholder다 — 새 슬라이스를 만들지 말고 해당 슬라이스를 채운다 (예: `features/enter-event`, `entities/entry`)
+- 관리자 페이지는 `pages/admin/<슬라이스>/`로 중첩한다 — boundaries가 `src/pages/admin/*`을 개별 슬라이스로 인식하므로 admin 하위 페이지끼리의 import도 같은 레이어 규칙으로 차단된다
+- `index.ts`가 `export {}`만 있는 슬라이스는 구현 예정 placeholder다 — 새 슬라이스를 만들지 말고 해당 슬라이스를 채운다 (예: `features/manage-banner`, `entities/banner`)
 
 ### 의존 방향
 
@@ -78,7 +86,8 @@ app → pages → widgets → features → entities → shared
 ### API 호출
 
 - 컴포넌트에서 fetch/axios를 직접 호출하지 않는다 — TanStack Query 훅을 통해 호출한다
-- 조회(읽기) 훅은 `entities/*/api/`에, 사용자 행동 mutation 훅은 `features/*/api/`에 둔다 (예: `features/check-attendance/api/queries.ts`)
+- 조회(읽기) 훅은 `entities/*/api/`에, 사용자 행동 mutation 훅은 `features/*/api/`에 둔다 (예: `features/enter-event/api/queries.ts`)
+- 엔티티의 쿼리 키는 해당 `entities/*/api/`에서 상수로 export한다 (`EVENTS_KEY`, `TICKETS_KEY` 등). 다른 슬라이스에서 무효화할 때 이 상수를 쓰고, 문자열 리터럴로 키를 적지 않는다
 - 서버 응답은 Zod 스키마로 검증한다 (`entities/*/model/`에 정의)
 - 시간은 서버에서 UTC로 받고, 화면 표시는 `shared/lib/date`의 KST 변환 함수를 사용한다
 - "지금"이 필요한 코드는 `new Date()`를 직접 호출하지 않고 `useVirtualClock().now()`(`shared/lib/virtual-clock`)를 쓴다 — 관리자 시간 여행이 오버라이드할 수 있어야 한다. 컴포넌트 밖 순수 함수는 `now`를 인자로 받는다
@@ -86,14 +95,23 @@ app → pages → widgets → features → entities → shared
 
 ### 상태 관리 (역할이 겹치지 않도록 구분)
 
-| 데이터 종류                                         | 도구                                        |
-| --------------------------------------------------- | ------------------------------------------- |
-| 서버에서 받아오는 데이터 (이벤트 목록, 응모권 잔액) | TanStack Query                              |
-| 전역 UI 설정·화면 국한 상태 (테마, 모달 열림)       | Zustand (`shared/lib/ui-settings` 등)       |
-| 여러 화면에 걸친 복잡한 전역 플로우                 | Redux Toolkit                               |
-| 폼 상태                                             | React Hook Form (전역 상태로 만들지 않는다) |
+새 상태의 도구는 **공유 범위 → 수명 → 변화 빈도** 순으로 판단한다:
 
-역할 분리 기준은 `docs/adr/ADR-0003-state-management-roles.md`를 따른다. Redux Toolkit은 의존성만 있고 스토어는 아직 없다 — 필요한 전역 플로우가 생길 때 도입한다. 가상 시계는 상태 라이브러리가 아닌 `shared/lib/virtual-clock`의 React context다.
+| 판단 질문                                         | 데이터 종류                                                 | 도구                                  |
+| ------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------- |
+| 서버가 진실의 원천인가?                           | 서버 데이터 (이벤트 목록, 응모권 잔액)                      | TanStack Query                        |
+| 한 컴포넌트·페이지 안에서만 살고 사라져도 되는가? | 일시적 로컬 상태 (입력값, 열림, 진행 단계)                  | `useState`/`useReducer` — 전역화 금지 |
+| 여러 컴포넌트·화면이 동기적으로 공유하는가?       | 전역 UI 상태 (테마, 큰글씨, 전역 모달, 화면 간 "의도" 전달) | Zustand (`shared/lib/ui-settings` 등) |
+| Provider 생명주기와 같고 드물게 변하는가?         | 세션·환경 Context (가상 시계, 인증 세션)                    | React Context                         |
+| 여러 화면을 오가는 복잡한 전이가 있는가?          | 복잡한 전역 플로우                                          | Redux Toolkit                         |
+| 폼인가?                                           | 폼 상태                                                     | React Hook Form (전역 승격 금지)      |
+
+- 서버 데이터를 Zustand·Redux·store 내부 비동기 호출로 복사·캐싱하지 않는다 — 캐시·무효화·재시도는 TanStack Query가 소유한다 (store 안에서 `fetch → set()` 하는 이중 캐시 패턴 금지)
+- 로그인·가상 사용자 등 조건이 필요한 쿼리는 `enabled`로 게이팅한다 — 조건 불충족 시 호출 자체를 차단한다
+- 여러 컴포넌트가 같은 행동을 중복 요청할 수 있으면 `useRef` Set으로 동기적으로 차단하고, 서버 측 중복은 멱등키로 막는다 (ADR-0005)
+- 컴포넌트 트리 밖 → 안쪽으로 신호를 보낼 때는 props 드릴링 대신 "의도" store(pending flag + consume) 패턴을 쓴다
+
+역할 분리 기준은 `docs/adr/ADR-0003-state-management-roles.md`를 따른다. Redux Toolkit은 의존성만 있고 스토어는 아직 없다 — 필요한 전역 플로우가 생길 때 도입한다. 가상 시계는 상태 라이브러리가 아닌 `shared/lib/virtual-clock`의 React context다 — context·훅·Provider·저장 키가 한 폴더에 있다. Provider 중첩은 `QueryClientProvider`가 가장 바깥이다 — Context 기반 상태(가상 시계)가 쿼리의 `enabled`·queryFn에 영향을 줄 수 있어야 한다.
 
 ### 스타일
 

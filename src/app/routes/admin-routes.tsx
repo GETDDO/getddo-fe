@@ -8,7 +8,7 @@ import { AdminEventsPage } from '@pages/admin/events';
 import { AdminVirtualClockPage } from '@pages/admin/virtual-clock';
 import { AdminLayout } from '@widgets/admin-layout';
 
-import { AdminGuard } from './admin-guard';
+import { AdminGuard } from './AdminGuard';
 
 export const adminRoutes: RouteObject[] = [
     {

@@ -1,1 +1,1 @@
-export { useGameList } from './queries';
+export { GAMES_KEY, useGameList } from './queries';

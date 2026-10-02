@@ -7,9 +7,11 @@ import { gameSchema } from '../model/types';
 
 const gameListSchema = z.array(gameSchema);
 
+export const GAMES_KEY = ['games'] as const;
+
 export function useGameList() {
     return useQuery({
-        queryKey: ['games', 'list'],
+        queryKey: [...GAMES_KEY, 'list'],
         queryFn: async () => {
             const { data } = await apiClient.get<unknown>('/games');
             return gameListSchema.parse(data);
