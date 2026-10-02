@@ -176,7 +176,7 @@ export const entryHandlers = [
         }
 
         // 화면에서도 막고 있지만, 최종 접수 여부는 서버가 정한다는 원칙대로 여기서도 검사한다
-        if (ticketCount > getMockTicketBalance()) {
+        if (ticketCount > getMockTicketBalance(userId)) {
             return remember(409, failBody('INSUFFICIENT_TICKETS', '보유 응모권이 부족합니다'));
         }
         if ((event.myTicketCount ?? 0) + ticketCount > ENTRY_TICKET_LIMIT) {
@@ -185,7 +185,7 @@ export const entryHandlers = [
 
         recordMockEventEntry(event, ticketCount);
         if (ticketCount > 0) {
-            recordMockTicketGrant(-ticketCount, `${event.title} 응모`);
+            recordMockTicketGrant(userId, -ticketCount, `${event.title} 응모`);
         }
 
         const now = new Date().toISOString();

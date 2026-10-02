@@ -84,7 +84,11 @@ export const gameHandlers = [
         if (ticketsGranted > 0) {
             game.rewardedToday = true;
             game.remainingPlays = 0;
-            recordMockTicketGrant(ticketsGranted, `${game.title} 게임 보상`);
+            recordMockTicketGrant(
+                request.headers.get('X-User-ID') ?? 'anonymous',
+                ticketsGranted,
+                `${game.title} 게임 보상`,
+            );
         }
         return HttpResponse.json(
             {

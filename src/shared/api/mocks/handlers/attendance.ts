@@ -30,8 +30,9 @@ const seedState = (): AttendanceState => ({
 // X-User-ID별로 분리한다 — 한 사용자의 출석이 다른 사용자에게 보이거나 보상을 막지 않도록
 const stateByUser = new Map<string, AttendanceState>();
 
-const stateFor = (request: Request) => {
-    const userId = request.headers.get('X-User-ID') ?? 'anonymous';
+const userIdOf = (request: Request) => request.headers.get('X-User-ID') ?? 'anonymous';
+
+const stateFor = (userId: string) => {
     let state = stateByUser.get(userId);
     if (!state) {
         state = seedState();
@@ -55,7 +56,7 @@ export const attendanceHandlers = [
     http.get(api('/attendances/policy'), () => HttpResponse.json(policy)),
     // AT01 초안 — 오늘 출석 여부 + 최근 기준일
     http.get(api('/attendances/today'), ({ request }) => {
-        const state = stateFor(request);
+        const state = stateFor(userIdOf(request));
         const today = toDate(new Date());
         return HttpResponse.json({
             attended: state.checkedDates.includes(today),
@@ -68,7 +69,8 @@ export const attendanceHandlers = [
         // 본문이 붙어 오는 경우도 있으므로 소비해 두고, 출석 판정에는 쓰지 않는다
         await request.json().catch(() => null);
 
-        const state = stateFor(request);
+        const userId = userIdOf(request);
+        const state = stateFor(userId);
         const today = toDate(new Date());
 
         // 같은 기준일 재요청: 새로 지급하지 않고 이미 확정한 결과를 그대로 돌려준다 (AT02 명시)
@@ -89,7 +91,7 @@ export const attendanceHandlers = [
         const bonus = policy.streakBonuses.find((b) => b.days === state.streak);
         const tickets = policy.dailyRewardTickets + (bonus?.rewardTickets ?? 0);
         state.todayGranted = tickets;
-        recordMockTicketGrant(tickets, '매일 출석체크 리워드');
+        recordMockTicketGrant(userId, tickets, '매일 출석체크 리워드');
 
         return HttpResponse.json(
             { attended: true, consecutiveDays: state.streak, ticketsGranted: tickets },
