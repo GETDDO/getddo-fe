@@ -2,8 +2,8 @@ import { toast } from 'sonner';
 
 import type { Mission } from '@entities/mission';
 
-import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
+import { StatusDot } from '@shared/ui/status-dot';
 
 const MISSION_COPY = {
     quiz: {
@@ -25,34 +25,22 @@ export function MissionCard({ mission }: { mission: Mission }) {
     return (
         <article className="bg-surface-page border-border-default flex items-center justify-between gap-4 rounded-2xl border p-4 shadow-md transition-[translate] duration-200 motion-safe:hover:-translate-y-1">
             <div className="flex min-w-0 flex-col gap-1">
-                <div className="flex items-center gap-2">
-                    <span
-                        aria-hidden
-                        className={cn(
-                            'size-1.25 rounded-full',
-                            completed ? 'bg-fg-disabled' : 'bg-brand-primary',
-                        )}
-                    />
-                    <span
-                        className={`text-caption ${completed ? 'text-fg-tertiary' : 'text-brand-primary'}`}
-                    >
-                        {completed ? '참여 완료' : '참여 가능'}
-                    </span>
-                </div>
+                <StatusDot tone={completed ? 'muted' : 'brand'}>
+                    {completed ? '참여 완료' : '참여 가능'}
+                </StatusDot>
                 <h3 className="text-title-3 text-fg-primary">{mission.title}</h3>
                 <p className="text-body text-fg-tertiary">
                     {copy.description(mission.rewardTickets)}
                 </p>
             </div>
             {completed ? (
-                <span className="bg-surface-disabled text-fg-disabled text-body-bold flex h-10 shrink-0 items-center justify-center rounded-lg px-7">
+                <Button disabled className="px-7">
                     참여 완료
-                </span>
+                </Button>
             ) : (
                 <Button
-                    variant="secondary"
-                    // 디자인 시스템 action/neutral 호버·누름 색, 누를 때 내려가지 않게, 손가락 커서
-                    className="text-body-bold! bg-action-neutral hover:bg-action-neutral-hover active:bg-action-neutral-pressed h-10 shrink-0 cursor-pointer px-7 font-semibold active:not-aria-[haspopup]:translate-y-0"
+                    // 공용 기본 버튼 Medium(40)
+                    className="px-7"
                     // TODO: 설문·퀴즈 풀이 화면과 라우트가 생기면 해당 화면으로 이동한다
                     onClick={() => toast.info(`${copy.action} 화면은 준비 중이에요.`)}
                 >

@@ -80,9 +80,9 @@ export function RewardDialog({
                         <span className="text-fg-secondary">오늘의 게임 보상이에요.</span>
                     </DialogDescription>
                 </div>
-                {/* 기본 버튼(action/neutral) Medium(40) */}
-                <DialogClose className="bg-action-neutral hover:bg-action-neutral-hover active:bg-action-neutral-pressed text-fg-on-brand text-body-bold focus-visible:ring-border-focus h-10 w-full cursor-pointer rounded-lg transition-colors focus-visible:ring-2 focus-visible:outline-none">
-                    확인
+                {/* 공용 버튼 primary Medium(40) */}
+                <DialogClose asChild>
+                    <Button className="w-full">확인</Button>
                 </DialogClose>
             </DialogPrimitive.Content>
         </Dialog>

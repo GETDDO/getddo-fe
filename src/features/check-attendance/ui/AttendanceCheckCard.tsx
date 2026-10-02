@@ -22,16 +22,6 @@ import { AttendanceBakingStage, BAKING_SPRITE_SRC } from './AttendanceBakingStag
 import { AttendanceMonthGrid } from './AttendanceMonthGrid';
 import { AttendanceWeekStrip } from './AttendanceWeekStrip';
 
-// shared/ui/button의 cn이 커스텀 타이포 토큰(text-body-bold)을 text-sm과 같은 그룹으로 인식하지 못해,
-// 버튼 기본 text-sm이 남지 않도록 important로 덮는다
-// 디자인 시스템 버튼 크기는 Small 36 · Medium 40 · Large 48 고정 (Medium·Large 글자 16px SemiBold)
-const LARGE_BUTTON_CLASS = 'text-body-bold! font-semibold h-12 w-full';
-
-// 공용 Button(secondary)의 기본 호버·누름은 디자인 시스템과 달라(임의 호버색, 누름색 없음, 누를 때 1px 내려감)
-// action/neutral 기본·호버·누름 토큰으로 덮고(테마와 상관없이 고정), 내려가는 움직임은 끄고, 손가락 커서를 쓴다
-const NEUTRAL_BUTTON_STATE =
-    'bg-action-neutral cursor-pointer hover:bg-action-neutral-hover active:bg-action-neutral-pressed active:not-aria-[haspopup]:translate-y-0';
-
 /** 굽기 스프라이트 재생 시간 — 응답이 빨라도 이만큼은 보여주고 끝나면 출석판을 펼친다 */
 const BAKING_MIN_MS = 1600;
 
@@ -232,17 +222,11 @@ export function AttendanceCheckCard({
     const compactCheckButton = baking ? (
         <AttendanceBaking compact />
     ) : status?.checkedToday ? (
-        <span
-            className={`bg-surface-disabled text-fg-disabled text-body-bold flex h-10 shrink-0 items-center justify-center rounded-lg ${COMPACT_CHECK_WIDTH}`}
-        >
+        <Button disabled className={COMPACT_CHECK_WIDTH}>
             오늘 출석 완료
-        </span>
+        </Button>
     ) : (
-        <Button
-            variant="secondary"
-            className={`text-body-bold! h-10 shrink-0 font-semibold ${COMPACT_CHECK_WIDTH} ${NEUTRAL_BUTTON_STATE}`}
-            onClick={() => void handleCheck()}
-        >
+        <Button className={COMPACT_CHECK_WIDTH} onClick={() => void handleCheck()}>
             출석하기
         </Button>
     );
@@ -254,15 +238,11 @@ export function AttendanceCheckCard({
     const shownCheckedToday = !!status?.checkedToday && !baking;
 
     const checkButton = status?.checkedToday ? (
-        <span className="bg-surface-disabled text-fg-disabled text-body-bold flex h-12 w-full items-center justify-center rounded-lg">
+        <Button disabled size="lg" className="w-full">
             오늘 출석 완료
-        </span>
+        </Button>
     ) : (
-        <Button
-            variant="secondary"
-            className={`${LARGE_BUTTON_CLASS} ${NEUTRAL_BUTTON_STATE}`}
-            onClick={() => void handleCheck()}
-        >
+        <Button size="lg" className="w-full" onClick={() => void handleCheck()}>
             출석하기
         </Button>
     );

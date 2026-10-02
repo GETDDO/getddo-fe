@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { useReducedMotion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Clock, Flame, Pause, Play } from 'lucide-react';
+import { Clock, Flame } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -10,10 +10,17 @@ import type { Event } from '@entities/event';
 import { useEventList } from '@entities/event';
 import { formatCountdown } from '@shared/lib/date';
 import { useVirtualClock } from '@shared/lib/virtual-clock';
+import { Badge } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
+import { Pager } from '@shared/ui/pager';
+
+import bannerBackground from '../assets/banner-bg.webp';
+import bannerMascot from '../assets/banner-mascot.webp';
 
 const AUTO_SLIDE_MS = 5000;
 const MAX_SLIDES = 5;
+/** 피그마 홈 배너의 무너 캐릭터(image 28) — 배너 이미지 대신 고정 장식으로 보여준다 */
+const SHOW_MASCOT = true;
 
 export function BannerSlider({
     renderStatus,
@@ -26,7 +33,10 @@ export function BannerSlider({
     // 정지 조건을 축별로 분리한다 — 포커스가 안에 있는데 마우스만 빠져나가도 재생이 재개되지 않게
     const [hovered, setHovered] = useState(false);
     const [focused, setFocused] = useState(false);
-    const [manualPaused, setManualPaused] = useState(false);
+    // 자동 넘김은 한 바퀴(모든 배너를 한 번씩 보여주고 첫 배너로 돌아오기)만 하고 멈춘다.
+    // 사용자가 화살표로 직접 넘기면 그때부터는 자동 넘김을 끈다
+    const [autoSteps, setAutoSteps] = useState(0);
+    const [userControlled, setUserControlled] = useState(false);
     // 동작 줄이기 설정 사용자에게는 자동 슬라이드를 켜지 않는다
     const reduceMotion = useReducedMotion();
     // 마감 판정이 아닌 화면 표시 전용 카운트다운이므로 가상 시계의 시각을 쓴다
@@ -54,13 +64,21 @@ export function BannerSlider({
     );
 
     const autoplayStopped =
-        slides.length <= 1 || hovered || focused || manualPaused || reduceMotion === true;
+        slides.length <= 1 ||
+        hovered ||
+        focused ||
+        userControlled ||
+        autoSteps >= slides.length ||
+        reduceMotion === true;
 
     useEffect(() => {
         if (autoplayStopped) {
             return;
         }
-        const timer = setInterval(() => setIndex((i) => (i + 1) % slides.length), AUTO_SLIDE_MS);
+        const timer = setInterval(() => {
+            setIndex((i) => (i + 1) % slides.length);
+            setAutoSteps((n) => n + 1);
+        }, AUTO_SLIDE_MS);
         return () => clearInterval(timer);
     }, [slides.length, autoplayStopped]);
 
@@ -76,7 +94,7 @@ export function BannerSlider({
 
     return (
         <section
-            className="flex flex-col gap-3"
+            className="relative flex flex-col gap-2"
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             onFocusCapture={() => setFocused(true)}
@@ -93,99 +111,80 @@ export function BannerSlider({
                     className="flex ease-out motion-safe:transition-transform motion-safe:duration-500"
                     style={{ transform: `translateX(-${safeIndex * 100}%)` }}
                 >
-                    {slides.map((event) => {
+                    {slides.map((event, slideIndex) => {
                         const remainingMs = new Date(event.endsAt).getTime() - now.getTime();
                         return (
+                            // 피그마 홈 배너 — 1200×365, 노란 배경 그림, 본문은 왼쪽 50·위 84에서 시작
                             <div
                                 key={event.id}
-                                className="bg-play-yellow w-full shrink-0 p-8 sm:p-10"
+                                // 화면 밖 배너는 Tab 포커스·보조 기술에서 빼 실시간 현황 알림도 보이는 배너만 읽힌다
+                                inert={slideIndex !== safeIndex}
+                                className="bg-play-yellow relative flex min-h-91.25 w-full shrink-0 flex-col bg-cover bg-right"
+                                style={{ backgroundImage: `url(${bannerBackground})` }}
                             >
-                                <div className="flex items-start justify-between gap-6">
-                                    <div className="flex flex-col gap-4">
-                                        {/* 디자인상 카운트다운 pill이 배너 왼쪽 가장자리에 붙은 탭 형태 — 음수 마진으로 패딩을 상쇄하고 왼쪽 radius를 제거해 가장자리에 평평하게 붙인다 */}
-                                        <span className="bg-surface-page text-fg-primary text-body-sm-bold -ml-8 flex w-fit items-center gap-1.5 rounded-r-full py-2 pr-3 pl-8 tabular-nums shadow-md sm:-ml-10 sm:pl-10">
-                                            <Clock className="size-4" />
-                                            마감까지 {formatCountdown(remainingMs)}
-                                        </span>
-                                        <div className="flex items-center gap-2">
-                                            <Flame className="text-brand-primary size-5" />
+                                {/* 마감 시간 — 배너 왼쪽 끝에 붙은 흰 탭 (공용 Badge surface xl) */}
+                                <Badge
+                                    variant="surface"
+                                    size="xl"
+                                    className="absolute top-7.5 left-0 rounded-l-none pl-12.5 tabular-nums"
+                                >
+                                    <Clock />
+                                    마감까지 {formatCountdown(remainingMs)}
+                                </Badge>
+                                <div className="flex flex-1 flex-col items-start gap-5 px-6 pt-21 pb-8 sm:px-12.5 sm:pb-8.75">
+                                    <div className="flex max-w-150 flex-col gap-1">
+                                        <div className="flex items-center gap-1">
+                                            <Flame className="text-brand-primary size-5.5" />
                                             <span className="text-brand-primary text-body-sm-bold">
                                                 오늘의 타임 래플
                                             </span>
                                         </div>
                                         <div className="flex flex-col gap-3">
-                                            <h2 className="text-title-2 text-fg-primary">
+                                            <h2 className="text-display text-fg-primary">
                                                 {event.title}
                                             </h2>
                                             <p className="text-body text-fg-primary whitespace-pre-line">
                                                 {event.description}
                                             </p>
-                                        </div>
-                                        {renderStatus?.(event)}
-                                        <div>
-                                            <Button
-                                                asChild
-                                                variant="secondary"
-                                                size="lg"
-                                                className="h-auto px-7 py-4 text-base"
-                                            >
-                                                <Link to={`/events/${event.id}`}>응모하기</Link>
-                                            </Button>
+                                            {renderStatus?.(event)}
                                         </div>
                                     </div>
-                                    {event.bannerImageUrl && (
-                                        <img
-                                            src={event.bannerImageUrl}
-                                            alt=""
-                                            className="hidden w-72 shrink-0 sm:block"
-                                        />
-                                    )}
+                                    {/* 버튼은 배너 아래에서 35px 위에 고정 — 설명이 한 줄이어도 피그마와 같은 자리 */}
+                                    <Button asChild size="lg" className="mt-auto px-7">
+                                        <Link to={`/events/${event.id}`}>응모하기</Link>
+                                    </Button>
                                 </div>
                             </div>
                         );
                     })}
                 </div>
             </div>
+            {/* 피그마 홈 — 배너 오른쪽에 무너 캐릭터가 배너 밖으로 살짝 걸쳐 있다 (넓은 화면만) */}
+            {SHOW_MASCOT && (
+                <img
+                    src={bannerMascot}
+                    alt=""
+                    aria-hidden
+                    className="pointer-events-none absolute -top-16.75 -right-13.5 hidden w-125 select-none xl:block"
+                />
+            )}
             {slides.length > 1 && (
-                <div className="flex justify-end">
-                    <div className="bg-surface-page border-border-default flex items-center gap-1 rounded-full border px-2 py-1 shadow-sm">
-                        <button
-                            type="button"
-                            aria-label="이전 이벤트"
-                            onClick={() => setIndex((i) => (i - 1 + slides.length) % slides.length)}
-                            className="text-fg-primary focus-visible:ring-border-focus flex size-6 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
-                        >
-                            <ChevronLeft className="size-5" />
-                        </button>
-                        <span className="text-caption text-fg-primary tabular-nums">
-                            {String(safeIndex + 1).padStart(2, '0')} /{' '}
-                            {String(slides.length).padStart(2, '0')}
-                        </span>
-                        <button
-                            type="button"
-                            aria-label="다음 이벤트"
-                            onClick={() => setIndex((i) => (i + 1) % slides.length)}
-                            className="text-fg-primary focus-visible:ring-border-focus flex size-6 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
-                        >
-                            <ChevronRight className="size-5" />
-                        </button>
-                        {/* 무한 자동 슬라이드는 hover/focus 외에 명시적 정지 수단이 필요하다 (WCAG 2.2.2) */}
-                        <button
-                            type="button"
-                            aria-label={
-                                manualPaused ? '자동 슬라이드 재생' : '자동 슬라이드 일시정지'
-                            }
-                            aria-pressed={manualPaused}
-                            onClick={() => setManualPaused((v) => !v)}
-                            className="text-fg-primary focus-visible:ring-border-focus ml-1 flex size-6 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
-                        >
-                            {manualPaused ? (
-                                <Play className="size-4" />
-                            ) : (
-                                <Pause className="size-4" />
-                            )}
-                        </button>
-                    </div>
+                <div className="relative z-10 flex justify-end">
+                    {/* 피그마 홈 — 원형 화살표 사이에 '01 / 04' (공용 Pager) */}
+                    <Pager
+                        current={safeIndex}
+                        total={slides.length}
+                        prevLabel="이전 이벤트"
+                        nextLabel="다음 이벤트"
+                        onPrev={() => {
+                            setUserControlled(true);
+                            setIndex((safeIndex - 1 + slides.length) % slides.length);
+                        }}
+                        onNext={() => {
+                            setUserControlled(true);
+                            setIndex((safeIndex + 1) % slides.length);
+                        }}
+                    />
                 </div>
             )}
         </section>

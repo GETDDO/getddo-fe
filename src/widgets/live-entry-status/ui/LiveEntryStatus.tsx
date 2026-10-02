@@ -3,6 +3,7 @@ import { Ticket, UsersRound } from 'lucide-react';
 import type { Event } from '@entities/event';
 
 import { formatNumber } from '@shared/lib/format';
+import { Badge } from '@shared/ui/badge';
 
 // CONTEXT.md — 실시간 현황에는 응모자 수(중복 제거)·사용 응모권 수까지만 표시하고 당첨 확률은 노출하지 않는다
 export function LiveEntryStatus({ event }: { event: Event }) {
@@ -11,18 +12,19 @@ export function LiveEntryStatus({ event }: { event: Event }) {
     }
 
     return (
-        <div className="flex flex-wrap items-center gap-2">
+        // 목록 폴링으로 수치가 바뀌면 보조 기술에 조용히 알린다
+        <div className="flex flex-wrap items-center gap-2" aria-live="polite">
             {event.participantCount != null && (
-                <span className="bg-surface-page text-fg-primary text-caption flex items-center gap-1.5 rounded-full px-3 py-1 font-medium">
-                    <UsersRound className="size-4" />
+                <Badge variant="accent" size="md" className="gap-2.5">
+                    <UsersRound className="size-5" />
                     {formatNumber(event.participantCount)}명 참여 중
-                </span>
+                </Badge>
             )}
             {event.usedTicketCount != null && (
-                <span className="bg-surface-page text-fg-primary text-caption flex items-center gap-1.5 rounded-full px-3 py-1 font-medium">
-                    <Ticket className="size-4" />
+                <Badge variant="accent" size="md" className="gap-2.5">
+                    <Ticket className="size-5" />
                     {formatNumber(event.usedTicketCount)}장 사용
-                </span>
+                </Badge>
             )}
         </div>
     );

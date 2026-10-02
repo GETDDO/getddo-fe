@@ -6,12 +6,11 @@ import { Link } from 'react-router-dom';
 
 import { useGameList } from '@entities/game';
 import { useMissionList } from '@entities/mission';
-import { useTicketBalance } from '@entities/ticket';
 import { useAttendanceStatus } from '@features/check-attendance';
-import { formatNumber } from '@shared/lib/format';
 import { useDragScroll } from '@shared/lib/use-drag-scroll';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
+import { TicketCard } from '@shared/ui/ticket-card';
 
 interface EarnCard {
     id: string;
@@ -44,7 +43,6 @@ export function TicketBalanceWidget({
     sortCompletedLast?: boolean;
     hideMoreLink?: boolean;
 } = {}) {
-    const { data: balance } = useTicketBalance();
     const { data: attendance } = useAttendanceStatus();
     const { data: missions } = useMissionList();
     const { data: games } = useGameList();
@@ -105,15 +103,10 @@ export function TicketBalanceWidget({
     }
 
     return (
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-3">
                     <h2 className="text-subhead text-fg-primary">오늘 받을 수 있는 응모권</h2>
-                    {balance && (
-                        <span className="text-fg-tertiary text-caption">
-                            보유 응모권 {formatNumber(balance.balance)}장
-                        </span>
-                    )}
                     <span className="text-fg-tertiary text-caption">
                         출석과 게임 보상은 매일 오전 9시(KST)에 다시 받을 수 있어요.
                     </span>
@@ -133,7 +126,8 @@ export function TicketBalanceWidget({
                 layoutScroll
                 {...dragScroll}
                 className={cn(
-                    'flex cursor-grab [scrollbar-width:none] gap-4 overflow-x-auto select-none active:cursor-grabbing [&::-webkit-scrollbar]:hidden',
+                    // 카드 그림자가 잘리지 않게 사방에 12px 여백을 두고 같은 만큼 당긴다
+                    '-m-3 flex cursor-grab scroll-px-3 [scrollbar-width:none] gap-4 overflow-x-auto p-3 select-none active:cursor-grabbing [&::-webkit-scrollbar]:hidden',
                     railClassName,
                 )}
             >
@@ -148,46 +142,56 @@ export function TicketBalanceWidget({
                         }}
                         key={card.id}
                         className={cn(
-                            'bg-surface-page border-border-default flex w-[calc((100%-1rem)/1.5)] shrink-0 flex-col gap-3 rounded-2xl border p-4 sm:w-[calc((100%-2rem)/2.5)] lg:w-[calc((100%-3rem)/3.7)]',
+                            // 게임 페이지 티켓 카드와 같은 크기 (너비 265, 높이 360)
+                            'flex w-66.25 shrink-0',
                             cardClassName,
                         )}
                     >
-                        <div
-                            className={`flex h-28 items-center justify-center rounded-lg ${card.thumbnailClass}`}
+                        {/* 공용 티켓 카드 — 펀칭은 절취선 높이에 맞춰 실제로 도려낸다 (피그마 Group 633903) */}
+                        <TicketCard
+                            className="w-full"
+                            cardClassName="h-90"
+                            stub={
+                                <>
+                                    <div className="mt-3.75 flex h-4.5 items-center justify-between gap-2">
+                                        <span className="text-fg-tertiary text-caption">
+                                            응모권
+                                        </span>
+                                        <span className="text-brand-primary text-body-sm-bold flex items-center gap-1">
+                                            <Ticket className="size-4.5" />+{card.rewardTickets}
+                                        </span>
+                                    </div>
+                                    {card.completed ? (
+                                        <Button disabled size="lg" className="mt-2 w-full">
+                                            오늘 참여 완료
+                                        </Button>
+                                    ) : (
+                                        <Button asChild size="lg" className="mt-2 w-full">
+                                            <Link to={card.href}>{card.actionLabel}</Link>
+                                        </Button>
+                                    )}
+                                </>
+                            }
                         >
-                            <card.thumbnailIcon className="text-fg-tertiary size-8" />
-                        </div>
-                        <span className="text-fg-tertiary text-caption">{card.category}</span>
-                        <div className="flex flex-col gap-1">
-                            <p className="text-subhead text-fg-primary">{card.title}</p>
-                            <p className="text-fg-tertiary text-body-sm">{card.description}</p>
-                        </div>
-                        {/* 티켓 펀칭 효과 — 페이지 배경색 반원을 카드 좌우 끝에 올려 테두리·점선을 끊는다. 배경이 흰색이 아닌 곳에서는 --ticket-punch-bg로 구멍 색을 맞춘다 */}
-                        <div className="border-border-default relative -mx-4 mt-auto border-t border-dashed">
-                            <span
-                                aria-hidden
-                                className="border-border-default absolute top-0 -left-px h-4 w-2 -translate-y-1/2 rounded-r-full border border-l-0 bg-(--ticket-punch-bg,var(--color-surface-page)) shadow-[inset_-2px_0_3px_-1px_rgb(from_var(--color-ink)_r_g_b_/_0.12)]"
-                            />
-                            <span
-                                aria-hidden
-                                className="border-border-default absolute top-0 -right-px h-4 w-2 -translate-y-1/2 rounded-l-full border border-r-0 bg-(--ticket-punch-bg,var(--color-surface-page)) shadow-[inset_2px_0_3px_-1px_rgb(from_var(--color-ink)_r_g_b_/_0.12)]"
-                            />
-                            <div className="flex items-center justify-between gap-2 px-4 pt-3">
-                                <span className="text-fg-tertiary text-caption">응모권</span>
-                                <span className="text-brand-primary text-body-sm-bold flex items-center gap-1">
-                                    <Ticket className="size-4" />+{card.rewardTickets}
-                                </span>
+                            <div
+                                className={`flex h-30 shrink-0 items-center justify-center rounded-lg ${card.thumbnailClass}`}
+                            >
+                                <card.thumbnailIcon className="text-fg-tertiary size-8" />
                             </div>
-                        </div>
-                        {card.completed ? (
-                            <span className="bg-surface-sunken text-fg-disabled flex h-9 items-center justify-center rounded-lg text-center text-sm font-medium">
-                                오늘 참여 완료
-                            </span>
-                        ) : (
-                            <Button asChild variant="secondary" className="w-full">
-                                <Link to={card.href}>{card.actionLabel}</Link>
-                            </Button>
-                        )}
+                            <div className="mt-3 flex flex-col gap-2">
+                                <div className="flex flex-col">
+                                    <span className="text-fg-tertiary text-caption">
+                                        {card.category}
+                                    </span>
+                                    <p className="text-subhead text-fg-primary truncate">
+                                        {card.title}
+                                    </p>
+                                </div>
+                                <p className="text-fg-tertiary text-body-sm line-clamp-2">
+                                    {card.description}
+                                </p>
+                            </div>
+                        </TicketCard>
                     </motion.div>
                 ))}
             </motion.div>

@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { toKst } from '@shared/lib/date';
 import { useVirtualClock } from '@shared/lib/virtual-clock';
+import { Badge } from '@shared/ui/badge';
 import { Card } from '@shared/ui/card';
 
 import type { Event } from '../model/types';
@@ -32,40 +33,32 @@ export function EventCard({ event }: { event: Event }) {
     const dDay = event.status === 'open' ? kstDayDiff(event.endsAt, now) : null;
 
     return (
-        <Card className="h-full gap-0 py-0">
+        // 피그마 홈 이벤트 카드 — 테두리 없이 그림자, 이미지 높이 150, 본문 여백 16
+        <Card variant="elevated" className="h-full gap-0 py-0">
             {event.bannerImageUrl ? (
-                <img
-                    src={event.bannerImageUrl}
-                    alt=""
-                    className="aspect-[2/1] w-full object-cover"
-                />
+                <img src={event.bannerImageUrl} alt="" className="h-37.5 w-full object-cover" />
             ) : (
-                <div className="bg-surface-sunken flex aspect-[2/1] items-center justify-center">
+                <div className="bg-surface-sunken flex h-37.5 items-center justify-center">
                     <Gift className="text-fg-disabled size-8" />
                 </div>
             )}
-            <div className="flex flex-col gap-2 p-4">
+            <div className="flex flex-col gap-3 p-4">
                 {((event.tags?.length ?? 0) > 0 || (dDay != null && dDay >= 0)) && (
-                    <div className="flex flex-wrap items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
                         {event.tags?.map((tag) => (
-                            <span
-                                key={tag}
-                                className="border-border-default text-fg-secondary text-caption rounded-full border px-2 py-0.5"
-                            >
+                            <Badge key={tag} variant="info">
                                 {tag}
-                            </span>
+                            </Badge>
                         ))}
-                        {dDay != null && dDay >= 0 && (
-                            <span className="bg-brand-primary text-fg-on-brand text-caption rounded-full px-2 py-0.5">
-                                D-{dDay}
-                            </span>
-                        )}
+                        {dDay != null && dDay >= 0 && <Badge variant="brand">D-{dDay}</Badge>}
                     </div>
                 )}
-                <p className="text-subhead text-fg-primary">{event.title}</p>
-                <p className="text-caption text-fg-tertiary">
-                    {formatYmd(event.startsAt)} ~ {formatYmd(event.endsAt)}
-                </p>
+                <div className="flex flex-col gap-2">
+                    <p className="text-title-3 text-fg-primary truncate">{event.title}</p>
+                    <p className="text-body text-fg-tertiary">
+                        {formatYmd(event.startsAt)} ~ {formatYmd(event.endsAt)}
+                    </p>
+                </div>
             </div>
         </Card>
     );

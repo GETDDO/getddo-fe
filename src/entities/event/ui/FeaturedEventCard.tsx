@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
+import { Badge } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 import { Card } from '@shared/ui/card';
 
@@ -44,60 +45,74 @@ export function FeaturedEventCard({ event }: { event: Event }) {
     ].filter((stat) => stat.value != null && stat.value > 0);
 
     return (
-        <Card className="bg-surface-page ring-border-brand flex-row gap-0 py-0 ring-2">
-            <div className="flex flex-1 flex-col gap-3 p-4 sm:p-6">
-                <div className="flex items-center gap-2">
-                    <span className="bg-brand-primary text-fg-on-brand text-caption rounded-sm px-2 py-0.5">
-                        모집중
-                    </span>
-                    <span className="bg-surface-sunken text-fg-secondary text-caption flex items-center gap-1 rounded-full px-2.5 py-1">
-                        <Clock className="size-3.5" />
-                        {formatKst(event.startsAt, TIME_ONLY)} ~{' '}
-                        {formatKst(event.endsAt, TIME_ONLY)}
-                    </span>
-                </div>
-                <div className="flex flex-col gap-1">
-                    <p className="text-subhead text-fg-primary">
-                        {event.title} ({event.winnerCount}명)
-                    </p>
-                    <p className="text-body-sm text-fg-tertiary">{event.description}</p>
+        // 피그마 홈 — brand 테두리 1px·그림자, 왼쪽 정보 / 오른쪽 이미지·버튼(250)
+        <Card className="border-border-brand flex-col gap-4 p-4 sm:flex-row">
+            <div className="flex min-w-0 flex-1 flex-col justify-between gap-6">
+                <div className="flex flex-col gap-5">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="brand" size="md">
+                            진행중
+                        </Badge>
+                        <Badge variant="neutral" size="lg">
+                            <Clock className="size-4.5" />
+                            {formatKst(event.startsAt, TIME_ONLY)} ~{' '}
+                            {formatKst(event.endsAt, TIME_ONLY)}
+                        </Badge>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                        <p className="text-title-2 text-fg-primary">
+                            {event.title}{' '}
+                            <span className="text-fg-tertiary">({event.winnerCount}명)</span>
+                        </p>
+                        <p className="text-body text-fg-primary line-clamp-2">
+                            {event.description}
+                        </p>
+                    </div>
                 </div>
                 {stats.length > 0 && (
-                    <div className="mt-auto flex gap-6">
-                        {stats.map(({ key, label, value, unit, icon: Icon, accent }) => (
-                            <div key={key} className="flex flex-col gap-0.5">
-                                <span className="text-caption text-fg-tertiary flex items-center gap-1">
-                                    <Icon className="size-3.5" />
-                                    {label}
-                                </span>
-                                <span
-                                    className={
-                                        accent
-                                            ? 'text-body-sm-bold text-fg-brand'
-                                            : 'text-body-sm-bold text-fg-primary'
-                                    }
-                                >
-                                    {formatNumber(value!)}
-                                    {unit}
-                                </span>
+                    <div className="flex flex-wrap items-center gap-4">
+                        {stats.map(({ key, label, value, unit, icon: Icon, accent }, index) => (
+                            <div key={key} className="flex items-center gap-2">
+                                {/* 내 응모는 아이콘 없이 앞 칸과 짧은 세로선으로 구분한다 (피그마) */}
+                                {accent && index > 0 ? (
+                                    <span
+                                        aria-hidden
+                                        className="bg-border-default -ml-2 h-9 w-px"
+                                    />
+                                ) : (
+                                    <Icon aria-hidden className="text-fg-primary size-6" />
+                                )}
+                                <div className="flex flex-col gap-0.5">
+                                    <span className="text-caption text-fg-tertiary">{label}</span>
+                                    <span
+                                        className={
+                                            accent
+                                                ? 'text-body-sm-bold text-fg-brand'
+                                                : 'text-body-sm-bold text-fg-primary'
+                                        }
+                                    >
+                                        {formatNumber(value!)}
+                                        {unit}
+                                    </span>
+                                </div>
                             </div>
                         ))}
                     </div>
                 )}
             </div>
-            <div className="flex w-36 shrink-0 flex-col gap-3 p-3 sm:w-44">
+            <div className="flex w-full shrink-0 flex-col gap-5 sm:w-62.5">
                 {event.bannerImageUrl ? (
                     <img
                         src={event.bannerImageUrl}
                         alt=""
-                        className="min-h-0 flex-1 rounded-lg object-cover"
+                        className="h-46.5 w-full rounded-2xl object-cover"
                     />
                 ) : (
-                    <div className="bg-surface-sunken flex min-h-0 flex-1 items-center justify-center rounded-lg">
+                    <div className="bg-surface-canvas flex h-46.5 items-center justify-center rounded-2xl">
                         <Gift className="text-fg-disabled size-8" />
                     </div>
                 )}
-                <Button asChild variant="secondary" className="w-full">
+                <Button asChild size="lg" className="w-full">
                     <Link to={`/events/${event.id}`}>응모하러 가기</Link>
                 </Button>
             </div>
