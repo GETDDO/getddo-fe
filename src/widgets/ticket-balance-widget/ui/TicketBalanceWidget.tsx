@@ -6,9 +6,7 @@ import { Link } from 'react-router-dom';
 
 import { useGameList } from '@entities/game';
 import { useMissionList } from '@entities/mission';
-import { useTicketBalance } from '@entities/ticket';
 import { useAttendanceStatus } from '@features/check-attendance';
-import { formatNumber } from '@shared/lib/format';
 import { useDragScroll } from '@shared/lib/use-drag-scroll';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
@@ -45,7 +43,6 @@ export function TicketBalanceWidget({
     sortCompletedLast?: boolean;
     hideMoreLink?: boolean;
 } = {}) {
-    const { data: balance } = useTicketBalance();
     const { data: attendance } = useAttendanceStatus();
     const { data: missions } = useMissionList();
     const { data: games } = useGameList();
@@ -106,15 +103,10 @@ export function TicketBalanceWidget({
     }
 
     return (
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-3">
                     <h2 className="text-subhead text-fg-primary">오늘 받을 수 있는 응모권</h2>
-                    {balance && (
-                        <span className="text-fg-tertiary text-caption">
-                            보유 응모권 {formatNumber(balance.balance)}장
-                        </span>
-                    )}
                     <span className="text-fg-tertiary text-caption">
                         출석과 게임 보상은 매일 오전 9시(KST)에 다시 받을 수 있어요.
                     </span>
@@ -150,30 +142,31 @@ export function TicketBalanceWidget({
                         }}
                         key={card.id}
                         className={cn(
-                            'flex w-[calc((100%-1rem)/1.5)] shrink-0 sm:w-[calc((100%-2rem)/2.5)] lg:w-[calc((100%-3rem)/3.7)]',
+                            // 게임 페이지 티켓 카드와 같은 크기 (너비 265, 높이 360)
+                            'flex w-66.25 shrink-0',
                             cardClassName,
                         )}
                     >
                         {/* 공용 티켓 카드 — 펀칭은 절취선 높이에 맞춰 실제로 도려낸다 (피그마 Group 633903) */}
                         <TicketCard
                             className="w-full"
-                            cardClassName="gap-3"
+                            cardClassName="h-90"
                             stub={
                                 <>
-                                    <div className="flex items-center justify-between gap-2 pt-3">
+                                    <div className="mt-3.75 flex h-4.5 items-center justify-between gap-2">
                                         <span className="text-fg-tertiary text-caption">
                                             응모권
                                         </span>
                                         <span className="text-brand-primary text-body-sm-bold flex items-center gap-1">
-                                            <Ticket className="size-4" />+{card.rewardTickets}
+                                            <Ticket className="size-4.5" />+{card.rewardTickets}
                                         </span>
                                     </div>
                                     {card.completed ? (
-                                        <span className="bg-surface-sunken text-fg-disabled mt-3 flex h-9 items-center justify-center rounded-lg text-center text-sm font-medium">
+                                        <Button disabled size="lg" className="mt-2 w-full">
                                             오늘 참여 완료
-                                        </span>
+                                        </Button>
                                     ) : (
-                                        <Button asChild variant="secondary" className="mt-3 w-full">
+                                        <Button asChild size="lg" className="mt-2 w-full">
                                             <Link to={card.href}>{card.actionLabel}</Link>
                                         </Button>
                                     )}
@@ -181,14 +174,22 @@ export function TicketBalanceWidget({
                             }
                         >
                             <div
-                                className={`flex h-28 items-center justify-center rounded-lg ${card.thumbnailClass}`}
+                                className={`flex h-30 shrink-0 items-center justify-center rounded-lg ${card.thumbnailClass}`}
                             >
                                 <card.thumbnailIcon className="text-fg-tertiary size-8" />
                             </div>
-                            <span className="text-fg-tertiary text-caption">{card.category}</span>
-                            <div className="flex flex-col gap-1">
-                                <p className="text-subhead text-fg-primary">{card.title}</p>
-                                <p className="text-fg-tertiary text-body-sm">{card.description}</p>
+                            <div className="mt-3 flex flex-col gap-2">
+                                <div className="flex flex-col">
+                                    <span className="text-fg-tertiary text-caption">
+                                        {card.category}
+                                    </span>
+                                    <p className="text-subhead text-fg-primary truncate">
+                                        {card.title}
+                                    </p>
+                                </div>
+                                <p className="text-fg-tertiary text-body-sm line-clamp-2">
+                                    {card.description}
+                                </p>
                             </div>
                         </TicketCard>
                     </motion.div>

@@ -2,7 +2,7 @@ import { ChevronRight, Gift } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { toKst } from '@shared/lib/date';
-import { cn } from '@shared/lib/utils';
+import { StatusDot } from '@shared/ui/status-dot';
 
 import type { Event } from '../model/types';
 
@@ -22,41 +22,30 @@ export function EventResultRow({ event }: { event: Event }) {
     return (
         <Link
             to={`/events/${event.id}`}
-            className="hover:bg-surface-sunken flex items-center gap-5 px-6 py-5 transition-colors"
+            // 호버하면 연한 배경이 생기되 행 끝까지 꽉 채우지 않고 사방으로 8px 들이고 옅게(60%) 그려 구분선·썸네일과 겹쳐 답답해 보이지 않게 한다 (after — before는 목록 구분선이 쓴다)
+            className="group focus-visible:ring-border-focus after:bg-surface-canvas/60 relative isolate flex items-center gap-4 rounded-2xl p-4 after:absolute after:inset-x-2 after:inset-y-2 after:-z-10 after:rounded-xl after:opacity-0 after:transition-opacity after:duration-200 hover:after:opacity-100 focus-visible:ring-2 focus-visible:outline-none"
         >
             {event.bannerImageUrl ? (
                 <img
                     src={event.bannerImageUrl}
                     alt=""
-                    className="size-24 shrink-0 rounded-lg object-cover"
+                    className="h-20 w-40 shrink-0 rounded-lg object-cover"
                 />
             ) : (
-                <div className="bg-surface-sunken flex size-24 shrink-0 items-center justify-center rounded-lg">
+                <div className="bg-surface-canvas flex h-20 w-40 shrink-0 items-center justify-center rounded-lg">
                     <Gift className="text-fg-disabled size-8" />
                 </div>
             )}
-            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                <span
-                    className={cn(
-                        'text-caption flex items-center gap-1.5',
-                        drawn ? 'text-fg-tertiary' : 'text-fg-brand',
-                    )}
-                >
-                    <span
-                        aria-hidden="true"
-                        className={cn(
-                            'size-1.5 rounded-full',
-                            drawn ? 'bg-fg-disabled' : 'bg-brand-primary',
-                        )}
-                    />
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <StatusDot tone={drawn ? 'muted' : 'brand'}>
                     {drawn ? '종료' : '응모 마감 · 발표 예정'}
-                </span>
-                <p className="text-subhead text-fg-primary truncate">{event.title}</p>
+                </StatusDot>
+                <p className="text-title-3 text-fg-primary truncate">{event.title}</p>
                 <p className="text-caption text-fg-tertiary">
                     {formatYmdWeekday(event.startsAt)} ~ {formatYmdWeekday(event.endsAt)}
                 </p>
             </div>
-            <ChevronRight className="text-fg-tertiary size-5 shrink-0" />
+            <ChevronRight className="text-fg-secondary group-hover:text-fg-primary size-7 shrink-0 transition-transform duration-200 group-hover:translate-x-1" />
         </Link>
     );
 }
