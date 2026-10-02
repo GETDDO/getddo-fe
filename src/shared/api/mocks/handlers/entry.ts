@@ -18,6 +18,11 @@ interface EntryResponse {
     createdAt: string;
 }
 
+/** 내 응모 내역 한 줄 — 목록에서 이벤트 제목을 보여줘야 해서 접수 응답에 제목을 더한 모양이다 */
+interface MyEntryResponse extends EntryResponse {
+    eventTitle: string;
+}
+
 interface AcceptedEntry {
     eventId: string;
     ticketsUsed: number;
@@ -30,19 +35,20 @@ interface AcceptedEntry {
  */
 const acceptedByKey = new Map<string, AcceptedEntry>();
 
+// 내 응모 내역 — 접수한 응모가 앞에 쌓인다 (목업 세션 동안 유지)
+const myEntries: MyEntryResponse[] = [
+    {
+        id: 'entry-1',
+        eventId: 'evt-001',
+        eventTitle: '5G 프리미어 가입 감사 이벤트',
+        ticketsUsed: 1,
+        status: 'applied',
+        createdAt: '2026-09-15T08:00:00Z',
+    },
+];
+
 export const entryHandlers = [
-    http.get(api('/entries/me'), () =>
-        HttpResponse.json([
-            {
-                id: 'entry-1',
-                eventId: 'evt-001',
-                eventTitle: '5G 프리미어 가입 감사 이벤트',
-                ticketsUsed: 1,
-                status: 'applied',
-                createdAt: '2026-09-15T08:00:00Z',
-            },
-        ]),
-    ),
+    http.get(api('/entries/me'), () => HttpResponse.json(myEntries)),
     // 반복 클릭 응모 누적 — 멱등키로 중복 요청을 식별한다 (전달 헤더명은 계약 확정 전 임시로 X-Idempotency-Key 사용)
     http.post(api('/events/:eventId/entries'), async ({ params, request }) => {
         const idempotencyKey = request.headers.get('X-Idempotency-Key');
@@ -114,6 +120,8 @@ export const entryHandlers = [
             createdAt: new Date().toISOString(),
         };
         acceptedByKey.set(idempotencyKey, { eventId, ticketsUsed, body: responseBody });
+        // 내 응모 내역에도 남겨야 응모 직후 목록에서 확인할 수 있다
+        myEntries.unshift({ ...responseBody, eventTitle: event.title });
 
         return HttpResponse.json(responseBody, { status: 201 });
     }),
