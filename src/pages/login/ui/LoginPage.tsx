@@ -14,7 +14,7 @@ export function LoginPage() {
     const handleSelect = (user: VirtualUser) => {
         selectUser(user);
         // 관리자 계정은 관리자 대시보드로 바로 진입한다
-        void navigate(user.role === 'admin' ? '/admin' : '/', { replace: true });
+        void navigate(user.role === 'ADMIN' ? '/admin' : '/', { replace: true });
     };
 
     return (
@@ -49,7 +49,7 @@ export function LoginPage() {
                                     'hover:border-fg-brand focus-visible:border-fg-brand transition-colors focus-visible:outline-none',
                                 )}
                             >
-                                {user.role === 'admin' ? (
+                                {user.role === 'ADMIN' ? (
                                     <ShieldCheck className="text-fg-brand size-6 shrink-0" />
                                 ) : (
                                     <CircleUserRound className="text-fg-primary size-6 shrink-0" />
@@ -59,7 +59,7 @@ export function LoginPage() {
                                         <span className="text-subhead text-fg-primary">
                                             {user.name}
                                         </span>
-                                        {user.role === 'admin' && (
+                                        {user.role === 'ADMIN' && (
                                             <span className="bg-brand-primary text-fg-on-brand rounded-md px-2 py-0.5 text-xs font-medium">
                                                 관리자
                                             </span>

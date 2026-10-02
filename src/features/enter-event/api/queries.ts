@@ -1,14 +1,18 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRef } from 'react';
+import { z } from 'zod';
 
 import { entrySchema } from '@entities/entry';
 import { apiClient } from '@shared/api/client';
-import { createIdempotencyKey } from '@shared/lib/idempotency-key';
+import { createIdempotencyKey, IDEMPOTENCY_HEADER } from '@shared/lib/idempotency-key';
 
 interface EntryAttempt {
-    ticketsUsed: number;
+    ticketCount: number;
     key: string;
 }
+
+// spec 공통 계약 초안의 성공 봉투 — EntryReceipt를 data에서 꺼낸다
+const entryEnvelopeSchema = z.object({ success: z.literal(true), data: entrySchema });
 
 /**
  * 이벤트에 응모한다.
@@ -22,17 +26,17 @@ export function useEnterEvent(eventId: string) {
     const attemptRef = useRef<EntryAttempt | null>(null);
 
     return useMutation({
-        mutationFn: async (ticketsUsed: number) => {
-            if (attemptRef.current?.ticketsUsed !== ticketsUsed) {
-                attemptRef.current = { ticketsUsed, key: createIdempotencyKey() };
+        mutationFn: async (ticketCount: number) => {
+            if (attemptRef.current?.ticketCount !== ticketCount) {
+                attemptRef.current = { ticketCount, key: createIdempotencyKey() };
             }
 
             const { data } = await apiClient.post<unknown>(
                 `/events/${eventId}/entries`,
-                { ticketsUsed },
-                { headers: { 'X-Idempotency-Key': attemptRef.current.key } },
+                { ticketCount },
+                { headers: { [IDEMPOTENCY_HEADER]: attemptRef.current.key } },
             );
-            return entrySchema.parse(data);
+            return entryEnvelopeSchema.parse(data).data;
         },
         onSuccess: () => {
             // 다음 응모는 재시도가 아니라 새 건이다

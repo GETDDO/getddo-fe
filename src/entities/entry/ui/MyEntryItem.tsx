@@ -2,15 +2,15 @@ import { formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { cn } from '@shared/lib/utils';
 
-import type { EntryStatus, MyEntry } from '../model/types';
+import type { Entry, EntryStatus } from '../model/types';
 
 // 접수 상태만 표시한다 — 당첨 여부는 발표 화면에서 다룬다 (docs/CONTEXT.md: 발표 전 당첨 정보 비노출)
 const STATUS_META: Record<EntryStatus, { label: string; chipClass: string }> = {
-    applied: { label: '접수', chipClass: 'bg-semantic-success-soft text-semantic-success' },
-    cancelled: { label: '취소', chipClass: 'bg-surface-sunken text-fg-tertiary' },
+    ACCEPTED: { label: '접수', chipClass: 'bg-semantic-success-soft text-semantic-success' },
+    REJECTED: { label: '거절', chipClass: 'bg-surface-sunken text-fg-tertiary' },
 };
 
-export function MyEntryItem({ entry }: { entry: MyEntry }) {
+export function MyEntryItem({ entry }: { entry: Entry }) {
     const meta = STATUS_META[entry.status];
 
     return (
@@ -26,13 +26,13 @@ export function MyEntryItem({ entry }: { entry: MyEntry }) {
                 </span>
                 <div className="flex min-w-0 flex-col gap-0.5">
                     <p className="text-body-sm text-fg-primary truncate">{entry.eventTitle}</p>
-                    <p className="text-caption text-fg-tertiary">{formatKst(entry.createdAt)}</p>
+                    <p className="text-caption text-fg-tertiary">{formatKst(entry.requestedAt)}</p>
                 </div>
             </div>
             <span className="text-body-sm-bold text-fg-primary shrink-0">
-                {entry.ticketsUsed === 0
+                {entry.deductedTicketCount === 0
                     ? '응모권 미사용'
-                    : `${formatNumber(entry.ticketsUsed)}장 사용`}
+                    : `${formatNumber(entry.deductedTicketCount)}장 사용`}
             </span>
         </li>
     );

@@ -8,11 +8,11 @@ export function MyEntriesPage() {
 
     // 최신 응모가 위로. 같은 초에 소수 초가 있는 값과 없는 값이 섞일 수 있어 문자열이 아닌 시각으로 비교한다
     const sortedEntries = [...(entries ?? [])].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        (a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime(),
     );
-    // 취소된 응모는 접수 건수에서 뺀다
-    const appliedEntries = sortedEntries.filter((entry) => entry.status === 'applied');
-    const usedTickets = appliedEntries.reduce((sum, entry) => sum + entry.ticketsUsed, 0);
+    // 거절된 응모는 접수 건수에서 뺀다
+    const appliedEntries = sortedEntries.filter((entry) => entry.status === 'ACCEPTED');
+    const usedTickets = appliedEntries.reduce((sum, entry) => sum + entry.deductedTicketCount, 0);
 
     return (
         <main className="mx-auto flex w-full max-w-300 flex-col gap-10 px-6 pt-20 pb-28">

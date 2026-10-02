@@ -60,7 +60,7 @@ export function TicketBalanceWidget({
                       rewardTickets: 1,
                       href: '/attendance',
                       actionLabel: '출석하러 가기',
-                      completed: attendance.checkedToday,
+                      completed: attendance.attended,
                       thumbnailClass: 'bg-play-lavender-soft',
                       thumbnailIcon: CalendarCheck,
                   },

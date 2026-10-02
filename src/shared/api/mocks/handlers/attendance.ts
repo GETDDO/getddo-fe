@@ -7,14 +7,18 @@ import { recordMockTicketGrant } from './ticket';
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-// 출석 기준일은 00:00 UTC에 바뀐다 — UTC 날짜 문자열로 관리한다
-const toDate = (date: Date) => date.toISOString().slice(0, 10);
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+// 출석 기준일은 00:00 KST에 바뀐다 — KST 날짜 문자열로 관리한다 (getddo-spec 공통 시간 기준)
+const toDate = (date: Date) => new Date(date.getTime() + KST_OFFSET_MS).toISOString().slice(0, 10);
 const daysAgo = (days: number) => toDate(new Date(Date.now() - days * DAY_MS));
 
 // 목업 세션 동안 유지되는 출석 상태 — 어제까지 3일 연속 출석한 상태에서 시작한다
 const state = {
     checkedDates: [daysAgo(5), daysAgo(3), daysAgo(2), daysAgo(1)],
     streak: 3,
+    /** 오늘 출석에서 이미 확정한 응모권 — 같은 날 재요청은 이 값을 그대로 돌려준다 */
+    todayGranted: 0,
 };
 
 // 관리자가 설정하는 출석 정책 — getddo-spec 출석 규칙의 초기 설정(7·14·28일, 1·3·7장)
@@ -28,35 +32,46 @@ const policy = {
 };
 
 export const attendanceHandlers = [
-    http.get(api('/attendance/policy'), () => HttpResponse.json(policy)),
-    http.get(api('/attendance/me'), () => {
+    // 관리자 정책 API가 없어 시연 화면을 위한 임시 조회 — spec의 attendances/* 네임스페이스 안에 둔다
+    http.get(api('/attendances/policy'), () => HttpResponse.json(policy)),
+    // AT01 초안 — 오늘 출석 여부 + 최근 기준일
+    http.get(api('/attendances/today'), () => {
         const today = toDate(new Date());
         return HttpResponse.json({
-            checkedToday: state.checkedDates.includes(today),
-            streak: state.streak,
+            attended: state.checkedDates.includes(today),
+            consecutiveDays: state.streak,
             checkedDates: state.checkedDates,
         });
     }),
-    http.post(api('/attendance/check'), ({ request }) => {
-        // 멱등키 전달 헤더명은 계약 확정 전 임시로 X-Idempotency-Key 사용 (ADR-0005)
-        if (!request.headers.get('X-Idempotency-Key')) {
-            return HttpResponse.json(
-                { code: 'IDEMPOTENCY_KEY_REQUIRED', message: '멱등키가 필요합니다' },
-                { status: 400 },
-            );
-        }
+    // AT02 초안 — 본문을 받지 않는다. 날짜·보상량은 서버 기준일·정책으로 정한다
+    http.post(api('/attendances'), async ({ request }) => {
+        // 본문이 붙어 오는 경우도 있으므로 소비해 두고, 출석 판정에는 쓰지 않는다
+        await request.json().catch(() => null);
+
         const today = toDate(new Date());
+
+        // 같은 기준일 재요청: 새로 지급하지 않고 이미 확정한 결과를 그대로 돌려준다 (AT02 명시)
         if (state.checkedDates.includes(today)) {
             return HttpResponse.json(
-                { code: 'ALREADY_CHECKED_IN', message: '오늘은 이미 출석했습니다' },
-                { status: 409 },
+                {
+                    attended: true,
+                    consecutiveDays: state.streak,
+                    ticketsGranted: state.todayGranted,
+                },
+                { status: 200 },
             );
         }
-        state.checkedDates = [...state.checkedDates, today];
+
+        state.checkedDates.push(today);
         state.streak += 1;
-        recordMockTicketGrant(1, '매일 출석체크 리워드');
+
+        const bonus = policy.streakBonuses.find((b) => b.days === state.streak);
+        const tickets = policy.dailyRewardTickets + (bonus?.rewardTickets ?? 0);
+        state.todayGranted = tickets;
+        recordMockTicketGrant(tickets, '매일 출석체크 리워드');
+
         return HttpResponse.json(
-            { checkedToday: true, streak: state.streak, ticketsGranted: 1 },
+            { attended: true, consecutiveDays: state.streak, ticketsGranted: tickets },
             { status: 201 },
         );
     }),

@@ -62,7 +62,7 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                                     selectUser(user);
                                     setOpen(false);
                                     // 관리자 계정으로 전환하면 관리자 대시보드로 바로 이동한다
-                                    if (user.role === 'admin') {
+                                    if (user.role === 'ADMIN') {
                                         void navigate('/admin');
                                     }
                                 }}
@@ -71,7 +71,7 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                                     isCurrent && 'cursor-default',
                                 )}
                             >
-                                {user.role === 'admin' ? (
+                                {user.role === 'ADMIN' ? (
                                     <ShieldCheck className="text-fg-brand size-5 shrink-0" />
                                 ) : (
                                     <CircleUserRound className="text-fg-primary size-5 shrink-0" />
@@ -79,7 +79,7 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                                 <div className="flex flex-1 flex-col">
                                     <span className="text-body-sm-bold text-fg-primary flex items-center gap-1.5">
                                         {user.name}
-                                        {user.role === 'admin' && (
+                                        {user.role === 'ADMIN' && (
                                             <span className="bg-brand-primary text-fg-on-brand rounded px-1.5 py-0.5 text-xs font-medium">
                                                 관리자
                                             </span>

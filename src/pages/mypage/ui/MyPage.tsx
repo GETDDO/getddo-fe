@@ -21,7 +21,7 @@ export function MyPage() {
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
                                 <span className="text-title-3 text-fg-primary">{user.name}</span>
-                                {user.role === 'admin' && (
+                                {user.role === 'ADMIN' && (
                                     <span className="bg-brand-primary text-fg-on-brand rounded-md px-2 py-0.5 text-xs font-medium">
                                         관리자
                                     </span>

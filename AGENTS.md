@@ -82,7 +82,7 @@ app → pages → widgets → features → entities → shared
 - 서버 응답은 Zod 스키마로 검증한다 (`entities/*/model/`에 정의)
 - 시간은 서버에서 UTC로 받고, 화면 표시는 `shared/lib/date`의 KST 변환 함수를 사용한다
 - "지금"이 필요한 코드는 `new Date()`를 직접 호출하지 않고 `useVirtualClock().now()`(`shared/lib/virtual-clock`)를 쓴다 — 관리자 시간 여행이 오버라이드할 수 있어야 한다. 컴포넌트 밖 순수 함수는 `now`를 인자로 받는다
-- 응모·추첨 등 중복 위험 요청에는 `shared/lib/idempotency-key`의 멱등키를 붙인다. 현재 헤더명은 임시로 `X-Idempotency-Key`다 (ADR-0005, spec 초안의 `Idempotency-Key`와 다름 — 확정 시 교체)
+- 응모·추첨 등 중복 위험 요청에는 `shared/lib/idempotency-key`의 멱등키를 붙인다. 헤더명은 `IDEMPOTENCY_HEADER` 상수(`Idempotency-Key`)를 쓰고 문자열을 직접 쓰지 않는다 (ADR-0005)
 
 ### 상태 관리 (역할이 겹치지 않도록 구분)
 

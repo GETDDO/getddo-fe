@@ -40,7 +40,7 @@ export function TimeRaffleDetailPage() {
     const [shortfallOpen, setShortfallOpen] = useState(false);
     const [completeOpen, setCompleteOpen] = useState(false);
     // 완료 모달이 쓸 값 — 접수 직후에는 이벤트 쿼리가 아직 갱신 전이라 응답 기준으로 계산해 담아 둔다
-    const [lastTicketsUsed, setLastTicketsUsed] = useState(0);
+    const [lastDeductedCount, setLastDeductedCount] = useState(0);
     const [lastRemaining, setLastRemaining] = useState(0);
     // 모달을 닫으면 방금 누른 응모 버튼으로 포커스를 되돌린다
     const entryButtonRef = useRef<HTMLButtonElement>(null);
@@ -145,8 +145,8 @@ export function TimeRaffleDetailPage() {
                     enterEvent.mutate(quantity, {
                         onSuccess: (entry) => {
                             setConfirmOpen(false);
-                            setLastTicketsUsed(entry.ticketsUsed);
-                            setLastRemaining(Math.max(0, maxQuantity - entry.ticketsUsed));
+                            setLastDeductedCount(entry.deductedTicketCount);
+                            setLastRemaining(Math.max(0, maxQuantity - entry.deductedTicketCount));
                             // 한도가 줄어들어 지금 수량이 범위를 벗어날 수 있으므로 되돌린다
                             setQuantity(1);
                             setCompleteOpen(true);
@@ -168,7 +168,7 @@ export function TimeRaffleDetailPage() {
             <EntryCompleteDialog
                 open={completeOpen}
                 onOpenChange={setCompleteOpen}
-                ticketsUsed={lastTicketsUsed}
+                deductedTicketCount={lastDeductedCount}
                 remainingAllowance={lastRemaining}
                 returnFocusTo={entryButtonRef}
             />

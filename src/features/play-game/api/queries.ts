@@ -1,13 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@shared/api/client';
-import { createIdempotencyKey } from '@shared/lib/idempotency-key';
+import { createIdempotencyKey, IDEMPOTENCY_HEADER } from '@shared/lib/idempotency-key';
 
 import { playResultSchema } from '../model/types';
 
 /**
  * 플레이 결과 제출 — 같은 플레이가 재시도로 두 번 반영되지 않게 멱등키를 붙인다.
- * TODO: 서버가 플레이 ID를 발급하는 계약이 정해지면 시작할 때 ID를 받아 함께 보낸다 (getddo-spec 게임 규칙)
+ * TODO: spec 초안은 G03(POST /games/{gameId}/plays → playId·playToken 발급) → G04(PUT .../result) 구조다.
+ * playId 계약이 확정되면 멱등키 대신 서버 발급 playId로 재시도를 식별한다 (getddo-spec 게임 규칙)
  */
 export function useSubmitGamePlay() {
     const queryClient = useQueryClient();
@@ -17,7 +18,7 @@ export function useSubmitGamePlay() {
             const { data } = await apiClient.post<unknown>(
                 `/games/${gameId}/play`,
                 { score },
-                { headers: { 'X-Idempotency-Key': createIdempotencyKey() } },
+                { headers: { [IDEMPOTENCY_HEADER]: createIdempotencyKey() } },
             );
             return playResultSchema.parse(data);
         },

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { apiClient } from '@shared/api/client';
+import { IDEMPOTENCY_HEADER } from '@shared/lib/idempotency-key';
 
 // 목업은 모듈 수준 상태를 들고 있어 테스트끼리 영향을 준다.
 // 이벤트별 누적 한도(ADR-010)가 걸리므로 한도를 쓰는 테스트는 서로 다른 이벤트를 쓴다.
@@ -14,29 +15,35 @@ async function balance() {
     return data.balance;
 }
 
-function enter(key: string, ticketsUsed: unknown, eventId = EVENT_ID) {
+function enter(key: string, ticketCount: unknown, eventId = EVENT_ID) {
     return apiClient.post(
         `/events/${eventId}/entries`,
-        { ticketsUsed },
-        { headers: { 'X-Idempotency-Key': key }, validateStatus: () => true },
+        { ticketCount },
+        { headers: { [IDEMPOTENCY_HEADER]: key }, validateStatus: () => true },
     );
 }
 
-interface MyEntry {
+interface EntryReceipt {
     id: string;
     eventId: string;
     eventTitle: string;
-    ticketsUsed: number;
+    requestedTicketCount: number;
+    deductedTicketCount: number;
     status: string;
 }
 
+interface Envelope<T> {
+    success: boolean;
+    data: T;
+}
+
 async function myEntries() {
-    const { data } = await apiClient.get<MyEntry[]>('/entries/me');
-    return data;
+    const { data } = await apiClient.get<Envelope<{ items: EntryReceipt[] }>>('/users/me/entries');
+    return data.data.items;
 }
 
 describe('응모 목업 핸들러', () => {
-    it('같은 멱등키로 다시 보내면 응모권을 또 차감하지 않는다', async () => {
+    it('같은 멱등키로 다시내면 응모권을 또 차감하지 않는다', async () => {
         const key = `test-retry-${Date.now()}`;
         const before = await balance();
 
@@ -51,7 +58,7 @@ describe('응모 목업 핸들러', () => {
         expect(await balance()).toBe(before - 1);
     });
 
-    it('같은 멱등키로 다른 수량을 보내면 거절한다', async () => {
+    it('같은 멱등키로 다른 수량을내면 거절한다', async () => {
         const key = `test-conflict-${Date.now()}`;
         await enter(key, 1);
 
@@ -71,7 +78,7 @@ describe('응모 목업 핸들러', () => {
     it('멱등키가 없으면 400으로 거절한다', async () => {
         const response = await apiClient.post(
             `/events/${EVENT_ID}/entries`,
-            { ticketsUsed: 1 },
+            { ticketCount: 1 },
             { validateStatus: () => true },
         );
 
@@ -89,9 +96,9 @@ describe('응모 목업 핸들러', () => {
 
         const latest = after[0];
         if (!latest) throw new Error('응모 내역이 비어 있습니다');
-        expect(latest.id).toBe((response.data as { id: string }).id);
+        expect(latest.id).toBe((response.data as Envelope<EntryReceipt>).data.id);
         expect(latest.eventId).toBe(OTHER_EVENT_ID);
-        expect(latest.ticketsUsed).toBe(2);
+        expect(latest.deductedTicketCount).toBe(2);
         // 목록에서 이벤트 이름을 보여줘야 하므로 제목이 함께 와야 한다
         expect(latest.eventTitle).not.toBe('');
     });
