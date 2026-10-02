@@ -166,7 +166,13 @@ export function TicketBalanceWidget({
                                             오늘 참여 완료
                                         </Button>
                                     ) : (
-                                        <Button asChild size="lg" className="mt-2 w-full">
+                                        <Button
+                                            asChild
+                                            // 첫 화면의 주 행동(배너·추천 이벤트 응모)이 돋보이도록 카드 버튼은 한 단계 낮은 secondary
+                                            variant="secondary"
+                                            size="lg"
+                                            className="mt-2 w-full"
+                                        >
                                             <Link to={card.href}>{card.actionLabel}</Link>
                                         </Button>
                                     )}
