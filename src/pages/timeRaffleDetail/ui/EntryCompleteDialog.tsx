@@ -58,27 +58,17 @@ export function EntryCompleteDialog({
 
                 <div className="flex gap-4">
                     <DialogClose asChild>
-                        {/* secondary 변형은 배경·호버 색을 함께 얹어서, 시안대로 테두리만 두려고 ghost를 쓴다 */}
-                        <Button
-                            variant="ghost"
-                            className="border-border-strong bg-surface-page hover:bg-surface-sunken h-10 flex-1"
-                        >
-                            <span className="text-body-bold text-fg-primary">
-                                {canEnterMore ? '닫기' : '확인'}
-                            </span>
+                        <Button variant="secondary" className="flex-1">
+                            {canEnterMore ? '닫기' : '확인'}
                         </Button>
                     </DialogClose>
                     {canEnterMore ? (
                         <DialogClose asChild>
-                            <Button variant="secondary" className="h-10 flex-1">
-                                <span className="text-body-bold">추가 응모하기</span>
-                            </Button>
+                            <Button className="flex-1">추가 응모하기</Button>
                         </DialogClose>
                     ) : (
-                        <Button asChild variant="secondary" className="h-10 flex-1">
-                            <Link to="/my-entries">
-                                <span className="text-body-bold">내 응모 내역</span>
-                            </Link>
+                        <Button asChild className="flex-1">
+                            <Link to="/my-entries">내 응모 내역</Link>
                         </Button>
                     )}
                 </div>

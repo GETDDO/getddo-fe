@@ -89,41 +89,36 @@ export function TimeRaffleDetailPage() {
                         isOpen ? (
                             <Button
                                 ref={entryButtonRef}
-                                variant="secondary"
+                                size="lg"
                                 disabled={!canEnter}
                                 onClick={() =>
                                     hasEnoughTickets ? setConfirmOpen(true) : setShortfallOpen(true)
                                 }
-                                className="h-12 w-full"
+                                className="w-full"
                             >
-                                <span className="text-body-bold">
-                                    {!canEnter
-                                        ? '응모 완료'
-                                        : alreadyUsed > 0
-                                          ? '추가 응모하기'
-                                          : '응모하기'}
-                                </span>
+                                {!canEnter
+                                    ? '응모 완료'
+                                    : alreadyUsed > 0
+                                      ? '추가 응모하기'
+                                      : '응모하기'}
                             </Button>
                         ) : event.status === 'drawn' ? (
                             // 발표 여부는 서버가 내려준 status로만 판단한다 —
                             // 화면의 카운트다운이 0이 됐다고 결과를 열어 주지 않는다 (docs/CONTEXT.md)
                             <Button
+                                variant="emphasis"
+                                size="lg"
                                 onClick={() => {
                                     // TODO: 결과 화면은 GD-24 「추첨 결과 페이지 프론트 화면 개발」에서 연결한다
                                     toast.info('당첨 결과 발표 화면은 준비 중이에요.');
                                 }}
-                                className="h-12 w-full"
+                                className="w-full"
                             >
-                                <span className="text-body-bold">당첨 결과 발표 보기</span>
+                                당첨 결과 발표 보기
                             </Button>
                         ) : (
-                            <Button
-                                disabled
-                                className="bg-surface-disabled h-12 w-full disabled:opacity-100"
-                            >
-                                <span className="text-body-bold text-fg-disabled">
-                                    {STATUS_LABEL[event.status]}
-                                </span>
+                            <Button disabled size="lg" className="w-full">
+                                {STATUS_LABEL[event.status]}
                             </Button>
                         )
                     }
