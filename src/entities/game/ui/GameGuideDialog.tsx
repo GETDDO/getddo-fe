@@ -1,3 +1,4 @@
+import { Button } from '@shared/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@shared/ui/dialog';
 
 import type { GameContent } from './game-content';
@@ -71,14 +72,10 @@ export function GameGuideDialog({
                     className="aspect-[314/160] w-full rounded-2xl object-cover"
                 />
 
-                {/* 디자인 시스템 브랜드 버튼 Large(48): brand/primary 기본·호버·누름 */}
-                <button
-                    type="button"
-                    onClick={onStart}
-                    className="bg-brand-primary hover:bg-brand-primary-hover active:bg-brand-primary-pressed text-fg-on-brand text-body-bold focus-visible:ring-border-focus h-12 w-full cursor-pointer rounded-lg transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                >
+                {/* 공용 버튼 emphasis(강조) Large(48) */}
+                <Button variant="emphasis" size="lg" className="w-full" onClick={onStart}>
                     게임 시작
-                </button>
+                </Button>
             </DialogContent>
         </Dialog>
     );

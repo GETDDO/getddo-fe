@@ -1,6 +1,7 @@
 import { Gamepad2, Ticket } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { Button } from '@shared/ui/button';
 import { TicketCard } from '@shared/ui/ticket-card';
 
 import type { Game } from '../model/types';
@@ -39,13 +40,10 @@ export function GameTicketCard({
                             </span>
                         )}
                     </div>
-                    {/* 디자인 시스템 action/neutral 기본·호버·누름 색 */}
-                    <Link
-                        to={href}
-                        className="bg-action-neutral hover:bg-action-neutral-hover active:bg-action-neutral-pressed text-fg-on-brand text-body-bold focus-visible:ring-border-focus mt-1 flex h-12 shrink-0 items-center justify-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                    >
-                        {rewarded ? '한 번 더 하기' : '게임하러 가기'}
-                    </Link>
+                    {/* 공용 버튼 primary Large(48) */}
+                    <Button asChild size="lg" className="mt-2 w-full">
+                        <Link to={href}>{rewarded ? '한 번 더 하기' : '게임하러 가기'}</Link>
+                    </Button>
                 </>
             }
         >
