@@ -111,12 +111,14 @@ export function BannerSlider({
                     className="flex ease-out motion-safe:transition-transform motion-safe:duration-500"
                     style={{ transform: `translateX(-${safeIndex * 100}%)` }}
                 >
-                    {slides.map((event) => {
+                    {slides.map((event, slideIndex) => {
                         const remainingMs = new Date(event.endsAt).getTime() - now.getTime();
                         return (
                             // 피그마 홈 배너 — 1200×365, 노란 배경 그림, 본문은 왼쪽 50·위 84에서 시작
                             <div
                                 key={event.id}
+                                // 화면 밖 배너는 Tab 포커스·보조 기술에서 빼 실시간 현황 알림도 보이는 배너만 읽힌다
+                                inert={slideIndex !== safeIndex}
                                 className="bg-play-yellow relative flex min-h-91.25 w-full shrink-0 flex-col bg-cover bg-right"
                                 style={{ backgroundImage: `url(${bannerBackground})` }}
                             >
@@ -176,11 +178,11 @@ export function BannerSlider({
                         nextLabel="다음 이벤트"
                         onPrev={() => {
                             setUserControlled(true);
-                            setIndex((i) => (i - 1 + slides.length) % slides.length);
+                            setIndex((safeIndex - 1 + slides.length) % slides.length);
                         }}
                         onNext={() => {
                             setUserControlled(true);
-                            setIndex((i) => (i + 1) % slides.length);
+                            setIndex((safeIndex + 1) % slides.length);
                         }}
                     />
                 </div>

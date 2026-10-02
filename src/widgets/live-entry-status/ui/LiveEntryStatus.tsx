@@ -12,7 +12,8 @@ export function LiveEntryStatus({ event }: { event: Event }) {
     }
 
     return (
-        <div className="flex flex-wrap items-center gap-2">
+        // 목록 폴링으로 수치가 바뀌면 보조 기술에 조용히 알린다
+        <div className="flex flex-wrap items-center gap-2" aria-live="polite">
             {event.participantCount != null && (
                 <Badge variant="accent" size="md" className="gap-2.5">
                     <UsersRound className="size-5" />

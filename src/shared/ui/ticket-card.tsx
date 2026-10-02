@@ -58,6 +58,8 @@ function TicketCard({
         measure();
         const observer = new ResizeObserver(measure);
         observer.observe(card);
+        // 카드 높이가 고정돼도 절취선 아래(stub) 내용 높이가 바뀌면 절취선 위치가 움직인다
+        if (tear.parentElement) observer.observe(tear.parentElement);
         return () => observer.disconnect();
     }, []);
 
