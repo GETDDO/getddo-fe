@@ -2,20 +2,23 @@ import { cn } from 'cn';
 import * as React from 'react';
 
 /**
- * 카드 — 디자인 시스템(피그마 05 Card) 기준: 흰 바탕(surface/page)·border/default 1px·모서리 16px·그림자 md.
+ * 카드 — 디자인 시스템(피그마 05 Card) 기준: 흰 바탕(surface/page)·모서리 16px·그림자 md·안쪽 여백 16.
+ * variant: outlined(기본, border/default 1px) · elevated(테두리 없이 그림자만 — 홈 이벤트 카드 등)
  * 색은 테마 변수(bg-card 등) 대신 토큰으로 고정해, OS가 다크 모드여도 까맣게 바뀌지 않는다
  */
 function Card({
     className,
     size = 'default',
+    variant = 'outlined',
     ...props
-}: React.ComponentProps<'div'> & { size?: 'default' | 'sm' }) {
+}: React.ComponentProps<'div'> & { size?: 'default' | 'sm'; variant?: 'outlined' | 'elevated' }) {
     return (
         <div
             data-slot="card"
             data-size={size}
+            data-variant={variant}
             className={cn(
-                'group/card bg-surface-page text-fg-primary border-border-default flex flex-col gap-(--card-spacing) overflow-hidden rounded-2xl border py-(--card-spacing) text-sm shadow-md [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-2xl *:[img:last-child]:rounded-b-2xl',
+                'group/card bg-surface-page text-fg-primary border-border-default flex flex-col gap-(--card-spacing) overflow-hidden rounded-2xl border py-(--card-spacing) text-sm shadow-md [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 data-[variant=elevated]:border-transparent *:[img:first-child]:rounded-t-2xl *:[img:last-child]:rounded-b-2xl',
                 className,
             )}
             {...props}
