@@ -7,7 +7,7 @@ import { TimeRaffleHero } from './TimeRaffleHero';
 import { TimeRaffleSection } from './TimeRaffleSection';
 import { TimeRaffleTrustNotice } from './TimeRaffleTrustNotice';
 
-const CONTAINER = 'mx-auto w-full max-w-300 px-6 pt-20 pb-54';
+const CONTAINER = 'mx-auto w-full max-w-312 px-6 pt-20 pb-54';
 
 export function TimeRafflePage() {
     const { data: events, isPending, isError } = useEventList();

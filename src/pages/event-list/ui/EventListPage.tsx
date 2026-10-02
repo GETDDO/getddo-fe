@@ -47,7 +47,7 @@ export function EventListPage() {
     ) : null;
 
     return (
-        <main className="mx-auto flex w-full max-w-300 flex-col px-6 pt-20 pb-28">
+        <main className="mx-auto flex w-full max-w-312 flex-col px-6 pt-20 pb-28">
             <h1 className="text-title-1 text-fg-primary">진행 중 이벤트</h1>
 
             <section className="mt-10 flex flex-col gap-6">

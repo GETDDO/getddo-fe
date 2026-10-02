@@ -13,7 +13,7 @@ import { MissionCard } from './MissionCard';
 import { SectionHeader } from './SectionHeader';
 import { TicketHistoryCard } from './TicketHistoryCard';
 
-const CONTAINER = 'mx-auto w-full max-w-300 px-6';
+const CONTAINER = 'mx-auto w-full max-w-312 px-6';
 
 /** 출석 카드 펼침 여부 — 새로고침해도 유지하도록 이 탭의 세션 저장소에 둔다 */
 const ATTENDANCE_EXPANDED_KEY = 'getddo:attendance-expanded';

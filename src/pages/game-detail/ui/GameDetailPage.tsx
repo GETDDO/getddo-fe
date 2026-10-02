@@ -15,7 +15,7 @@ import { GameRail } from '@widgets/game-rail';
 import { GameHero } from './GameHero';
 import { GameStats } from './GameStats';
 
-const CONTAINER = 'mx-auto w-full max-w-300 px-6';
+const CONTAINER = 'mx-auto w-full max-w-312 px-6';
 
 /**
  * 무대 폭 — 최대 960px(피그마 840보다 한 단계 크게)이고, 화면 높이가 모자라면 840:546 비율대로 줄어든다.
