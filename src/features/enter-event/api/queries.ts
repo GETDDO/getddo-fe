@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { useRef } from 'react';
 import { z } from 'zod';
 
@@ -49,6 +50,13 @@ export function useEnterEvent(eventId: string) {
                 queryClient.invalidateQueries({ queryKey: ['tickets'] }),
                 queryClient.invalidateQueries({ queryKey: ['entries'] }),
             ]);
+        },
+        onError: (error) => {
+            // 서버가 응답한 거절(4xx/5xx)은 결과가 키에 묶여 저장되므로 다음 시도는 새 키로 간다.
+            // 응답을 받지 못한 네트워크 오류만 같은 키를 유지해 재시도로 식별되게 한다 (ADR-0005)
+            if (isAxiosError(error) && error.response) {
+                attemptRef.current = null;
+            }
         },
     });
 }

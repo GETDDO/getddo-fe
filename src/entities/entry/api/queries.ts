@@ -16,13 +16,27 @@ const myEntryPageSchema = z.object({
 const envelope = <T extends z.ZodTypeAny>(dataSchema: T) =>
     z.object({ success: z.literal(true), data: dataSchema });
 
-/** 내가 응모한 내역 — 응모가 접수되면 features/enter-event가 이 쿼리를 무효화한다 */
+const ENTRIES_PAGE_SIZE = 50;
+
+/**
+ * 내가 응모한 내역 — 응모가 접수되면 features/enter-event가 이 쿼리를 무효화한다.
+ * Page<T>는 기본 20건씩이라 totalElements까지 전부 모아야 합계·목록이 정확하다
+ */
 export function useMyEntries() {
     return useQuery({
         queryKey: ['entries', 'me'],
         queryFn: async () => {
-            const { data } = await apiClient.get<unknown>('/users/me/entries');
-            return envelope(myEntryPageSchema).parse(data).data.items;
+            const entries = [];
+            // 페이지는 1부터 시작한다 (spec 공통 계약)
+            for (let page = 1; ; page += 1) {
+                const { data } = await apiClient.get<unknown>('/users/me/entries', {
+                    params: { page, size: ENTRIES_PAGE_SIZE },
+                });
+                const parsed = envelope(myEntryPageSchema).parse(data).data;
+                entries.push(...parsed.items);
+                if (entries.length >= parsed.totalElements || parsed.items.length === 0) break;
+            }
+            return entries;
         },
     });
 }
