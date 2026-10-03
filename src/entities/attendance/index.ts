@@ -4,4 +4,9 @@ export {
     useAttendancePolicy,
     useAttendanceStatus,
 } from './api/queries';
-export * from './model/types';
+export {
+    attendancePolicySchema,
+    attendanceStatusSchema,
+    checkAttendanceResultSchema,
+} from './model/types';
+export type { AttendancePolicy, AttendanceStatus, CheckAttendanceResult } from './model/types';

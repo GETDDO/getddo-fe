@@ -10,7 +10,7 @@ export const drawHandlers = [
     http.post(api('/admin/events/:eventId/draw'), ({ params }) =>
         HttpResponse.json(
             {
-                drawResultId: `draw-${mockNow().getTime()}`,
+                drawResultId: `draw-${crypto.randomUUID()}`,
                 eventId: params.eventId,
                 winners: [
                     { userId: 'user-101', rank: 1, prizeName: '갤럭시 버즈' },

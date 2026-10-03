@@ -63,7 +63,7 @@ src/
 규칙:
 
 - 같은 레이어의 다른 슬라이스끼리 서로 참조하지 않습니다 (공유가 필요하면 `shared`/`entities`로 내립니다).
-- 슬라이스는 반드시 `index.ts`(공개 API)를 통해서만 import합니다. 내부 파일 직접 import는 ESLint가 차단합니다.
+- 슬라이스는 반드시 `index.ts`(공개 API)를 통해서만 import합니다. 내부 파일 직접 import는 ESLint가 차단합니다. 단, `pages` 슬라이스는 예외입니다 — 라우트가 페이지를 직접 가리키는 최상위 소비자라 배럴이 불필요하므로 `index.ts` 없이 루트의 `XxxPage.tsx`가 곧 공개 API입니다.
 - `import.meta.env`는 `src/shared/config/env.ts`에서만 접근합니다.
 
 ## 구현 현황
