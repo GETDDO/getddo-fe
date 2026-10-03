@@ -1,16 +1,14 @@
 import { http, HttpResponse } from 'msw';
 
+import type { TicketHistory } from '@entities/ticket';
+
 import { env } from '@shared/config/env';
+
+import { mockNow } from '../now';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
-interface TicketHistoryItem {
-    id: string;
-    type: string;
-    amount: number;
-    reason: string;
-    createdAt: string;
-}
+type TicketHistoryItem = TicketHistory;
 
 // 시연용 초기 이력 — 사용자별 상태에 복사본으로 들어간다
 const seedTicketHistory: TicketHistoryItem[] = [
@@ -170,7 +168,7 @@ export function recordMockTicketGrant(userId: string, amount: number, reason: st
         type: amount >= 0 ? 'earn' : 'use',
         amount,
         reason,
-        createdAt: new Date().toISOString(),
+        createdAt: mockNow().toISOString(),
     });
 }
 

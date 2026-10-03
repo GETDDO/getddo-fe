@@ -1,5 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
+import type { Notification } from '@entities/notification';
+
 import { env } from '@shared/config/env';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
@@ -7,7 +9,7 @@ const DEFAULT_SIZE = 20;
 
 // N01~N03 확정 계약(getddo-spec/05-api/notification.md) 기준 목업 — createdAt 내림차순이 기본 상태다
 // 원본은 템플릿으로만 쓰고 읽음 상태는 X-User-ID별로 분리한다 (한 사용자의 읽음이 타인 목록을 바꾸지 않도록)
-const initialNotifications = [
+const initialNotifications: Notification[] = [
     {
         id: '3f4a1b2c-0001-4000-8000-000000000001',
         title: '무너 한정 굿즈 타임 래플 오픈 예정',
@@ -46,11 +48,9 @@ const initialNotifications = [
     },
 ];
 
-type MockNotification = (typeof initialNotifications)[number];
+const notificationsByUser = new Map<string, Notification[]>();
 
-const notificationsByUser = new Map<string, MockNotification[]>();
-
-const getNotificationsForUser = (userId: string): MockNotification[] => {
+const getNotificationsForUser = (userId: string): Notification[] => {
     const existing = notificationsByUser.get(userId);
     if (existing) return existing;
 

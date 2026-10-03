@@ -1,8 +1,11 @@
 import { http, HttpResponse } from 'msw';
 
+import type { Entry } from '@entities/entry';
+
 import { env } from '@shared/config/env';
 import { IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
 
+import { mockNow } from '../now';
 import { findMockEvent, recordMockEventEntry } from './event';
 import { getMockTicketBalance, recordMockTicketGrant } from './ticket';
 
@@ -11,19 +14,8 @@ const api = (path: string) => `${env.apiBaseUrl}${path}`;
 /** ADR-010 — 가중치 적용 이벤트는 사용자·이벤트별 누적 5장까지만 쓸 수 있다 */
 const ENTRY_TICKET_LIMIT = 5;
 
-// getddo-spec/05-api/entry.md 초안의 EntryReceipt 모양
-interface EntryReceipt {
-    id: string;
-    eventId: string;
-    eventTitle: string;
-    requestedTicketCount: number;
-    deductedTicketCount: number;
-    status: 'ACCEPTED' | 'REJECTED';
-    requestedAt: string;
-    acceptedAt: string | null;
-    rejectionCode: string | null;
-    rejectionReason: string | null;
-}
+// getddo-spec/05-api/entry.md 초안의 EntryReceipt — 계약 기준은 entities/entry의 entrySchema다
+type EntryReceipt = Entry;
 
 const okBody = (data: unknown) => ({
     success: true,
@@ -188,7 +180,7 @@ export const entryHandlers = [
             recordMockTicketGrant(userId, -ticketCount, `${event.title} 응모`);
         }
 
-        const now = new Date().toISOString();
+        const now = mockNow().toISOString();
         const responseBody: EntryReceipt = {
             id: crypto.randomUUID(),
             eventId,

@@ -1,11 +1,15 @@
 import { http, HttpResponse } from 'msw';
 
+import type { AbuseCase, AbuseDecision } from '@entities/abuseCase';
+
 import { env } from '@shared/config/env';
+
+import { mockNow } from '../now';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
 // 목업 세션 동안 유지되는 탐지·검토 상태 — 검토 요청이 이 목록에 반영된다
-const abuseCases = [
+const abuseCases: AbuseCase[] = [
     {
         id: 'ab-1',
         target: 'entry',
@@ -111,7 +115,7 @@ export const abuseHandlers = [
             );
         }
         const { decision, note } = (await request.json()) as {
-            decision?: 'allow' | 'exclude';
+            decision?: AbuseDecision;
             note?: string;
         };
         if (decision !== 'allow' && decision !== 'exclude') {
@@ -129,7 +133,7 @@ export const abuseHandlers = [
         target.status = decision === 'allow' ? 'allowed' : 'excluded';
         target.review = {
             reviewer: 'admin-01',
-            reviewedAt: new Date().toISOString(),
+            reviewedAt: mockNow().toISOString(),
             note: note?.trim() ?? '',
         };
         return HttpResponse.json(target);

@@ -1,21 +1,18 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import { useRef } from 'react';
-import { z } from 'zod';
 
 import { ENTRIES_KEY, entrySchema } from '@entities/entry';
 import { EVENTS_KEY } from '@entities/event';
 import { TICKETS_KEY } from '@entities/ticket';
 import { apiClient } from '@shared/api/client';
+import { envelopeSchema } from '@shared/api/envelopeSchema';
 import { createIdempotencyKey, IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
 
 interface EntryAttempt {
     ticketCount: number;
     key: string;
 }
-
-// spec 공통 계약 초안의 성공 봉투 — EntryReceipt를 data에서 꺼낸다
-const entryEnvelopeSchema = z.object({ success: z.literal(true), data: entrySchema });
 
 /**
  * 이벤트에 응모한다.
@@ -39,7 +36,7 @@ export function useEnterEvent(eventId: string) {
                 { ticketCount },
                 { headers: { [IDEMPOTENCY_HEADER]: attemptRef.current.key } },
             );
-            return entryEnvelopeSchema.parse(data).data;
+            return envelopeSchema(entrySchema).parse(data).data;
         },
         onSuccess: () => {
             // 다음 응모는 재시도가 아니라 새 건이다

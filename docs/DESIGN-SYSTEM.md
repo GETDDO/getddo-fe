@@ -12,6 +12,7 @@
 2. **의미(semantic) 우선**: 같은 색이어도 "무엇에 쓰는가"에 따라 다른 토큰명을 쓴다.
 3. **관리자 전용 vs 사용자 전용 구분**: `status/*`, `chart/*`는 관리자(운영자) 화면 전용, `play/*`는 사용자(응모자) 사이트 전용.
 4. **값의 원천**: 이 문서의 모든 값은 Figma 도형에 실제로 바인딩된 Variable/Effect 값을 기준으로 작성했다 (캔버스에 사람이 손으로 적어둔 hex 텍스트 라벨이 아님). 2026-09-27 기준으로 캔버스 라벨과 실제 값은 모두 일치한다.
+5. **`cn()` 병합 주의**: `cn`(`@shared/lib/utils`)의 충돌 병합은 Tailwind 기본 그룹 기준이라 커스텀 토큰을 모른다. `cn('text-caption', 'text-fg-brand')`처럼 타이포 토큰과 색상 토큰을 함께 넣으면 같은 `text-*` 그룹으로 보고 앞 클래스를 지운다 — 그 조합은 `cn` 대신 문자열 결합을 쓴다 (사례: `features/checkAttendance/ui/AttendanceCheckCard.tsx`).
 
 ---
 

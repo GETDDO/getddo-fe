@@ -1,7 +1,10 @@
 import { http, HttpResponse } from 'msw';
 
+import type { AttendancePolicy } from '@entities/attendance';
+
 import { env } from '@shared/config/env';
 
+import { mockNow } from '../now';
 import { recordMockTicketGrant } from './ticket';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
@@ -11,7 +14,8 @@ const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 // 출석 기준일은 00:00 KST에 바뀐다 — KST 날짜 문자열로 관리한다 (getddo-spec 공통 시간 기준)
 const toDate = (date: Date) => new Date(date.getTime() + KST_OFFSET_MS).toISOString().slice(0, 10);
-const daysAgo = (days: number) => toDate(new Date(Date.now() - days * DAY_MS));
+// 가상 시계 기준 — 시간 여행 시연에서 '오늘' 출석이 가상 날짜를 따라간다
+const daysAgo = (days: number) => toDate(new Date(mockNow().getTime() - days * DAY_MS));
 
 interface AttendanceState {
     checkedDates: string[];
@@ -42,7 +46,7 @@ const stateFor = (userId: string) => {
 };
 
 // 관리자가 설정하는 출석 정책 — getddo-spec 출석 규칙의 초기 설정(7·14·28일, 1·3·7장)
-const policy = {
+const policy: AttendancePolicy = {
     dailyRewardTickets: 1,
     streakBonuses: [
         { days: 7, rewardTickets: 1 },
@@ -57,7 +61,7 @@ export const attendanceHandlers = [
     // AT01 초안 — 오늘 출석 여부 + 최근 기준일
     http.get(api('/attendances/today'), ({ request }) => {
         const state = stateFor(userIdOf(request));
-        const today = toDate(new Date());
+        const today = toDate(mockNow());
         return HttpResponse.json({
             attended: state.checkedDates.includes(today),
             consecutiveDays: state.streak,
@@ -71,7 +75,7 @@ export const attendanceHandlers = [
 
         const userId = userIdOf(request);
         const state = stateFor(userId);
-        const today = toDate(new Date());
+        const today = toDate(mockNow());
 
         // 같은 기준일 재요청: 새로 지급하지 않고 이미 확정한 결과를 그대로 돌려준다 (AT02 명시)
         if (state.checkedDates.includes(today)) {

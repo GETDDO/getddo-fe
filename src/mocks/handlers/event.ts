@@ -1,14 +1,10 @@
 import { http, HttpResponse } from 'msw';
 
+import type { EventStatus } from '@entities/event';
+
 import { env } from '@shared/config/env';
 
 import { mockNow } from '../now';
-
-/**
- * 이벤트 상태 — entities/event의 eventStatusSchema와 같은 값이다.
- * shared는 entities를 참조할 수 없어(FSD) 목업 쪽에 따로 적어 둔다.
- */
-type MockEventStatus = 'upcoming' | 'open' | 'closed' | 'drawn';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
@@ -28,7 +24,7 @@ function sessionFixedTime(key: string, offsetMs: number): string {
         // 저장소를 쓸 수 없는 환경(테스트 등)에서는 매번 계산한다
     }
 
-    const value = new Date(Date.now() + offsetMs).toISOString();
+    const value = new Date(mockNow().getTime() + offsetMs).toISOString();
     try {
         sessionStorage.setItem(storageKey, value);
     } catch {
@@ -64,7 +60,7 @@ const PENDING_ENDS_AT = sessionFixedTime('pending-ends-at', 3 * 60 * MINUTE);
  * 타임래플은 당일 시간대별로 열리고 닫혀서, 언제 데모를 돌려도 "오픈 15:00" 같은 표기가 자연스럽도록 실행일 기준으로 만든다.
  */
 function kstAt(dayOffset: number, hour: number): string {
-    const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    const kstNow = new Date(mockNow().getTime() + 9 * 60 * 60 * 1000);
     return new Date(
         Date.UTC(
             kstNow.getUTCFullYear(),
@@ -789,7 +785,7 @@ const ANNOUNCE_DELAY_MS = 5 * 60 * 1000;
  * (마감일이 지났는데 계속 진행 중으로 남는 식). 서버가 할 일이므로 응답을 만들 때 다시 계산해
  * 진행 예정 → 진행 중 → 마감(발표 대기) → 발표 완료가 실제로 이어지게 한다.
  */
-function statusAt(startsAt: string, endsAt: string, now: number): MockEventStatus {
+function statusAt(startsAt: string, endsAt: string, now: number): EventStatus {
     const starts = new Date(startsAt).getTime();
     const ends = new Date(endsAt).getTime();
 

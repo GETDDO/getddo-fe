@@ -1,17 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { apiClient } from '@shared/api/client';
+import type { EventStatus } from '@entities/event';
 
-/**
- * 이벤트 상태 — entities/event의 eventStatusSchema와 같은 값이다.
- * shared는 entities를 참조할 수 없어(FSD) 목업 쪽에 따로 적어 둔다.
- */
-type MockEventStatus = 'upcoming' | 'open' | 'closed' | 'drawn';
+import { apiClient } from '@shared/api/client';
 
 interface EventResponse {
     id: string;
     title: string;
-    status: MockEventStatus;
+    status: EventStatus;
     startsAt: string;
     endsAt: string;
     announceAt: string;
@@ -32,7 +28,7 @@ describe('이벤트 목업 핸들러', () => {
             const ends = new Date(event.endsAt).getTime();
             const announces = new Date(event.announceAt).getTime();
 
-            const expected: MockEventStatus =
+            const expected: EventStatus =
                 now < starts
                     ? 'upcoming'
                     : now < ends

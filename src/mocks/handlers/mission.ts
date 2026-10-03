@@ -1,10 +1,12 @@
 import { http, HttpResponse } from 'msw';
 
+import type { Mission } from '@entities/mission';
+
 import { env } from '@shared/config/env';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
-const mockMissions = [
+const mockMissions: Mission[] = [
     {
         id: 'msn-1',
         title: '알림 수신 동의하기',
