@@ -1,52 +1,23 @@
 import { ChevronDown, Menu } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 
 import { useSessionStore } from '@entities/user';
-import { VirtualClockTicker } from '@features/control-virtual-clock';
-import { VirtualUserSwitcher } from '@features/switch-virtual-user';
+import { VirtualClockTicker } from '@features/controlVirtualClock';
+import { VirtualUserSwitcher } from '@features/switchVirtualUser';
 import { cn } from '@shared/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
-import { NotificationBell } from '@widgets/notification-bell';
+import { NotificationBell } from '@widgets/notificationBell';
 
-import certifiedIcon from '../assets/footer/certified.png';
-import headsetIcon from '../assets/footer/headset.png';
-import privacyIcon from '../assets/footer/privacy.png';
-import teamIcon from '../assets/footer/team.png';
-import trophyIcon from '../assets/footer/trophy.png';
-import verifiedIcon from '../assets/footer/verified.png';
-import profileAvatar from '../assets/profile-avatar.png';
-import { USER_NAV_ITEMS } from './user-nav-items';
-
-// 피그마 홈 푸터 — 약관 링크(굵게 강조 2개)와 회사·연락처 안내 (UI 문구만, 링크 연결은 추후)
-const FOOTER_LINKS = [
-    { label: '이용약관' },
-    { label: '위치정보이용약관', strong: true },
-    { label: '개인정보처리방침', strong: true },
-    { label: '프라이버시센터' },
-    { label: '통신자료제공사실열람' },
-    { label: '청소년보호정책' },
-    { label: '이용자피해예방가이드' },
-    { label: '미환급금조회' },
-    { label: '명의도용방지서비스' },
-    { label: '장애현황' },
-    { label: '임직원 Happy Program' },
-];
-
-// 피그마 홈 푸터 하단 — 수상·인증 표시 (아이콘은 장식, 글자로 내용을 전달한다)
-const FOOTER_AWARDS = [
-    { icon: trophyIcon, title: '융합프로젝트 만족도지수', detail: '2026 응모 플랫폼 부문 1위' },
-    { icon: headsetIcon, title: '얻어가유 고객센터', detail: '품질지수 최우수 조 선정' },
-    { icon: teamIcon, title: '한국팀플협회 협업지수', detail: '8인 팀워크혁신상 수상' },
-    { icon: certifiedIcon, title: '한국추첨공정성지수', detail: '공정추첨 우수 플랫폼 선정' },
-    { icon: verifiedIcon, title: '동일 조건 재추첨 검증', detail: '추첨 결과 재현율 100%' },
-    { icon: privacyIcon, title: '당첨자 개인정보 마스킹', detail: '안심 발표 시스템 적용' },
-];
+import profileAvatar from './assets/profile-avatar.png';
+import { FOOTER_AWARDS, FOOTER_LINKS } from './footerData';
+import { USER_NAV_ITEMS } from './userNavItems';
 
 export function UserLayout() {
     const navRef = useRef<HTMLElement>(null);
     const { pathname } = useLocation();
-    const user = useSessionStore((state) => state.user);
+    // UserGuard가 미선택 상태를 먼저 걸러 주므로 여기서는 항상 있다
+    const user = useSessionStore((state) => state.user)!;
     const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
     const [menuOpen, setMenuOpen] = useState(false);
     // 맨 위에서는 피그마처럼 헤더 아래 선 없이, 스크롤하면 연한 그림자로 본문과 구분한다
@@ -81,11 +52,6 @@ export function UserLayout() {
         window.addEventListener('resize', update);
         return () => window.removeEventListener('resize', update);
     }, [pathname]);
-
-    // 가상 사용자 미선택 상태에서는 로그인 화면으로 보낸다 (시연 로그인 흐름)
-    if (!user) {
-        return <Navigate to="/login" replace />;
-    }
 
     return (
         <div className="bg-surface-page flex min-h-screen flex-col">

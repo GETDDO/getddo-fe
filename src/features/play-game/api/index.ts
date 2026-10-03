@@ -1,1 +1,0 @@
-export { useSubmitGamePlay } from './queries';

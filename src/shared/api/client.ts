@@ -2,9 +2,13 @@ import type { AxiosError } from 'axios';
 
 import axios from 'axios';
 
-import type { ApiErrorBody } from '@shared/types/api';
-
 import { env } from '@shared/config/env';
+
+// 공통 API 에러 응답 — FE-BE 연동 계약(docs/product-context.md '프론트엔드 연동 계약') 확정 시 갱신한다
+interface ApiErrorBody {
+    code: string;
+    message: string;
+}
 
 export class ApiError extends Error {
     readonly code: string;

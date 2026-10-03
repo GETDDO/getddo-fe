@@ -1,4 +1,4 @@
-const KST_TIME_ZONE = 'Asia/Seoul';
+export const KST_TIME_ZONE = 'Asia/Seoul';
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 /** UTC Date/ISO 문자열을 KST 기준으로 포맷한다 (기본: 2026. 9. 17. 오후 3:00) */

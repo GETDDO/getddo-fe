@@ -1,3 +1,4 @@
-export { useVirtualUsers } from './api/queries';
+export { useVirtualUsers, VIRTUAL_USERS_KEY } from './api/queries';
 export { useSessionStore } from './model/session';
+export { userRoleSchema, virtualUserSchema } from './model/types';
 export type { UserRole, VirtualUser } from './model/types';

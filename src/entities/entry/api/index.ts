@@ -1,1 +1,0 @@
-export { useMyEntries } from './queries';

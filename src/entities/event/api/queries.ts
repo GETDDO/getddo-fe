@@ -7,9 +7,11 @@ import { eventSchema } from '../model/types';
 
 const eventListSchema = z.array(eventSchema);
 
+export const EVENTS_KEY = ['events'] as const;
+
 export function useEventList() {
     return useQuery({
-        queryKey: ['events', 'list'],
+        queryKey: [...EVENTS_KEY, 'list'],
         queryFn: async () => {
             const { data } = await apiClient.get<unknown>('/events');
             return eventListSchema.parse(data);
@@ -21,7 +23,7 @@ export function useEventList() {
 
 export function useEvent(eventId: string) {
     return useQuery({
-        queryKey: ['events', 'detail', eventId],
+        queryKey: [...EVENTS_KEY, 'detail', eventId],
         queryFn: async () => {
             const { data } = await apiClient.get<unknown>(`/events/${eventId}`);
             return eventSchema.parse(data);

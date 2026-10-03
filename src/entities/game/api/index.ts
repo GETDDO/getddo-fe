@@ -1,1 +1,0 @@
-export { useGameList } from './queries';

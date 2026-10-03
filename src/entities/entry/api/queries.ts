@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 
 import { apiClient } from '@shared/api/client';
+import { envelopeSchema } from '@shared/api/envelopeSchema';
 
 import { entrySchema } from '../model/types';
 
@@ -13,8 +14,7 @@ const myEntryPageSchema = z.object({
     totalElements: z.number().int(),
 });
 
-const envelope = <T extends z.ZodTypeAny>(dataSchema: T) =>
-    z.object({ success: z.literal(true), data: dataSchema });
+export const ENTRIES_KEY = ['entries'] as const;
 
 const ENTRIES_PAGE_SIZE = 50;
 
@@ -24,7 +24,7 @@ const ENTRIES_PAGE_SIZE = 50;
  */
 export function useMyEntries() {
     return useQuery({
-        queryKey: ['entries', 'me'],
+        queryKey: [...ENTRIES_KEY, 'me'],
         queryFn: async () => {
             const entries = [];
             // 페이지는 1부터 시작한다 (spec 공통 계약)
@@ -32,7 +32,7 @@ export function useMyEntries() {
                 const { data } = await apiClient.get<unknown>('/users/me/entries', {
                     params: { page, size: ENTRIES_PAGE_SIZE },
                 });
-                const parsed = envelope(myEntryPageSchema).parse(data).data;
+                const parsed = envelopeSchema(myEntryPageSchema).parse(data).data;
                 entries.push(...parsed.items);
                 if (entries.length >= parsed.totalElements || parsed.items.length === 0) break;
             }
