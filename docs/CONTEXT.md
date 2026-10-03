@@ -24,7 +24,7 @@
 | 추첨·발표             | `DrawResult` (`entities/draw-result`)       | 유형 무관하게 마감 + 5분 검토 후 **자동** 최초 발표 (`getddo-spec` ADR-009). 수동 최초 추첨·발표 승인은 없다. 가중치 적용 이벤트의 가중치는 실제 차감한 응모권 누적 수와 동일한 선형 — 별도 가중치 상한·배율 없음(ADR-013)                                      |
 | 재추첨                | redraw (`features/run-redraw`)              | 당첨 취소 건에 한해 관리자 수동 실행. 최초 추첨과 연결 관계를 보존하고 덮어쓰지 않는다                                                                                                                                                                          |
 | 당첨자                | `Winner` (`entities/winner`)                | `userId`, `rank`, `prizeName`. 발표 시 마스킹한 이름·전화번호·이메일로 표시                                                                                                                                                                                     |
-| 출석                  | attendance (`features/check-attendance`)    | 사용자 단위 일일 체크. 초기 1일 1장 지급, **매일 00:00 KST 초기화**                                                                                                                                                                                             |
+| 출석                  | attendance (`features/checkAttendance`)     | 사용자 단위 일일 체크. 초기 1일 1장 지급, **매일 00:00 KST 초기화**                                                                                                                                                                                             |
 | 미션                  | `Mission` (`entities/mission`)              | 서비스 공통 퀴즈·설문. 사용자당 미션별 1회 달성·보상. 연속 출석은 미션이 아닌 출석 도메인, 주간 미션은 보류                                                                                                                                                     |
 | 게임                  | `Game` (`entities/game`)                    | 횟수 제한 없이 플레이 가능하나 보상은 사용자별·게임별 하루 1회 1장. 점수는 서버가 판정                                                                                                                                                                          |
 | 어뷰징 검토           | abuse review (`features/review-abuse-case`) | 탐지→관리자 검토(참여 허용/추첨 대상 제외). 탐지만으로 자동 제외하지 않는다                                                                                                                                                                                     |
@@ -60,7 +60,7 @@
 - **업무 기준일·기준월은 KST다** — 일일 출석·게임 보상은 매일 00:00 KST에, 연속 출석·응모권 귀속월·만료는 매월 1일 00:00 KST 경계를 따른다. 관리자가 화면에 입력하는 운영 시각도 KST로 해석한다
 - **마감·발표 판정은 서버 시각 기준**이다. 마감 전 접수 완료된 응모는 응답이 늦게 도착해도 유효하고, 클라이언트 시각으로 마감 여부를 판정해 버튼을 막는 로직을 만들지 않는다 (표시용 카운트다운은 허용)
 - 마감 후 발표 카운트다운도 **서버가 제공한 발표 예정 시각** 기준으로 계산한다 — 새로고침·재접속으로 5분이 리셋되지 않아야 하고, 타이머 종료만으로 미공개 결과를 노출하지 않는다
-- 시간 판정이 필요한 로직은 `new Date()`를 직접 호출하지 않고 `useVirtualClock().now()`(`shared/lib/virtual-clock`)를 경유한다 — 관리자 시간 여행(시연)이 오버라이드할 수 있어야 하기 때문이다. 순수 함수는 `now`를 인자로 받는다(`shared/lib/date` 참조)
+- 시간 판정이 필요한 로직은 `new Date()`를 직접 호출하지 않고 `useVirtualClock().now()`(`shared/lib/virtualClock`)를 경유한다 — 관리자 시간 여행(시연)이 오버라이드할 수 있어야 하기 때문이다. 순수 함수는 `now`를 인자로 받는다(`shared/lib/date` 참조)
 
 ## 중복 방지·멱등키
 
@@ -99,6 +99,6 @@
 - 당첨자 마스킹 세부 규칙 — 담당자 결정 대기
 - 마감 + 5분 자동 발표가 장애·정합성 오류로 실패했을 때의 사용자 문구·복구·취소 기준 — 미확정
 - 배너 이미지 형식·용량 제한 — 담당자 확정 대기
-- 사용자 문맥 헤더(`X-User-ID`·`X-User-Membership`)의 공통 처리 위치와 `INACTIVE` 사용자 처리·테스트 사용자 목록·시드 제공 방식 — BE 공통 처리 위치는 담당자 후속 작업 (`pending-decisions.md`의 "사용자 문맥과 알림 API", N01~N03 확정 범위에는 미포함). FE 측 `X-User-ID` 주입은 `src/app/setup/user-context-header.ts`의 `apiClient` 요청 인터셉터가 담당한다
+- 사용자 문맥 헤더(`X-User-ID`·`X-User-Membership`)의 공통 처리 위치와 `INACTIVE` 사용자 처리·테스트 사용자 목록·시드 제공 방식 — BE 공통 처리 위치는 담당자 후속 작업 (`pending-decisions.md`의 "사용자 문맥과 알림 API", N01~N03 확정 범위에는 미포함). FE 측 `X-User-ID` 주입은 `src/app/config/sessionSync.ts`의 `apiClient` 요청 인터셉터가 담당한다
 
-MSW 목업(`shared/api/mocks/handlers/`)은 계약의 임시 구현이다. Zod 스키마(`entities/*/model/`)가 검증 기준이며, 도메인 정책의 원본은 `../getddo-spec/02-domain/`에 있다.
+MSW 목업(`src/mocks/handlers/`)은 계약의 임시 구현이다. Zod 스키마(`entities/*/model/`)가 검증 기준이며, 도메인 정책의 원본은 `../getddo-spec/02-domain/`에 있다.

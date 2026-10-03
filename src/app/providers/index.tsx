@@ -2,9 +2,9 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
 
-import { queryClient } from '@shared/api/query-client';
-import { useUiSettingsStore } from '@shared/lib/ui-settings';
-import { VirtualClockProvider } from '@shared/lib/virtual-clock';
+import { queryClient } from '@shared/api/queryClient';
+import { useUiSettingsStore } from '@shared/lib/uiSettings';
+import { VirtualClockProvider } from '@shared/lib/virtualClock';
 import { Toaster } from '@shared/ui/sonner';
 
 import { router } from '../routes';

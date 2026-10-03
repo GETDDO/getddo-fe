@@ -1,3 +1,3 @@
-export * from './model';
-export * from './api';
-export * from './ui';
+export * from './model/types';
+export { ENTRIES_KEY, useMyEntries } from './api/queries';
+export { MyEntryItem } from './ui/MyEntryItem';

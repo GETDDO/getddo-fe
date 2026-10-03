@@ -2,7 +2,7 @@ import { Gift } from 'lucide-react';
 import { useState } from 'react';
 
 import { toKst } from '@shared/lib/date';
-import { useVirtualClock } from '@shared/lib/virtual-clock';
+import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Badge } from '@shared/ui/badge';
 import { Card } from '@shared/ui/card';
 

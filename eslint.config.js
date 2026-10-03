@@ -6,7 +6,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-const SLICED_LAYERS = ['pages', 'widgets', 'features', 'entities'];
+const SLICED_LAYERS = ['widgets', 'features', 'entities'];
 
 // 슬라이스 내부 파일 직접 import 차단 셀렉터 — 슬라이스 루트의 index.ts(x)만 공개 API다.
 // '*/**'가 하위 폴더의 모든 파일(index.ts 포함)을, '!(index.ts|index.tsx)'가 루트의 index 외 파일을 차단한다.
@@ -19,14 +19,34 @@ const DEEP_IMPORT_OF_SLICE = {
         },
     },
 };
+// pages는 배럴(index.ts) 없이 슬라이스 루트의 XxxPage.tsx를 라우트가 직접 import한다.
+// 대신 ui/·model/·lib/ 등 하위 세그먼트 파일의 외부 참조만 차단한다 ('*/**'는 하위 폴더 파일만 매칭).
+const DEEP_IMPORT_OF_PAGE_SLICE = {
+    to: {
+        element: { type: 'pages', fileInternalPath: '*/**' },
+    },
+};
 // FSD 레이어 의존 방향: app → pages → widgets → features → entities → shared
 // 같은 레이어의 다른 슬라이스 간 참조는 allow 목록에 자기 자신이 없어 자동 차단된다.
 // 정책 내부에서는 disallow가 allow보다 우선하므로 딥 임포트 차단을 각 정책에 둔다.
 const FSD_DEPENDENCY_POLICIES = [
     {
         from: { element: { type: 'app' } },
-        disallow: [DEEP_IMPORT_OF_SLICE],
-        allow: [{ to: { element: { types: { anyOf: ['app', ...SLICED_LAYERS, 'shared'] } } } }],
+        disallow: [DEEP_IMPORT_OF_SLICE, DEEP_IMPORT_OF_PAGE_SLICE],
+        allow: [
+            {
+                to: {
+                    element: {
+                        types: { anyOf: ['app', 'pages', ...SLICED_LAYERS, 'shared', 'mocks'] },
+                    },
+                },
+            },
+        ],
+    },
+    {
+        // 목업은 서버 응답을 흉내 내는 인프라 — entities 스키마·타입과 shared를 참조해 계약이 한 군데가 된다
+        from: { element: { type: 'mocks' } },
+        allow: [{ to: { element: { types: { anyOf: ['mocks', 'entities', 'shared'] } } } }],
     },
     {
         from: { element: { type: 'pages' } },
@@ -87,6 +107,8 @@ export default tseslint.config(
                 { type: 'features', pattern: 'src/features/*' },
                 { type: 'entities', pattern: 'src/entities/*' },
                 { type: 'shared', pattern: 'src/shared/*' },
+                // src/mocks는 FSD 레이어가 아닌 독립 요소 — 슬라이스 공개 API 규칙 대상이 아니다
+                { type: 'mocks', pattern: 'src/mocks/*' },
             ],
             // @app/@pages/... 경로 별칭을 boundaries가 해석할 수 있도록 tsconfig paths 기반 resolver 사용
             'import/resolver': {
@@ -113,7 +135,10 @@ export default tseslint.config(
                     type: 'alphabetical',
                     order: 'asc',
                     newlinesBetween: 1,
-                    internalPattern: ['^@/', '^@(app|pages|widgets|features|entities|shared)(/|$)'],
+                    internalPattern: [
+                        '^@/',
+                        '^@(app|pages|widgets|features|entities|shared|mocks)(/|$)',
+                    ],
                 },
             ],
             // FSD: 레이어 의존 방향 + 같은 레이어 슬라이스 간 참조 차단 + 슬라이스 공개 API(index.ts) 강제
@@ -144,8 +169,9 @@ export default tseslint.config(
         rules: { 'no-restricted-syntax': 'off' },
     },
     {
-        // shadcn 생성물(variant 상수와 컴포넌트를 함께 export하는 표준 패턴)과 배럴 파일은 fast-refresh 경고 제외
-        files: ['src/shared/ui/**', '**/index.ts', '**/index.tsx'],
+        // shadcn 생성물(variant 상수와 컴포넌트를 함께 export하는 표준 패턴), 배럴 파일,
+        // 라우트 정의 파일(lazy 페이지 래퍼와 RouteObject를 함께 둠)은 fast-refresh 경고 제외
+        files: ['src/shared/ui/**', '**/index.ts', '**/index.tsx', 'src/app/routes/**'],
         rules: { 'react-refresh/only-export-components': 'off' },
     },
     {

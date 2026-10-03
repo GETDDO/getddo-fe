@@ -7,7 +7,7 @@ export default mergeConfig(
     defineConfig({
         test: {
             environment: 'jsdom',
-            setupFiles: ['./src/shared/test/setup.ts'],
+            setupFiles: ['./src/shared/test/setup.ts', './src/mocks/testSetup.ts'],
             globals: true,
             css: true,
             // .env는 커밋하지 않아 CI에는 없다. 값이 비면 목 핸들러가 등록하는 경로와
