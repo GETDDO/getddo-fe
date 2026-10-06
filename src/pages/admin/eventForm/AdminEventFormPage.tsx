@@ -2,85 +2,27 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { z } from 'zod';
-
-import type { EventWriteRequest } from '@entities/event';
 
 import { EVENT_TYPE_LABEL, MEMBERSHIP_LABEL, useAdminEvent } from '@entities/event';
 import { useCreateEvent, useUpdateEvent } from '@features/manageEvent';
-import { kstInputToUtcIso, utcIsoToKstInput } from '@shared/lib/date';
+import { ApiError } from '@shared/api/client';
+import { utcIsoToKstInput } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
 import { Input } from '@shared/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
+
+import type { EventFormInput, EventFormValues } from './lib/eventFormValues';
+
+import { eventFormSchema, eventFormToRequest, eventToFormValues } from './lib/eventFormValues';
 
 const FIELD_LABEL = 'text-body-bold text-fg-primary';
 const FIELD_ERROR = 'text-destructive text-caption';
 const INPUT_LIKE =
     'border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-lg border bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:ring-3 disabled:opacity-50';
 
-const prizeSchema = z.object({
-    rank: z.coerce.number().int().min(1, '등수는 1 이상이어야 합니다'),
-    name: z.string().trim().min(1, '경품명을 입력하세요'),
-    winnerCount: z.coerce.number().int().min(1, '당첨 인원은 1명 이상이어야 합니다'),
-    description: z.string(),
-    imageKey: z.string(),
-});
-
-// 관리자 입력 시각은 KST로 해석한다 — datetime-local 값을 그대로 받고 제출 시 UTC로 변환 (spec 공통 시간 기준)
-const formSchema = z
-    .object({
-        title: z.string().trim().min(1, '이벤트 이름을 입력하세요'),
-        description: z.string().trim().min(1, '설명을 입력하세요'),
-        imageKey: z.string(),
-        eventType: z.enum(['NO_TICKET', 'TICKET']),
-        weightingEnabled: z.boolean(),
-        // 상한 없음은 빈 입력으로 둔다 (월말 소진용 이벤트)
-        maxTicketsPerUser: z.string(),
-        membershipRule: z.enum(['excellent', 'vip', 'vvip']),
-        startsAt: z.string().min(1, '시작 시각을 입력하세요'),
-        endsAt: z.string().min(1, '마감 시각을 입력하세요'),
-        prizes: z
-            .array(prizeSchema)
-            .min(1, '경품은 최소 1개 필요합니다')
-            .refine(
-                (prizes) => new Set(prizes.map((p) => p.rank)).size === prizes.length,
-                '같은 등수에 경품이 중복됐습니다',
-            ),
-    })
-    .refine((v) => v.endsAt > v.startsAt, {
-        message: '마감 시각은 시작 시각 이후여야 합니다',
-        path: ['endsAt'],
-    });
-
-// coerce를 쓰는 경품 숫자 필드 때문에 입력(z.input)과 출력(z.output) 타입이 다르다 — RHF는 입력 기준으로 폼을 잡는다
-type FormInput = z.input<typeof formSchema>;
-type FormValues = z.output<typeof formSchema>;
-
-const toBody = (v: FormValues): EventWriteRequest => ({
-    title: v.title.trim(),
-    description: v.description.trim(),
-    imageKey: v.imageKey.trim() || null,
-    eventType: v.eventType,
-    weightingEnabled: v.eventType === 'TICKET' && v.weightingEnabled,
-    maxTicketsPerUser:
-        v.eventType === 'TICKET' && v.weightingEnabled && v.maxTicketsPerUser.trim() !== ''
-            ? Number(v.maxTicketsPerUser)
-            : null,
-    membershipRule: v.membershipRule,
-    startsAt: kstInputToUtcIso(v.startsAt),
-    endsAt: kstInputToUtcIso(v.endsAt),
-    prizes: v.prizes.map((p) => ({
-        rank: p.rank,
-        name: p.name.trim(),
-        winnerCount: p.winnerCount,
-        description: p.description.trim() || null,
-        imageKey: p.imageKey.trim() || null,
-    })),
-});
-
 const MEMBERSHIP_OPTIONS = (
-    Object.entries(MEMBERSHIP_LABEL) as [FormValues['membershipRule'], string][]
+    Object.entries(MEMBERSHIP_LABEL) as [EventFormValues['membershipRule'], string][]
 ).map(([value, label]) => ({ value, label: `${label} 이상` }));
 
 export function AdminEventFormPage() {
@@ -97,30 +39,9 @@ export function AdminEventFormPage() {
         control,
         handleSubmit,
         formState: { errors },
-    } = useForm<FormInput, undefined, FormValues>({
-        resolver: zodResolver(formSchema),
-        values: event
-            ? {
-                  title: event.title,
-                  description: event.description,
-                  imageKey: event.imageKey ?? '',
-                  eventType: event.eventType,
-                  weightingEnabled: event.weightingEnabled,
-                  maxTicketsPerUser:
-                      event.maxTicketsPerUser === null ? '' : String(event.maxTicketsPerUser),
-                  membershipRule: event.membershipRule,
-                  startsAt: utcIsoToKstInput(event.startsAt),
-                  endsAt: utcIsoToKstInput(event.endsAt),
-                  prizes: event.prizes.map((p) => ({
-                      rank: p.rank,
-                      name: p.name,
-                      winnerCount: p.winnerCount,
-                      description: p.description ?? '',
-                      // 응답은 imageUrl, 쓰기 요청은 imageKey라 초기값은 imageUrl에서 가져온다 (spec 초안 비대칭)
-                      imageKey: p.imageUrl ?? '',
-                  })),
-              }
-            : undefined,
+    } = useForm<EventFormInput, undefined, EventFormValues>({
+        resolver: zodResolver(eventFormSchema),
+        values: event ? eventToFormValues(event) : undefined,
         defaultValues: {
             title: '',
             description: '',
@@ -135,7 +56,12 @@ export function AdminEventFormPage() {
         },
     });
 
-    const { fields, append, remove } = useFieldArray({ control, name: 'prizes' });
+    // 경품 데이터의 id(수정 시 기존 경품 식별)와 RHF 내부 키가 겹치지 않게 keyName을 바꾼다
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: 'prizes',
+        keyName: 'fieldKey',
+    });
     const eventType = useWatch({ control, name: 'eventType' });
     const weightingEnabled = useWatch({ control, name: 'weightingEnabled' });
     const showTicketOptions = eventType === 'TICKET';
@@ -160,7 +86,7 @@ export function AdminEventFormPage() {
 
     const submit = (e: React.FormEvent) => {
         void handleSubmit((values) => {
-            const body = toBody(values);
+            const body = eventFormToRequest(values);
             const onSuccess = () => {
                 toast.success(isEdit ? '이벤트를 수정했습니다' : '이벤트를 등록했습니다');
                 void navigate('/admin/events');
@@ -300,6 +226,11 @@ export function AdminEventFormPage() {
                                     placeholder="비우면 상한 없음"
                                     {...register('maxTicketsPerUser')}
                                 />
+                                {errors.maxTicketsPerUser && (
+                                    <p className={FIELD_ERROR}>
+                                        {errors.maxTicketsPerUser.message}
+                                    </p>
+                                )}
                             </div>
                         )}
                     </div>
@@ -363,7 +294,7 @@ export function AdminEventFormPage() {
 
                 {fields.map((field, index) => (
                     <div
-                        key={field.id}
+                        key={field.fieldKey}
                         className="border-border-default flex flex-col gap-3 rounded-xl border p-4"
                     >
                         <div className="flex items-center justify-between">
@@ -432,7 +363,9 @@ export function AdminEventFormPage() {
 
             {mutation.isError && (
                 <p className={cn(FIELD_ERROR, 'text-body-sm')}>
-                    저장에 실패했습니다. 입력값과 이벤트 상태를 확인한 뒤 다시 시도해주세요.
+                    {mutation.error instanceof ApiError
+                        ? mutation.error.message
+                        : '저장에 실패했습니다. 입력값과 이벤트 상태를 확인한 뒤 다시 시도해주세요.'}
                 </p>
             )}
 

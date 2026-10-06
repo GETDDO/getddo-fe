@@ -104,6 +104,7 @@
 - 당첨자 마스킹 세부 규칙 — 담당자 결정 대기
 - 최초 발표 관련 후속 계약(2026-10-05 정책 반영 후에도 남은 항목) — 최초 공개 전 재추첨의 관리자 확인 API, 발표 지연 안내 문구·새 예정 시각 제공 여부, 발표 후 취소~갱신 사이의 취소자 임시 표시와 본인 중간 결과, 장애·정합성 오류의 복구·재시도·취소 전환 기준, 취소 요청의 `abuseCaseId` 연계 방식(어뷰징 검토 후 재논의)
 - 추첨·결과 API 초안이 2026-10-05 재구성됐다 — 사용자 E09는 `GET /events/{eventId}/my-result`, 관리자는 AD01~AD09(`GET /admin/draws`, `POST /admin/wins/{winId}/cancellations`, `POST /admin/cancellations/{id}/redraws` 등). `src/mocks/handlers/draw.ts`의 현재 경로(`POST /admin/events/:eventId/draw`, `POST /admin/draws/:drawResultId/redraw`)는 어느 초안과도 맞지 않는 구 목업이라 추첨 관련 구현 시 새 초안으로 갱신한다. 가중치 계산도 `ticketCount` 그대로에서 등급별 장수×장당 가중치 합산으로 바뀌었다(ADR-014) — `ticketCount`(실제 장수)와 `weight`를 구분해 반영한다
+- 관리자 이벤트 계약 — `entities/event`의 `AdminEvent` 모델과 `mocks/handlers/adminEvent.ts`는 `05-api/event.md`의 AE01~AE08 검토 대기 초안을 따른다. 확정되면 DTO·상태 운영 응답을 조정한다
 - 배너 이미지 형식·용량 제한 — 담당자 확정 대기
 - 사용자 문맥 헤더(`X-User-ID`·`X-User-Membership`)의 공통 처리 위치와 `INACTIVE` 사용자 처리·테스트 사용자 목록·시드 제공 방식 — BE 공통 처리 위치는 담당자 후속 작업 (`pending-decisions.md`의 "사용자 문맥과 알림 API", N01~N03 확정 범위에는 미포함). FE 측 `X-User-ID` 주입은 `src/app/config/sessionSync.ts`의 `apiClient` 요청 인터셉터가 담당한다
 - 등급 응모권(ADR-014, 상태 제안) — 게임·미션 보상의 무작위 등급 지급과 등급별 가중치(브론즈 1·실버 3·골드 5)만 확정됐다. 출석 보상의 등급 적용, 기존 무등급 응모권 전환, 응모 시 차감 등급 선택 주체와 계약, 반환 시 등급 보존은 미결정이다. 등급별 잔액·지급 결과의 공개 API 필드는 담당자 검토 후 반영되므로 임의로 필드를 만들지 않는다 (`pending-decisions.md`의 "등급 응모권")
