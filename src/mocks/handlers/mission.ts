@@ -1,36 +1,413 @@
 import { http, HttpResponse } from 'msw';
 
-import type { Mission } from '@entities/mission';
+import type {
+    MissionAnswer,
+    MissionDetail,
+    MissionQuestion,
+    MissionSubmissionResult,
+    MissionSummary,
+} from '@entities/mission';
 
 import { env } from '@shared/config/env';
+import { IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
+
+import { mockNow } from '../now';
+import { recordMockTicketGrant } from './ticket';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
-const mockMissions: Mission[] = [
+const okBody = (data: unknown) => ({
+    success: true,
+    code: 'SUCCESS',
+    message: '성공했습니다.',
+    data,
+});
+
+const failBody = (code: string, message: string) => ({
+    success: false,
+    code,
+    message,
+    data: null,
+});
+
+const ok = (data: unknown, status = 200) => HttpResponse.json(okBody(data), { status });
+
+const fail = (status: number, code: string, message: string) =>
+    HttpResponse.json(failBody(code, message), { status });
+
+/** 정답 정보는 서버만 안다 — 상세 응답(M02)에서 제외하는 필드 */
+interface MockQuestion extends MissionQuestion {
+    correctOptionId?: string;
+    correctAnswer?: string;
+}
+
+interface MockMission extends Omit<MissionDetail, 'questions'> {
+    questions: MockQuestion[];
+}
+
+const mockMissions: MockMission[] = [
     {
-        id: 'msn-1',
-        title: '알림 수신 동의하기',
-        type: 'survey',
-        rewardTickets: 1,
-        status: 'available',
+        id: 'msn-survey-1',
+        title: '서비스 이용 경험 설문',
+        description:
+            '응모 이벤트 서비스 이용 경험을 묻는 설문입니다. 필수 문항에 모두 답하면 완료됩니다.',
+        missionType: 'SURVEY',
+        startsAt: '2026-10-01T00:00:00Z',
+        endsAt: '2026-12-31T14:59:59Z',
+        rewardTicketCount: 1,
+        questions: [
+            {
+                id: 'q-survey-1-1',
+                questionType: 'SINGLE_CHOICE',
+                questionText: '이벤트 결과 알림을 받고 싶은 채널은 무엇인가요?',
+                required: true,
+                displayOrder: 1,
+                options: [
+                    { id: 'opt-survey-1-1', optionText: '앱 푸시', displayOrder: 1 },
+                    { id: 'opt-survey-1-2', optionText: '문자 메시지', displayOrder: 2 },
+                    { id: 'opt-survey-1-3', optionText: '받지 않는다', displayOrder: 3 },
+                ],
+            },
+            {
+                id: 'q-survey-1-2',
+                questionType: 'FREE_TEXT',
+                questionText: '서비스에서 개선을 바라는 점이 있다면 자유롭게 적어주세요.',
+                required: false,
+                displayOrder: 2,
+                options: [],
+            },
+        ],
     },
-    { id: 'msn-2', title: '5G 퀴즈 풀기', type: 'quiz', rewardTickets: 2, status: 'available' },
-    { id: 'msn-3', title: '브랜드 퀴즈', type: 'quiz', rewardTickets: 1, status: 'available' },
     {
-        id: 'msn-4',
-        title: '9월 신규고객 웰컴 선물 증정!',
-        type: 'survey',
-        rewardTickets: 1,
-        status: 'completed',
+        id: 'msn-quiz-1',
+        title: '5G 상식 OX 퀴즈',
+        description: '5G 관련 상식을 확인하는 OX 퀴즈입니다. 정답을 맞혀야 완료됩니다.',
+        missionType: 'QUIZ',
+        startsAt: '2026-10-01T00:00:00Z',
+        endsAt: '2026-12-31T14:59:59Z',
+        rewardTicketCount: 1,
+        questions: [
+            {
+                id: 'q-quiz-1-1',
+                questionType: 'OX',
+                questionText: '5G는 LTE보다 데이터 전송 속도가 빠르다.',
+                required: true,
+                displayOrder: 1,
+                options: [
+                    { id: 'opt-quiz-1-o', optionText: 'O', displayOrder: 1 },
+                    { id: 'opt-quiz-1-x', optionText: 'X', displayOrder: 2 },
+                ],
+                correctOptionId: 'opt-quiz-1-o',
+            },
+        ],
+    },
+    {
+        id: 'msn-quiz-2',
+        title: '유플러스 브랜드 퀴즈',
+        description: '브랜드를 얼마나 알고 있는지 묻는 단답 퀴즈입니다.',
+        missionType: 'QUIZ',
+        startsAt: '2026-10-01T00:00:00Z',
+        endsAt: '2026-12-31T14:59:59Z',
+        rewardTicketCount: 2,
+        questions: [
+            {
+                id: 'q-quiz-2-1',
+                questionType: 'SHORT_ANSWER',
+                questionText: '유플러스의 공식 캐릭터 이름은 무엇일까요?',
+                required: true,
+                displayOrder: 1,
+                options: [],
+                // 단답 정규화(공백·대소문자 등)는 미션 완료·채점 세부 계약 미정 — 목업은 trim 후 단순 일치로 둔다
+                correctAnswer: '무너',
+            },
+        ],
+    },
+    {
+        id: 'msn-survey-done',
+        title: '9월 신규고객 웰컴 선물 설문',
+        description: '이미 완료된 미션의 화면 상태를 보여주는 시드입니다.',
+        missionType: 'SURVEY',
+        startsAt: '2026-09-01T00:00:00Z',
+        endsAt: '2026-12-31T14:59:59Z',
+        rewardTicketCount: 1,
+        questions: [
+            {
+                id: 'q-survey-done-1',
+                questionType: 'FREE_TEXT',
+                questionText: '가입을 결심한 이유를 알려주세요.',
+                required: true,
+                displayOrder: 1,
+                options: [],
+            },
+        ],
+    },
+    {
+        id: 'msn-quiz-ended',
+        title: '지난 시즌 퀴즈',
+        description: '운영 기간이 끝난 미션입니다. 제출하면 서버가 거절합니다.',
+        missionType: 'QUIZ',
+        startsAt: '2026-09-01T00:00:00Z',
+        endsAt: '2026-09-30T14:59:59Z',
+        rewardTicketCount: 1,
+        questions: [
+            {
+                id: 'q-quiz-ended-1',
+                questionType: 'OX',
+                questionText: '이 퀴즈는 종료됐다.',
+                required: true,
+                displayOrder: 1,
+                options: [
+                    { id: 'opt-ended-o', optionText: 'O', displayOrder: 1 },
+                    { id: 'opt-ended-x', optionText: 'X', displayOrder: 2 },
+                ],
+                correctOptionId: 'opt-ended-o',
+            },
+        ],
     },
 ];
 
+/** 멱등키에 묶인 처음 처리 결과 — 업무 거절(4xx)도 저장해 같은 재전송에 같은 응답을 돌려준다 (M03) */
+interface StoredAttempt {
+    userId: string;
+    missionId: string;
+    answersJson: string;
+    status: number;
+    body: unknown;
+}
+const attempts = new Map<string, StoredAttempt>();
+
+/** 사용자별 제출 기록 — 완료 여부(completed)와 재제출 시 기존 결과 반환에 쓴다 */
+const submissionsByUser = new Map<string, MissionSubmissionResult[]>();
+
+const userIdOf = (request: Request) => request.headers.get('X-User-ID') ?? 'anonymous';
+
+const seedCompletedSubmission = (): MissionSubmissionResult => ({
+    submissionId: 'sub-seed-survey-done',
+    missionId: 'msn-survey-done',
+    receivedAt: '2026-09-15T02:00:00Z',
+    isCompleted: true,
+    reward: {
+        claimId: 'claim-seed-survey-done',
+        ticketCount: 1,
+        grantedAt: '2026-09-15T02:00:00Z',
+        expiresAt: null,
+    },
+    createdAt: '2026-09-15T02:00:00Z',
+});
+
+const submissionsFor = (userId: string) => {
+    let list = submissionsByUser.get(userId);
+    if (!list) {
+        // 시연 첫 진입에도 완료 상태가 보이게 사용자별 시드 하나를 둔다
+        list = [seedCompletedSubmission()];
+        submissionsByUser.set(userId, list);
+    }
+    return list;
+};
+
+const hasCompleted = (userId: string, missionId: string) =>
+    submissionsFor(userId).some((s) => s.missionId === missionId && s.isCompleted);
+
+const summaryOf = (mission: MockMission, userId: string, now: string): MissionSummary => ({
+    id: mission.id,
+    title: mission.title,
+    imageUrl: mission.imageUrl ?? null,
+    missionType: mission.missionType,
+    startsAt: mission.startsAt,
+    endsAt: mission.endsAt,
+    rewardTicketCount: mission.rewardTicketCount,
+    completed: hasCompleted(userId, mission.id),
+    serverTime: now,
+});
+
+const detailOf = (mission: MockMission, userId: string): MissionDetail => ({
+    ...summaryOf(mission, userId, mockNow().toISOString()),
+    description: mission.description,
+    // 정답 필드는 사용자 응답에 포함하지 않는다 (미션 도메인 규칙)
+    questions: mission.questions.map((question) => ({
+        id: question.id,
+        questionType: question.questionType,
+        questionText: question.questionText,
+        required: question.required,
+        displayOrder: question.displayOrder,
+        options: question.options,
+    })),
+});
+
+const CHOICE_TYPES: MissionQuestion['questionType'][] = ['OX', 'SINGLE_CHOICE'];
+const TEXT_TYPES: MissionQuestion['questionType'][] = ['SHORT_ANSWER', 'FREE_TEXT'];
+
+const isValidAnswerFor = (question: MissionQuestion, answer: MissionAnswer) => {
+    if (CHOICE_TYPES.includes(question.questionType)) {
+        // 선택형은 선택지만 — 소속 선택지인지까지 확인한다
+        return (
+            answer.answerText === undefined &&
+            question.options.some((option) => option.id === answer.selectedOptionId)
+        );
+    }
+    if (TEXT_TYPES.includes(question.questionType)) {
+        // 서술형은 텍스트만 — 공백만 있는 답은 제출하지 않은 것으로 본다
+        return (
+            answer.selectedOptionId === undefined &&
+            typeof answer.answerText === 'string' &&
+            answer.answerText.trim().length > 0
+        );
+    }
+    return false;
+};
+
+const isCorrect = (question: MockQuestion, answer: MissionAnswer) => {
+    if (question.correctOptionId !== undefined) {
+        return answer.selectedOptionId === question.correctOptionId;
+    }
+    if (question.correctAnswer !== undefined) {
+        return answer.answerText?.trim() === question.correctAnswer;
+    }
+    // 정답이 없는 문항(설문 서술형)은 채점 대상이 아니다
+    return true;
+};
+
 export const missionHandlers = [
-    http.get(api('/missions'), () => HttpResponse.json(mockMissions)),
-    http.post(api('/missions/:missionId/submit'), ({ params }) =>
-        HttpResponse.json(
-            { missionId: params.missionId, status: 'completed', ticketsGranted: 1 },
-            { status: 201 },
-        ),
-    ),
+    // M01 초안 — Page<MissionSummary> 봉투, page·size는 1부터
+    http.get(api('/missions'), ({ request }) => {
+        const url = new URL(request.url);
+        const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
+        const size = Math.max(1, Number(url.searchParams.get('size')) || 20);
+        const now = mockNow().toISOString();
+        const userId = userIdOf(request);
+        const items = mockMissions
+            .map((mission) => summaryOf(mission, userId, now))
+            .slice((page - 1) * size, page * size);
+        return ok({ items, page, size, totalElements: mockMissions.length });
+    }),
+
+    // M02 초안 — 문항·선택지를 포함한 상세. 정답은 응답하지 않는다
+    http.get(api('/missions/:missionId'), ({ params, request }) => {
+        const mission = mockMissions.find((m) => m.id === String(params.missionId));
+        if (!mission) {
+            return fail(404, 'MISSION_NOT_FOUND', '미션을 찾을 수 없습니다');
+        }
+        return ok(detailOf(mission, userIdOf(request)));
+    }),
+
+    // M03 초안 — 멱등키 필수. 같은 키·같은 본문은 처음 결과를 돌려준다
+    http.post(api('/missions/:missionId/submissions'), async ({ params, request }) => {
+        const idempotencyKey = request.headers.get(IDEMPOTENCY_HEADER);
+        if (!idempotencyKey) {
+            return fail(400, 'COMMON-002', '멱등키가 필요합니다');
+        }
+        const userId = userIdOf(request);
+        const missionId = String(params.missionId);
+        const body = (await request.json().catch(() => null)) as {
+            answers?: unknown;
+        } | null;
+        const answersJson = JSON.stringify(body?.answers ?? null);
+
+        const attempt = attempts.get(idempotencyKey);
+        if (attempt) {
+            // 같은 키에 다른 내용이 오면 재시도가 아니라 다른 요청이다
+            if (
+                attempt.userId !== userId ||
+                attempt.missionId !== missionId ||
+                attempt.answersJson !== answersJson
+            ) {
+                return fail(
+                    409,
+                    'IDEMPOTENCY_CONFLICT',
+                    '같은 멱등키로 다른 제출을 보낼 수 없습니다',
+                );
+            }
+            const status = attempt.status === 201 ? 200 : attempt.status;
+            return HttpResponse.json(attempt.body as object, { status });
+        }
+
+        // 여기서부터는 키에 처음 묶이는 새 요청 — 업무 거절도 결과를 키에 저장한다
+        const remember = (status: number, responseBody: unknown) => {
+            attempts.set(idempotencyKey, {
+                userId,
+                missionId,
+                answersJson,
+                status,
+                body: responseBody,
+            });
+            return HttpResponse.json(responseBody as object, { status });
+        };
+
+        const mission = mockMissions.find((m) => m.id === missionId);
+        if (!mission) {
+            return remember(404, failBody('MISSION_NOT_FOUND', '미션을 찾을 수 없습니다'));
+        }
+
+        if (!Array.isArray(body?.answers)) {
+            return remember(400, failBody('COMMON-002', '답변 목록이 올바르지 않습니다'));
+        }
+        const answers = body.answers as MissionAnswer[];
+
+        // 문항 소속·중복·유형별 필드 검증 — 선택형은 선택지만, 서술형은 텍스트만 받는다
+        const questionIds = new Set(answers.map((a) => a?.questionId));
+        if (questionIds.size !== answers.length) {
+            return remember(400, failBody('COMMON-002', '같은 문항에 중복으로 답할 수 없습니다'));
+        }
+        const answeredValid = answers.every((answer) => {
+            const question = mission.questions.find((q) => q.id === answer?.questionId);
+            return question !== undefined && isValidAnswerFor(question, answer);
+        });
+        if (!answeredValid) {
+            return remember(400, failBody('COMMON-002', '답변 형식이 문항과 맞지 않습니다'));
+        }
+
+        const missingRequired = mission.questions.some(
+            (q) => q.required && !answers.some((a) => a.questionId === q.id),
+        );
+        if (missingRequired) {
+            return remember(400, failBody('COMMON-002', '필수 문항에 모두 답해야 합니다'));
+        }
+
+        // 제출 인정 시각은 서버(가상 시계) 기준 — [startsAt, endsAt) 밖은 거절한다
+        const now = mockNow();
+        if (now < new Date(mission.startsAt) || now >= new Date(mission.endsAt)) {
+            return remember(409, failBody('MISSION_NOT_ACTIVE', '미션 운영 기간이 아닙니다'));
+        }
+
+        // 완료 후 재제출은 기존 완료 결과를 반환한다 — 답변을 덮어쓰거나 보상을 중복 지급하지 않는다
+        const existing = submissionsFor(userId).find(
+            (s) => s.missionId === missionId && s.isCompleted,
+        );
+        if (existing) {
+            return remember(200, okBody(existing));
+        }
+
+        // 다문항 완료·채점 방식은 세부 계약 미정 — 목업은 모든 문항이 정답일 때만 완료로 둔다
+        const isCompleted =
+            mission.missionType === 'SURVEY'
+                ? true
+                : mission.questions.every((q) => {
+                      const answer = answers.find((a) => a.questionId === q.id);
+                      return answer !== undefined && isCorrect(q, answer);
+                  });
+
+        const receivedAt = now.toISOString();
+        const result: MissionSubmissionResult = {
+            submissionId: crypto.randomUUID(),
+            missionId,
+            receivedAt,
+            isCompleted,
+            reward: isCompleted
+                ? {
+                      claimId: crypto.randomUUID(),
+                      ticketCount: mission.rewardTicketCount,
+                      grantedAt: receivedAt,
+                      expiresAt: null,
+                  }
+                : null,
+            createdAt: receivedAt,
+        };
+
+        if (isCompleted) {
+            recordMockTicketGrant(userId, mission.rewardTicketCount, `${mission.title} 보상`);
+        }
+        submissionsFor(userId).unshift(result);
+
+        return remember(201, okBody(result));
+    }),
 ];
