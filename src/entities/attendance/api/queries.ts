@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@shared/api/client';
+import { queryPresets } from '@shared/api/queryPresets';
 
 import { attendancePolicySchema, attendanceStatusSchema } from '../model/types';
 
@@ -14,6 +15,8 @@ export const ATTENDANCE_POLICY_API_PATH = `${ATTENDANCES_API_PATH}/policy`;
 
 export function useAttendanceStatus() {
     return useQuery({
+        // 화면을 열어 둔 채 기준일(00:00 KST)이 지나면 어제의 attended가 남아 버튼이 계속 비활성된다 — 주기적으로 다시 받는다
+        ...queryPresets.realtime,
         queryKey: ATTENDANCE_STATUS_KEY,
         queryFn: async () => {
             const { data } = await apiClient.get<unknown>(ATTENDANCE_TODAY_API_PATH);
