@@ -114,8 +114,8 @@ describe('eventFormToRequest', () => {
 });
 
 describe('eventFormSchema', () => {
-    it('가중치 적용 상한에 0 이하·비정수 문자열을 거절한다', () => {
-        for (const bad of ['0', '-1', '1.5', 'abc']) {
+    it('가중치 적용 상한에 0 이하·6 이상·비정수 문자열을 거절한다', () => {
+        for (const bad of ['0', '-1', '6', '10', '1.5', 'abc']) {
             const result = eventFormSchema.safeParse({
                 ...base,
                 eventType: 'TICKET',

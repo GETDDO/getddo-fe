@@ -23,12 +23,12 @@ export const eventFormSchema = z
         imageKey: z.string(),
         eventType: z.enum(['NO_TICKET', 'TICKET']),
         weightingEnabled: z.boolean(),
-        // 상한 없음(월말 소진용)은 빈 입력으로 둔다
+        // 상한 없음(월말 소진용)은 빈 입력으로 둔다 — 일반 이벤트는 ADR-010의 사용자당 누적 5장 상한까지
         maxTicketsPerUser: z
             .string()
             .refine(
-                (s) => s.trim() === '' || /^[1-9]\d*$/.test(s.trim()),
-                '1 이상의 정수를 입력하세요',
+                (s) => s.trim() === '' || /^[1-5]$/.test(s.trim()),
+                '1~5 사이의 정수를 입력하세요',
             ),
         membershipRule: z.enum(['excellent', 'vip', 'vvip']),
         startsAt: z.string().min(1, '시작 시각을 입력하세요'),

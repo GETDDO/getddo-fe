@@ -5,8 +5,9 @@ import type { AdminEventStatus, AdminPrize, MembershipRule } from '@entities/eve
 import { env } from '@shared/config/env';
 
 import { mockNow } from '../now';
-import { mockEventHasEntries } from './entry';
+import { mockEntryTicketTotals, mockEventHasEntries } from './entry';
 import { mockEvents, sessionFixedTime } from './event';
+import { recordMockTicketRefund } from './ticket';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
@@ -237,8 +238,10 @@ function effectiveStatus(item: MockAdminEvent, now: number): AdminEventStatus {
     if (item.status === 'SUSPENDED') {
         if (now >= ends) {
             // 중단 중 마감 도달 — 자동 취소(응모권 반환 규칙 적용 대상). 저장 상태에 남겨 재개를 차단한다
+            refundAndRelease(item);
             item.status = 'CANCELED';
             item.canceledAt = new Date(now).toISOString();
+            item.updatedAt = new Date(now).toISOString();
             return 'CANCELED';
         }
         return 'SUSPENDED';
@@ -308,6 +311,23 @@ function removeUserProjection(eventId: string) {
     if (index >= 0) mockEvents.splice(index, 1);
 }
 
+/**
+ * 취소 정리 — 실제 차감분을 각 사용자 잔액에 되돌리고 반환 이력을 남긴 뒤 사용자 목록 projection을 제거한다.
+ * refundedTicketCount는 시드된 사용 총량과 실제 환불 합계 중 큰 값으로 보낸다
+ * (시드 응모자는 목업에 실제 지갑이 없어 잔액 반영 없이 합계만 표시한다).
+ */
+function refundAndRelease(item: MockAdminEvent): number {
+    let refunded = 0;
+    for (const [userId, count] of mockEntryTicketTotals(item.id)) {
+        recordMockTicketRefund(userId, count, `${item.title} 이벤트 취소 응모권 반환`);
+        refunded += count;
+    }
+    const total = Math.max(item.usedTicketTotal, refunded);
+    item.usedTicketTotal = 0;
+    removeUserProjection(item.id);
+    return total;
+}
+
 // 중단은 목록에 남기고 응모만 막고(도메인 규칙: 이후 응모 거절), 취소는 사용자 모델이 표현 못 해 목록에서 제거한다
 function setEntryBlocked(eventId: string, blocked: boolean) {
     const event = mockEvents.find((e) => e.id === eventId);
@@ -372,8 +392,11 @@ function validateWriteBody(body: EventWriteBody): string | null {
             return '응모권 미사용 이벤트의 maxTicketsPerUser는 null입니다';
     } else if (body.weightingEnabled === false) {
         if (body.maxTicketsPerUser !== 1) return '가중치 미적용 이벤트는 사용자당 1장입니다';
-    } else if (body.maxTicketsPerUser !== null && !isInt(body.maxTicketsPerUser)) {
-        return 'maxTicketsPerUser는 1 이상의 정수 또는 null(월말 소진용)입니다';
+    } else if (
+        body.maxTicketsPerUser !== null &&
+        (!isInt(body.maxTicketsPerUser) || body.maxTicketsPerUser > 5)
+    ) {
+        return 'maxTicketsPerUser는 1~5의 정수 또는 null(월말 소진용)입니다';
     }
     if (!['excellent', 'vip', 'vvip'].includes(body.membershipRule as string)) {
         return 'membershipRule은 excellent/vip/vvip 중 하나입니다';
@@ -545,7 +568,8 @@ export const adminEventHandlers = [
         if (effectiveStatus(item, mockNow().getTime()) !== 'SCHEDULED') {
             return fail(409, 'STATE_CONFLICT', '시작 전 이벤트만 삭제할 수 있습니다');
         }
-        if (mockEventHasEntries(item.id)) {
+        // 시드된 응모자 수(entryCount)와 실제 접수 이력을 모두 본다 — 시드만 있는 이벤트도 삭제를 막는다
+        if (item.entryCount > 0 || mockEventHasEntries(item.id)) {
             return fail(409, 'STATE_CONFLICT', '응모 이력이 있는 이벤트는 삭제할 수 없습니다');
         }
         // 도메인 규칙: 연결된 배너도 함께 삭제 — 배너 목업이 단일 고정 항목이라 생략한다
@@ -568,12 +592,10 @@ export const adminEventHandlers = [
         }
         if (previous === 'CLOSED') {
             // 이미 마감된 이벤트의 중단 요청은 즉시 취소로 전환하고 같은 반환 규칙을 적용한다
-            const refunded = item.usedTicketTotal;
-            item.usedTicketTotal = 0;
+            const refunded = refundAndRelease(item);
             item.status = 'CANCELED';
             item.canceledAt = now.toISOString();
             item.updatedAt = now.toISOString();
-            removeUserProjection(item.id);
             return ok(operationResult(item, previous, refunded, now));
         }
         item.status = 'SUSPENDED';
@@ -613,12 +635,10 @@ export const adminEventHandlers = [
 
         const now = mockNow();
         const previous = effectiveStatus(item, now.getTime());
-        const refunded = item.usedTicketTotal;
-        item.usedTicketTotal = 0;
+        const refunded = refundAndRelease(item);
         item.status = 'CANCELED';
         item.canceledAt = now.toISOString();
         item.updatedAt = now.toISOString();
-        removeUserProjection(item.id);
         return ok(operationResult(item, previous, refunded, now));
     }),
 ];

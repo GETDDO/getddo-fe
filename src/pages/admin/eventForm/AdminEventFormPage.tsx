@@ -239,6 +239,7 @@ export function AdminEventFormPage() {
                                     id="event-max-tickets"
                                     type="number"
                                     min={1}
+                                    max={5}
                                     className="w-36"
                                     placeholder="비우면 상한 없음"
                                     {...register('maxTicketsPerUser')}

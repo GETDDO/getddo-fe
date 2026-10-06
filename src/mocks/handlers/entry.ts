@@ -77,6 +77,18 @@ export function mockEventHasEntries(eventId: string): boolean {
     return false;
 }
 
+/** 관리자 목업이 취소 시 사용자별 실제 차감 합계를 환불할 때 쓴다 — 시드 카운터가 아닌 접수 기록이 근거다 */
+export function mockEntryTicketTotals(eventId: string): Map<string, number> {
+    const totals = new Map<string, number>();
+    for (const [userId, list] of entriesByUser) {
+        const sum = list
+            .filter((entry) => entry.eventId === eventId && entry.status === 'ACCEPTED')
+            .reduce((acc, entry) => acc + entry.deductedTicketCount, 0);
+        if (sum > 0) totals.set(userId, sum);
+    }
+    return totals;
+}
+
 const myEntriesFor = (userId: string) => {
     let list = entriesByUser.get(userId);
     if (!list) {
