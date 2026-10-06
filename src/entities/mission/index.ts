@@ -27,3 +27,5 @@ export {
     useMissionDetail,
     useMissionList,
 } from './api/queries';
+export { buildMissionAnswers, findMissingRequired } from './lib/missionAnswers';
+export type { MissionAnswerDraft } from './lib/missionAnswers';
