@@ -41,7 +41,7 @@ export function TimeRafflePage() {
     return (
         <main className={CONTAINER}>
             <div className="flex flex-col gap-2">
-                <h1 className="text-title-1 text-fg-primary">타임래플</h1>
+                <h1 className="text-title-1 text-fg-primary">겟또타임</h1>
                 <p className="text-body text-fg-tertiary">
                     정해진 시간에만 열리는 한정 굿즈 래플입니다. 응모권을 사용해 당첨 기회를
                     높이세요.

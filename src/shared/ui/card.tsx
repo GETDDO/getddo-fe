@@ -3,6 +3,8 @@ import * as React from 'react';
 
 /**
  * 카드 — 디자인 시스템(피그마 05 Card) 기준: 흰 바탕(surface/page)·모서리 16px·그림자 md·안쪽 여백 16.
+ * size: default(여백 16 — 그리드 속 좁은 카드) · lg(여백 20 — 폭 500 이상 넓은 카드) · sm(여백 12).
+ * 안쪽 여백은 --card-spacing 변수라, 카드에 직접 p-(--card-spacing)을 주면 size를 따라간다
  * variant: outlined(기본, border/default 1px) · elevated(테두리 없이 그림자만 — 홈 이벤트 카드 등)
  * 색은 테마 변수(bg-card 등) 대신 토큰으로 고정해, OS가 다크 모드여도 까맣게 바뀌지 않는다
  */
@@ -11,14 +13,17 @@ function Card({
     size = 'default',
     variant = 'outlined',
     ...props
-}: React.ComponentProps<'div'> & { size?: 'default' | 'sm'; variant?: 'outlined' | 'elevated' }) {
+}: React.ComponentProps<'div'> & {
+    size?: 'default' | 'sm' | 'lg';
+    variant?: 'outlined' | 'elevated';
+}) {
     return (
         <div
             data-slot="card"
             data-size={size}
             data-variant={variant}
             className={cn(
-                'group/card bg-surface-page text-fg-primary border-border-default flex flex-col gap-(--card-spacing) overflow-hidden rounded-2xl border py-(--card-spacing) text-sm shadow-md [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 data-[variant=elevated]:border-transparent *:[img:first-child]:rounded-t-2xl *:[img:last-child]:rounded-b-2xl',
+                'group/card bg-surface-page text-fg-primary border-border-default flex flex-col gap-(--card-spacing) overflow-hidden rounded-2xl border py-(--card-spacing) text-sm shadow-md [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=lg]:[--card-spacing:--spacing(5)] data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 data-[variant=elevated]:border-transparent *:[img:first-child]:rounded-t-2xl *:[img:last-child]:rounded-b-2xl',
                 className,
             )}
             {...props}

@@ -14,7 +14,7 @@ import { Badge } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 import { Pager } from '@shared/ui/pager';
 
-import bannerBackground from '../assets/banner-bg.webp';
+import bannerBackground from '../assets/banner-bg.jpg';
 import bannerMascot from '../assets/banner-mascot.webp';
 
 const AUTO_SLIDE_MS = 5000;
@@ -119,7 +119,7 @@ export function BannerSlider({
                                 key={event.id}
                                 // 화면 밖 배너는 Tab 포커스·보조 기술에서 빼 실시간 현황 알림도 보이는 배너만 읽힌다
                                 inert={slideIndex !== safeIndex}
-                                className="bg-play-yellow relative flex min-h-91.25 w-full shrink-0 flex-col bg-cover bg-right"
+                                className="bg-play-yellow relative flex min-h-91.25 w-full shrink-0 flex-col bg-cover bg-right-bottom"
                                 style={{ backgroundImage: `url(${bannerBackground})` }}
                             >
                                 {/* 마감 시간 — 배너 왼쪽 끝에 붙은 흰 탭 (공용 Badge surface xl) */}
@@ -134,16 +134,20 @@ export function BannerSlider({
                                 <div className="flex flex-1 flex-col items-start gap-5 px-6 pt-21 pb-8 sm:px-12.5 sm:pb-8.75">
                                     <div className="flex max-w-150 flex-col gap-1">
                                         <div className="flex items-center gap-1">
-                                            <Flame className="text-brand-primary size-5.5" />
-                                            <span className="text-brand-primary text-body-sm-bold">
-                                                오늘의 타임 래플
+                                            {/* 채운 불꽃 아이콘 — 아이콘·글자 모두 잉크(fg/primary) */}
+                                            <Flame
+                                                aria-hidden
+                                                className="fill-fg-primary text-fg-primary size-5.5"
+                                            />
+                                            <span className="text-fg-primary text-body-sm-bold">
+                                                오늘의 겟또타임
                                             </span>
                                         </div>
                                         <div className="flex flex-col gap-3">
-                                            <h2 className="text-display text-fg-primary">
+                                            <h2 className="text-title-1 text-fg-primary">
                                                 {event.title}
                                             </h2>
-                                            <p className="text-body text-fg-primary whitespace-pre-line">
+                                            <p className="text-body text-fg-primary break-keep whitespace-pre-line">
                                                 {event.description}
                                             </p>
                                             {renderStatus?.(event)}
@@ -165,7 +169,7 @@ export function BannerSlider({
                     src={bannerMascot}
                     alt=""
                     aria-hidden
-                    className="pointer-events-none absolute -top-16.75 -right-13.5 hidden w-125 select-none xl:block"
+                    className="pointer-events-none absolute -top-16.75 right-8 hidden w-125 select-none xl:block"
                 />
             )}
             {slides.length > 1 && (

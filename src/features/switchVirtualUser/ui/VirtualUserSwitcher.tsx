@@ -27,7 +27,7 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                 className={
                     trigger
                         ? undefined
-                        : 'text-fg-primary focus-visible:ring-border-focus relative flex size-6 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none'
+                        : 'text-fg-primary focus-visible:ring-border-focus focus-visible:ring-offset-surface-page relative flex size-6 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'
                 }
             >
                 {trigger ?? <CircleUserRound className="size-6" />}

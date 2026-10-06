@@ -17,16 +17,18 @@ export function UpcomingEventCard({ event }: { event: Event }) {
     return (
         <Link
             to={`/events/${event.id}`}
-            className="bg-surface-canvas hover:bg-surface-sunken flex min-h-0 flex-1 items-center gap-4 rounded-2xl p-4 transition-colors"
+            // 넘김 영역이 overflow-hidden이라 바깥에 띄운 포커스 링은 잘린다 — 이 행은 링을 안쪽(ring-inset)에 그린다
+            // 발표 결과 행과 같은 호버 — 행에서 8px 들인 옅은 배경, 안쪽 여백도 8px로 사방 같게
+            className="focus-visible:ring-border-focus after:bg-surface-canvas/60 relative isolate flex min-h-0 items-center gap-4 rounded-2xl p-4 after:absolute after:inset-2 after:-z-10 after:rounded-xl after:opacity-0 hover:after:opacity-100 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset motion-safe:after:transition-opacity motion-safe:after:duration-200"
         >
             {event.bannerImageUrl ? (
                 <img
                     src={event.bannerImageUrl}
                     alt=""
-                    className="size-20 shrink-0 rounded-lg object-cover"
+                    className="h-20 w-25 shrink-0 rounded-lg object-cover"
                 />
             ) : (
-                <div className="bg-surface-page flex size-20 shrink-0 items-center justify-center rounded-lg">
+                <div className="bg-surface-canvas flex h-20 w-25 shrink-0 items-center justify-center rounded-lg">
                     <Gift className="text-fg-disabled size-6" />
                 </div>
             )}
@@ -34,8 +36,8 @@ export function UpcomingEventCard({ event }: { event: Event }) {
                 <StatusDot tone="info">
                     오늘 {formatKst(event.startsAt, TIME_ONLY)} 오픈 예정
                 </StatusDot>
-                <p className="text-title-3 text-fg-primary truncate">
-                    {event.title} ({event.winnerCount}명)
+                <p className="text-body-bold text-fg-primary truncate">
+                    {event.title} <span className="text-fg-tertiary">({event.winnerCount}명)</span>
                 </p>
                 <p className="text-caption text-fg-tertiary">
                     응모권 {event.requiredTickets === 1 ? '1장' : '여러 장'} 응모 가능

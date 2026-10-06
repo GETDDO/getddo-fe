@@ -45,8 +45,8 @@ export function FeaturedEventCard({ event }: { event: Event }) {
     ].filter((stat) => stat.value != null && stat.value > 0);
 
     return (
-        // 피그마 홈 — brand 테두리 1px·그림자, 왼쪽 정보 / 오른쪽 이미지·버튼(250)
-        <Card className="border-border-brand flex-col gap-4 p-4 sm:flex-row">
+        // 피그마 홈 — 기본 테두리·그림자, 왼쪽 정보 / 오른쪽 이미지·버튼(250)
+        <Card size="lg" className="flex-col gap-4 p-(--card-spacing) sm:flex-row">
             <div className="flex min-w-0 flex-1 flex-col justify-between gap-6">
                 <div className="flex flex-col gap-5">
                     <div className="flex flex-wrap items-center gap-2">
@@ -60,11 +60,11 @@ export function FeaturedEventCard({ event }: { event: Event }) {
                         </Badge>
                     </div>
                     <div className="flex flex-col gap-3">
-                        <p className="text-title-2 text-fg-primary">
+                        <p className="text-title-3 text-fg-primary">
                             {event.title}{' '}
                             <span className="text-fg-tertiary">({event.winnerCount}명)</span>
                         </p>
-                        <p className="text-body text-fg-primary line-clamp-2">
+                        <p className="text-body-sm text-fg-primary line-clamp-2 break-keep">
                             {event.description}
                         </p>
                     </div>
@@ -84,13 +84,7 @@ export function FeaturedEventCard({ event }: { event: Event }) {
                                 )}
                                 <div className="flex flex-col gap-0.5">
                                     <span className="text-caption text-fg-tertiary">{label}</span>
-                                    <span
-                                        className={
-                                            accent
-                                                ? 'text-body-sm-bold text-fg-brand'
-                                                : 'text-body-sm-bold text-fg-primary'
-                                        }
-                                    >
+                                    <span className="text-body-sm-bold text-fg-primary">
                                         {formatNumber(value!)}
                                         {unit}
                                     </span>
@@ -112,7 +106,7 @@ export function FeaturedEventCard({ event }: { event: Event }) {
                         <Gift className="text-fg-disabled size-8" />
                     </div>
                 )}
-                <Button asChild size="lg" className="w-full">
+                <Button asChild variant="emphasis" size="lg" className="w-full">
                     <Link to={`/events/${event.id}`}>응모하러 가기</Link>
                 </Button>
             </div>

@@ -19,6 +19,7 @@
     /* Ticket — 응모권 */
     --color-ticket-primary: #ffc83d;
     --color-ticket-accent: #fff4d1;
+    --color-ticket-accent-pressed: #ffe9a6;
     --color-ticket-on: #1f242b;
 
     /* Play — 놀이 파스텔 (사용자 사이트 전용) */
@@ -52,7 +53,8 @@
     --color-border-strong: #cdd2d8;
     --color-border-brand: #e6007e;
     --color-border-brand-subtle: #f5a3cb;
-    --color-border-focus: #a8005c;
+    /* 키보드 포커스 링 — 잉크(fg/primary). 마젠타는 브랜드·강조와 겹쳐 잉크로 바꿨고, 2px 띄워 검정 버튼·노랑 배너 위에서도 보이게 한다 */
+    --color-border-focus: var(--color-fg-primary);
 
     /* Foreground — 텍스트·아이콘 */
     --color-fg-primary: #1f242b;
@@ -182,6 +184,7 @@
 
     /* Ticket — soft 배경만 다크용 */
     --color-ticket-accent: #453815;
+    --color-ticket-accent-pressed: #5a4a1c;
 
     /* Play — soft 파스텔 배경만 다크용 (일러스트 본체 색은 유지) */
     --color-play-yellow-soft: #453815;

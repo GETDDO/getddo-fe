@@ -23,7 +23,7 @@ export function EventResultRow({ event }: { event: Event }) {
         <Link
             to={`/events/${event.id}`}
             // 호버하면 연한 배경이 생기되 행 끝까지 꽉 채우지 않고 사방으로 8px 들이고 옅게(60%) 그려 구분선·썸네일과 겹쳐 답답해 보이지 않게 한다 (after — before는 목록 구분선이 쓴다)
-            className="group focus-visible:ring-border-focus after:bg-surface-canvas/60 relative isolate flex items-center gap-4 rounded-2xl p-4 after:absolute after:inset-x-2 after:inset-y-2 after:-z-10 after:rounded-xl after:opacity-0 hover:after:opacity-100 focus-visible:ring-2 focus-visible:outline-none motion-safe:after:transition-opacity motion-safe:after:duration-200"
+            className="group focus-visible:ring-border-focus focus-visible:ring-offset-surface-page after:bg-surface-canvas/60 relative isolate flex items-center gap-4 rounded-2xl p-4 after:absolute after:inset-x-2 after:inset-y-2 after:-z-10 after:rounded-xl after:opacity-0 hover:after:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:after:transition-opacity motion-safe:after:duration-200"
         >
             {event.bannerImageUrl ? (
                 <img
@@ -37,10 +37,8 @@ export function EventResultRow({ event }: { event: Event }) {
                 </div>
             )}
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <StatusDot tone={drawn ? 'muted' : 'brand'}>
-                    {drawn ? '종료' : '응모 마감 · 발표 예정'}
-                </StatusDot>
-                <p className="text-title-3 text-fg-primary truncate">{event.title}</p>
+                <StatusDot tone="muted">{drawn ? '종료' : '응모 마감 · 발표 예정'}</StatusDot>
+                <p className="text-body-bold text-fg-primary truncate">{event.title}</p>
                 <p className="text-caption text-fg-tertiary">
                     {formatYmdWeekday(event.startsAt)} ~ {formatYmdWeekday(event.endsAt)}
                 </p>

@@ -6,6 +6,7 @@ import type { Event } from '@entities/event';
 
 import { FeaturedEventCard, UpcomingEventCard } from '@entities/event';
 import { cn } from '@shared/lib/utils';
+import { Button } from '@shared/ui/button';
 import { Card } from '@shared/ui/card';
 import { Pager } from '@shared/ui/pager';
 
@@ -34,14 +35,13 @@ export function TicketEventSection({
     return (
         <section className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
-                <h2 className="text-subhead text-fg-primary">타임 래플 · 응모권 사용</h2>
-                <Link
-                    to="/events"
-                    className="text-fg-primary text-body-sm flex items-center gap-0.5"
-                >
-                    전체보기
-                    <ChevronRight className="size-5" />
-                </Link>
+                <h2 className="text-title-3 text-fg-primary">겟또타임 · 응모권 사용</h2>
+                <Button asChild variant="link" size="text">
+                    <Link to="/events">
+                        더보기
+                        <ChevronRight />
+                    </Link>
+                </Button>
             </div>
             {isPending && <p className="text-fg-tertiary text-body-sm">불러오는 중…</p>}
             {isError && (
@@ -56,13 +56,13 @@ export function TicketEventSection({
                     {upcomingEvents.length > 0 &&
                         (featured ? (
                             // featured 카드가 행 높이를 결정하고 캐러셀은 그 안에서 늘어난다 — 내용물 높이가 행을 밀지 않도록 absolute로 띄운다
-                            <Card className="relative gap-0 self-stretch py-0">
-                                <div className="absolute inset-0 flex flex-col gap-2 overflow-hidden p-4">
+                            <Card size="lg" className="relative gap-0 self-stretch py-0">
+                                <div className="absolute inset-0 flex flex-col gap-2 overflow-hidden p-(--card-spacing)">
                                     <UpcomingEventCarousel events={upcomingEvents} fillHeight />
                                 </div>
                             </Card>
                         ) : (
-                            <Card className="gap-2 p-4">
+                            <Card size="lg" className="gap-2 p-(--card-spacing)">
                                 <UpcomingEventCarousel events={upcomingEvents} />
                             </Card>
                         ))}
@@ -91,10 +91,14 @@ function UpcomingEventCarousel({
     return (
         <>
             <div className="flex items-center justify-between">
-                <h3 className="text-body-sm-bold text-fg-primary">오픈 예정</h3>
+                <h3 className="text-body-sm-bold text-fg-primary flex gap-1">
+                    오픈 예정
+                    <span className="text-fg-tertiary">{events.length}</span>
+                </h3>
                 {/* 넘길 게 있을 때만 — 제목 줄 오른쪽에 배너와 같은 공용 Pager */}
                 {totalPages > 1 && (
                     <Pager
+                        size="md"
                         current={current}
                         total={totalPages}
                         prevLabel="이전 오픈 예정"
@@ -106,7 +110,8 @@ function UpcomingEventCarousel({
                     />
                 )}
             </div>
-            <div className={cn('relative', fillHeight && 'min-h-0 flex-1')}>
+            {/* 행 안쪽 여백(16)만큼 목록을 좌우로 넓혀, 썸네일이 '오픈 예정' 제목과 같은 선에서 시작하게 한다 */}
+            <div className={cn('relative -mx-4', fillHeight && 'min-h-0 flex-1')}>
                 <div className={cn('overflow-hidden', fillHeight && 'h-full')}>
                     <div
                         className={cn(
@@ -121,7 +126,9 @@ function UpcomingEventCarousel({
                                 // 화면 밖 슬라이드도 렌더되므로 Tab 포커스·보조 기술 접근을 inert로 차단한다
                                 inert={pageIndex !== current}
                                 className={cn(
-                                    'flex w-full shrink-0 flex-col gap-2 px-1',
+                                    // 피그마 홈 — 한 쪽에 2행 칸을 고정해 1개만 있어도 2개일 때와 같은 높이·위치로 보인다.
+                                    // 행 사이 구분선은 호버 배경과 같은 8px 안쪽에서 시작한다
+                                    '[&>*+*]:before:bg-border-default grid w-full shrink-0 grid-rows-2 [&>*+*]:relative [&>*+*]:before:absolute [&>*+*]:before:inset-x-2 [&>*+*]:before:top-0 [&>*+*]:before:h-px',
                                     fillHeight && 'h-full',
                                 )}
                             >

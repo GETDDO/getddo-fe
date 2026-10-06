@@ -23,7 +23,7 @@ export function MissionCard({ mission }: { mission: MissionSummary }) {
     // 피그마 설문·퀴즈 카드 — 왼쪽에 상태·제목·설명, 오른쪽에 Medium(40) 버튼을 한 줄로 둔다
     // 호버하면 살짝 떠오른다 (동작 줄이기 설정이면 움직이지 않는다)
     return (
-        <article className="bg-surface-page border-border-default flex items-center justify-between gap-4 rounded-2xl border p-4 shadow-md transition-[translate] duration-200 motion-safe:hover:-translate-y-1">
+        <article className="bg-surface-page border-border-default flex items-center justify-between gap-4 rounded-2xl border p-5 shadow-md transition-[translate] duration-200 motion-safe:hover:-translate-y-1">
             <div className="flex min-w-0 flex-col gap-1">
                 <StatusDot tone={mission.completed ? 'muted' : 'brand'}>
                     {mission.completed ? '참여 완료' : '참여 가능'}

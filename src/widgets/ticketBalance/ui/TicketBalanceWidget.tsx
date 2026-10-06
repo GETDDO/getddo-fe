@@ -21,8 +21,8 @@ interface EarnCard {
     href: string;
     actionLabel: string;
     completed: boolean;
-    /** 카드 상단 썸네일 — 이미지 에셋이 없어 카테고리별 색상 블록 + 아이콘으로 표시한다 */
-    thumbnailClass: string;
+    /** 카드 상단 썸네일 — 이미지가 있으면 보여주고(게임), 없으면 임시로 회색 블록 + 아이콘 */
+    thumbnailUrl: string | null;
     thumbnailIcon: LucideIcon;
 }
 
@@ -30,7 +30,7 @@ interface EarnCard {
  * railClassName: 카드 가로 스크롤 영역에 덧붙일 클래스 (예: 화면 끝까지 펼치기)
  * cardClassName: 카드에 덧붙일 클래스 (예: 고정 너비) — 넘기지 않으면 기존 모양 그대로다
  * sortCompletedLast: 오늘 참여를 마친 카드(출석 완료 등)를 목록 맨 뒤로 보낸다
- * hideMoreLink: 제목 옆 '전체보기' 링크를 숨긴다 (미션 페이지처럼 이미 전체 목록인 곳)
+ * hideMoreLink: 제목 옆 '더보기' 링크를 숨긴다 (미션 페이지처럼 이미 전체 목록인 곳)
  */
 export function TicketBalanceWidget({
     railClassName,
@@ -61,21 +61,21 @@ export function TicketBalanceWidget({
                       href: '/missions',
                       actionLabel: '출석하러 가기',
                       completed: attendance.attended,
-                      thumbnailClass: 'bg-play-lavender-soft',
+                      thumbnailUrl: null,
                       thumbnailIcon: CalendarCheck,
                   },
               ]
             : []),
         ...(missions ?? []).map((mission) => ({
             id: mission.id,
-            category: mission.missionType === 'QUIZ' ? 'MISSION · 퀴즈' : 'MISSION · 설문',
+            category: 'MISSION',
             title: mission.title,
             description: '미션마다 1장씩, 한 번만 받을 수 있어요',
             rewardTickets: mission.rewardTicketCount,
             href: '/missions',
             actionLabel: '미션하러 가기',
             completed: mission.completed,
-            thumbnailClass: 'bg-play-pink-soft',
+            thumbnailUrl: null,
             thumbnailIcon: ClipboardList,
         })),
         ...(games ?? []).map((game) => ({
@@ -87,7 +87,7 @@ export function TicketBalanceWidget({
             href: `/missions/games/${game.id}`,
             actionLabel: '게임하러 가기',
             completed: game.remainingPlays === 0,
-            thumbnailClass: 'bg-play-yellow-soft',
+            thumbnailUrl: game.thumbnailUrl ?? null,
             thumbnailIcon: Gamepad2,
         })),
     ];
@@ -106,19 +106,18 @@ export function TicketBalanceWidget({
         <section className="flex flex-col gap-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-3">
-                    <h2 className="text-subhead text-fg-primary">오늘 받을 수 있는 응모권</h2>
+                    <h2 className="text-title-3 text-fg-primary">오늘 받을 수 있는 응모권</h2>
                     <span className="text-fg-tertiary text-caption">
                         출석과 게임 보상은 매일 자정(00:00 KST)에 다시 받을 수 있어요.
                     </span>
                 </div>
                 {!hideMoreLink && (
-                    <Link
-                        to="/missions"
-                        className="text-fg-primary text-body-sm flex items-center gap-0.5"
-                    >
-                        전체보기
-                        <ChevronRight className="size-5" />
-                    </Link>
+                    <Button asChild variant="link" size="text">
+                        <Link to="/missions">
+                            더보기
+                            <ChevronRight />
+                        </Link>
+                    </Button>
                 )}
             </div>
             {/* 한 화면에 N.5장 — 반 장이 잘려 보이며 옆으로 더 있다는 암시를 준다. 마우스는 드래그로, 터치는 브라우저 네이티브 스크롤로 움직인다 */}
@@ -157,7 +156,7 @@ export function TicketBalanceWidget({
                                         <span className="text-fg-tertiary text-caption">
                                             응모권
                                         </span>
-                                        <span className="text-brand-primary text-body-sm-bold flex items-center gap-1">
+                                        <span className="text-ticket-on text-body-sm-bold flex items-center gap-1">
                                             <Ticket className="size-4.5" />+{card.rewardTickets}
                                         </span>
                                     </div>
@@ -166,30 +165,30 @@ export function TicketBalanceWidget({
                                             오늘 참여 완료
                                         </Button>
                                     ) : (
-                                        <Button
-                                            asChild
-                                            // 첫 화면의 주 행동(배너·추천 이벤트 응모)이 돋보이도록 카드 버튼은 한 단계 낮은 secondary
-                                            variant="secondary"
-                                            size="lg"
-                                            className="mt-2 w-full"
-                                        >
+                                        <Button asChild size="lg" className="mt-2 w-full">
                                             <Link to={card.href}>{card.actionLabel}</Link>
                                         </Button>
                                     )}
                                 </>
                             }
                         >
-                            <div
-                                className={`flex h-30 shrink-0 items-center justify-center rounded-lg ${card.thumbnailClass}`}
-                            >
-                                <card.thumbnailIcon className="text-fg-tertiary size-8" />
+                            <div className="bg-surface-canvas flex h-30 shrink-0 items-center justify-center overflow-hidden rounded-lg">
+                                {card.thumbnailUrl ? (
+                                    <img
+                                        src={card.thumbnailUrl}
+                                        alt=""
+                                        className="size-full object-cover"
+                                    />
+                                ) : (
+                                    <card.thumbnailIcon className="text-fg-disabled size-8" />
+                                )}
                             </div>
                             <div className="mt-3 flex flex-col gap-2">
                                 <div className="flex flex-col">
                                     <span className="text-fg-tertiary text-caption">
                                         {card.category}
                                     </span>
-                                    <p className="text-subhead text-fg-primary truncate">
+                                    <p className="text-body-bold text-fg-primary truncate">
                                         {card.title}
                                     </p>
                                 </div>
