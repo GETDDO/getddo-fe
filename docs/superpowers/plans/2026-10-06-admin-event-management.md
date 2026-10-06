@@ -4,6 +4,8 @@
 
 **Goal:** `/admin/events`에 관리자 이벤트 목록·상세·등록·수정·상태 운영(중단/재개/취소/삭제) 화면을 구현한다.
 
+**Status (2026-10-06):** 구현 + 리뷰 반영 완료 — `77b580f`(초기 구현), `c749e7d`(기간 필터·운영 이력·오류 메시지), `34e7a09`(폼 변환 분리·계약 오류 수정). 검증 4종 통과. 남은 항목: dev 서버 수동 시연.
+
 **Architecture:** FSD — 조회는 `entities/event`(관리자 모델은 spec AE01~AE08 모양의 `AdminEvent`), mutation은 새 슬라이스 `features/manageEvent`, 화면은 `pages/admin/*` 3개(목록/상세/폼). MSW 목업은 별도 관리자 스토어(`mocks/handlers/adminEvent.ts`)로 spec 모양을 그대로 구현한다.
 
 **Tech Stack:** React 19, TanStack Query, @tanstack/react-table v9(`useTable`+`tableFeatures`+`createColumnHelper`), React Hook Form + zod, MSW, Vitest.
@@ -202,7 +204,7 @@ it('KST 자정 경계를 넘나들어도 날짜가 맞다', () => {
 - [x] **Step 2:** `npx vitest run src/shared/lib/date.test.ts` → FAIL 확인
 - [x] **Step 3: 구현** — `kstInputToUtcIso`: `new Date(`${local}:00+09:00`).toISOString()` (초가 이미 있는 입력은 그대로 오프셋 부여). `utcIsoToKstInput`: `toKst` 결과의 UTC 필드로 `YYYY-MM-DDTHH:mm` 조립
 - [x] **Step 4:** 테스트 PASS 확인
-- [ ] 커밋: `feat: KST datetime-local 입력 변환 헬퍼 추가`
+- [x] 커밋: `77b580f`에 포함 (기능 단위 커밋 분리 대신 단일 커밋으로 정리)
 
 ---
 
@@ -251,7 +253,7 @@ it('KST 자정 경계를 넘나들어도 날짜가 맞다', () => {
 - [x] **Step 2:** `npx vitest run src/mocks/handlers/adminEvent.test.ts` → FAIL
 - [x] **Step 3:** 구현 + `mockEventHasEntries` export + 핸들러 등록
 - [x] **Step 4:** PASS + `npm run test:ci` 전체 회귀
-- [ ] 커밋: `feat: 관리자 이벤트 CRUD·상태 운영 목업 핸들러 추가`
+- [x] 커밋: `77b580f`에 포함
 
 ---
 
@@ -276,9 +278,9 @@ it('KST 자정 경계를 넘나들어도 날짜가 맞다', () => {
 - 페이지: 필터 바(키워드 Input+검색 버튼, 상태 Select, 유형 Select, 초기화 버튼) → `useAdminEvents` → 테이블 → `Pager`. 필터 변경 시 page=1 리셋. 행 클릭/제목 클릭 → `useNavigate`로 `/admin/events/${id}`. 우상단 "새 이벤트 등록" 버튼 → `/admin/events/new`
 
 - [x] AdminEventTable 구현
-- [x] AdminEventsPage 구현 (기존 placeholder 교체)
-- [ ] `npm run lint` + 수동 확인(`npm run dev` 후 `/admin/events`)
-- [ ] 커밋: `feat: 관리자 이벤트 목록 화면 구현`
+- [x] AdminEventsPage 구현 (기존 placeholder 교체) — 기간 필터(`from`/`to` date 입력 + KST 변환)는 `c749e7d`에서 추가
+- [x] `npm run lint` 통과 — 수동 시연만 남음(`npm run dev` 후 `/admin/events`)
+- [x] 커밋: `77b580f` + `c749e7d`에 포함
 
 ---
 
@@ -302,10 +304,10 @@ it('KST 자정 경계를 넘나들어도 날짜가 맞다', () => {
 - `EventActionDialog`: ReviewAbuseDialog 패턴 — 액션별 제목/설명/확인 버튼 문구, suspend·resume·cancel은 reason 입력 필수(공백 불가), delete는 reason 없이 확인 문구만. 성공 시 toast + 닫기, 실패 시 `ApiError.message` 표시
 
 - [x] mutations.ts 구현
-- [x] EventActionDialog 구현
+- [x] EventActionDialog 구현 — CLOSED 중단 경고·서버 오류 메시지 표시는 `c749e7d`에서 추가
 - [x] index.ts 공개 API 작성
 - [x] `npm run lint` 통과
-- [ ] 커밋: `feat: 이벤트 상태 운영 mutation과 사유 다이얼로그 추가`
+- [x] 커밋: `77b580f` + `c749e7d`에 포함
 
 ---
 
@@ -327,9 +329,9 @@ it('KST 자정 경계를 넘나들어도 날짜가 맞다', () => {
 - 액션 버튼(도메인 규칙의 허용 상태만 노출): 수정(SCHEDULED만 → `/admin/events/${id}/edit`), 중단(SCHEDULED/OPEN/CLOSED — CLOSED일 때 "즉시 취소로 전환됩니다" 경고 문구), 재개(SUSPENDED && 마감 전), 취소(전 상태), 삭제(SCHEDULED만 — 응모 이력은 서버가 최종 판정, 409면 에러 표시)
 - 목록으로 돌아가기 링크
 
-- [x] AdminEventDetailPage 구현
+- [x] AdminEventDetailPage 구현 — 발표 예정·중단/취소 이력 표시는 `c749e7d`에서 추가
 - [x] 라우트 등록 + `npm run lint`
-- [ ] 커밋: `feat: 관리자 이벤트 상세·상태 운영 화면 구현`
+- [x] 커밋: `77b580f` + `c749e7d`에 포함
 
 ---
 
@@ -358,11 +360,10 @@ it('KST 자정 경계를 넘나들어도 날짜가 맞다', () => {
 - 제출: create→useCreateEvent(성공 시 상세로 이동), edit→useUpdateEvent. `react-hook-form` + `zodResolver` 사용
 - 테스트 `eventFormValues.test.ts`: formToRequest의 NO_TICKET null 처리·KST→UTC 변환·빈 문자열→null 정규화, adminEventToForm 역변환
 
-- [ ] **Step 1:** `eventFormValues.test.ts` 작성 → FAIL
-- [ ] **Step 2:** schema + lib 구현 → PASS
-- [x] **Step 3:** EventForm + AdminEventFormPage + 라우트
-- [x] **Step 4:** `npm run lint` + `npm run test:ci`
-- [ ] 커밋: `feat: 관리자 이벤트 등록·수정 폼 구현`
+- [x] **Step 1·2:** `lib/eventFormValues.ts` + `eventFormValues.test.ts` — `34e7a09`에서 페이지 밖으로 분리하며 추가(9개 테스트, 유형×가중치 4분기·경품 id 보존 포함). 계획의 `features/manageEvent` 위치 대신 `pages/admin/eventForm/lib/`에 뒀다 — 페이지 전용 검증 로직이라 슬라이스 내부 배치가 적절하다고 판단
+- [x] **Step 3:** EventForm 기능은 AdminEventFormPage에 내장(별도 `EventForm` 슬라이스 분리 안 함 — 재사용 소비자가 없어 과분할로 판단)
+- [x] **Step 4:** `npm run lint` + `npm run test:ci` 통과
+- [x] 커밋: `77b580f` + `34e7a09`에 포함
 
 ---
 
@@ -373,7 +374,7 @@ it('KST 자정 경계를 넘나들어도 날짜가 맞다', () => {
 - [x] `npm run test:ci` — 전체 PASS
 - [x] `npm run build` — tsc + vite 성공
 - [ ] 시연 수동 확인: `/admin/events` 목록 필터·페이지, 상세, 등록→목록 반영, 중단→재개→취소, 삭제
-- [ ] CONTEXT.md의 "백엔드 연동 전 임시 상태"에 관리자 이벤트 계약 초안 사용 중임을 한 줄 추가(선택)
+- [x] CONTEXT.md에 관리자 이벤트 계약(AE01~AE08 초안) 사용 중 명시 — `34e7a09`에 포함
 
 ## Self-Review 메모
 
