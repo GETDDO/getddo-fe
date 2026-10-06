@@ -75,9 +75,11 @@ export function NotificationBell() {
                     <span className="bg-brand-primary border-surface-page absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2" />
                 )}
             </PopoverTrigger>
+            {/* 모바일에서는 화면 폭에서 좌우 16px을 뺀 만큼으로 줄이고, 화면 가장자리와도 16px 띄운다 */}
             <PopoverContent
                 align="end"
-                className="bg-surface-elevated border-border-default flex max-h-120 w-95 flex-col gap-0 overflow-hidden rounded-2xl border p-0 shadow-lg ring-0"
+                collisionPadding={16}
+                className="bg-surface-elevated border-border-default flex max-h-120 w-95 max-w-[calc(100vw-2rem)] flex-col gap-0 overflow-hidden rounded-2xl border p-0 shadow-lg ring-0"
             >
                 <div className="flex items-center justify-between pt-4 pr-3 pb-3.5 pl-5">
                     <div className="flex items-center gap-2">
