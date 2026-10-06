@@ -30,3 +30,5 @@ export {
 export { buildMissionAnswers, findMissingRequired } from './lib/missionAnswers';
 export type { MissionAnswerDraft } from './lib/missionAnswers';
 export { MissionQuestionField } from './ui/MissionQuestionField';
+export { MissionResultPanel } from './ui/MissionResultPanel';
+export { MissionRewardDialog } from './ui/MissionRewardDialog';

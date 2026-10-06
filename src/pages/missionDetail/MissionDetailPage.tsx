@@ -1,3 +1,4 @@
+import { MotionConfig } from 'framer-motion';
 import { Link, useParams } from 'react-router-dom';
 
 import { useMissionDetail } from '@entities/mission';
@@ -58,35 +59,38 @@ export function MissionDetailPage() {
                 </p>
             </header>
 
-            {mission.completed ? (
-                <section className="bg-surface-page border-border-default flex flex-col items-center gap-4 rounded-2xl border p-8 text-center">
-                    <h2 className="text-title-2 text-fg-primary">이미 완료한 미션이에요</h2>
-                    <p className="text-body text-fg-secondary">
-                        미션은 한 번만 완료할 수 있어요. 다른 미션에 도전해 보세요.
-                    </p>
-                    <Button asChild variant="primary">
-                        <Link to="/missions">미션 목록으로</Link>
-                    </Button>
-                </section>
-            ) : notYetOpen || ended ? (
-                <section className="bg-surface-page border-border-default flex flex-col items-center gap-4 rounded-2xl border p-8 text-center">
-                    <h2 className="text-title-2 text-fg-primary">
-                        {notYetOpen ? '아직 시작하지 않은 미션이에요' : '종료된 미션이에요'}
-                    </h2>
-                    <p className="text-body text-fg-secondary">
-                        {notYetOpen
-                            ? `${formatKst(mission.startsAt, PERIOD_FORMAT)}부터 참여할 수 있어요.`
-                            : '운영 기간이 지나 제출할 수 없어요.'}
-                    </p>
-                    <Button asChild variant="secondary">
-                        <Link to="/missions">미션 목록으로</Link>
-                    </Button>
-                </section>
-            ) : mission.missionType === 'QUIZ' ? (
-                <QuizForm mission={mission} />
-            ) : (
-                <SurveyForm mission={mission} />
-            )}
+            {/* 운영체제의 동작 줄이기 설정을 켠 사용자에게는 폼↔결과 전환 효과를 끈다 */}
+            <MotionConfig reducedMotion="user">
+                {mission.completed ? (
+                    <section className="bg-surface-page border-border-default flex flex-col items-center gap-4 rounded-2xl border p-8 text-center">
+                        <h2 className="text-title-2 text-fg-primary">이미 완료한 미션이에요</h2>
+                        <p className="text-body text-fg-secondary">
+                            미션은 한 번만 완료할 수 있어요. 다른 미션에 도전해 보세요.
+                        </p>
+                        <Button asChild variant="primary">
+                            <Link to="/missions">미션 목록으로</Link>
+                        </Button>
+                    </section>
+                ) : notYetOpen || ended ? (
+                    <section className="bg-surface-page border-border-default flex flex-col items-center gap-4 rounded-2xl border p-8 text-center">
+                        <h2 className="text-title-2 text-fg-primary">
+                            {notYetOpen ? '아직 시작하지 않은 미션이에요' : '종료된 미션이에요'}
+                        </h2>
+                        <p className="text-body text-fg-secondary">
+                            {notYetOpen
+                                ? `${formatKst(mission.startsAt, PERIOD_FORMAT)}부터 참여할 수 있어요.`
+                                : '운영 기간이 지나 제출할 수 없어요.'}
+                        </p>
+                        <Button asChild variant="secondary">
+                            <Link to="/missions">미션 목록으로</Link>
+                        </Button>
+                    </section>
+                ) : mission.missionType === 'QUIZ' ? (
+                    <QuizForm mission={mission} />
+                ) : (
+                    <SurveyForm mission={mission} />
+                )}
+            </MotionConfig>
         </main>
     );
 }
