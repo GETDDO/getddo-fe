@@ -41,7 +41,8 @@ interface MockQuestion extends MissionQuestion {
     correctAnswer?: string;
 }
 
-interface MockMission extends Omit<MissionDetail, 'questions'> {
+// completed·serverTime은 응답 시점에 계산하는 필드라 시드에는 두지 않는다
+interface MockMission extends Omit<MissionDetail, 'questions' | 'completed' | 'serverTime'> {
     questions: MockQuestion[];
 }
 

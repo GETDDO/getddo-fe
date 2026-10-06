@@ -25,18 +25,21 @@ export function buildMissionAnswers(
 ): MissionAnswer[] {
     return [...questions]
         .sort((a, b) => a.displayOrder - b.displayOrder)
-        .filter((question) => hasDraftAnswer(question, drafts[question.id]))
-        .map((question) =>
-            isChoice(question)
-                ? {
-                      questionId: question.id,
-                      selectedOptionId: drafts[question.id].selectedOptionId,
-                  }
-                : {
-                      questionId: question.id,
-                      answerText: drafts[question.id].answerText!.trim(),
-                  },
-        );
+        .flatMap((question): MissionAnswer[] => {
+            const draft = drafts[question.id];
+            if (isChoice(question)) {
+                return draft?.selectedOptionId !== undefined
+                    ? [
+                          {
+                              questionId: question.id,
+                              selectedOptionId: draft.selectedOptionId,
+                          },
+                      ]
+                    : [];
+            }
+            const answerText = draft?.answerText?.trim();
+            return answerText ? [{ questionId: question.id, answerText }] : [];
+        });
 }
 
 /** 필수 문항 중 답이 비어 있는 문항을 돌려준다 — 제출 전 클라이언트 1차 검증용 */
