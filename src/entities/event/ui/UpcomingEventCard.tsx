@@ -17,8 +17,9 @@ export function UpcomingEventCard({ event }: { event: Event }) {
     return (
         <Link
             to={`/events/${event.id}`}
+            // 넘김 영역이 overflow-hidden이라 바깥에 띄운 포커스 링은 잘린다 — 이 행은 링을 안쪽(ring-inset)에 그린다
             // 발표 결과 행과 같은 호버 — 행에서 8px 들인 옅은 배경, 안쪽 여백도 8px로 사방 같게
-            className="focus-visible:ring-border-focus focus-visible:ring-offset-surface-page after:bg-surface-canvas/60 relative isolate flex min-h-0 items-center gap-4 rounded-2xl p-4 after:absolute after:inset-2 after:-z-10 after:rounded-xl after:opacity-0 hover:after:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:after:transition-opacity motion-safe:after:duration-200"
+            className="focus-visible:ring-border-focus after:bg-surface-canvas/60 relative isolate flex min-h-0 items-center gap-4 rounded-2xl p-4 after:absolute after:inset-2 after:-z-10 after:rounded-xl after:opacity-0 hover:after:opacity-100 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset motion-safe:after:transition-opacity motion-safe:after:duration-200"
         >
             {event.bannerImageUrl ? (
                 <img
