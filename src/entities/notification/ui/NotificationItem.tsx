@@ -55,13 +55,14 @@ export function NotificationItem({
                 </button>
             </div>
             {onDelete && (
-                // 마우스를 올리거나 키보드로 들어오면 보이는 삭제 버튼 — 공용 모달 닫기(X)와 같은 모양
+                // 마우스를 올리거나 키보드로 들어오면 보이는 삭제 버튼 — 공용 모달 닫기(X)와 같은 모양.
+                // 숨겨진 동안은 클릭도 받지 않아, 터치 화면에서 알림 우상단을 눌러도 알림이 열린다
                 <Button
                     variant="ghost"
                     size="icon-sm"
                     aria-label={`${notification.title} 알림 삭제`}
                     onClick={() => onDelete(notification.id)}
-                    className="text-fg-secondary hover:text-fg-primary absolute top-2.5 right-3 cursor-pointer opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-transparent dark:hover:bg-transparent"
+                    className="text-fg-secondary hover:text-fg-primary pointer-events-none absolute top-2.5 right-3 cursor-pointer opacity-0 group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100 hover:bg-transparent dark:hover:bg-transparent"
                 >
                     <X />
                 </Button>
