@@ -1,5 +1,5 @@
 import { MotionConfig } from 'framer-motion';
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -33,10 +33,6 @@ export function GameDetailPage() {
     const [playingGameId, setPlayingGameId] = useState<string | null>(null);
     const submitPlay = useSubmitGamePlay();
 
-    // 다른 화면에서 스크롤을 내린 채 들어와도, 들어올 때(다른 게임으로 바뀔 때 포함) 맨 위에서 시작한다
-    useLayoutEffect(() => {
-        window.scrollTo({ top: 0 });
-    }, [gameId]);
     const game = games?.find((item) => item.id === gameId);
     // 썸네일 화면에 있는 동안 게임 그림·음악을 미리 받아 두어 게임 시작을 누르면 바로 뜨게 한다
     const playableGameId = game && hasGamePlayer(game.id) ? game.id : null;

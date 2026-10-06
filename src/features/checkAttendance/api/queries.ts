@@ -1,6 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { ATTENDANCE_STATUS_KEY, checkAttendanceResultSchema } from '@entities/attendance';
+import {
+    ATTENDANCE_STATUS_KEY,
+    ATTENDANCES_API_PATH,
+    checkAttendanceResultSchema,
+} from '@entities/attendance';
 import { TICKETS_KEY } from '@entities/ticket';
 import { apiClient } from '@shared/api/client';
 
@@ -15,7 +19,7 @@ export function useCheckAttendance() {
     return useMutation({
         mutationFn: async ({ minDurationMs = 0 }: { minDurationMs?: number } = {}) => {
             const [{ data }] = await Promise.all([
-                apiClient.post<unknown>('/attendances'),
+                apiClient.post<unknown>(ATTENDANCES_API_PATH),
                 new Promise((resolve) => setTimeout(resolve, minDurationMs)),
             ]);
             return checkAttendanceResultSchema.parse(data);

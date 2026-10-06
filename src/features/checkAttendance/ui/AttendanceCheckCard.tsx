@@ -124,8 +124,28 @@ export function AttendanceCheckCard({
     const bonusDays: ReadonlySet<number> = new Set(bonusRewards.keys());
     // 출석 판정은 서버가 하고, 여기서는 표시용 날짜 계산에만 쓴다
     const clock = useVirtualClock();
-    const [now] = useState(() => clock.now());
+    const [now, setNow] = useState(() => clock.now());
+    // 가상 시계 오버라이드가 바뀌면 렌더 단계에서 즉시 갱신한다 (effect setState는 lint 금지)
+    const [lastClock, setLastClock] = useState(clock);
+    if (lastClock !== clock) {
+        setLastClock(clock);
+        setNow(clock.now());
+    }
     const today = toAttendanceDate(now);
+
+    // 화면을 열어 둔 채 출석 기준일(00:00 KST)이 지나도 오늘 표시가 따라오도록 주기적으로 확인한다.
+    // 기준일이 바뀌지 않았으면 이전 Date를 돌려줘 리렌더를 일으키지 않는다
+    useEffect(() => {
+        const timer = setInterval(
+            () =>
+                setNow((prev) => {
+                    const next = clock.now();
+                    return toAttendanceDate(next) === toAttendanceDate(prev) ? prev : next;
+                }),
+            30_000,
+        );
+        return () => clearInterval(timer);
+    }, [clock]);
     const [baking, setBaking] = useState(false);
     // 접힌 카드에서 출석했을 때 굽기 장면이 카드 전체를 채운다 (넓어지는 동안에도 유지)
     const [stageFull, setStageFull] = useState(false);

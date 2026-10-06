@@ -9,11 +9,13 @@ const missionListSchema = z.array(missionSchema);
 
 export const MISSIONS_KEY = ['missions'] as const;
 
+export const MISSIONS_API_PATH = '/missions';
+
 export function useMissionList() {
     return useQuery({
         queryKey: [...MISSIONS_KEY, 'list'],
         queryFn: async () => {
-            const { data } = await apiClient.get<unknown>('/missions');
+            const { data } = await apiClient.get<unknown>(MISSIONS_API_PATH);
             return missionListSchema.parse(data);
         },
     });

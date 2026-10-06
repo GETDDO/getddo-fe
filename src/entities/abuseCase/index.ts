@@ -1,4 +1,9 @@
-export { ABUSE_CASES_KEY, useAbuseCases } from './api/queries';
+export {
+    ABUSE_CASES_API_PATH,
+    ABUSE_CASES_KEY,
+    abuseCaseReviewApiPath,
+    useAbuseCases,
+} from './api/queries';
 export {
     abuseCaseReviewSchema,
     abuseCaseSchema,
@@ -15,4 +20,4 @@ export type {
     AbuseDecision,
     RewardSource,
 } from './model/types';
-export { AbuseCaseCard } from './ui/AbuseCaseCard';
+export { AbuseCaseTable } from './ui/AbuseCaseTable';

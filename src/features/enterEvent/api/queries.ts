@@ -3,7 +3,7 @@ import { isAxiosError } from 'axios';
 import { useRef } from 'react';
 
 import { ENTRIES_KEY, entrySchema } from '@entities/entry';
-import { EVENTS_KEY } from '@entities/event';
+import { EVENTS_KEY, eventEntriesApiPath } from '@entities/event';
 import { TICKETS_KEY } from '@entities/ticket';
 import { apiClient } from '@shared/api/client';
 import { envelopeSchema } from '@shared/api/envelopeSchema';
@@ -32,7 +32,7 @@ export function useEnterEvent(eventId: string) {
             }
 
             const { data } = await apiClient.post<unknown>(
-                `/events/${eventId}/entries`,
+                eventEntriesApiPath(eventId),
                 { ticketCount },
                 { headers: { [IDEMPOTENCY_HEADER]: attemptRef.current.key } },
             );
