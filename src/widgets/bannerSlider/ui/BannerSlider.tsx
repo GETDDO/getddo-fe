@@ -134,8 +134,12 @@ export function BannerSlider({
                                 <div className="flex flex-1 flex-col items-start gap-5 px-6 pt-21 pb-8 sm:px-12.5 sm:pb-8.75">
                                     <div className="flex max-w-150 flex-col gap-1">
                                         <div className="flex items-center gap-1">
-                                            <Flame className="text-brand-primary size-5.5" />
-                                            <span className="text-brand-primary text-body-sm-bold">
+                                            {/* 채운 불꽃 아이콘 — 아이콘·글자 모두 잉크(fg/primary) */}
+                                            <Flame
+                                                aria-hidden
+                                                className="fill-fg-primary text-fg-primary size-5.5"
+                                            />
+                                            <span className="text-fg-primary text-body-sm-bold">
                                                 오늘의 겟또타임
                                             </span>
                                         </div>
@@ -165,7 +169,7 @@ export function BannerSlider({
                     src={bannerMascot}
                     alt=""
                     aria-hidden
-                    className="pointer-events-none absolute -top-16.75 -right-13.5 hidden w-125 select-none xl:block"
+                    className="pointer-events-none absolute -top-16.75 right-8 hidden w-125 select-none xl:block"
                 />
             )}
             {slides.length > 1 && (

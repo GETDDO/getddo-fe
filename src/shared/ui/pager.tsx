@@ -7,8 +7,8 @@ const ARROW =
 
 // 피그마 홈 — 원형 화살표(lucide CircleArrow) 사이에 '01 / 04' (글자 12 Medium)
 const SIZES = {
-    // 메인 배너 넘김 — 화살표 28
-    lg: 'size-7',
+    // 메인 배너 넘김 — 화살표 30
+    lg: 'size-7.5',
     // 섹션 안 넘김(오픈 예정 등) — 화살표 20, 배너보다 작게
     md: 'size-5',
 } as const;

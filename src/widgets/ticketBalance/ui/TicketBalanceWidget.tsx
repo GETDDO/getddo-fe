@@ -30,7 +30,7 @@ interface EarnCard {
  * railClassName: 카드 가로 스크롤 영역에 덧붙일 클래스 (예: 화면 끝까지 펼치기)
  * cardClassName: 카드에 덧붙일 클래스 (예: 고정 너비) — 넘기지 않으면 기존 모양 그대로다
  * sortCompletedLast: 오늘 참여를 마친 카드(출석 완료 등)를 목록 맨 뒤로 보낸다
- * hideMoreLink: 제목 옆 '전체보기' 링크를 숨긴다 (미션 페이지처럼 이미 전체 목록인 곳)
+ * hideMoreLink: 제목 옆 '더보기' 링크를 숨긴다 (미션 페이지처럼 이미 전체 목록인 곳)
  */
 export function TicketBalanceWidget({
     railClassName,
@@ -68,7 +68,7 @@ export function TicketBalanceWidget({
             : []),
         ...(missions ?? []).map((mission) => ({
             id: mission.id,
-            category: mission.missionType === 'QUIZ' ? 'MISSION · 퀴즈' : 'MISSION · 설문',
+            category: 'MISSION',
             title: mission.title,
             description: '미션마다 1장씩, 한 번만 받을 수 있어요',
             rewardTickets: mission.rewardTicketCount,
@@ -114,7 +114,7 @@ export function TicketBalanceWidget({
                 {!hideMoreLink && (
                     <Button asChild variant="link" size="text">
                         <Link to="/missions">
-                            전체보기
+                            더보기
                             <ChevronRight />
                         </Link>
                     </Button>

@@ -12,7 +12,8 @@ import { TicketEventSection } from '@widgets/ticketEventSection';
 /** 피그마 홈 본문 폭 1200 (좌우 여백 24 포함 1248) — 헤더와 같은 폭 */
 const CONTAINER = 'mx-auto w-full max-w-312 px-6';
 
-/** 발표 대기·결과는 피그마처럼 4개까지만 보여준다 */
+/** 응모권 없이 참여할 이벤트·발표 대기·결과는 한 줄(4개)까지만 보여주고 나머지는 '더보기'로 넘긴다 */
+const FREE_EVENT_LIMIT = 4;
 const RESULT_LIMIT = 4;
 
 export function HomePage() {
@@ -25,8 +26,8 @@ export function HomePage() {
     );
 
     return (
-        // 피그마 홈 간격 — 헤더 아래 80, 섹션 사이 80, 섹션 제목과 내용 24, 마지막 섹션과 푸터 224
-        <main className="flex w-full flex-col gap-20 pt-20 pb-56">
+        // 피그마 홈 간격 — 헤더 아래 80, 섹션 사이 80, 섹션 제목과 내용 24, 마지막 섹션과 푸터도 섹션 사이와 같은 80
+        <main className="flex w-full flex-col gap-20 pt-20 pb-20">
             <div className={`${CONTAINER} flex flex-col gap-20`}>
                 <BannerSlider renderStatus={(event) => <LiveEntryStatus event={event} />} />
                 <TicketEventSection events={ticketEvents} isPending={isPending} isError={isError} />
@@ -39,8 +40,7 @@ export function HomePage() {
                     title="응모권 없이 참여할 수 있는 이벤트"
                     moreHref="/events"
                     moreLabel="더보기"
-                    twoRowsOnly
-                    events={freeEvents}
+                    events={freeEvents.slice(0, FREE_EVENT_LIMIT)}
                     isPending={isPending}
                     isError={isError}
                     emptyMessage="현재 응모권 없이 참여할 수 있는 이벤트가 없습니다."

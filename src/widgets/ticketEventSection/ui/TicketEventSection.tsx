@@ -38,7 +38,7 @@ export function TicketEventSection({
                 <h2 className="text-title-3 text-fg-primary">겟또타임 · 응모권 사용</h2>
                 <Button asChild variant="link" size="text">
                     <Link to="/events">
-                        전체보기
+                        더보기
                         <ChevronRight />
                     </Link>
                 </Button>

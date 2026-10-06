@@ -4,18 +4,16 @@ import { Link } from 'react-router-dom';
 import type { Event } from '@entities/event';
 
 import { EventCard } from '@entities/event';
-import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
 
 export function EventCardList({
     title,
     moreHref,
-    moreLabel = '전체보기',
+    moreLabel = '더보기',
     events,
     isPending,
     isError,
     emptyMessage = '표시할 이벤트가 없습니다.',
-    twoRowsOnly = false,
 }: {
     title: string;
     moreHref?: string;
@@ -24,8 +22,6 @@ export function EventCardList({
     isPending?: boolean;
     isError?: boolean;
     emptyMessage?: string;
-    /** 화면 폭에 맞는 줄 수로 두 줄까지만 보여주고 나머지는 '더보기'로 넘긴다 (1열 2개 · 2열 4개 · 4열 8개) */
-    twoRowsOnly?: boolean;
 }) {
     return (
         <section className="flex flex-col gap-6">
@@ -49,17 +45,8 @@ export function EventCardList({
             )}
             {events.length > 0 && (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    {events.map((event, index) => (
-                        <Link
-                            key={event.id}
-                            to={`/events/${event.id}`}
-                            className={cn(
-                                'block',
-                                twoRowsOnly && index >= 2 && 'max-sm:hidden',
-                                twoRowsOnly && index >= 4 && 'sm:max-lg:hidden',
-                                twoRowsOnly && index >= 8 && 'lg:hidden',
-                            )}
-                        >
+                    {events.map((event) => (
+                        <Link key={event.id} to={`/events/${event.id}`} className="block">
                             <EventCard event={event} />
                         </Link>
                     ))}

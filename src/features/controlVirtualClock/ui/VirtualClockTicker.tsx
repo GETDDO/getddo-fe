@@ -66,7 +66,8 @@ export function VirtualClockTicker({
             )}
             <span
                 className={cn(
-                    'w-5 text-center tabular-nums',
+                    // 숫자 칸은 글자 2개 폭(2ch)·고정폭 숫자로 — 한 자리 시(4)도 콜론에 붙어 간격이 고르고, 초가 바뀌어도 흔들리지 않는다
+                    'w-[2ch] text-right tabular-nums',
                     isOverridden && 'text-fg-brand font-medium',
                 )}
             >
@@ -84,10 +85,7 @@ export function VirtualClockTicker({
                 </StepButton>
             )}
             <span
-                className={cn(
-                    'w-5 text-center tabular-nums',
-                    isOverridden && 'text-fg-brand font-medium',
-                )}
+                className={cn('w-[2ch] tabular-nums', isOverridden && 'text-fg-brand font-medium')}
             >
                 {part('minute')}
             </span>
@@ -97,7 +95,7 @@ export function VirtualClockTicker({
                 </StepButton>
             )}
             <span className="text-fg-tertiary">:</span>
-            <span className="text-fg-tertiary w-5 text-center tabular-nums">{part('second')}</span>
+            <span className="text-fg-tertiary w-[2ch] tabular-nums">{part('second')}</span>
         </div>
     );
 }

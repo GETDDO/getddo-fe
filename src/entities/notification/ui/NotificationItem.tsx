@@ -35,9 +35,10 @@ export function NotificationItem({
                 <button
                     type="button"
                     onClick={() => onRead?.(notification.id, notification.linkUrl)}
-                    className={`flex w-full flex-col gap-1 rounded-sm pr-6 text-left ${FOCUS}`}
+                    className={`flex w-full flex-col gap-1 rounded-sm text-left ${FOCUS}`}
                 >
-                    <span className="flex w-full items-center">
+                    {/* 삭제(X) 버튼은 제목 줄 오른쪽에만 뜨므로 그 자리(24+여유)는 제목 줄에서만 비워 두고, 본문·시간은 끝까지 쓴다 */}
+                    <span className="flex w-full items-center pr-7">
                         <span
                             className={`min-w-0 flex-1 truncate ${unread ? 'text-body-sm-bold text-fg-primary' : 'text-body-sm text-fg-secondary'}`}
                         >
