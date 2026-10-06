@@ -228,33 +228,45 @@ export function TakkoRunGame({
 
         let frame = 0;
         let last = performance.now();
+        // 연속 프레임 오류는 첫 번째만 남긴다 — 오류가 매 프레임 반복돼도 콘솔이 도배되지 않게
+        let frameErrorLogged = false;
         const tick = (now: number) => {
             const dt = Math.min((now - last) / 1000, MAX_STEP_SECONDS);
             last = now;
-            const run = runRef.current;
-            if (stepRun(run, dt)) finish(scoreOf(run));
-            if (run.stage !== stageRef.current) changeStage(run.stage);
-            if (run.jumps > jumpsRef.current) {
-                jumpsRef.current = run.jumps;
-                jumpSound();
+            try {
+                const run = runRef.current;
+                if (stepRun(run, dt)) finish(scoreOf(run));
+                if (run.stage !== stageRef.current) changeStage(run.stage);
+                if (run.jumps > jumpsRef.current) {
+                    jumpsRef.current = run.jumps;
+                    jumpSound();
+                }
+                const milestone = Math.floor(scoreOf(run) / SCORE_MILESTONE);
+                if (milestone > milestoneRef.current) {
+                    milestoneRef.current = milestone;
+                    celebrateMilestone();
+                }
+                // 점수·진행도는 값이 바뀔 때만 화면에 쓴다 — 매 프레임 쓰면 레이아웃 계산이 계속 일어난다.
+                // 진행도는 위치(left) 대신 transform으로 옮겨 레이아웃 없이 합성만 하게 한다
+                const score = scoreOf(run);
+                if (score !== shownScoreRef.current) {
+                    shownScoreRef.current = score;
+                    if (scoreRef.current) scoreRef.current.textContent = padScore(score);
+                    const shift = `translateX(${progressOf(score) * 100}%)`;
+                    if (progressRestRef.current) progressRestRef.current.style.transform = shift;
+                    if (progressFaceRef.current) progressFaceRef.current.style.transform = shift;
+                }
+                drawRun(ctx, run, images, palette);
+                frameErrorLogged = false;
+            } catch (error) {
+                if (!frameErrorLogged) {
+                    frameErrorLogged = true;
+                    console.error('타꼬런 프레임 처리 중 오류가 발생했어요.', error);
+                }
+            } finally {
+                // 한 프레임이 실패해도 다음 프레임 요청은 반드시 이어진다 — 그리기·진행 오류가 루프를 죽이지 않게 한다
+                frame = requestAnimationFrame(tick);
             }
-            const milestone = Math.floor(scoreOf(run) / SCORE_MILESTONE);
-            if (milestone > milestoneRef.current) {
-                milestoneRef.current = milestone;
-                celebrateMilestone();
-            }
-            // 점수·진행도는 값이 바뀔 때만 화면에 쓴다 — 매 프레임 쓰면 레이아웃 계산이 계속 일어난다.
-            // 진행도는 위치(left) 대신 transform으로 옮겨 레이아웃 없이 합성만 하게 한다
-            const score = scoreOf(run);
-            if (score !== shownScoreRef.current) {
-                shownScoreRef.current = score;
-                if (scoreRef.current) scoreRef.current.textContent = padScore(score);
-                const shift = `translateX(${progressOf(score) * 100}%)`;
-                if (progressRestRef.current) progressRestRef.current.style.transform = shift;
-                if (progressFaceRef.current) progressFaceRef.current.style.transform = shift;
-            }
-            drawRun(ctx, run, images, palette);
-            frame = requestAnimationFrame(tick);
         };
         frame = requestAnimationFrame(tick);
         return () => {
