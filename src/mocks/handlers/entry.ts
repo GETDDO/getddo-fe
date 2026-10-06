@@ -67,6 +67,16 @@ const seedEntry = (): EntryReceipt => ({
 
 const userIdOf = (request: Request) => request.headers.get('X-User-ID') ?? 'anonymous';
 
+/** 관리자 목업이 삭제 가능 여부(응모 이력 없음, 도메인 규칙)를 판정할 때 쓴다 */
+export function mockEventHasEntries(eventId: string): boolean {
+    for (const list of entriesByUser.values()) {
+        if (list.some((entry) => entry.eventId === eventId && entry.status === 'ACCEPTED')) {
+            return true;
+        }
+    }
+    return false;
+}
+
 const myEntriesFor = (userId: string) => {
     let list = entriesByUser.get(userId);
     if (!list) {
@@ -141,6 +151,10 @@ export const entryHandlers = [
         const event = findMockEvent(eventId);
         if (!event) {
             return remember(404, failBody('EVENT_NOT_FOUND', '이벤트를 찾을 수 없습니다'));
+        }
+        // 관리자 중단이 먼저 확정된 이벤트는 이후 응모를 거절한다 (getddo-spec 02-domain/event.md)
+        if (event.entryBlocked) {
+            return remember(409, failBody('EVENT_NOT_OPEN', '중단된 이벤트입니다'));
         }
 
         // 이벤트 유형별 수량 규칙 — 응모권 사용 이벤트는 1장 이상, 미사용 이벤트는 0장만 받는다

@@ -15,7 +15,7 @@ const api = (path: string) => `${env.apiBaseUrl}${path}`;
  * 카운트다운이 리셋된다 — docs/CONTEXT.md가 금지하는 동작이다.
  * 벽시계 경계에 붙이는 방법도 경계를 넘는 순간 한 칸 밀리므로, 세션에 저장해 고정한다.
  */
-function sessionFixedTime(key: string, offsetMs: number): string {
+export function sessionFixedTime(key: string, offsetMs: number): string {
     const storageKey = `getddo-mock-${key}`;
     try {
         const saved = sessionStorage.getItem(storageKey);
@@ -87,10 +87,38 @@ function raffleDetail(intro: string, prizeComposition: string) {
     };
 }
 
+/**
+ * 사용자 화면용 목 이벤트 항목.
+ * 관리자 목업(adminEvent.ts)이 등록·수정·취소를 이 배열에도 반영해 사용자 목록과 동기화한다.
+ * entryBlocked는 관리자의 중단 상태를 응모 핸들러에 전달하는 목업 전용 플래그다.
+ */
+export interface MockEvent {
+    id: string;
+    title: string;
+    description: string;
+    bannerImageUrl: string | null;
+    detailImageUrl?: string | null;
+    startsAt: string;
+    endsAt: string;
+    status: EventStatus;
+    isRecommended?: boolean;
+    isTimeRaffle?: boolean;
+    raffleDetail?: ReturnType<typeof raffleDetail>;
+    requiredTickets: number;
+    tags?: string[];
+    prizeName: string;
+    winnerCount: number;
+    participantCount: number | null;
+    usedTicketCount: number | null;
+    myEntryCount: number | null;
+    myTicketCount: number | null;
+    entryBlocked?: boolean;
+}
+
 // requiredTickets > 0 은 모은 응모권을 차감해 응모하는 이벤트, 0 은 응모권 없이 참여하는 이벤트다.
 // 이벤트 목록 화면이 이 값으로 위·아래 섹션을 가른다.
 // isTimeRaffle 이 true 면 타임래플 화면에만 노출하고 이벤트 목록에서는 뺀다.
-const mockEvents = [
+export const mockEvents: MockEvent[] = [
     {
         id: 'evt-001',
         isRecommended: true,
