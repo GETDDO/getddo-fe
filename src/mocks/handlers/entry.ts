@@ -67,6 +67,28 @@ const seedEntry = (): EntryReceipt => ({
 
 const userIdOf = (request: Request) => request.headers.get('X-User-ID') ?? 'anonymous';
 
+/** 관리자 목업이 삭제 가능 여부(응모 이력 없음, 도메인 규칙)를 판정할 때 쓴다 */
+export function mockEventHasEntries(eventId: string): boolean {
+    for (const list of entriesByUser.values()) {
+        if (list.some((entry) => entry.eventId === eventId && entry.status === 'ACCEPTED')) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/** 관리자 목업이 취소 시 사용자별 실제 차감 합계를 환불할 때 쓴다 — 시드 카운터가 아닌 접수 기록이 근거다 */
+export function mockEntryTicketTotals(eventId: string): Map<string, number> {
+    const totals = new Map<string, number>();
+    for (const [userId, list] of entriesByUser) {
+        const sum = list
+            .filter((entry) => entry.eventId === eventId && entry.status === 'ACCEPTED')
+            .reduce((acc, entry) => acc + entry.deductedTicketCount, 0);
+        if (sum > 0) totals.set(userId, sum);
+    }
+    return totals;
+}
+
 const myEntriesFor = (userId: string) => {
     let list = entriesByUser.get(userId);
     if (!list) {
@@ -141,6 +163,10 @@ export const entryHandlers = [
         const event = findMockEvent(eventId);
         if (!event) {
             return remember(404, failBody('EVENT_NOT_FOUND', '이벤트를 찾을 수 없습니다'));
+        }
+        // 관리자 중단이 먼저 확정된 이벤트는 이후 응모를 거절한다 (getddo-spec 02-domain/event.md)
+        if (event.entryBlocked) {
+            return remember(409, failBody('EVENT_NOT_OPEN', '중단된 이벤트입니다'));
         }
 
         // 이벤트 유형별 수량 규칙 — 응모권 사용 이벤트는 1장 이상, 미사용 이벤트는 0장만 받는다

@@ -172,6 +172,19 @@ export function recordMockTicketGrant(userId: string, amount: number, reason: st
     });
 }
 
+/** 관리자 취소·자동 취소로 차감된 응모권을 되돌려줄 때 쓴다 — 지급(earn)이 아닌 반환(refund) 이력으로 남긴다 */
+export function recordMockTicketRefund(userId: string, amount: number, reason: string) {
+    const state = stateFor(userId);
+    state.balance += amount;
+    state.history.unshift({
+        id: `th-mock-${crypto.randomUUID()}`,
+        type: 'refund',
+        amount,
+        reason,
+        createdAt: mockNow().toISOString(),
+    });
+}
+
 export const ticketHandlers = [
     http.get(api('/tickets/balance'), ({ request }) =>
         HttpResponse.json({

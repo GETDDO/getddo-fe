@@ -48,6 +48,30 @@ export const adminRoutes: RouteObject[] = [
                 ),
             },
             {
+                path: 'events/new',
+                element: lazyPage(() =>
+                    import('@pages/admin/eventForm/AdminEventFormPage').then((m) => ({
+                        default: m.AdminEventFormPage,
+                    })),
+                ),
+            },
+            {
+                path: 'events/:eventId',
+                element: lazyPage(() =>
+                    import('@pages/admin/eventDetail/AdminEventDetailPage').then((m) => ({
+                        default: m.AdminEventDetailPage,
+                    })),
+                ),
+            },
+            {
+                path: 'events/:eventId/edit',
+                element: lazyPage(() =>
+                    import('@pages/admin/eventForm/AdminEventFormPage').then((m) => ({
+                        default: m.AdminEventFormPage,
+                    })),
+                ),
+            },
+            {
                 path: 'draw',
                 element: lazyPage(() =>
                     import('@pages/admin/draw/AdminDrawPage').then((m) => ({

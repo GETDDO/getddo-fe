@@ -1,4 +1,5 @@
 import { abuseHandlers } from './abuse';
+import { adminEventHandlers } from './adminEvent';
 import { attendanceHandlers } from './attendance';
 import { bannerHandlers } from './banner';
 import { drawHandlers } from './draw';
@@ -12,6 +13,7 @@ import { virtualUserHandlers } from './virtualUsers';
 
 export const handlers = [
     ...abuseHandlers,
+    ...adminEventHandlers,
     ...attendanceHandlers,
     ...bannerHandlers,
     ...drawHandlers,

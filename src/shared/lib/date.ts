@@ -81,6 +81,22 @@ export function formatCountdown(remainingMs: number): string {
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
 
+/**
+ * `datetime-local` 입력값("YYYY-MM-DDTHH:mm")을 KST로 해석해 UTC ISO 문자열로 변환한다.
+ * 관리자가 화면에 입력하는 운영 시각은 KST 기준이다 (getddo-spec 기능 요구사항 공통 시간 기준).
+ */
+export function kstInputToUtcIso(local: string): string {
+    const withSeconds = local.length === 16 ? `${local}:00` : local;
+    return new Date(`${withSeconds}+09:00`).toISOString();
+}
+
+/** UTC ISO 문자열을 `datetime-local` 입력값("YYYY-MM-DDTHH:mm", KST 기준)으로 되돌린다 — 폼 초기값용 */
+export function utcIsoToKstInput(iso: string): string {
+    const k = toKst(iso);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${k.getUTCFullYear()}-${pad(k.getUTCMonth() + 1)}-${pad(k.getUTCDate())}T${pad(k.getUTCHours())}:${pad(k.getUTCMinutes())}`;
+}
+
 /** now 기준 상대 시간 문자열을 만든다. "지금"의 기준은 호출부가 useVirtualClock().now()로 넘겨준다 */
 export function formatRelativeFromNow(date: Date | string, now: Date): string {
     const target = typeof date === 'string' ? new Date(date) : date;
