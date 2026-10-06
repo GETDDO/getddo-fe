@@ -1,6 +1,6 @@
 import { ChevronDown, Menu } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
 
 import { useSessionStore } from '@entities/user';
 import { VirtualClockTicker } from '@features/controlVirtualClock';
@@ -55,6 +55,8 @@ export function UserLayout() {
 
     return (
         <div className="bg-surface-page flex min-h-screen flex-col">
+            {/* 라우트가 바뀌면 새 화면은 맨 위에서 시작하고, 뒤로 가기는 이전 위치를 복원한다 */}
+            <ScrollRestoration />
             <header
                 className={cn(
                     'bg-surface-page sticky top-0 z-30 transition-shadow duration-200',

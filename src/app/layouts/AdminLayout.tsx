@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
 
 import { VirtualClockTicker } from '@features/controlVirtualClock';
 import { cn } from '@shared/lib/utils';
@@ -15,6 +15,7 @@ export function AdminLayout() {
 
     return (
         <div className="bg-surface-canvas flex min-h-screen">
+            <ScrollRestoration />
             <aside className="border-border bg-surface-inverse hidden w-60 shrink-0 flex-col border-r md:flex">
                 <div className="border-border flex h-16 items-center gap-2 border-b px-5">
                     <img src="/favicon.svg" alt="" className="size-[46px]" />

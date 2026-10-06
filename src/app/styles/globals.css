@@ -90,6 +90,11 @@
     html {
         @apply font-sans;
     }
+    /* Tailwind v4 preflight는 button의 커서를 default로 둔다 — 누를 수 있는 요소는 모두 포인터를 유지한다 */
+    button:not(:disabled),
+    [role='button']:not([aria-disabled='true']) {
+        cursor: pointer;
+    }
     /* 큰글씨 모드 — html의 data-text-scale 속성으로 rem 기준을 키운다. rem 기반 컴포넌트에만 자연스럽게 배율이 적용된다 */
     html[data-text-scale='large'] {
         font-size: 120%;

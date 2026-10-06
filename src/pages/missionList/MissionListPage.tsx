@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useMissionList } from '@entities/mission';
 import {
@@ -54,11 +54,6 @@ export function MissionListPage() {
             // 저장하지 못해도 화면 동작에는 영향이 없다
         }
     }, [attendanceExpanded]);
-
-    // 다른 화면에서 스크롤을 내린 채 들어와도 맨 위에서 시작한다
-    useLayoutEffect(() => {
-        window.scrollTo({ top: 0 });
-    }, []);
 
     return (
         <main className="flex flex-col pt-20 pb-28">
