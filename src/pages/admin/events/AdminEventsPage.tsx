@@ -9,6 +9,7 @@ import {
     EVENT_TYPE_LABEL,
     useAdminEvents,
 } from '@entities/event';
+import { kstInputToUtcIso } from '@shared/lib/date';
 import { Button } from '@shared/ui/button';
 import { Input } from '@shared/ui/input';
 import { Pager } from '@shared/ui/pager';
@@ -32,12 +33,24 @@ const TYPE_OPTIONS: { value: 'all' | EventType; label: string }[] = [
     })),
 ];
 
+// 종료일 입력(YYYY-MM-DD, KST)을 다음 날 00:00 UTC ISO로 변환해 [from, to) 구간의 상한을 만든다
+const nextDay = (ymd: string) => {
+    const d = new Date(`${ymd}T00:00:00+09:00`);
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString();
+};
+
 export function AdminEventsPage() {
     const navigate = useNavigate();
     const [page, setPage] = useState(1);
     const [keywordInput, setKeywordInput] = useState('');
     // 검색어는 엔터·버튼으로 확정된 값만 쿼리에 넘긴다 — 입력마다 요청하지 않는다
     const [keyword, setKeyword] = useState('');
+    const [fromInput, setFromInput] = useState('');
+    const [toInput, setToInput] = useState('');
+    // 기간도 Select와 달리 즉시 적용되지 않고 검색 버튼으로 함께 적용된다 (응모 시작 시각 기준 [from, to))
+    const [from, setFrom] = useState('');
+    const [to, setTo] = useState('');
     const [status, setStatus] = useState<'all' | AdminEventStatus>('all');
     const [eventType, setEventType] = useState<'all' | EventType>('all');
 
@@ -47,6 +60,8 @@ export function AdminEventsPage() {
         keyword: keyword || undefined,
         status: status === 'all' ? undefined : status,
         eventType: eventType === 'all' ? undefined : eventType,
+        from: from || undefined,
+        to: to || undefined,
     });
 
     const totalPages = data ? Math.max(1, Math.ceil(data.totalElements / data.size)) : 0;
@@ -60,6 +75,8 @@ export function AdminEventsPage() {
                     onSubmit={(e) => {
                         e.preventDefault();
                         setKeyword(keywordInput.trim());
+                        setFrom(fromInput ? kstInputToUtcIso(`${fromInput}T00:00`) : '');
+                        setTo(toInput ? nextDay(toInput) : '');
                         resetPage();
                     }}
                 >
@@ -69,6 +86,21 @@ export function AdminEventsPage() {
                         placeholder="이벤트 이름·설명 검색"
                         className="w-64"
                         aria-label="이벤트 검색"
+                    />
+                    <Input
+                        type="date"
+                        value={fromInput}
+                        onChange={(e) => setFromInput(e.target.value)}
+                        className="w-40"
+                        aria-label="시작일 필터"
+                    />
+                    <span className="text-fg-tertiary self-center">~</span>
+                    <Input
+                        type="date"
+                        value={toInput}
+                        onChange={(e) => setToInput(e.target.value)}
+                        className="w-40"
+                        aria-label="종료일 필터"
                     />
                     <Button type="submit" variant="outline">
                         검색

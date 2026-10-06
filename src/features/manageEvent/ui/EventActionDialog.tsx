@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 
 import type { AdminEvent } from '@entities/event';
 
+import { ApiError } from '@shared/api/client';
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
@@ -80,6 +81,11 @@ export function EventActionDialog({
 
     const meta = ACTION_META[action];
     const mutation = action === 'delete' ? deleteEvent : eventAction;
+    // 마감(CLOSED) 이벤트의 중단은 서버에서 즉시 취소+응모권 반환으로 전환되므로 취소급 경고를 띄운다
+    const closedSuspend = action === 'suspend' && event.status === 'CLOSED';
+    const description = closedSuspend
+        ? '이미 마감된 이벤트입니다. 중단하면 즉시 취소되고 응모권이 반환되며 되돌릴 수 없습니다.'
+        : meta.description;
     const reasonRequired = action !== 'delete';
     const canSubmit = !mutation.isPending && (!reasonRequired || reason.trim().length > 0);
 
@@ -122,7 +128,7 @@ export function EventActionDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <p className="text-body-sm text-fg-secondary">{meta.description}</p>
+                <p className="text-body-sm text-fg-secondary">{description}</p>
 
                 {reasonRequired && (
                     <div className="flex flex-col gap-2">
@@ -143,7 +149,9 @@ export function EventActionDialog({
 
                 {mutation.isError && (
                     <p className="text-destructive text-body-sm">
-                        {meta.title}에 실패했습니다. 상태를 확인한 뒤 다시 시도해주세요.
+                        {mutation.error instanceof ApiError
+                            ? mutation.error.message
+                            : `${meta.title}에 실패했습니다. 상태를 확인한 뒤 다시 시도해주세요.`}
                     </p>
                 )}
 
@@ -159,7 +167,8 @@ export function EventActionDialog({
                     <Button
                         className={cn(
                             'text-body-bold h-10 flex-1',
-                            DESTRUCTIVE.has(action) && 'bg-destructive hover:bg-destructive/80',
+                            (DESTRUCTIVE.has(action) || closedSuspend) &&
+                                'bg-destructive hover:bg-destructive/80',
                         )}
                         disabled={!canSubmit}
                         onClick={submit}

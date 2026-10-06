@@ -134,6 +134,19 @@ export function AdminEventDetailPage() {
                     {formatKst(event.startsAt, KST_YMD_HM)} ~ {formatKst(event.endsAt, KST_YMD_HM)}{' '}
                     (KST)
                 </InfoRow>
+                <InfoRow label="발표 예정">
+                    {formatKst(event.publicationScheduledAt, KST_YMD_HM)} (KST)
+                </InfoRow>
+                {event.suspendedAt && (
+                    <InfoRow label="중단 이력">
+                        {formatKst(event.suspendedAt, KST_YMD_HM)}
+                        {event.suspendedFromStatus &&
+                            ` · ${ADMIN_STATUS_META[event.suspendedFromStatus].label}에서 중단`}
+                    </InfoRow>
+                )}
+                {event.canceledAt && (
+                    <InfoRow label="취소 이력">{formatKst(event.canceledAt, KST_YMD_HM)}</InfoRow>
+                )}
                 <InfoRow label="이미지 키">{event.imageKey ?? '없음'}</InfoRow>
                 <InfoRow label="등록일">{formatKst(event.createdAt, KST_YMD_HM)}</InfoRow>
             </section>
