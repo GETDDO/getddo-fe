@@ -51,16 +51,16 @@ export function EventCard({ event }: { event: Event }) {
                 {((event.tags?.length ?? 0) > 0 || (dDay != null && dDay >= 0)) && (
                     <div className="flex flex-wrap items-center gap-2">
                         {event.tags?.map((tag) => (
-                            <Badge key={tag} variant="info">
+                            <Badge key={tag} variant="neutral">
                                 {tag}
                             </Badge>
                         ))}
-                        {dDay != null && dDay >= 0 && <Badge variant="brand">D-{dDay}</Badge>}
+                        {dDay != null && dDay >= 0 && <Badge variant="inverse">D-{dDay}</Badge>}
                     </div>
                 )}
                 <div className="flex flex-col gap-2">
-                    <p className="text-title-3 text-fg-primary truncate">{event.title}</p>
-                    <p className="text-body text-fg-tertiary">
+                    <p className="text-body-bold text-fg-primary truncate">{event.title}</p>
+                    <p className="text-body-sm text-fg-tertiary">
                         {formatYmd(event.startsAt)} ~ {formatYmd(event.endsAt)}
                     </p>
                 </div>

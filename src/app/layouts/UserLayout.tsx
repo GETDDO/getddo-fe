@@ -92,7 +92,7 @@ export function UserLayout() {
                         {/* 활성 항목 밑줄은 텍스트 바닥과 프레임 하단의 중간 높이에 두고, 페이지 이동 시 미끄러지게 한다 */}
                         <span
                             aria-hidden
-                            className="bg-brand-primary pointer-events-none absolute bottom-4 h-0.5 rounded-full transition-all duration-300"
+                            className="bg-fg-primary pointer-events-none absolute bottom-4 h-0.5 rounded-full transition-all duration-300"
                             style={{
                                 left: indicator?.left ?? 0,
                                 width: indicator?.width ?? 0,
@@ -104,7 +104,7 @@ export function UserLayout() {
                     <Popover open={menuOpen} onOpenChange={setMenuOpen}>
                         <PopoverTrigger
                             aria-label="메뉴"
-                            className="text-fg-primary focus-visible:ring-border-focus flex size-8 items-center justify-center rounded-lg focus-visible:ring-2 focus-visible:outline-none md:hidden"
+                            className="text-fg-primary focus-visible:ring-border-focus focus-visible:ring-offset-surface-page flex size-8 items-center justify-center rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none md:hidden"
                         >
                             <Menu className="size-6" />
                         </PopoverTrigger>
@@ -142,7 +142,7 @@ export function UserLayout() {
                             trigger={
                                 <button
                                     type="button"
-                                    className="bg-surface-page focus-visible:ring-border-focus flex h-9 cursor-pointer items-center gap-2.5 rounded-full py-1 pr-2 pl-2 shadow-md focus-visible:ring-2 focus-visible:outline-none"
+                                    className="bg-surface-page focus-visible:ring-border-focus focus-visible:ring-offset-surface-page flex h-9 cursor-pointer items-center gap-2.5 rounded-full py-1 pr-2 pl-2 shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                                 >
                                     <span className="flex items-center gap-2">
                                         <img

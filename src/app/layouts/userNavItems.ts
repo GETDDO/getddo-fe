@@ -7,7 +7,7 @@ export interface UserNavItem {
 
 export const USER_NAV_ITEMS: UserNavItem[] = [
     { to: '/', label: '홈', end: true },
-    { to: '/time-raffle', label: '타임래플' },
+    { to: '/time-raffle', label: '겟또타임' },
     { to: '/events', label: '이벤트' },
     { to: '/missions', label: '미션' },
     { to: '/mypage', label: '마이페이지' },

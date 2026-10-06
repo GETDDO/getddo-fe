@@ -32,7 +32,7 @@ export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHe
                 tabIndex={hasAnnounceAt ? 0 : undefined}
                 role={hasAnnounceAt ? 'group' : undefined}
                 aria-label={hasAnnounceAt ? '상품 이미지 — 당첨자 발표까지 남은 시간' : undefined}
-                className="bg-surface-canvas focus-visible:ring-border-focus group relative h-48 w-full self-stretch focus-visible:ring-2 focus-visible:outline-none lg:h-auto lg:w-130 lg:shrink-0"
+                className="bg-surface-canvas focus-visible:ring-border-focus focus-visible:ring-offset-surface-page group relative h-48 w-full self-stretch focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none lg:h-auto lg:w-130 lg:shrink-0"
             >
                 {event.bannerImageUrl ? (
                     <img src={event.bannerImageUrl} alt="" className="size-full object-cover" />

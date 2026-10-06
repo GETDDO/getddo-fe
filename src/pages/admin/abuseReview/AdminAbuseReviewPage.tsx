@@ -32,7 +32,7 @@ export function AdminAbuseReviewPage() {
                             type="button"
                             onClick={() => setFilter(value)}
                             className={cn(
-                                'text-body-sm focus-visible:ring-border-focus rounded-lg px-3 py-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none',
+                                'text-body-sm focus-visible:ring-border-focus focus-visible:ring-offset-surface-page rounded-lg px-3 py-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
                                 filter === value
                                     ? 'bg-surface-inverse text-fg-inverse font-medium'
                                     : 'text-fg-secondary hover:bg-surface-sunken',

@@ -21,6 +21,8 @@ const badgeVariants = cva(
                 outline: 'bg-surface-page text-fg-secondary border-border-default',
                 // 흰 바탕 알약 — 배너 위 마감 시간처럼 색 배경 위에 띄울 때
                 surface: 'bg-surface-page text-fg-primary',
+                // 검정 알약 — 이벤트 카드 D-day처럼 무채색 위계에서 가장 진하게
+                inverse: 'bg-action-neutral text-fg-on-brand',
             },
             size: {
                 sm: 'h-6 py-0.5',

@@ -5,6 +5,7 @@ import type { Event } from '@entities/event';
 
 import { EventCard } from '@entities/event';
 import { cn } from '@shared/lib/utils';
+import { Button } from '@shared/ui/button';
 
 export function EventCardList({
     title,
@@ -29,15 +30,14 @@ export function EventCardList({
     return (
         <section className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
-                <h2 className="text-subhead text-fg-primary">{title}</h2>
+                <h2 className="text-title-3 text-fg-primary">{title}</h2>
                 {moreHref && (
-                    <Link
-                        to={moreHref}
-                        className="text-fg-primary text-body-sm flex items-center gap-0.5"
-                    >
-                        {moreLabel}
-                        <ChevronRight className="size-5" />
-                    </Link>
+                    <Button asChild variant="link" size="text">
+                        <Link to={moreHref}>
+                            {moreLabel}
+                            <ChevronRight />
+                        </Link>
+                    </Button>
                 )}
             </div>
             {isPending && <p className="text-fg-tertiary text-body-sm">불러오는 중…</p>}

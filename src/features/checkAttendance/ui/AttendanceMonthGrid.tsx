@@ -168,7 +168,7 @@ export function AttendanceMonthGrid({
                                 }
                                 onClick={(event) => handlePress(day.date, event.timeStamp)}
                                 // 판(최대 56px)의 86% = 48px — 좁은 화면에서는 판에 맞춰 함께 줄어든다
-                                className="focus-visible:ring-border-focus relative size-[86%] rounded-full [perspective:320px] focus-visible:ring-2 focus-visible:outline-none enabled:cursor-pointer"
+                                className="focus-visible:ring-border-focus focus-visible:ring-offset-surface-page relative size-[86%] rounded-full [perspective:320px] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none enabled:cursor-pointer"
                             >
                                 {/*
                                   원래 타코야끼와 어지러운 타코야끼를 겹쳐 두고 투명도로 바꾼다.
