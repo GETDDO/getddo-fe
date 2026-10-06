@@ -85,7 +85,7 @@ export function eventFormToRequest(v: EventFormValues): EventWriteRequest {
     };
 }
 
-// 응답의 imageUrl을 쓰기 요청의 imageKey 초기값으로 옮긴다 — spec 초안의 응답·요청 필드가 비대칭이다
+// 경품 응답에는 imageKey가 없고 imageUrl만 있다 — URL을 스토리지 키로 재전송하지 않도록 imageKey는 빈 값으로 둔다
 export function eventToFormValues(event: AdminEvent): EventFormInput {
     return {
         title: event.title,
@@ -103,7 +103,7 @@ export function eventToFormValues(event: AdminEvent): EventFormInput {
             name: p.name,
             winnerCount: p.winnerCount,
             description: p.description ?? '',
-            imageKey: p.imageUrl ?? '',
+            imageKey: '',
         })),
     };
 }

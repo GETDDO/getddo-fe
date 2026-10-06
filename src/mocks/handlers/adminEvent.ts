@@ -572,6 +572,7 @@ export const adminEventHandlers = [
             item.usedTicketTotal = 0;
             item.status = 'CANCELED';
             item.canceledAt = now.toISOString();
+            item.updatedAt = now.toISOString();
             removeUserProjection(item.id);
             return ok(operationResult(item, previous, refunded, now));
         }

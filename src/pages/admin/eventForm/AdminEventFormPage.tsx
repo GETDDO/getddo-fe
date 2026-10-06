@@ -83,6 +83,23 @@ export function AdminEventFormPage() {
             </div>
         );
     }
+    // 수정은 진행 예정만 허용 — URL 직접 진입도 서버 검증 전에 가드한다
+    if (isEdit && event && event.status !== 'SCHEDULED') {
+        return (
+            <div className="flex flex-col gap-4 pb-10">
+                <p className="text-body-sm text-fg-secondary">
+                    진행 예정 상태의 이벤트만 수정할 수 있습니다.
+                </p>
+                <Button
+                    variant="outline"
+                    className="w-fit"
+                    onClick={() => void navigate(`/admin/events/${eventId}`)}
+                >
+                    이벤트로 돌아가기
+                </Button>
+            </div>
+        );
+    }
 
     const submit = (e: React.FormEvent) => {
         void handleSubmit((values) => {
