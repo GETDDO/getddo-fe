@@ -1,6 +1,7 @@
 import { Gamepad2, Ticket } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
 import { TicketCard } from '@shared/ui/ticket-card';
 
@@ -26,7 +27,12 @@ export function GameTicketCard({
 
     return (
         <TicketCard
-            className={className}
+            // 호버하면 살짝 떠오른다 — 이 카드가 놓이는 곳마다 같은 효과를 주려고 컴포넌트 안에 둔다
+            // (동작 줄이기 설정이면 움직이지 않는다)
+            className={cn(
+                'transition-[translate] duration-200 motion-safe:hover:-translate-y-1',
+                className,
+            )}
             cardClassName="h-90 w-66.25"
             stub={
                 <>

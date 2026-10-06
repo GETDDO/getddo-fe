@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { XIcon } from 'lucide-react';
 import { Dialog as DialogPrimitive } from 'radix-ui';
 
+import rewardMascot from '@shared/assets/ui/reward-mascot.png';
 import { Button } from '@shared/ui/button';
 import {
     Dialog,
@@ -10,8 +11,6 @@ import {
     DialogOverlay,
     DialogTitle,
 } from '@shared/ui/dialog';
-
-import rewardMascot from '../assets/ui/reward-mascot.png';
 
 /**
  * 게임 보상 적립 안내 — 오늘 첫 유효 플레이로 응모권을 받았을 때 결과 화면 위에 한 번 띄운다.

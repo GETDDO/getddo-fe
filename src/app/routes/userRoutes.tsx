@@ -9,6 +9,7 @@ import { EventListPage } from '@pages/eventList/EventListPage';
 import { GameDetailPage } from '@pages/gameDetail/GameDetailPage';
 import { HomePage } from '@pages/home/HomePage';
 import { LoginPage } from '@pages/login/LoginPage';
+import { MissionDetailPage } from '@pages/missionDetail/MissionDetailPage';
 import { MissionListPage } from '@pages/missionList/MissionListPage';
 import { MyEntriesPage } from '@pages/myEntries/MyEntriesPage';
 import { MyPage } from '@pages/myPage/MyPage';
@@ -36,6 +37,7 @@ export const userRoutes: RouteObject[] = [
             { path: '/events', element: <EventListPage /> },
             { path: '/events/:id', element: <EventDetailPage /> },
             { path: '/missions', element: <MissionListPage /> },
+            { path: '/missions/:missionId', element: <MissionDetailPage /> },
             { path: '/missions/games/:gameId', element: <GameDetailPage /> },
             { path: '/my-tickets', element: <MyTicketsPage /> },
             { path: '/my-entries', element: <MyEntriesPage /> },
