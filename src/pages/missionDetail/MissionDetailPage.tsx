@@ -22,8 +22,13 @@ const PERIOD_FORMAT: Intl.DateTimeFormatOptions = {
 export function MissionDetailPage() {
     const { missionId } = useParams<{ missionId: string }>();
     const { data: mission, isPending, isError } = useMissionDetail(missionId ?? '');
-    // 방금 제출로 완료된 결과 — 상세 쿼리 무효화로 폼이 언마운트돼도 결과 화면이 살아있게 페이지가 들고 있는다
-    const [submitted, setSubmitted] = useState<MissionSubmissionResult | null>(null);
+    // 방금 제출로 완료된 결과 — 상세 쿼리 무효화로 폼이 언마운트돼도 결과 화면이 살아있게 페이지가 들고 있는다.
+    // 결과는 낸 미션 id와 함께 보관한다 — 다른 미션 상세로 바뀌어도 이전 미션의 결과가 뜨지 않게
+    const [submission, setSubmission] = useState<{
+        missionId: string;
+        result: MissionSubmissionResult;
+    } | null>(null);
+    const submitted = submission?.missionId === (missionId ?? '') ? submission.result : null;
     const [rewardOpen, setRewardOpen] = useState(false);
     // 기간 판정은 서버 몫 — 여기의 now 비교는 표시용 안내에만 쓴다 (시간 규칙)
     const now = useVirtualClock().now();
@@ -54,7 +59,7 @@ export function MissionDetailPage() {
     const rewardTickets = grantedTickets ?? mission.rewardTicketCount;
 
     const handleCompleted = (result: MissionSubmissionResult, isNewSubmission: boolean) => {
-        setSubmitted(result);
+        setSubmission({ missionId: missionId ?? '', result });
         // 보상 모달은 이번 제출로 막 완료됐을 때(201)만 — 재제출 재생(200)에는 띄우지 않는다
         if (isNewSubmission) setRewardOpen(true);
     };
@@ -86,7 +91,6 @@ export function MissionDetailPage() {
                                     : '설문 참여가 완료됐어요'
                             }
                             tickets={grantedTickets}
-                            receivedAt={submitted.receivedAt}
                         />
                     ) : mission.completed ? (
                         <section
