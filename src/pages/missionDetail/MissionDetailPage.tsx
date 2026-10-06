@@ -5,8 +5,7 @@ import { Link, useParams } from 'react-router-dom';
 import type { MissionSubmissionResult } from '@entities/mission';
 
 import { MissionResultPanel, MissionRewardDialog, useMissionDetail } from '@entities/mission';
-import { QuizForm } from '@features/submitQuiz';
-import { SurveyForm } from '@features/submitSurvey';
+import { QuizForm, SurveyForm } from '@features/submitMission';
 import { formatKst } from '@shared/lib/date';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
@@ -49,7 +48,10 @@ export function MissionDetailPage() {
 
     const notYetOpen = now < new Date(mission.startsAt);
     const ended = now >= new Date(mission.endsAt);
-    const rewardTickets = submitted?.reward?.ticketCount ?? mission.rewardTicketCount;
+    // 결과 패널은 실제 지급된 보상만 표시 — 영수증이 없으면(보상 없는 미션) 문구를 숨긴다
+    const grantedTickets = submitted?.reward?.ticketCount;
+    // 보상 모달은 신규 완료(201)에만 열리므로 영수증이 없어도 미션에 적힌 보상으로 보여준다
+    const rewardTickets = grantedTickets ?? mission.rewardTicketCount;
 
     const handleCompleted = (result: MissionSubmissionResult, isNewSubmission: boolean) => {
         setSubmitted(result);
@@ -83,7 +85,7 @@ export function MissionDetailPage() {
                                     ? '정답이에요!'
                                     : '설문 참여가 완료됐어요'
                             }
-                            tickets={rewardTickets}
+                            tickets={grantedTickets}
                             receivedAt={submitted.receivedAt}
                         />
                     ) : mission.completed ? (

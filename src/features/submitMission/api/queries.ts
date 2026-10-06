@@ -2,8 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import { useRef } from 'react';
 
-import type { MissionAnswer } from '@entities/mission';
-import type { MissionSubmissionOutcome } from '@entities/mission';
+import type { MissionAnswer, MissionSubmissionOutcome } from '@entities/mission';
 
 import { MISSIONS_KEY, missionApiPath, missionSubmissionResultSchema } from '@entities/mission';
 import { TICKETS_KEY } from '@entities/ticket';
@@ -17,12 +16,12 @@ interface SubmitAttempt {
 }
 
 /**
- * 퀴즈 미션 제출 (M03 초안).
+ * 미션 답변 제출 (M03 초안) — 설문·퀴즈가 같은 엔드포인트를 쓴다.
  *
- * 오답(isCompleted=false)도 서버가 확정한 결과다 — 화면에서 "다시 시도"는 새 제출이므로
- * 응답을 받은 뒤에는 항상 새 멱등키를 쓴다. 네트워크 재시도만 같은 키를 유지한다.
+ * 답변이 같은 동안 멱등키를 유지해 "응답 유실 후 같은 답변 재클릭"을 같은 제출로 묶고,
+ * 서버가 응답을 돌려준 뒤의 제출(퀴즈 오답 재도전 포함)은 새 제출이므로 새 키를 쓴다 (ADR-0005).
  */
-export function useSubmitQuiz(missionId: string) {
+export function useSubmitMission(missionId: string) {
     const queryClient = useQueryClient();
     const attemptRef = useRef<SubmitAttempt | null>(null);
 
@@ -46,7 +45,7 @@ export function useSubmitQuiz(missionId: string) {
         },
         onSuccess: (outcome) => {
             attemptRef.current = null;
-            // 오답 제출은 완료 상태·잔액이 바뀌지 않는다 — 완료됐을 때만 갱신한다
+            // 완료되지 않은 제출(퀴즈 오답)은 완료 상태·잔액이 바뀌지 않는다 — 완료됐을 때만 갱신한다
             if (!outcome.result.isCompleted) return;
             return Promise.all([
                 queryClient.invalidateQueries({ queryKey: MISSIONS_KEY }),

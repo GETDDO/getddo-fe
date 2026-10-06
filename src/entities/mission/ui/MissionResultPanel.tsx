@@ -21,7 +21,8 @@ export function MissionResultPanel({
     receivedAt,
 }: {
     title: string;
-    tickets: number;
+    /** 실제 지급된 응모권 수 — 없으면(보상 없는 미션) 보상 문구를 숨긴다 */
+    tickets?: number;
     /** 서버 접수 시각(ISO) — 공정성 근거로 함께 보여준다 */
     receivedAt?: string;
 }) {
@@ -46,7 +47,9 @@ export function MissionResultPanel({
                 {title}
             </h2>
             <div className="flex flex-col gap-1">
-                <p className="text-body text-fg-secondary">응모권 {tickets}장을 받았어요.</p>
+                {tickets !== undefined && (
+                    <p className="text-body text-fg-secondary">응모권 {tickets}장을 받았어요.</p>
+                )}
                 {receivedAt && (
                     <p className="text-body-sm text-fg-tertiary">
                         서버에 {formatKst(receivedAt, TIME_ONLY)}에 접수됐어요
