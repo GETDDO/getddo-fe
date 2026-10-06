@@ -41,7 +41,8 @@ export function MissionQuestionField({
 
             {question.questionType === 'OX' || question.questionType === 'SINGLE_CHOICE' ? (
                 <RadioGroup
-                    value={value?.selectedOptionId}
+                    // 미선택은 ''로 고정 — undefined로 두면 비제어→제어 전환 경고가 난다
+                    value={value?.selectedOptionId ?? ''}
                     onValueChange={(selectedOptionId) => onChange({ selectedOptionId })}
                     className="gap-2"
                 >

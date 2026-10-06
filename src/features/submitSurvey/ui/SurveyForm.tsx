@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -10,13 +10,7 @@ import type {
     MissionSubmissionResult,
 } from '@entities/mission';
 
-import {
-    buildMissionAnswers,
-    findMissingRequired,
-    MissionQuestionField,
-    MissionResultPanel,
-    MissionRewardDialog,
-} from '@entities/mission';
+import { buildMissionAnswers, findMissingRequired, MissionQuestionField } from '@entities/mission';
 import { ApiError } from '@shared/api/client';
 import { Button } from '@shared/ui/button';
 import {
@@ -30,20 +24,27 @@ import {
 
 import { useSubmitSurvey } from '../api/queries';
 
-/** 설문 미션 제출 폼 — 제출이 곧 완료 확정이라 마지막 확인 모달을 거친 뒤 제출한다 */
-export function SurveyForm({ mission }: { mission: MissionDetail }) {
+/**
+ * 설문 미션 제출 폼 — 제출이 곧 완료 확정이라 마지막 확인 모달을 거친 뒤 제출한다.
+ * 완료 결과는 onCompleted로 올려 페이지가 결과 패널·보상 모달을 띄운다
+ * (상세 쿼리 무효화로 이 폼이 언마운트되기 때문).
+ */
+export function SurveyForm({
+    mission,
+    onCompleted,
+}: {
+    mission: MissionDetail;
+    onCompleted: (result: MissionSubmissionResult) => void;
+}) {
     const submitSurvey = useSubmitSurvey(mission.id);
     const [missingIds, setMissingIds] = useState<Set<string>>(new Set());
-    const [result, setResult] = useState<MissionSubmissionResult | null>(null);
     // 확인 모달에 걸어둔 제출 payload — '제출하기'를 누르면 이 값으로 요청한다
     const [pendingAnswers, setPendingAnswers] = useState<MissionAnswer[] | null>(null);
-    const [rewardOpen, setRewardOpen] = useState(false);
     const { control, handleSubmit } = useForm<Record<string, MissionAnswerDraft>>({
         defaultValues: {},
     });
 
     const questions = [...mission.questions].sort((a, b) => a.displayOrder - b.displayOrder);
-    const rewardTickets = result?.reward?.ticketCount ?? mission.rewardTicketCount;
 
     const onSubmit = (values: Record<string, MissionAnswerDraft>) => {
         const missing = findMissingRequired(questions, values);
@@ -58,8 +59,7 @@ export function SurveyForm({ mission }: { mission: MissionDetail }) {
         if (!pendingAnswers) return;
         submitSurvey.mutate(pendingAnswers, {
             onSuccess: (submitted) => {
-                setResult(submitted);
-                if (submitted.isCompleted) setRewardOpen(true);
+                if (submitted.isCompleted) onCompleted(submitted);
             },
             onError: (error) => {
                 toast.error(
@@ -74,58 +74,47 @@ export function SurveyForm({ mission }: { mission: MissionDetail }) {
 
     return (
         <>
-            <AnimatePresence mode="wait" initial={false}>
-                {result?.isCompleted ? (
-                    <MissionResultPanel
-                        key="result"
-                        title="설문 참여가 완료됐어요"
-                        tickets={rewardTickets}
-                    />
-                ) : (
-                    <motion.form
-                        key="form"
-                        exit={{ opacity: 0, y: -8 }}
-                        transition={{ duration: 0.15 }}
-                        onSubmit={(event) => void handleSubmit(onSubmit)(event)}
-                        className="flex flex-col gap-4"
-                    >
-                        {questions.map((question) => (
-                            <Controller
-                                key={question.id}
-                                control={control}
-                                name={question.id}
-                                render={({ field }) => (
-                                    <MissionQuestionField
-                                        question={question}
-                                        value={field.value}
-                                        invalid={missingIds.has(question.id)}
-                                        onChange={(draft) => {
-                                            field.onChange(draft);
-                                            // 답이 바뀐 문항은 필수 누락 표시를 바로 거둔다
-                                            if (missingIds.has(question.id)) {
-                                                setMissingIds((prev) => {
-                                                    const next = new Set(prev);
-                                                    next.delete(question.id);
-                                                    return next;
-                                                });
-                                            }
-                                        }}
-                                    />
-                                )}
+            <motion.form
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15 }}
+                onSubmit={(event) => void handleSubmit(onSubmit)(event)}
+                className="flex flex-col gap-4"
+            >
+                {questions.map((question) => (
+                    <Controller
+                        key={question.id}
+                        control={control}
+                        name={question.id}
+                        render={({ field }) => (
+                            <MissionQuestionField
+                                question={question}
+                                value={field.value}
+                                invalid={missingIds.has(question.id)}
+                                onChange={(draft) => {
+                                    field.onChange(draft);
+                                    // 답이 바뀐 문항은 필수 누락 표시를 바로 거둔다
+                                    if (missingIds.has(question.id)) {
+                                        setMissingIds((prev) => {
+                                            const next = new Set(prev);
+                                            next.delete(question.id);
+                                            return next;
+                                        });
+                                    }
+                                }}
                             />
-                        ))}
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            size="lg"
-                            disabled={submitSurvey.isPending}
-                            className="self-end"
-                        >
-                            {submitSurvey.isPending ? '제출 중…' : '제출하기'}
-                        </Button>
-                    </motion.form>
-                )}
-            </AnimatePresence>
+                        )}
+                    />
+                ))}
+                <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    disabled={submitSurvey.isPending}
+                    className="self-end"
+                >
+                    {submitSurvey.isPending ? '제출 중…' : '제출하기'}
+                </Button>
+            </motion.form>
 
             <Dialog
                 open={pendingAnswers !== null}
@@ -148,12 +137,6 @@ export function SurveyForm({ mission }: { mission: MissionDetail }) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
-            <MissionRewardDialog
-                open={rewardOpen}
-                onOpenChange={setRewardOpen}
-                tickets={rewardTickets}
-            />
         </>
     );
 }
