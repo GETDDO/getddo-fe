@@ -29,7 +29,8 @@ export function MissionDetailPage() {
         result: MissionSubmissionResult;
     } | null>(null);
     const submitted = submission?.missionId === (missionId ?? '') ? submission.result : null;
-    const [rewardOpen, setRewardOpen] = useState(false);
+    // 보상 모달도 연 미션 id로 귀속 — 모달이 열린 채 다른 미션으로 이동하면 새 미션 보상을 잘못 보여주지 않게 한다
+    const [rewardMissionId, setRewardMissionId] = useState<string | null>(null);
     // 기간 판정은 서버 몫 — 여기의 now 비교는 표시용 안내에만 쓴다 (시간 규칙)
     const now = useVirtualClock().now();
 
@@ -61,7 +62,7 @@ export function MissionDetailPage() {
     const handleCompleted = (result: MissionSubmissionResult, isNewSubmission: boolean) => {
         setSubmission({ missionId: missionId ?? '', result });
         // 보상 모달은 이번 제출로 막 완료됐을 때(201)만 — 재제출 재생(200)에는 띄우지 않는다
-        if (isNewSubmission) setRewardOpen(true);
+        if (isNewSubmission) setRewardMissionId(missionId ?? '');
     };
 
     return (
@@ -131,8 +132,10 @@ export function MissionDetailPage() {
             </MotionConfig>
 
             <MissionRewardDialog
-                open={rewardOpen}
-                onOpenChange={setRewardOpen}
+                open={rewardMissionId === (missionId ?? '')}
+                onOpenChange={(open) => {
+                    if (!open) setRewardMissionId(null);
+                }}
                 tickets={rewardTickets}
             />
         </main>
