@@ -214,6 +214,51 @@ describe('관리자 이벤트 목업 핸들러', () => {
         expect(await userEventIds()).not.toContain(created.id);
     });
 
+    it('취소를 반복해도 차감된 응모권을 한 번만 반환한다', async () => {
+        const userId = `cancel-${Date.now()}`;
+        const created = await createEvent({
+            eventType: 'TICKET',
+            weightingEnabled: true,
+            maxTicketsPerUser: 5,
+        });
+
+        // 사용자가 응모권 3장으로 응모한다 (잔액 10 → 7)
+        const entered = await apiClient.post(
+            `/events/${created.id}/entries`,
+            { ticketCount: 3 },
+            {
+                headers: {
+                    [IDEMPOTENCY_HEADER]: `cancel-${Date.now()}`,
+                    'X-User-ID': userId,
+                },
+                validateStatus: () => true,
+            },
+        );
+        expect(entered.status).toBe(201);
+
+        const balanceOf = async () =>
+            (
+                await apiClient.get<{ balance: number }>('/tickets/balance', {
+                    headers: { 'X-User-ID': userId },
+                })
+            ).data.balance;
+
+        const first = await call('post', `/admin/events/${created.id}/cancel`, {
+            reason: '경품 수급 문제',
+        });
+        const firstResult = (first.data as Envelope<EventOperationResult>).data;
+        expect(firstResult.refundedTicketCount).toBe(3);
+        expect(await balanceOf()).toBe(10);
+
+        // 재취소는 멱등하게 성공하지만 반환 수량은 0이고 잔액도 변하지 않는다
+        const second = await call('post', `/admin/events/${created.id}/cancel`, {
+            reason: '취소 재요청',
+        });
+        expect(second.status).toBe(200);
+        expect((second.data as Envelope<EventOperationResult>).data.refundedTicketCount).toBe(0);
+        expect(await balanceOf()).toBe(10);
+    });
+
     it('사유 없이 상태 운영을 요청하면 400으로 거절한다', async () => {
         const created = await createEvent();
         const res = await call('post', `/admin/events/${created.id}/cancel`, { reason: '  ' });
