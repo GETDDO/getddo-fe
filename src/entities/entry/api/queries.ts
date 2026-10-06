@@ -16,6 +16,8 @@ const myEntryPageSchema = z.object({
 
 export const ENTRIES_KEY = ['entries'] as const;
 
+export const MY_ENTRIES_API_PATH = '/users/me/entries';
+
 const ENTRIES_PAGE_SIZE = 50;
 
 /**
@@ -29,7 +31,7 @@ export function useMyEntries() {
             const entries = [];
             // 페이지는 1부터 시작한다 (spec 공통 계약)
             for (let page = 1; ; page += 1) {
-                const { data } = await apiClient.get<unknown>('/users/me/entries', {
+                const { data } = await apiClient.get<unknown>(MY_ENTRIES_API_PATH, {
                     params: { page, size: ENTRIES_PAGE_SIZE },
                 });
                 const parsed = envelopeSchema(myEntryPageSchema).parse(data).data;

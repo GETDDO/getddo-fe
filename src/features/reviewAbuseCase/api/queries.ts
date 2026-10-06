@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type { AbuseDecision } from '@entities/abuseCase';
 
-import { ABUSE_CASES_KEY, abuseCaseSchema } from '@entities/abuseCase';
+import { ABUSE_CASES_KEY, abuseCaseReviewApiPath, abuseCaseSchema } from '@entities/abuseCase';
 import { apiClient } from '@shared/api/client';
 
 interface ReviewAbuseCaseInput {
@@ -16,7 +16,7 @@ export function useReviewAbuseCase() {
 
     return useMutation({
         mutationFn: async ({ caseId, decision, note }: ReviewAbuseCaseInput) => {
-            const { data } = await apiClient.post<unknown>(`/admin/abuse-cases/${caseId}/review`, {
+            const { data } = await apiClient.post<unknown>(abuseCaseReviewApiPath(caseId), {
                 decision,
                 note,
             });

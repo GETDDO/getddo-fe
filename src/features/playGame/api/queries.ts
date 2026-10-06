@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { GAMES_KEY } from '@entities/game';
+import { GAMES_KEY, gamePlayApiPath } from '@entities/game';
 import { TICKETS_KEY } from '@entities/ticket';
 import { apiClient } from '@shared/api/client';
 import { createIdempotencyKey, IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
@@ -18,7 +18,7 @@ export function useSubmitGamePlay() {
     return useMutation({
         mutationFn: async ({ gameId, score }: { gameId: string; score: number }) => {
             const { data } = await apiClient.post<unknown>(
-                `/games/${gameId}/play`,
+                gamePlayApiPath(gameId),
                 { score },
                 { headers: { [IDEMPOTENCY_HEADER]: createIdempotencyKey() } },
             );

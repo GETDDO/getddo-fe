@@ -2,10 +2,9 @@ import { useState } from 'react';
 
 import type { AbuseCase, AbuseCaseStatus } from '@entities/abuseCase';
 
-import { AbuseCaseCard, useAbuseCases } from '@entities/abuseCase';
+import { AbuseCaseTable, useAbuseCases } from '@entities/abuseCase';
 import { ReviewAbuseDialog } from '@features/reviewAbuseCase';
 import { cn } from '@shared/lib/utils';
-import { Button } from '@shared/ui/button';
 
 const FILTERS: { value: 'all' | AbuseCaseStatus; label: string }[] = [
     { value: 'all', label: '전체' },
@@ -24,7 +23,7 @@ export function AdminAbuseReviewPage() {
     const pendingCount = sorted.filter((c) => c.status === 'pending').length;
 
     return (
-        <div className="flex max-w-200 flex-col gap-6 pr-10 pb-10">
+        <div className="flex max-w-280 flex-col gap-6 pr-10 pb-10">
             <div className="flex items-center justify-between gap-4">
                 <div className="flex gap-1">
                     {FILTERS.map(({ value, label }) => (
@@ -57,23 +56,7 @@ export function AdminAbuseReviewPage() {
                         : '해당하는 탐지 건이 없습니다.'}
                 </p>
             )}
-            {filtered.length > 0 && (
-                <ul className="flex flex-col gap-3">
-                    {filtered.map((abuseCase) => (
-                        <AbuseCaseCard
-                            key={abuseCase.id}
-                            abuseCase={abuseCase}
-                            action={
-                                abuseCase.status === 'pending' ? (
-                                    <Button size="sm" onClick={() => setReviewing(abuseCase)}>
-                                        검토
-                                    </Button>
-                                ) : undefined
-                            }
-                        />
-                    ))}
-                </ul>
-            )}
+            {filtered.length > 0 && <AbuseCaseTable cases={filtered} onReview={setReviewing} />}
 
             <ReviewAbuseDialog
                 abuseCase={reviewing}
