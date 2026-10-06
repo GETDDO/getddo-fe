@@ -44,11 +44,7 @@ export function GameRail({
                 >
                     {ordered.map((game) => (
                         <div key={game.id} className="shrink-0">
-                            <GameTicketCard
-                                game={game}
-                                href={gameDetailPath(game.id)}
-                                className="transition-[translate] duration-200 motion-safe:hover:-translate-y-1"
-                            />
+                            <GameTicketCard game={game} href={gameDetailPath(game.id)} />
                         </div>
                     ))}
                 </div>

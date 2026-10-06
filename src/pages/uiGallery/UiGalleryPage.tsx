@@ -19,6 +19,7 @@ import {
     DialogTrigger,
 } from '@shared/ui/dialog';
 import { Input } from '@shared/ui/input';
+import { RadioGroup, RadioGroupItem } from '@shared/ui/radio-group';
 import {
     Select,
     SelectContent,
@@ -37,6 +38,7 @@ import {
     TableHeader,
     TableRow,
 } from '@shared/ui/table';
+import { Textarea } from '@shared/ui/textarea';
 
 function Section({
     title,
@@ -101,6 +103,38 @@ export function UiGalleryPage() {
                     <Input placeholder="비활성 상태" disabled />
                     <Input defaultValue="잘못된 값" aria-invalid />
                 </div>
+            </Section>
+
+            <Section
+                title="Textarea"
+                usage="여러 줄 텍스트 입력 — 설문 자유 서술 문항, 긴 사유 입력"
+            >
+                <div className="flex max-w-sm flex-col gap-3">
+                    <Textarea placeholder="의견을 자유롭게 적어주세요" rows={4} />
+                    <Textarea placeholder="비활성 상태" disabled />
+                </div>
+            </Section>
+
+            <Section
+                title="Radio Group"
+                usage="하나만 고르는 선택지 — 미션 OX·객관식 문항처럼 보기가 항상 보이는 선택"
+            >
+                <RadioGroup defaultValue="opt-1" className="max-w-sm gap-2">
+                    {[
+                        { id: 'opt-1', label: '앱 푸시' },
+                        { id: 'opt-2', label: '문자 메시지' },
+                        { id: 'opt-3', label: '받지 않는다' },
+                    ].map((option) => (
+                        <label
+                            key={option.id}
+                            htmlFor={option.id}
+                            className="border-border-default has-checked:border-primary has-checked:bg-brand-primary/10 flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition-colors"
+                        >
+                            <RadioGroupItem id={option.id} value={option.id} />
+                            <span className="text-body text-fg-primary">{option.label}</span>
+                        </label>
+                    ))}
+                </RadioGroup>
             </Section>
 
             <Section
