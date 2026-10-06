@@ -6,6 +6,7 @@ import { envelopeSchema } from '@shared/api/envelopeSchema';
 import { queryPresets } from '@shared/api/queryPresets';
 
 import type { MissionSummary } from '../model/types';
+import type { MissionSubmissionResult } from '../model/types';
 
 import { missionDetailSchema, missionSummarySchema } from '../model/types';
 
@@ -24,6 +25,15 @@ export const MISSIONS_API_PATH = '/missions';
 export const missionApiPath = (missionId: string) => `${MISSIONS_API_PATH}/${missionId}`;
 
 const MISSIONS_PAGE_SIZE = 50;
+
+/**
+ * 제출 응답 + 신규 완료 여부. 서버는 이미 완료된 미션의 재제출에 200으로 기존 결과를 돌려주고,
+ * 이번 제출로 막 완료됐을 때만 201을 준다 — 보상 모달 같은 "방금 완료" 연출은 201에만 띄운다
+ */
+export interface MissionSubmissionOutcome {
+    result: MissionSubmissionResult;
+    isNewSubmission: boolean;
+}
 
 /**
  * 진행 중인 미션 목록 — Page<T>는 기본 20건씩이라 totalElements까지 전부 모은다.

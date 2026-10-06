@@ -12,6 +12,8 @@ interface MissionQuestionFieldProps {
     onChange: (draft: MissionAnswerDraft) => void;
     /** 제출 시도 후 필수 문항이 비어 있으면 true — 오류 표시용 */
     invalid?: boolean;
+    /** 제출 처리 중이면 true — 전송 중 답변이 바뀌지 않게 입력을 잠근다 */
+    disabled?: boolean;
 }
 
 /**
@@ -23,11 +25,13 @@ export function MissionQuestionField({
     value,
     onChange,
     invalid = false,
+    disabled = false,
 }: MissionQuestionFieldProps) {
     const options = [...question.options].sort((a, b) => a.displayOrder - b.displayOrder);
 
     return (
         <fieldset
+            disabled={disabled}
             className={cn(
                 'bg-surface-page border-border-default flex flex-col gap-3 rounded-2xl border p-5',
                 invalid && 'border-destructive',
@@ -41,6 +45,7 @@ export function MissionQuestionField({
 
             {question.questionType === 'OX' || question.questionType === 'SINGLE_CHOICE' ? (
                 <RadioGroup
+                    name={question.id}
                     // 미선택은 ''로 고정 — undefined로 두면 비제어→제어 전환 경고가 난다
                     value={value?.selectedOptionId ?? ''}
                     onValueChange={(selectedOptionId) => onChange({ selectedOptionId })}
@@ -59,6 +64,7 @@ export function MissionQuestionField({
                 </RadioGroup>
             ) : question.questionType === 'SHORT_ANSWER' ? (
                 <Input
+                    name={question.id}
                     value={value?.answerText ?? ''}
                     onChange={(event) => onChange({ answerText: event.target.value })}
                     placeholder="정답을 입력하세요"
@@ -66,6 +72,7 @@ export function MissionQuestionField({
                 />
             ) : (
                 <Textarea
+                    name={question.id}
                     value={value?.answerText ?? ''}
                     onChange={(event) => onChange({ answerText: event.target.value })}
                     placeholder="답변을 입력하세요"

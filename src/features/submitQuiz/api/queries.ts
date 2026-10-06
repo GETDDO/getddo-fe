@@ -3,6 +3,7 @@ import { isAxiosError } from 'axios';
 import { useRef } from 'react';
 
 import type { MissionAnswer } from '@entities/mission';
+import type { MissionSubmissionOutcome } from '@entities/mission';
 
 import { MISSIONS_KEY, missionApiPath, missionSubmissionResultSchema } from '@entities/mission';
 import { TICKETS_KEY } from '@entities/ticket';
@@ -32,17 +33,21 @@ export function useSubmitQuiz(missionId: string) {
                 attemptRef.current = { answersJson, key: createIdempotencyKey() };
             }
 
-            const { data } = await apiClient.post<unknown>(
+            const { data, status } = await apiClient.post<unknown>(
                 `${missionApiPath(missionId)}/submissions`,
                 { answers },
                 { headers: { [IDEMPOTENCY_HEADER]: attemptRef.current.key } },
             );
-            return envelopeSchema(missionSubmissionResultSchema).parse(data).data;
+            const outcome: MissionSubmissionOutcome = {
+                result: envelopeSchema(missionSubmissionResultSchema).parse(data).data,
+                isNewSubmission: status === 201,
+            };
+            return outcome;
         },
-        onSuccess: (result) => {
+        onSuccess: (outcome) => {
             attemptRef.current = null;
             // 오답 제출은 완료 상태·잔액이 바뀌지 않는다 — 완료됐을 때만 갱신한다
-            if (!result.isCompleted) return;
+            if (!outcome.result.isCompleted) return;
             return Promise.all([
                 queryClient.invalidateQueries({ queryKey: MISSIONS_KEY }),
                 queryClient.invalidateQueries({ queryKey: TICKETS_KEY }),

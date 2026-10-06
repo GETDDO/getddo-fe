@@ -22,7 +22,8 @@ export function QuizForm({
     onCompleted,
 }: {
     mission: MissionDetail;
-    onCompleted: (result: MissionSubmissionResult) => void;
+    /** isNewSubmission: 이번 제출로 막 완료됐으면 true — 재제출 재생(200)에는 보상 연출을 하지 않는다 */
+    onCompleted: (result: MissionSubmissionResult, isNewSubmission: boolean) => void;
 }) {
     const submitQuiz = useSubmitQuiz(mission.id);
     const [missingIds, setMissingIds] = useState<Set<string>>(new Set());
@@ -41,11 +42,11 @@ export function QuizForm({
             return;
         }
         submitQuiz.mutate(buildMissionAnswers(questions, values), {
-            onSuccess: (submitted) => {
-                if (submitted.isCompleted) {
-                    onCompleted(submitted);
+            onSuccess: (outcome) => {
+                if (outcome.result.isCompleted) {
+                    onCompleted(outcome.result, outcome.isNewSubmission);
                 } else {
-                    setLastResult(submitted);
+                    setLastResult(outcome.result);
                     // 오답 — 폼을 remount하면 입력이 날아가므로 scope만 좌우로 흔든다
                     void animate(scope.current, { x: [0, -10, 8, -6, 4, 0] }, { duration: 0.45 });
                 }
@@ -90,8 +91,11 @@ export function QuizForm({
                                 question={question}
                                 value={field.value}
                                 invalid={missingIds.has(question.id)}
+                                disabled={submitQuiz.isPending}
                                 onChange={(draft) => {
                                     field.onChange(draft);
+                                    // 답을 고치기 시작하면 오답 배너는 거둔다
+                                    if (lastResult && !lastResult.isCompleted) setLastResult(null);
                                     if (missingIds.has(question.id)) {
                                         setMissingIds((prev) => {
                                             const next = new Set(prev);

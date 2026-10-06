@@ -51,9 +51,10 @@ export function MissionDetailPage() {
     const ended = now >= new Date(mission.endsAt);
     const rewardTickets = submitted?.reward?.ticketCount ?? mission.rewardTicketCount;
 
-    const handleCompleted = (result: MissionSubmissionResult) => {
+    const handleCompleted = (result: MissionSubmissionResult, isNewSubmission: boolean) => {
         setSubmitted(result);
-        setRewardOpen(true);
+        // 보상 모달은 이번 제출로 막 완료됐을 때(201)만 — 재제출 재생(200)에는 띄우지 않는다
+        if (isNewSubmission) setRewardOpen(true);
     };
 
     return (
@@ -83,6 +84,7 @@ export function MissionDetailPage() {
                                     : '설문 참여가 완료됐어요'
                             }
                             tickets={rewardTickets}
+                            receivedAt={submitted.receivedAt}
                         />
                     ) : mission.completed ? (
                         <section

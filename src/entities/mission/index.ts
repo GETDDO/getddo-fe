@@ -27,6 +27,7 @@ export {
     useMissionDetail,
     useMissionList,
 } from './api/queries';
+export type { MissionSubmissionOutcome } from './api/queries';
 export { buildMissionAnswers, findMissingRequired } from './lib/missionAnswers';
 export type { MissionAnswerDraft } from './lib/missionAnswers';
 export { MissionQuestionField } from './ui/MissionQuestionField';

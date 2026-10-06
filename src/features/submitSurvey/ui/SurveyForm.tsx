@@ -34,7 +34,8 @@ export function SurveyForm({
     onCompleted,
 }: {
     mission: MissionDetail;
-    onCompleted: (result: MissionSubmissionResult) => void;
+    /** isNewSubmission: 이번 제출로 막 완료됐으면 true — 재제출 재생(200)에는 보상 연출을 하지 않는다 */
+    onCompleted: (result: MissionSubmissionResult, isNewSubmission: boolean) => void;
 }) {
     const submitSurvey = useSubmitSurvey(mission.id);
     const [missingIds, setMissingIds] = useState<Set<string>>(new Set());
@@ -58,8 +59,9 @@ export function SurveyForm({
     const confirmSubmit = () => {
         if (!pendingAnswers) return;
         submitSurvey.mutate(pendingAnswers, {
-            onSuccess: (submitted) => {
-                if (submitted.isCompleted) onCompleted(submitted);
+            onSuccess: (outcome) => {
+                if (outcome.result.isCompleted)
+                    onCompleted(outcome.result, outcome.isNewSubmission);
             },
             onError: (error) => {
                 toast.error(
@@ -90,6 +92,7 @@ export function SurveyForm({
                                 question={question}
                                 value={field.value}
                                 invalid={missingIds.has(question.id)}
+                                disabled={submitSurvey.isPending}
                                 onChange={(draft) => {
                                     field.onChange(draft);
                                     // 답이 바뀐 문항은 필수 누락 표시를 바로 거둔다
