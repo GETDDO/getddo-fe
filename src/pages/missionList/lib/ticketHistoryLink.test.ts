@@ -11,6 +11,12 @@ describe('getTicketHistoryLink', () => {
         );
     });
 
+    it('래플 id에 경로 구분 문자가 있어도 인코딩해 한 경로 조각으로 넣는다', () => {
+        expect(getTicketHistoryLink({ transactionType: 'SPEND', eventId: 'a/b?c#d' })?.to).toBe(
+            '/time-raffle/a%2Fb%3Fc%23d',
+        );
+    });
+
     it('연결된 래플이 없으면 내 응모 내역으로 보낸다', () => {
         expect(getTicketHistoryLink({ transactionType: 'SPEND', eventId: null })?.to).toBe(
             '/my-entries',

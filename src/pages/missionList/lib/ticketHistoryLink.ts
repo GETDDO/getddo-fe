@@ -11,7 +11,11 @@ export function getTicketHistoryLink(
 ): { to: string; label: string } | undefined {
     const isEntry = item.transactionType === 'SPEND' || item.transactionType === 'REFUND';
     if (isEntry && item.eventId) {
-        return { to: `/time-raffle/${item.eventId}`, label: '응모한 래플 보기' };
+        // 서버가 준 임의 문자열이라 /·?·# 등이 들어 있어도 경로가 바뀌지 않게 인코딩한다
+        return {
+            to: `/time-raffle/${encodeURIComponent(item.eventId)}`,
+            label: '응모한 래플 보기',
+        };
     }
     return TICKET_HISTORY_META[item.transactionType].link;
 }
