@@ -47,18 +47,12 @@ export function InsufficientTicketsDialog({
 
                 <div className="flex gap-4">
                     <DialogClose asChild>
-                        {/* secondary 변형은 배경·호버 색을 함께 얹어서, 시안대로 테두리만 두려고 ghost를 쓴다 */}
-                        <Button
-                            variant="ghost"
-                            className="border-border-strong bg-surface-page hover:bg-surface-sunken h-10 flex-1"
-                        >
-                            <span className="text-body-bold text-fg-primary">닫기</span>
+                        <Button variant="secondary" className="flex-1">
+                            닫기
                         </Button>
                     </DialogClose>
-                    <Button asChild variant="secondary" className="h-10 flex-1">
-                        <Link to="/missions">
-                            <span className="text-body-bold">응모권 모으러 가기</span>
-                        </Link>
+                    <Button asChild className="flex-1">
+                        <Link to="/missions">응모권 모으러 가기</Link>
                     </Button>
                 </div>
             </DialogContent>
