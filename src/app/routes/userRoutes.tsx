@@ -16,8 +16,9 @@ import { MyPage } from '@pages/myPage/MyPage';
 import { MyTicketsPage } from '@pages/myTickets/MyTicketsPage';
 import { TimeRafflePage } from '@pages/timeRaffle/TimeRafflePage';
 import { TimeRaffleDetailPage } from '@pages/timeRaffleDetail/TimeRaffleDetailPage';
+import { env } from '@shared/config/env';
 
-// 디자인 갤러리는 개발용 화면 — 제품 사용자는 열지 않으므로 진입 시점에만 받아진다
+// 디자인 갤러리는 개발용 화면 — 운영 빌드에서는 라우트 자체를 등록하지 않는다
 const UiGalleryPageLazy = lazy(() =>
     import('@pages/uiGallery/UiGalleryPage').then((m) => ({ default: m.UiGalleryPage })),
 );
@@ -42,14 +43,18 @@ export const userRoutes: RouteObject[] = [
             { path: '/my-tickets', element: <MyTicketsPage /> },
             { path: '/my-entries', element: <MyEntriesPage /> },
             { path: '/mypage', element: <MyPage /> },
-            {
-                path: '/ui-gallery',
-                element: (
-                    <Suspense fallback={null}>
-                        <UiGalleryPageLazy />
-                    </Suspense>
-                ),
-            },
+            ...(env.isDev
+                ? ([
+                      {
+                          path: '/ui-gallery',
+                          element: (
+                              <Suspense fallback={null}>
+                                  <UiGalleryPageLazy />
+                              </Suspense>
+                          ),
+                      },
+                  ] satisfies RouteObject[])
+                : []),
         ],
     },
 ];

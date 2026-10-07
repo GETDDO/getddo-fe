@@ -141,7 +141,7 @@ export function EventActionDialog({
                 <div className="flex gap-4">
                     <DialogClose asChild>
                         <Button
-                            variant="outline"
+                            variant="secondary"
                             className="bg-surface-sunken border-border-default text-fg-primary text-body-bold hover:bg-surface-pressed h-10 flex-1"
                         >
                             닫기

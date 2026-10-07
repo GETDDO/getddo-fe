@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
+import { Button } from '@shared/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
 import type { AdminEvent } from '../model/adminTypes';
@@ -27,6 +28,7 @@ const helper = createColumnHelper<typeof features, AdminEvent>();
 /**
  * 관리자 이벤트 목록 테이블 — 행 클릭으로 상세로 이동한다.
  * 운영 액션(수정·취소·삭제 등)은 상세 화면에 모아 목록 행을 가볍게 둔다
+ * 행 onClick만으로는 키보드가 상세를 열 수 없으므로 '상세' 버튼 열로 동일 경로를 제공한다
  */
 export function AdminEventTable({
     events,
@@ -118,8 +120,24 @@ export function AdminEventTable({
                         </span>
                     ),
                 }),
+                helper.display({
+                    id: 'detail',
+                    header: '상세',
+                    cell: ({ row }) => (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onRowClick?.(row.original);
+                            }}
+                        >
+                            상세
+                        </Button>
+                    ),
+                }),
             ]),
-        [],
+        [onRowClick],
     );
 
     const table = useTable({ features, columns, data: events });
@@ -149,7 +167,10 @@ export function AdminEventTable({
                         <TableRow
                             key={row.id}
                             onClick={() => onRowClick?.(row.original)}
-                            className="hover:bg-surface-canvas cursor-pointer"
+                            className={cn(
+                                'hover:bg-surface-canvas',
+                                onRowClick && 'cursor-pointer',
+                            )}
                         >
                             {row.getAllCells().map((cell) => (
                                 <TableCell key={cell.id} className="px-4 py-3 align-top">

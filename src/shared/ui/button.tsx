@@ -27,12 +27,6 @@ const buttonVariants = cva(
                 // 강조 — brand (피그마 Button/*/brand), 자주 쓰지 않는다
                 emphasis:
                     'bg-brand-primary text-fg-on-brand hover:bg-brand-primary-hover active:bg-brand-primary-pressed',
-                /** @deprecated primary와 같다 — 예전 이름 호환 (쓰는 곳을 primary로 바꾸면 지운다) */
-                default:
-                    'bg-action-neutral text-fg-on-brand hover:bg-action-neutral-hover active:bg-action-neutral-pressed',
-                /** @deprecated secondary와 같다 — 예전 이름 호환 (쓰는 곳을 secondary로 바꾸면 지운다) */
-                outline:
-                    'bg-surface-elevated border-border-strong text-fg-primary hover:bg-ticket-accent hover:border-ticket-primary active:bg-ticket-accent-pressed active:border-ticket-primary',
                 ghost: 'text-fg-secondary hover:bg-surface-sunken hover:text-fg-primary active:bg-surface-pressed aria-expanded:bg-surface-sunken',
                 destructive:
                     'bg-semantic-error text-fg-on-brand hover:bg-semantic-error-strong active:bg-semantic-error-strong',

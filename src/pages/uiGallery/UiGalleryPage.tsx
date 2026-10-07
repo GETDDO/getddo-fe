@@ -78,9 +78,9 @@ export function UiGalleryPage() {
             >
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-wrap items-center gap-2">
-                        <Button>default</Button>
+                        <Button>primary</Button>
                         <Button variant="secondary">secondary</Button>
-                        <Button variant="outline">outline</Button>
+                        <Button variant="emphasis">emphasis</Button>
                         <Button variant="ghost">ghost</Button>
                         <Button variant="destructive">destructive</Button>
                         <Button variant="link">link</Button>
@@ -203,7 +203,7 @@ export function UiGalleryPage() {
             >
                 <Dialog>
                     <DialogTrigger asChild>
-                        <Button variant="outline">모달 열기</Button>
+                        <Button variant="secondary">모달 열기</Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
@@ -211,7 +211,7 @@ export function UiGalleryPage() {
                             <DialogDescription>실행 후에는 되돌릴 수 없습니다.</DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
-                            <Button variant="outline">취소</Button>
+                            <Button variant="secondary">취소</Button>
                             <Button>실행</Button>
                         </DialogFooter>
                     </DialogContent>
@@ -224,15 +224,15 @@ export function UiGalleryPage() {
             >
                 <div className="flex flex-wrap gap-2">
                     <Button
-                        variant="outline"
+                        variant="secondary"
                         onClick={() => toast.success('응모가 완료되었습니다')}
                     >
                         success
                     </Button>
-                    <Button variant="outline" onClick={() => toast.error('응모권이 부족합니다')}>
+                    <Button variant="secondary" onClick={() => toast.error('응모권이 부족합니다')}>
                         error
                     </Button>
-                    <Button variant="outline" onClick={() => toast('결과 발표가 예정되었습니다')}>
+                    <Button variant="secondary" onClick={() => toast('결과 발표가 예정되었습니다')}>
                         default
                     </Button>
                 </div>

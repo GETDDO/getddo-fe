@@ -1,1 +1,1 @@
-export {};
+export { AdminStatSummary } from './ui/AdminStatSummary';

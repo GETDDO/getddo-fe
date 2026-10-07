@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import type { AbuseCase, AbuseDecision } from '@entities/abuseCase';
 
 import { formatKst } from '@shared/lib/date';
-import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
 import {
     Dialog,
@@ -88,13 +87,14 @@ export function ReviewAbuseDialog({ abuseCase, open, onOpenChange }: ReviewAbuse
                             <Button
                                 key={value}
                                 type="button"
-                                variant={decision === value ? 'default' : 'outline'}
-                                className={cn(
-                                    'flex-1',
-                                    decision === value &&
-                                        value === 'exclude' &&
-                                        'bg-destructive hover:bg-destructive/80',
-                                )}
+                                variant={
+                                    decision === value
+                                        ? value === 'exclude'
+                                            ? 'destructive'
+                                            : 'primary'
+                                        : 'secondary'
+                                }
+                                className="flex-1"
                                 onClick={() => setDecision(value)}
                             >
                                 {label}
@@ -128,7 +128,7 @@ export function ReviewAbuseDialog({ abuseCase, open, onOpenChange }: ReviewAbuse
                 <div className="flex gap-4">
                     <DialogClose asChild>
                         <Button
-                            variant="outline"
+                            variant="secondary"
                             className="bg-surface-sunken border-border-default text-fg-primary text-body-bold hover:bg-surface-pressed h-10 flex-1"
                         >
                             취소

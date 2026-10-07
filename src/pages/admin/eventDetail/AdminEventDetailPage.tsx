@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import type { EventActionKind } from '@features/manageEvent';
 
@@ -46,27 +46,23 @@ export function AdminEventDetailPage() {
         return (
             <div className="flex flex-col gap-4 pb-10">
                 <p className="text-destructive text-body-sm">이벤트를 불러오지 못했습니다.</p>
-                <Button
-                    variant="outline"
-                    className="w-fit"
-                    onClick={() => void navigate('/admin/events')}
-                >
-                    목록으로
+                <Button variant="secondary" className="w-fit" asChild>
+                    <Link to="/admin/events">목록으로</Link>
                 </Button>
             </div>
         );
     }
 
-    // spec event.md 운영 규칙 — 수정·삭제는 진행 예정(SCHEDULED)만, 취소는 종료 전까지
+    // spec event.md 운영 규칙 — 수정·삭제는 진행 예정(SCHEDULED)만, 취소는 CANCELED 외 모든 상태에서 허용
     const canEdit = event.status === 'SCHEDULED';
     const canCancel = event.status !== 'CANCELED';
     const status = ADMIN_STATUS_META[event.status];
 
     return (
-        <div className="flex max-w-280 flex-col gap-6 pr-10 pb-10">
+        <div className="flex max-w-280 flex-col gap-6 pb-10 md:pr-10">
             <div className="flex items-center gap-3">
-                <Button variant="outline" size="sm" onClick={() => void navigate('/admin/events')}>
-                    ← 목록
+                <Button variant="secondary" size="sm" asChild>
+                    <Link to="/admin/events">← 목록</Link>
                 </Button>
                 <h2 className="text-title-3 text-fg-primary truncate">{event.title}</h2>
                 <span
@@ -79,23 +75,17 @@ export function AdminEventDetailPage() {
                 </span>
                 <div className="ml-auto flex gap-2">
                     {canEdit && (
-                        <Button
-                            variant="outline"
-                            onClick={() => void navigate(`/admin/events/${event.id}/edit`)}
-                        >
-                            수정
+                        <Button variant="secondary" asChild>
+                            <Link to={`/admin/events/${event.id}/edit`}>수정</Link>
                         </Button>
                     )}
                     {canEdit && (
-                        <Button variant="outline" onClick={() => setAction('delete')}>
+                        <Button variant="secondary" onClick={() => setAction('delete')}>
                             삭제
                         </Button>
                     )}
                     {canCancel && (
-                        <Button
-                            className="bg-destructive hover:bg-destructive/80"
-                            onClick={() => setAction('cancel')}
-                        >
+                        <Button variant="destructive" onClick={() => setAction('cancel')}>
                             취소
                         </Button>
                     )}
