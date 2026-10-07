@@ -111,6 +111,7 @@
 - 게임 결과 제출 — spec은 G03(`POST /games/{gameId}/plays` → playId 발급)·G04(`PUT .../plays/{playId}/result`) 2단계지만 서버 발급 playId가 전제라, 계약 미확정 동안 목업과 클라이언트는 단일 `POST /games/:gameId/play` + `Idempotency-Key`를 유지한다 (GD-102에서 봉투만 적용, `features/playGame/api/queries.ts`의 TODO와 연결). 계약 확정 시 2단계로 분리한다
 - 출석 DTO — `mocks/handlers/attendance.ts`는 응답 봉투만 맞췄고 필드는 화면용(`attended`·`consecutiveDays`·`checkedDates`·`ticketsGranted`)이다. spec의 `AttendanceToday`(attendanceDate·milestones·nextResetAt 등)·`AttendanceReceipt`(rewards[])와 다르고, 주간 도트가 쓰는 `checkedDates`는 spec상 월별 조회(AT03)에만 있다 — 계약 확정 시 필드를 정합한다 (GD-102 잔여)
 - 어뷰징 목록 DTO — `mocks/handlers/abuse.ts`는 spec 요약 필드 대신 시연 표시 필드(userNickname·eventTitle·requestSummary)를 싣는다. 경로·봉투·필터와 `/decisions` 결정 계약(AR03 — ALLOW/CONFIRM·excludeFromEvent·userNoticeReason)은 초안을 따른다 (GD-102)
+- 어뷰징 표시 상태 — CONFIRM 결정이어도 `excludeFromEvent` 없으면 추첨 대상에 남는데(spec AR03의 `eligibilityStatus: ELIGIBLE` 경로), 화면 상태 모델은 pending/allowed/excluded 3개뿐이라 목록은 `excluded`로 표시한다. 현재 검토 다이얼로그는 CONFIRM 시 항상 제외를 내므로 도달하지 않는 경로다 — "확정·제외 안 함" 결정을 UI에서 지원할 때 별도 상태를 추가한다 (GD-102 잔여)
 - `/virtual-users` — spec에 없는 시연 전용 경로로 로그인·가상 사용자 전환 UI가 쓴다. 봉투만 공통 계약을 따르고 정식 계약은 BE 협의 대상이다 (GD-102)
 - `index` 번들 ~618kB — 관리자 라우트는 페이지별 lazy로 분리돼 있고 사용자 번들은 vendor가 대부분이다. `manualChunks` 벤더 분리는 빌드 설정 변경이라 별도 이슈로 미뤘다 (GD-102 잔여)
 
