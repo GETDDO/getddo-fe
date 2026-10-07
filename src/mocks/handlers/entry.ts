@@ -7,6 +7,7 @@ import { IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
 
 import { mockNow } from '../now';
 import { findMockEvent, recordMockEventEntry } from './event';
+import { fail, failBody, ok, okBody } from './response';
 import { getMockTicketBalance, recordMockTicketGrant } from './ticket';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
@@ -16,25 +17,6 @@ const ENTRY_TICKET_LIMIT = 5;
 
 // getddo-spec/05-api/entry.md 초안의 EntryReceipt — 계약 기준은 entities/entry의 entrySchema다
 type EntryReceipt = Entry;
-
-const okBody = (data: unknown) => ({
-    success: true,
-    code: 'SUCCESS',
-    message: '성공했습니다.',
-    data,
-});
-
-const failBody = (code: string, message: string) => ({
-    success: false,
-    code,
-    message,
-    data: null,
-});
-
-const ok = (data: unknown, status = 200) => HttpResponse.json(okBody(data), { status });
-
-const fail = (status: number, code: string, message: string) =>
-    HttpResponse.json(failBody(code, message), { status });
 
 /**
  * 멱등키에 묶인 처음 처리 결과 — 성공뿐 아니라 업무 거절(4xx)도 저장한다.

@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { GAMES_KEY, gamePlayApiPath } from '@entities/game';
 import { TICKETS_KEY } from '@entities/ticket';
 import { apiClient } from '@shared/api/client';
+import { envelopeSchema } from '@shared/api/envelopeSchema';
 import { createIdempotencyKey, IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
 
 import { playResultSchema } from '../model/types';
@@ -22,7 +23,7 @@ export function useSubmitGamePlay() {
                 { score },
                 { headers: { [IDEMPOTENCY_HEADER]: createIdempotencyKey() } },
             );
-            return playResultSchema.parse(data);
+            return envelopeSchema(playResultSchema).parse(data).data;
         },
         onSuccess: () => {
             // 최고점·오늘 플레이·오늘 받은 응모권과, 보상으로 바뀐 응모권 잔액·이력을 다시 받아온다

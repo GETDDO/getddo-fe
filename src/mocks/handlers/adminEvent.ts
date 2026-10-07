@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
 
 import type { AdminEventStatus, AdminPrize, MembershipRule } from '@entities/event';
 
@@ -7,20 +7,10 @@ import { env } from '@shared/config/env';
 import { mockNow } from '../now';
 import { mockEntryTicketTotals, mockEventHasEntries } from './entry';
 import { mockEvents, sessionFixedTime } from './event';
+import { fail, ok } from './response';
 import { recordMockTicketRefund } from './ticket';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
-
-const okBody = (data: unknown) => ({
-    success: true,
-    code: 'SUCCESS',
-    message: '성공했습니다.',
-    data,
-});
-const failBody = (code: string, message: string) => ({ success: false, code, message, data: null });
-const ok = (data: unknown, status = 200) => HttpResponse.json(okBody(data), { status });
-const fail = (status: number, code: string, message: string) =>
-    HttpResponse.json(failBody(code, message), { status });
 
 /** ADR-009 — 유형과 무관하게 마감 + 5분 검토 후 자동으로 최초 발표한다 */
 const ANNOUNCE_DELAY_MS = 5 * 60 * 1000;

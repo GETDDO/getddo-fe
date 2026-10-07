@@ -51,12 +51,11 @@ async function missionCompleted(missionId: string, userId: string) {
 }
 
 async function balance(userId: string) {
-    const { data } = await apiClient.get<Envelope<{ balance: number }> | { balance: number }>(
-        '/tickets/balance',
+    const { data } = await apiClient.get<Envelope<{ availableBalance: number }>>(
+        '/tickets/wallets/me',
         { headers: { 'X-User-ID': userId } },
     );
-    // 응모권 잔액 응답이 봉투일 수도 납작할 수도 있어 둘 다 받는다
-    return 'data' in data ? data.data.balance : data.balance;
+    return data.data.availableBalance;
 }
 
 describe('미션 목업 핸들러', () => {

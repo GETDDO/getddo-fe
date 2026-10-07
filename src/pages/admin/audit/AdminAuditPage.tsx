@@ -96,7 +96,7 @@ export function AdminAuditPage() {
                         className="w-40"
                         aria-label="종료일 필터"
                     />
-                    <Button type="submit" variant="outline">
+                    <Button type="submit" variant="secondary">
                         검색
                     </Button>
                 </form>

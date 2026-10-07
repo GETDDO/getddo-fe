@@ -1,19 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import { z } from 'zod';
 
 import { apiClient } from '@shared/api/client';
-import { envelopeSchema } from '@shared/api/envelopeSchema';
+import { envelopeSchema, pageSchema } from '@shared/api/envelopeSchema';
 import { queryPresets } from '@shared/api/queryPresets';
 
 import { auditLogDetailSchema, auditLogSummarySchema } from '../model/types';
 
-// spec 공통 계약의 Page<T> — items/page/size/totalElements (페이지는 1부터)
-const auditLogPageSchema = z.object({
-    items: z.array(auditLogSummarySchema),
-    page: z.number().int(),
-    size: z.number().int(),
-    totalElements: z.number().int(),
-});
+const auditLogPageSchema = pageSchema(auditLogSummarySchema);
 
 export const AUDIT_KEY = ['admin', 'audit-logs'] as const;
 

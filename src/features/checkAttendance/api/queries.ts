@@ -7,6 +7,7 @@ import {
 } from '@entities/attendance';
 import { TICKETS_KEY } from '@entities/ticket';
 import { apiClient } from '@shared/api/client';
+import { envelopeSchema } from '@shared/api/envelopeSchema';
 
 /**
  * 오늘 출석 — 출석은 사용자·KST 기준일로 재처리하므로 멱등키를 쓰지 않는다 (ADR-0005, spec 공통 계약).
@@ -22,7 +23,7 @@ export function useCheckAttendance() {
                 apiClient.post<unknown>(ATTENDANCES_API_PATH),
                 new Promise((resolve) => setTimeout(resolve, minDurationMs)),
             ]);
-            return checkAttendanceResultSchema.parse(data);
+            return envelopeSchema(checkAttendanceResultSchema).parse(data).data;
         },
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: ATTENDANCE_STATUS_KEY });

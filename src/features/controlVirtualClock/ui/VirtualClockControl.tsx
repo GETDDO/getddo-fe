@@ -95,7 +95,7 @@ export function VirtualClockControl() {
                         <div>
                             <Button
                                 type="button"
-                                variant="outline"
+                                variant="secondary"
                                 size="sm"
                                 onClick={() => setOverride(null)}
                             >

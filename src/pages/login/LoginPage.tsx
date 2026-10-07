@@ -13,8 +13,8 @@ export function LoginPage() {
 
     const handleSelect = (user: VirtualUser) => {
         selectUser(user);
-        // 관리자 계정은 관리자 대시보드로 바로 진입한다
-        void navigate(user.role === 'ADMIN' ? '/admin' : '/', { replace: true });
+        // 관리자 포함 모두 사용자 홈으로 진입한다 — 관리자 화면 이동은 헤더의 관리자 버튼으로만 한다
+        void navigate('/', { replace: true });
     };
 
     return (
@@ -46,7 +46,7 @@ export function LoginPage() {
                                 onClick={() => handleSelect(user)}
                                 className={cn(
                                     'bg-surface-page border-border-default flex w-full items-center gap-4 rounded-2xl border p-5 text-left',
-                                    'hover:border-fg-brand focus-visible:border-fg-brand transition-colors focus-visible:outline-none',
+                                    'hover:border-fg-brand focus-visible:ring-border-focus focus-visible:ring-offset-surface-page transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
                                 )}
                             >
                                 {user.role === 'ADMIN' ? (

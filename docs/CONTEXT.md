@@ -103,10 +103,16 @@
 - 사용자 문맥 헤더 — spec 권고안은 `X-User-ID` 필수+`X-User-Membership` 선택이고 `X-User-Role`은 받지 않는다고 명시하지만, BE `CurrentUserArgumentResolver`는 `X-User-Role`을 필수로 요구한다. 어느 쪽으로 맞출지 합의 전이며 FE는 `X-User-ID`만 전송한다
 - 당첨자 마스킹 세부 규칙 — 담당자 결정 대기
 - 최초 발표 관련 후속 계약(2026-10-05 정책 반영 후에도 남은 항목) — 최초 공개 전 재추첨의 관리자 확인 API, 발표 지연 안내 문구·새 예정 시각 제공 여부, 발표 후 취소~갱신 사이의 취소자 임시 표시와 본인 중간 결과, 장애·정합성 오류의 복구·재시도·취소 전환 기준, 취소 요청의 `abuseCaseId` 연계 방식(어뷰징 검토 후 재논의)
-- 추첨·결과 API 초안이 2026-10-05 재구성됐다 — 사용자 E09는 `GET /events/{eventId}/my-result`, 관리자는 AD01~AD09(`GET /admin/draws`, `POST /admin/wins/{winId}/cancellations`, `POST /admin/cancellations/{id}/redraws` 등). `src/mocks/handlers/draw.ts`의 현재 경로(`POST /admin/events/:eventId/draw`, `POST /admin/draws/:drawResultId/redraw`)는 어느 초안과도 맞지 않는 구 목업이라 추첨 관련 구현 시 새 초안으로 갱신한다. 가중치 계산도 `ticketCount` 그대로에서 등급별 장수×장당 가중치 합산으로 바뀌었다(ADR-014) — `ticketCount`(실제 장수)와 `weight`를 구분해 반영한다
+- 추첨·결과 API 초안이 2026-10-05 재구성됐다 — 사용자 E09는 `GET /events/{eventId}/my-result`, 관리자는 AD01~AD09(`GET /admin/draws`, `POST /admin/wins/{winId}/cancellations`, `POST /admin/cancellations/{id}/redraws` 등). 어느 초안과도 맞지 않던 구 목업 `src/mocks/handlers/draw.ts`는 삭제했으므로(GD-102) 추첨 관련 구현 시 AD01~AD09 초안으로 새 목업을 만든다. 가중치 계산도 `ticketCount` 그대로에서 등급별 장수×장당 가중치 합산으로 바뀌었다(ADR-014) — `ticketCount`(실제 장수)와 `weight`를 구분해 반영한다
 - 관리자 이벤트 계약 — `entities/event`의 `AdminEvent` 모델과 `mocks/handlers/adminEvent.ts`는 `05-api/event.md`의 AE01~AE05·AE08 검토 대기 초안을 따른다. 확정되면 DTO·상태 운영 응답을 조정한다. AE06·AE07(중단·재개)은 ADR-015로 계약에서 제외됐고 코드·목업의 `SUSPENDED` 상태와 suspend/resume 액션·필드(`suspendedAt`·`suspendedFromStatus`)도 함께 제거했다
 - 배너 이미지 형식·용량 제한 — 담당자 확정 대기
 - 사용자 문맥 헤더(`X-User-ID`·`X-User-Membership`)의 공통 처리 위치와 `INACTIVE` 사용자 처리·테스트 사용자 목록·시드 제공 방식 — BE 공통 처리 위치는 담당자 후속 작업 (`pending-decisions.md`의 "사용자 문맥과 알림 API", N01~N03 확정 범위에는 미포함). FE 측 `X-User-ID` 주입은 `src/app/config/sessionSync.ts`의 `apiClient` 요청 인터셉터가 담당한다
 - 등급 응모권(ADR-014, 상태 제안) — 게임·미션 보상의 무작위 등급 지급과 등급별 가중치(브론즈 1·실버 3·골드 5)만 확정됐다. 출석 보상의 등급 적용, 기존 무등급 응모권 전환, 응모 시 차감 등급 선택 주체와 계약, 반환 시 등급 보존은 미결정이다. 등급별 잔액·지급 결과의 공개 API 필드는 담당자 검토 후 반영되므로 임의로 필드를 만들지 않는다 (`pending-decisions.md`의 "등급 응모권")
+- 게임 결과 제출 — spec은 G03(`POST /games/{gameId}/plays` → playId 발급)·G04(`PUT .../plays/{playId}/result`) 2단계지만 서버 발급 playId가 전제라, 계약 미확정 동안 목업과 클라이언트는 단일 `POST /games/:gameId/play` + `Idempotency-Key`를 유지한다 (GD-102에서 봉투만 적용, `features/playGame/api/queries.ts`의 TODO와 연결). 계약 확정 시 2단계로 분리한다
+- 출석 DTO — `mocks/handlers/attendance.ts`는 응답 봉투만 맞췄고 필드는 화면용(`attended`·`consecutiveDays`·`checkedDates`·`ticketsGranted`)이다. spec의 `AttendanceToday`(attendanceDate·milestones·nextResetAt 등)·`AttendanceReceipt`(rewards[])와 다르고, 주간 도트가 쓰는 `checkedDates`는 spec상 월별 조회(AT03)에만 있다 — 계약 확정 시 필드를 정합한다 (GD-102 잔여)
+- 어뷰징 목록 DTO — `mocks/handlers/abuse.ts`는 spec 요약 필드 대신 시연 표시 필드(userNickname·eventTitle·requestSummary)를 싣는다. 경로·봉투·필터와 `/decisions` 결정 계약(AR03 — ALLOW/CONFIRM·excludeFromEvent·userNoticeReason)은 초안을 따른다 (GD-102)
+- 어뷰징 표시 상태 — CONFIRM 결정이어도 `excludeFromEvent` 없으면 추첨 대상에 남는데(spec AR03의 `eligibilityStatus: ELIGIBLE` 경로), 화면 상태 모델은 pending/allowed/excluded 3개뿐이라 목록은 `excluded`로 표시한다. 현재 검토 다이얼로그는 CONFIRM 시 항상 제외를 내므로 도달하지 않는 경로다 — "확정·제외 안 함" 결정을 UI에서 지원할 때 별도 상태를 추가한다 (GD-102 잔여)
+- `/virtual-users` — spec에 없는 시연 전용 경로로 로그인·가상 사용자 전환 UI가 쓴다. 봉투만 공통 계약을 따르고 정식 계약은 BE 협의 대상이다 (GD-102)
+- `index` 번들 ~618kB — 관리자 라우트는 페이지별 lazy로 분리돼 있고 사용자 번들은 vendor가 대부분이다. `manualChunks` 벤더 분리는 빌드 설정 변경이라 별도 이슈로 미뤘다 (GD-102 잔여)
 
 MSW 목업(`src/mocks/handlers/`)은 계약의 임시 구현이다. Zod 스키마(`entities/*/model/`)가 검증 기준이며, 도메인 정책의 원본은 `../getddo-spec/02-domain/`에 있다.

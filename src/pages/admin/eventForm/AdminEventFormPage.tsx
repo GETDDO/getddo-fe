@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { EVENT_TYPE_LABEL, MEMBERSHIP_LABEL, useAdminEvent } from '@entities/event';
@@ -73,12 +73,8 @@ export function AdminEventFormPage() {
         return (
             <div className="flex flex-col gap-4 pb-10">
                 <p className="text-destructive text-body-sm">이벤트를 불러오지 못했습니다.</p>
-                <Button
-                    variant="outline"
-                    className="w-fit"
-                    onClick={() => void navigate('/admin/events')}
-                >
-                    목록으로
+                <Button variant="secondary" className="w-fit" asChild>
+                    <Link to="/admin/events">목록으로</Link>
                 </Button>
             </div>
         );
@@ -90,12 +86,8 @@ export function AdminEventFormPage() {
                 <p className="text-body-sm text-fg-secondary">
                     진행 예정 상태의 이벤트만 수정할 수 있습니다.
                 </p>
-                <Button
-                    variant="outline"
-                    className="w-fit"
-                    onClick={() => void navigate(`/admin/events/${eventId}`)}
-                >
-                    이벤트로 돌아가기
+                <Button variant="secondary" className="w-fit" asChild>
+                    <Link to={`/admin/events/${eventId}`}>이벤트로 돌아가기</Link>
                 </Button>
             </div>
         );
@@ -119,7 +111,12 @@ export function AdminEventFormPage() {
     return (
         <form onSubmit={submit} className="flex max-w-200 flex-col gap-6 pr-10 pb-10">
             <div className="flex items-center gap-3">
-                <Button type="button" variant="outline" size="sm" onClick={() => void navigate(-1)}>
+                <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => void navigate(-1)}
+                >
                     ← 뒤로
                 </Button>
                 <h2 className="text-title-3 text-fg-primary">
@@ -291,7 +288,7 @@ export function AdminEventFormPage() {
                     <h3 className={FIELD_LABEL}>경품 ({fields.length}종)</h3>
                     <Button
                         type="button"
-                        variant="outline"
+                        variant="secondary"
                         size="sm"
                         onClick={() =>
                             append({
@@ -320,7 +317,7 @@ export function AdminEventFormPage() {
                             {fields.length > 1 && (
                                 <Button
                                     type="button"
-                                    variant="outline"
+                                    variant="secondary"
                                     size="sm"
                                     onClick={() => remove(index)}
                                 >
@@ -390,7 +387,7 @@ export function AdminEventFormPage() {
             <div className="flex gap-4">
                 <Button
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     className="h-10 flex-1"
                     onClick={() => void navigate(-1)}
                 >

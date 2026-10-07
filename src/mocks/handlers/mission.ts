@@ -12,28 +12,10 @@ import { env } from '@shared/config/env';
 import { IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
 
 import { mockNow } from '../now';
+import { fail, failBody, ok, okBody } from './response';
 import { recordMockTicketGrant } from './ticket';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
-
-const okBody = (data: unknown) => ({
-    success: true,
-    code: 'SUCCESS',
-    message: '성공했습니다.',
-    data,
-});
-
-const failBody = (code: string, message: string) => ({
-    success: false,
-    code,
-    message,
-    data: null,
-});
-
-const ok = (data: unknown, status = 200) => HttpResponse.json(okBody(data), { status });
-
-const fail = (status: number, code: string, message: string) =>
-    HttpResponse.json(failBody(code, message), { status });
 
 /** 정답 정보는 서버만 안다 — 상세 응답(M02)에서 제외하는 필드 */
 interface MockQuestion extends MissionQuestion {

@@ -2,10 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 
 import { apiClient } from '@shared/api/client';
+import { envelopeSchema } from '@shared/api/envelopeSchema';
 
 import { gameSchema } from '../model/types';
 
-const gameListSchema = z.array(gameSchema);
+const gameListSchema = envelopeSchema(z.array(gameSchema));
 
 export const GAMES_KEY = ['games'] as const;
 
@@ -18,7 +19,7 @@ export function useGameList() {
         queryKey: [...GAMES_KEY, 'list'],
         queryFn: async () => {
             const { data } = await apiClient.get<unknown>(GAMES_API_PATH);
-            return gameListSchema.parse(data);
+            return gameListSchema.parse(data).data;
         },
     });
 }

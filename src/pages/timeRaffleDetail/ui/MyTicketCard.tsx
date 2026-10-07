@@ -2,11 +2,11 @@ import { Ticket } from 'lucide-react';
 
 import type { Event } from '@entities/event';
 
-import { useTicketBalance } from '@entities/ticket';
+import { useTicketWallets } from '@entities/ticket';
 import { formatNumber } from '@shared/lib/format';
 
 export function MyTicketCard({ event }: { event: Event }) {
-    const { data: ticket } = useTicketBalance();
+    const { data: ticket } = useTicketWallets();
 
     const entryCount = event.myEntryCount ?? 0;
     // 한 번에 여러 장을 쓸 수 있어 횟수 × 차감량으로는 실제 사용량이 나오지 않는다
@@ -14,7 +14,7 @@ export function MyTicketCard({ event }: { event: Event }) {
     const rows = [
         {
             label: '보유 응모권',
-            value: ticket ? `${formatNumber(ticket.balance)} 장` : '-',
+            value: ticket ? `${formatNumber(ticket.availableBalance)} 장` : '-',
         },
         { label: '이번 이벤트 응모 횟수', value: `${formatNumber(entryCount)} 회` },
         {

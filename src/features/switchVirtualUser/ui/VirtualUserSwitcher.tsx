@@ -1,6 +1,5 @@
 import { Check, CircleUserRound, ShieldCheck } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { useSessionStore, useVirtualUsers } from '@entities/user';
 import { cn } from '@shared/lib/utils';
@@ -14,7 +13,6 @@ interface VirtualUserSwitcherProps {
 // 헤더 프로필 아이콘 등에서 가상 사용자를 즉시 전환하는 팝오버 — 최초 진입만 /login, 이후 전환은 이 컴포넌트로 처리한다
 export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
     const [open, setOpen] = useState(false);
-    const navigate = useNavigate();
     const current = useSessionStore((state) => state.user);
     const selectUser = useSessionStore((state) => state.selectUser);
     const { data: users, isPending, isError } = useVirtualUsers();
@@ -61,13 +59,10 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                                 onClick={() => {
                                     selectUser(user);
                                     setOpen(false);
-                                    // 관리자 계정으로 전환하면 관리자 대시보드로 바로 이동한다
-                                    if (user.role === 'ADMIN') {
-                                        void navigate('/admin');
-                                    }
+                                    // 관리자 전환도 현재 화면에 머문다 — 관리자 화면 이동은 헤더 버튼으로만 한다
                                 }}
                                 className={cn(
-                                    'hover:bg-surface-sunken focus-visible:bg-surface-sunken flex items-center gap-3 rounded-lg p-2.5 text-left transition-colors focus-visible:outline-none',
+                                    'hover:bg-surface-sunken focus-visible:bg-surface-sunken focus-visible:ring-border-focus flex items-center gap-3 rounded-lg p-2.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
                                     isCurrent && 'cursor-default',
                                 )}
                             >

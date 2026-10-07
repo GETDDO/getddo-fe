@@ -50,7 +50,7 @@ export function AppearanceSettings() {
                     </p>
                 </div>
                 <Button
-                    variant="outline"
+                    variant="secondary"
                     aria-pressed={isLargeText}
                     onClick={() => setTextScale(isLargeText ? 'normal' : 'large')}
                     className={cn(

@@ -1,7 +1,7 @@
 import { Ticket } from 'lucide-react';
 import { Fragment, useState } from 'react';
 
-import { useTicketBalance, useTicketHistory } from '@entities/ticket';
+import { useTicketWallets, useTicketHistory } from '@entities/ticket';
 import { formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { useCountUp } from '@shared/lib/useCountUp';
@@ -31,14 +31,14 @@ export function TicketHistoryCard({
     compact?: boolean;
     className?: string;
 }) {
-    const { data: balance } = useTicketBalance();
+    const { data: wallets } = useTicketWallets();
     const { data: history, isPending, isError } = useTicketHistory();
     // 이번 달 판정은 표시용이므로 마운트 시각을 쓴다
     const clock = useVirtualClock();
     const [now] = useState(() => clock.now());
     const monthly = history ? summarizeMonthlyTickets(history, now) : undefined;
     // 출석 등으로 응모권을 받으면 숫자가 굴러 올라가고, 새 내역이 위에서 들어오며 잠깐 강조된다
-    const balanceDisplay = useCountUp(balance?.balance);
+    const balanceDisplay = useCountUp(wallets?.availableBalance);
     const earnedDisplay = useCountUp(monthly?.earned);
     const freshIds = useFreshIds(history?.map((item) => item.id));
 
@@ -107,7 +107,9 @@ export function TicketHistoryCard({
                                                 </p>
                                             </div>
                                             <span className="text-body-bold text-fg-primary shrink-0">
-                                                {item.amount > 0 ? `+${item.amount}` : item.amount}
+                                                {item.quantity > 0
+                                                    ? `+${item.quantity}`
+                                                    : item.quantity}
                                             </span>
                                         </li>
                                     </Fragment>

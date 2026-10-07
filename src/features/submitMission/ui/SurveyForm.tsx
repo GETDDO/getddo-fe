@@ -80,7 +80,7 @@ export function SurveyForm({
                         <DialogDescription>제출 후에는 답변을 수정할 수 없어요.</DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setPendingAnswers(null)}>
+                        <Button variant="secondary" onClick={() => setPendingAnswers(null)}>
                             취소
                         </Button>
                         <Button variant="primary" onClick={confirmSubmit}>

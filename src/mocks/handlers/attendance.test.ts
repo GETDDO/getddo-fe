@@ -9,13 +9,13 @@ interface AttendanceResult {
 }
 
 const check = (userId: string) =>
-    apiClient.post<AttendanceResult>('/attendances', undefined, {
+    apiClient.post<{ data: AttendanceResult }>('/attendances', undefined, {
         headers: { 'X-User-ID': userId },
         validateStatus: () => true,
     });
 
 const today = (userId: string) =>
-    apiClient.get<{ attended: boolean; consecutiveDays: number }>('/attendances/today', {
+    apiClient.get<{ data: { attended: boolean; consecutiveDays: number } }>('/attendances/today', {
         headers: { 'X-User-ID': userId },
     });
 
@@ -36,7 +36,7 @@ describe('출석 목업 핸들러', () => {
 
         const first = await check(userId);
         expect(first.status).toBe(201);
-        expect(first.data.ticketsGranted).toBeGreaterThan(0);
+        expect(first.data.data.ticketsGranted).toBeGreaterThan(0);
 
         const again = await check(userId);
         expect(again.status).toBe(200);
@@ -56,7 +56,7 @@ describe('출석 목업 핸들러', () => {
         expect(second.status).toBe(201);
 
         const statusA = await today(userA);
-        expect(statusA.data.attended).toBe(true);
+        expect(statusA.data.data.attended).toBe(true);
     });
 
     it('응모권 잔액·이력도 사용자별로 분리된다', async () => {
@@ -64,20 +64,28 @@ describe('출석 목업 핸들러', () => {
         const userA = `user-tkt-a-${Date.now()}`;
         const userB = `user-tkt-b-${Date.now()}`;
 
-        const { data: beforeB } = await apiClient.get<{ balance: number }>('/tickets/balance', {
+        const { data: beforeB } = await apiClient.get<{
+            data: { availableBalance: number };
+        }>('/tickets/wallets/me', {
             headers: { 'X-User-ID': userB },
         });
 
         // A가 출석 보상을 받아도 B의 잔액은 변하지 않는다
         await check(userA);
-        const { data: afterB } = await apiClient.get<{ balance: number }>('/tickets/balance', {
-            headers: { 'X-User-ID': userB },
-        });
-        expect(afterB.balance).toBe(beforeB.balance);
+        const { data: afterB } = await apiClient.get<{ data: { availableBalance: number } }>(
+            '/tickets/wallets/me',
+            {
+                headers: { 'X-User-ID': userB },
+            },
+        );
+        expect(afterB.data.availableBalance).toBe(beforeB.data.availableBalance);
 
-        const { data: afterA } = await apiClient.get<{ balance: number }>('/tickets/balance', {
-            headers: { 'X-User-ID': userA },
-        });
-        expect(afterA.balance).toBeGreaterThan(beforeB.balance);
+        const { data: afterA } = await apiClient.get<{ data: { availableBalance: number } }>(
+            '/tickets/wallets/me',
+            {
+                headers: { 'X-User-ID': userA },
+            },
+        );
+        expect(afterA.data.availableBalance).toBeGreaterThan(beforeB.data.availableBalance);
     });
 });

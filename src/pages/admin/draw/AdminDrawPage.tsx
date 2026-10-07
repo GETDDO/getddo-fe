@@ -1,3 +1,3 @@
 export function AdminDrawPage() {
-    return <main className="p-6">추첨 실행</main>;
+    return <div className="p-6">추첨 실행</div>;
 }

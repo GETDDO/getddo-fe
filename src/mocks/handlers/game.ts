@@ -1,7 +1,8 @@
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
 
 import { env } from '@shared/config/env';
 
+import { fail, ok } from './response';
 import { recordMockTicketGrant } from './ticket';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
@@ -106,21 +107,19 @@ const stateFor = (userId: string, gameId: string): GamePlayState => {
 };
 
 export const gameHandlers = [
+    // G01 초안 — 목록은 배열을 data에 싣는다
     http.get(api('/games'), ({ request }) => {
         const userId = userIdOf(request);
-        return HttpResponse.json(
-            mockGames.map((game) => ({ ...game, ...stateFor(userId, game.id) })),
-        );
+        return ok(mockGames.map((game) => ({ ...game, ...stateFor(userId, game.id) })));
     }),
     // 플레이 결과 — 새로고침 전까지 최고점·오늘 플레이·보상 여부를 기억한다.
     // 게임별 하루 1회 응모권 1장: 오늘 첫 유효 플레이에만 지급한다 (getddo-spec 게임 규칙)
+    // spec은 G03 plays 생성 → G04 result 제출의 두 단계지만, 게임별 검증 계약 미확정으로 최종 계약이 아니라
+    // 한 단계 제출을 유지한다 — 계약 확정 후 G03/G04로 나눈다 (features/playGame의 TODO와 연결)
     http.post(api('/games/:gameId/play'), async ({ params, request }) => {
         const game = mockGames.find((item) => item.id === params.gameId);
         if (!game) {
-            return HttpResponse.json(
-                { code: 'GAME_NOT_FOUND', message: '게임을 찾을 수 없습니다' },
-                { status: 404 },
-            );
+            return fail(404, 'RESOURCE_NOT_FOUND', '게임을 찾을 수 없습니다');
         }
         const userId = userIdOf(request);
         const state = stateFor(userId, game.id);
@@ -134,7 +133,7 @@ export const gameHandlers = [
             state.remainingPlays = 0;
             recordMockTicketGrant(userId, ticketsGranted, `${game.title} 게임 보상`);
         }
-        return HttpResponse.json(
+        return ok(
             {
                 gameId: game.id,
                 score,
@@ -142,7 +141,7 @@ export const gameHandlers = [
                 todayPlayCount: state.todayPlayCount,
                 ticketsGranted,
             },
-            { status: 201 },
+            201,
         );
     }),
 ];

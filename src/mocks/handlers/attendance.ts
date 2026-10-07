@@ -1,10 +1,11 @@
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
 
 import type { AttendancePolicy } from '@entities/attendance';
 
 import { env } from '@shared/config/env';
 
 import { mockNow } from '../now';
+import { ok } from './response';
 import { recordMockTicketGrant } from './ticket';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
@@ -57,18 +58,20 @@ const policy: AttendancePolicy = {
 
 export const attendanceHandlers = [
     // 관리자 정책 API가 없어 시연 화면을 위한 임시 조회 — spec의 attendances/* 네임스페이스 안에 둔다
-    http.get(api('/attendances/policy'), () => HttpResponse.json(policy)),
-    // AT01 초안 — 오늘 출석 여부 + 최근 기준일
+    http.get(api('/attendances/policy'), () => ok(policy)),
+    // AT01 초안 — 오늘 출석 여부 + 최근 기준일.
+    // spec AttendanceToday와 필드가 다르다: 화면의 주간 도트가 쓰는 checkedDates는 spec으로는 AT03(월별 조회)에만 있다 — 계약 확정 후 정합 대상
     http.get(api('/attendances/today'), ({ request }) => {
         const state = stateFor(userIdOf(request));
         const today = toDate(mockNow());
-        return HttpResponse.json({
+        return ok({
             attended: state.checkedDates.includes(today),
             consecutiveDays: state.streak,
             checkedDates: state.checkedDates,
         });
     }),
-    // AT02 초안 — 본문을 받지 않는다. 날짜·보상량은 서버 기준일·정책으로 정한다
+    // AT02 초안 — 본문을 받지 않는다. 날짜·보상량은 서버 기준일·정책으로 정한다.
+    // spec AttendanceReceipt(attendanceId/rewards[])와 필드가 다르다 — 화면은 확정 응모권 수만 쓰므로 초안 계약 확정 시 맞춘다
     http.post(api('/attendances'), async ({ request }) => {
         // 본문이 붙어 오는 경우도 있으므로 소비해 두고, 출석 판정에는 쓰지 않는다
         await request.json().catch(() => null);
@@ -79,13 +82,13 @@ export const attendanceHandlers = [
 
         // 같은 기준일 재요청: 새로 지급하지 않고 이미 확정한 결과를 그대로 돌려준다 (AT02 명시)
         if (state.checkedDates.includes(today)) {
-            return HttpResponse.json(
+            return ok(
                 {
                     attended: true,
                     consecutiveDays: state.streak,
                     ticketsGranted: state.todayGranted,
                 },
-                { status: 200 },
+                200,
             );
         }
 
@@ -97,9 +100,6 @@ export const attendanceHandlers = [
         state.todayGranted = tickets;
         recordMockTicketGrant(userId, tickets, '매일 출석체크 리워드');
 
-        return HttpResponse.json(
-            { attended: true, consecutiveDays: state.streak, ticketsGranted: tickets },
-            { status: 201 },
-        );
+        return ok({ attended: true, consecutiveDays: state.streak, ticketsGranted: tickets }, 201);
     }),
 ];

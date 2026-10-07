@@ -47,7 +47,7 @@ export function InsufficientTicketsDialog({
 
                 <div className="flex gap-4">
                     <DialogClose asChild>
-                        {/* outline 변형은 다크 전용 배경을 함께 얹어서, 시안대로 테두리만 두려고 ghost를 쓴다 */}
+                        {/* secondary 변형은 배경·호버 색을 함께 얹어서, 시안대로 테두리만 두려고 ghost를 쓴다 */}
                         <Button
                             variant="ghost"
                             className="border-border-strong bg-surface-page hover:bg-surface-sunken h-10 flex-1"

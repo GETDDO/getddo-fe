@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@shared/api/client';
+import { envelopeSchema } from '@shared/api/envelopeSchema';
 import { queryPresets } from '@shared/api/queryPresets';
 
 import { attendancePolicySchema, attendanceStatusSchema } from '../model/types';
@@ -20,7 +21,7 @@ export function useAttendanceStatus() {
         queryKey: ATTENDANCE_STATUS_KEY,
         queryFn: async () => {
             const { data } = await apiClient.get<unknown>(ATTENDANCE_TODAY_API_PATH);
-            return attendanceStatusSchema.parse(data);
+            return envelopeSchema(attendanceStatusSchema).parse(data).data;
         },
     });
 }
@@ -31,7 +32,7 @@ export function useAttendancePolicy() {
         queryKey: ATTENDANCE_POLICY_KEY,
         queryFn: async () => {
             const { data } = await apiClient.get<unknown>(ATTENDANCE_POLICY_API_PATH);
-            return attendancePolicySchema.parse(data);
+            return envelopeSchema(attendancePolicySchema).parse(data).data;
         },
     });
 }

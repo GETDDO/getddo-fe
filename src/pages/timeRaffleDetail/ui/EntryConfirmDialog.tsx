@@ -71,7 +71,7 @@ export function EntryConfirmDialog({
                 <div className="flex gap-4">
                     <DialogClose asChild>
                         <Button
-                            variant="outline"
+                            variant="secondary"
                             className="bg-surface-sunken border-border-default hover:bg-surface-pressed h-10 flex-1"
                         >
                             <span className="text-body-bold text-fg-primary">취소</span>

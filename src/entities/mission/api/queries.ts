@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { z } from 'zod';
 
 import { apiClient } from '@shared/api/client';
-import { envelopeSchema } from '@shared/api/envelopeSchema';
+import { envelopeSchema, pageSchema } from '@shared/api/envelopeSchema';
 import { queryPresets } from '@shared/api/queryPresets';
 
 import type { MissionSummary } from '../model/types';
@@ -10,13 +9,7 @@ import type { MissionSubmissionResult } from '../model/types';
 
 import { missionDetailSchema, missionSummarySchema } from '../model/types';
 
-// spec 공통 계약 초안의 Page<T> 봉투 — items/page/size/totalElements (페이지는 1부터)
-const missionPageSchema = z.object({
-    items: z.array(missionSummarySchema),
-    page: z.number().int(),
-    size: z.number().int(),
-    totalElements: z.number().int(),
-});
+const missionPageSchema = pageSchema(missionSummarySchema);
 
 export const MISSIONS_KEY = ['missions'] as const;
 

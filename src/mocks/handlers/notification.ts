@@ -1,8 +1,10 @@
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
 
 import type { Notification } from '@entities/notification';
 
 import { env } from '@shared/config/env';
+
+import { fail, ok } from './response';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 const DEFAULT_SIZE = 20;
@@ -58,12 +60,6 @@ const getNotificationsForUser = (userId: string): Notification[] => {
     notificationsByUser.set(userId, created);
     return created;
 };
-
-const ok = (data: unknown) =>
-    HttpResponse.json({ success: true, code: 'SUCCESS', message: '성공했습니다.', data });
-
-const fail = (status: number, code: string, message: string) =>
-    HttpResponse.json({ success: false, code, message, data: null }, { status });
 
 export const notificationHandlers = [
     http.get(api('/v1/notifications/me'), ({ request }) => {

@@ -1,11 +1,11 @@
 import type { Event } from '@entities/event';
 
-import { useTicketBalance } from '@entities/ticket';
+import { useTicketWallets } from '@entities/ticket';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 
 export function RaffleDetailsCard({ event }: { event: Event }) {
-    const { data: ticket } = useTicketBalance();
+    const { data: ticket } = useTicketWallets();
 
     const detail = event.raffleDetail;
     const entryCount = event.myEntryCount ?? 0;
@@ -38,7 +38,10 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
                     ? '응모권 없이 참여'
                     : `1회 응모 시 ${event.requiredTickets}장`,
         },
-        { label: '보유 응모권', value: ticket ? `${formatNumber(ticket.balance)}장` : null },
+        {
+            label: '보유 응모권',
+            value: ticket ? `${formatNumber(ticket.availableBalance)}장` : null,
+        },
         {
             label: '이번 이벤트 차감',
             value: `${formatNumber(usedTickets)}장`,
