@@ -1,6 +1,14 @@
 import type { LucideIcon } from 'lucide-react';
 
-import { CalendarDays, Clock, Dices, Images, LayoutDashboard, ShieldAlert } from 'lucide-react';
+import {
+    CalendarDays,
+    Clock,
+    Dices,
+    Images,
+    LayoutDashboard,
+    ScrollText,
+    ShieldAlert,
+} from 'lucide-react';
 
 export interface AdminNavItem {
     to: string;
@@ -15,6 +23,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     { to: '/admin/events', label: '이벤트 관리', icon: CalendarDays },
     { to: '/admin/draw', label: '추첨 관리', icon: Dices },
     { to: '/admin/abuse-review', label: '어뷰징 검토', icon: ShieldAlert },
+    { to: '/admin/audit', label: '감사 로그', icon: ScrollText },
     { to: '/admin/banners', label: '배너 관리', icon: Images },
     { to: '/admin/virtual-clock', label: '가상 시계', icon: Clock },
 ];
