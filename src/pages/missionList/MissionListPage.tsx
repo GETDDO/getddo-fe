@@ -13,6 +13,7 @@ import { MissionCard } from './ui/MissionCard';
 import { MissionDialog } from './ui/MissionDialog';
 import { SectionHeader } from './ui/SectionHeader';
 import { TicketHistoryCard } from './ui/TicketHistoryCard';
+import { TicketSummaryCard } from './ui/TicketSummaryCard';
 
 const CONTAINER = 'mx-auto w-full max-w-312 px-6';
 
@@ -45,10 +46,16 @@ export function MissionListPage() {
     return (
         <main className="flex flex-col pt-20 pb-28">
             <div className={CONTAINER}>
-                <h1 className="text-title-1 text-fg-primary">응모권</h1>
-                <p className="text-body-sm text-fg-secondary">
-                    출석, 미션, 게임에 참여하고 응모권을 획득하세요.
-                </p>
+                {/* 피그마 미션 페이지 머리 — 왼쪽 제목·설명, 오른쪽 응모권 요약 카드 (좁은 화면에서는 아래로) */}
+                <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-col gap-1.5">
+                        <h1 className="text-title-1 text-fg-primary">응모권</h1>
+                        <p className="text-body-sm text-fg-secondary">
+                            출석, 미션, 게임에 참여하고 응모권을 획득하세요.
+                        </p>
+                    </div>
+                    <TicketSummaryCard />
+                </div>
 
                 <div
                     className={cn(
