@@ -1,4 +1,4 @@
-import { ChevronDown, Menu } from 'lucide-react';
+import { ChevronDown, LayoutDashboard, Menu } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
 
@@ -6,6 +6,7 @@ import { useSessionStore } from '@entities/user';
 import { VirtualClockTicker } from '@features/controlVirtualClock';
 import { VirtualUserSwitcher } from '@features/switchVirtualUser';
 import { cn } from '@shared/lib/utils';
+import { Button } from '@shared/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
 import { NotificationBell } from '@widgets/notificationBell';
 
@@ -127,10 +128,38 @@ export function UserLayout() {
                                         {label}
                                     </NavLink>
                                 ))}
+                                {user.role === 'ADMIN' && (
+                                    <>
+                                        <div
+                                            aria-hidden
+                                            className="border-border-default my-1 border-t"
+                                        />
+                                        <NavLink
+                                            to="/admin"
+                                            className="text-body-sm text-fg-tertiary hover:bg-surface-sunken hover:text-fg-primary rounded-lg px-3 py-2.5 transition-colors"
+                                        >
+                                            관리자 화면으로
+                                        </NavLink>
+                                    </>
+                                )}
                             </nav>
                         </PopoverContent>
                     </Popover>
                     <div className="ml-auto flex items-center gap-5">
+                        {/* 관리자 화면 진입은 관리자 계정에게만 보이는 버튼으로만 한다 — 로그인 시 자동 이동 없음 */}
+                        {user.role === 'ADMIN' && (
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                asChild
+                                className="hidden md:inline-flex"
+                            >
+                                <NavLink to="/admin">
+                                    <LayoutDashboard aria-hidden />
+                                    관리자 화면으로
+                                </NavLink>
+                            </Button>
+                        )}
                         {/* 가상 시계 조작은 관리자만 — 일반 사용자는 시각 표시만 본다 */}
                         <VirtualClockTicker
                             className="hidden lg:flex"
