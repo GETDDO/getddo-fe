@@ -7,7 +7,6 @@ export const adminEventStatusSchema = z.enum([
     'CLOSED',
     'DRAW_CONFIRMED',
     'PUBLISHED',
-    'SUSPENDED',
     'CANCELED',
     'REDRAWING',
     'NO_ENTRANTS',
@@ -46,8 +45,6 @@ export const adminEventSchema = z.object({
     createdBy: z.string(),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
-    suspendedFromStatus: z.enum(['SCHEDULED', 'OPEN']).nullable(),
-    suspendedAt: z.iso.datetime().nullable(),
     canceledAt: z.iso.datetime().nullable(),
 });
 
@@ -75,7 +72,7 @@ export interface EventWriteRequest {
     prizes: PrizeWrite[];
 }
 
-// AE06~AE08 상태 운영 응답
+// AE08 상태 운영 응답
 export const eventOperationResultSchema = z.object({
     eventId: z.string(),
     previousStatus: adminEventStatusSchema,

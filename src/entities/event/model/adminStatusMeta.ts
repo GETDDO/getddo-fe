@@ -10,7 +10,6 @@ export const ADMIN_STATUS_META: Record<AdminEventStatus, { label: string; chipCl
         chipClass: 'bg-status-pending text-status-pending-text',
     },
     PUBLISHED: { label: '발표 완료', chipClass: 'bg-status-approved text-status-approved-text' },
-    SUSPENDED: { label: '중단', chipClass: 'bg-status-rejected text-status-rejected-text' },
     CANCELED: { label: '취소', chipClass: 'bg-status-rejected text-status-rejected-text' },
     REDRAWING: { label: '재추첨 중', chipClass: 'bg-status-pending text-status-pending-text' },
     NO_ENTRANTS: { label: '응모자 없음', chipClass: 'bg-surface-sunken text-fg-secondary' },

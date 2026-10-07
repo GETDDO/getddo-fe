@@ -164,11 +164,6 @@ export const entryHandlers = [
         if (!event) {
             return remember(404, failBody('EVENT_NOT_FOUND', '이벤트를 찾을 수 없습니다'));
         }
-        // 관리자 중단이 먼저 확정된 이벤트는 이후 응모를 거절한다 (getddo-spec 02-domain/event.md)
-        if (event.entryBlocked) {
-            return remember(409, failBody('EVENT_NOT_OPEN', '중단된 이벤트입니다'));
-        }
-
         // 이벤트 유형별 수량 규칙 — 응모권 사용 이벤트는 1장 이상, 미사용 이벤트는 0장만 받는다
         const usesTickets = event.requiredTickets > 0;
         if (usesTickets && ticketCount < 1) {

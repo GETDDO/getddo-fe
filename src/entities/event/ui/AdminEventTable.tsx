@@ -26,7 +26,7 @@ const helper = createColumnHelper<typeof features, AdminEvent>();
 
 /**
  * 관리자 이벤트 목록 테이블 — 행 클릭으로 상세로 이동한다.
- * 운영 액션(수정·중단·취소 등)은 상세 화면에 모아 목록 행을 가볍게 둔다
+ * 운영 액션(수정·취소·삭제 등)은 상세 화면에 모아 목록 행을 가볍게 둔다
  */
 export function AdminEventTable({
     events,
