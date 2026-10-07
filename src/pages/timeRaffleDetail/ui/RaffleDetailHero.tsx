@@ -11,6 +11,19 @@ import { AnnounceCountdown } from './AnnounceCountdown';
 
 const CHIP = 'text-caption bg-surface-sunken flex items-center gap-2.5 rounded-full px-3 py-1';
 
+/**
+ * 히어로 상단 상태 칩.
+ *
+ * 마감·발표 완료 래플도 목록에서 상세로 들어올 수 있으므로 '진행중'으로 고정할 수 없다.
+ * 강조는 지금 응모할 수 있는 래플에만 둔다 — 끝난 래플까지 핑크로 띄우면 위계가 사라진다.
+ */
+const STATUS_CHIP: Record<Event['status'], { label: string; emphasized: boolean }> = {
+    open: { label: '진행중', emphasized: true },
+    upcoming: { label: '오픈 예정', emphasized: false },
+    closed: { label: '발표 대기', emphasized: false },
+    drawn: { label: '발표 완료', emphasized: false },
+};
+
 interface RaffleDetailHeroProps {
     event: Event;
     /** 응모 수량 스테퍼 — 진행 중일 때만 노출한다 */
@@ -20,7 +33,7 @@ interface RaffleDetailHeroProps {
 
 /** 상세 화면 대표 카드 — 목록 히어로와 달리 이미지가 카드에 꽉 차고, 현황은 칩으로 줄어든다 */
 export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHeroProps) {
-    const hasAnnounceAt = event.announceAt != null;
+    const hasPublicationSchedule = event.publicationScheduledAt != null;
 
     return (
         <article className="bg-surface-page border-border-brand flex flex-col items-center overflow-hidden rounded-2xl border lg:min-h-95 lg:flex-row lg:gap-5">
@@ -29,9 +42,11 @@ export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHe
              * 발표 예정 시각이 없으면 보여 줄 게 없으므로 오버레이도, 포커스 정지도 두지 않는다.
              */}
             <div
-                tabIndex={hasAnnounceAt ? 0 : undefined}
-                role={hasAnnounceAt ? 'group' : undefined}
-                aria-label={hasAnnounceAt ? '상품 이미지 — 당첨자 발표까지 남은 시간' : undefined}
+                tabIndex={hasPublicationSchedule ? 0 : undefined}
+                role={hasPublicationSchedule ? 'group' : undefined}
+                aria-label={
+                    hasPublicationSchedule ? '상품 이미지 — 당첨자 발표까지 남은 시간' : undefined
+                }
                 className="bg-surface-canvas focus-visible:ring-border-focus focus-visible:ring-offset-surface-page group relative h-48 w-full self-stretch focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none lg:h-auto lg:w-130 lg:shrink-0"
             >
                 {event.bannerImageUrl ? (
@@ -41,7 +56,7 @@ export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHe
                         <Gift className="text-fg-disabled size-12" />
                     </div>
                 )}
-                {hasAnnounceAt && (
+                {hasPublicationSchedule && (
                     <div className="bg-surface-overlay pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
                         <AnnounceCountdown event={event} />
                     </div>
@@ -51,8 +66,14 @@ export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHe
             <div className="flex h-full min-w-0 flex-1 flex-col justify-between gap-5 px-4 py-5">
                 <div className="flex flex-col gap-5">
                     <div className="flex flex-wrap items-center gap-2">
-                        <span className="bg-brand-primary text-fg-on-brand text-caption rounded-full px-3 py-1">
-                            진행중
+                        <span
+                            className={
+                                STATUS_CHIP[event.status].emphasized
+                                    ? 'bg-brand-primary text-fg-on-brand text-caption rounded-full px-3 py-1'
+                                    : 'bg-surface-sunken text-fg-secondary text-caption rounded-full px-3 py-1'
+                            }
+                        >
+                            {STATUS_CHIP[event.status].label}
                         </span>
                         <span className="bg-surface-sunken text-fg-secondary text-body-sm-bold flex items-center gap-1 rounded-full px-3 py-1">
                             <Clock className="size-4.5" />

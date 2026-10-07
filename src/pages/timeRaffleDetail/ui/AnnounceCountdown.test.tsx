@@ -53,7 +53,7 @@ describe('AnnounceCountdown', () => {
 
     it('새로고침 없이 1초마다 남은 시간이 줄어든다', () => {
         // 발표까지 10초
-        renderWithClock(makeEvent({ announceAt: '2026-09-30T05:00:10Z' }));
+        renderWithClock(makeEvent({ publicationScheduledAt: '2026-09-30T05:00:10Z' }));
 
         expect(screen.getByRole('timer')).toHaveTextContent('00:00:10');
 
@@ -68,19 +68,19 @@ describe('AnnounceCountdown', () => {
         expect(screen.getByRole('timer')).toHaveTextContent('00:00:06');
     });
 
-    it('발표 시각이 지나면 카운트다운 대신 안내 문구만 남는다', () => {
-        renderWithClock(makeEvent({ announceAt: '2026-09-30T05:00:01Z' }));
+    it('발표 예정 시각이 지나도 발표 시점을 다시 약속하지 않는다', () => {
+        renderWithClock(makeEvent({ publicationScheduledAt: '2026-09-30T05:00:01Z' }));
 
         act(() => {
             vi.advanceTimersByTime(2000);
         });
 
         expect(screen.queryByRole('timer')).not.toBeInTheDocument();
-        expect(screen.getByText('곧 당첨자를 발표합니다')).toBeInTheDocument();
+        expect(screen.getByText('아직 발표되지 않았습니다')).toBeInTheDocument();
     });
 
     it('발표 예정 시각이 없으면 아무것도 그리지 않는다', () => {
-        const { container } = renderWithClock(makeEvent({ announceAt: null }));
+        const { container } = renderWithClock(makeEvent({ publicationScheduledAt: null }));
         expect(container).toBeEmptyDOMElement();
     });
 });
