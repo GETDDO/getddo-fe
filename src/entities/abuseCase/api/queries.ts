@@ -4,6 +4,8 @@ import { apiClient } from '@shared/api/client';
 import { envelopeSchema, pageSchema } from '@shared/api/envelopeSchema';
 import { queryPresets } from '@shared/api/queryPresets';
 
+import type { AbuseCase } from '../model/types';
+
 import { abuseCaseSchema } from '../model/types';
 
 const abuseCaseListSchema = envelopeSchema(pageSchema(abuseCaseSchema));
@@ -21,9 +23,17 @@ export function useAbuseCases() {
         ...queryPresets.noCache,
         queryKey: ABUSE_CASES_KEY,
         queryFn: async () => {
-            const { data } = await apiClient.get<unknown>(ABUSE_CASES_API_PATH);
-            // 검토 화면은 한 번에 전체를 심사하므로 Page.items만 꺼낸다
-            return abuseCaseListSchema.parse(data).data.items;
+            // 검토 화면은 전체를 한 번에 심사하므로 totalElements까지 모든 페이지를 모은다
+            const cases: AbuseCase[] = [];
+            for (let page = 1; ; page += 1) {
+                const { data } = await apiClient.get<unknown>(ABUSE_CASES_API_PATH, {
+                    params: { page, size: 20 },
+                });
+                const parsed = abuseCaseListSchema.parse(data).data;
+                cases.push(...parsed.items);
+                if (cases.length >= parsed.totalElements || parsed.items.length === 0) break;
+            }
+            return cases;
         },
     });
 }

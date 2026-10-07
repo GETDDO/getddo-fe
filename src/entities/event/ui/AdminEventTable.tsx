@@ -123,18 +123,20 @@ export function AdminEventTable({
                 helper.display({
                     id: 'detail',
                     header: '상세',
-                    cell: ({ row }) => (
-                        <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onRowClick?.(row.original);
-                            }}
-                        >
-                            상세
-                        </Button>
-                    ),
+                    cell: ({ row }) =>
+                        onRowClick ? (
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                aria-label={`${row.original.title} 상세`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRowClick(row.original);
+                                }}
+                            >
+                                상세
+                            </Button>
+                        ) : null,
                 }),
             ]),
         [onRowClick],

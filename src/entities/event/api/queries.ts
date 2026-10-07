@@ -4,6 +4,8 @@ import { apiClient } from '@shared/api/client';
 import { envelopeSchema, pageSchema } from '@shared/api/envelopeSchema';
 import { queryPresets } from '@shared/api/queryPresets';
 
+import type { Event } from '../model/types';
+
 import { eventSchema } from '../model/types';
 
 const eventListSchema = envelopeSchema(pageSchema(eventSchema));
@@ -15,14 +17,24 @@ export const EVENTS_API_PATH = '/events';
 export const eventApiPath = (eventId: string) => `${EVENTS_API_PATH}/${eventId}`;
 export const eventEntriesApiPath = (eventId: string) => `${EVENTS_API_PATH}/${eventId}/entries`;
 
+const EVENTS_PAGE_SIZE = 20;
+
 export function useEventList() {
     return useQuery({
         ...queryPresets.realtime,
         queryKey: [...EVENTS_KEY, 'list'],
         queryFn: async () => {
-            const { data } = await apiClient.get<unknown>(EVENTS_API_PATH);
-            // 목록 화면은 한 번에 전부 그리므로 Page.items만 꺼낸다 — 페이지네이션 UI가 생기면 page/size 파라미터를 넘긴다
-            return eventListSchema.parse(data).data.items;
+            // Page는 기본 20건씩 자른다 — 목록 화면은 전체를 그리므로 totalElements까지 전부 모은다
+            const events: Event[] = [];
+            for (let page = 1; ; page += 1) {
+                const { data } = await apiClient.get<unknown>(EVENTS_API_PATH, {
+                    params: { page, size: EVENTS_PAGE_SIZE },
+                });
+                const parsed = eventListSchema.parse(data).data;
+                events.push(...parsed.items);
+                if (events.length >= parsed.totalElements || parsed.items.length === 0) break;
+            }
+            return events;
         },
         // 실시간 현황 자동 갱신 (getddo-spec 기능 요구사항 7절 — 갱신 주기는 구현 재량) — 홈 배너의 참여자/응모권 수를 주기적으로 다시 가져온다
     });

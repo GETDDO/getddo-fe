@@ -39,7 +39,7 @@
 - [x] `game.ts` — 봉투 적용. G03/G04(playId 2단계)는 서버 발급 playId 계약 미정이라 단일 `/play`+멱등키 유지하며 TODO로 표시
 - [x] `abuse.ts` — 목록 Page화, `/review` → AR03 `/decisions`(201, ReviewDecisionResult). UI의 allow/exclude는 ALLOW/CONFIRM+excludeFromEvent+userNoticeReason으로 변환
 - [x] `draw.ts` — 명세 없는 구 경로 + 사용처 없음 → 삭제
-- [x] `attendance.ts` — 봉투 적용, AttendanceToday/Receipt 필드(attendanceDate, milestones, rewards 등) 계약 정합
+- [x] `attendance.ts` — 봉투 적용. `AttendanceToday`/`AttendanceReceipt` 필드 정합은 계약 미확정으로 후속 작업이다 (CONTEXT.md 임시 상태 참조)
 - [x] `banner.ts`·`virtualUsers.ts` — 봉투 적용
 - [x] 공통 `pageSchema`/`cursorSchema`를 `shared/api/envelopeSchema.ts`에 두고 audit/adminEvent/event/mission이 재사용
 - [x] 테스트 픽스처 갱신 — 봉투 파싱, `/tickets/wallets/me`, `/events?size=100`(페이지 기본값 20 넘는 목업 수 대응)

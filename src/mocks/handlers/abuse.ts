@@ -9,15 +9,16 @@ import { fail, ok } from './response';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
-// spec AR01의 reviewStatus(PENDING/ALLOWED/CONFIRMED)를 목업 상태값으로 환산한다 — CONFIRMED는 추첨 제외로 모은다
-const STATUS_BY_REVIEW_STATUS: Record<string, AbuseCase['status']> = {
-    PENDING: 'pending',
-    ALLOWED: 'allowed',
-    CONFIRMED: 'excluded',
-};
+// 목업 내부 상태 — 화면 모델(AbuseCase.status)과 별개로 spec AR01의 reviewStatus와 이벤트 제외 여부를 따로 둔다.
+// CONFIRM이지만 추첨 제외를 안 건 건은 reviewStatus=CONFIRMED이면서 status는 검토 완료로만 둬야
+// reviewStatus 필터 조회에서 올바른 집합에 나온다
+interface MockAbuseCase extends AbuseCase {
+    reviewStatus: 'PENDING' | 'ALLOWED' | 'CONFIRMED';
+    excludedFromEvent: boolean;
+}
 
 // 목업 세션 동안 유지되는 탐지·검토 상태 — 검토 요청이 이 목록에 반영된다
-const abuseCases: AbuseCase[] = [
+const abuseCases: MockAbuseCase[] = [
     {
         id: 'ab-1',
         target: 'entry',
@@ -29,6 +30,8 @@ const abuseCases: AbuseCase[] = [
         requestSummary: 'POST /events/evt-201/entries — 10분 내 6회 (멱등키 상이)',
         detectedAt: '2026-09-27T14:32:00Z',
         status: 'pending',
+        reviewStatus: 'PENDING',
+        excludedFromEvent: false,
         review: null,
     },
     {
@@ -42,6 +45,8 @@ const abuseCases: AbuseCase[] = [
         requestSummary: 'POST /events/evt-187/entries — 마감 23:59 이후 3회',
         detectedAt: '2026-09-27T01:15:00Z',
         status: 'pending',
+        reviewStatus: 'PENDING',
+        excludedFromEvent: false,
         review: null,
     },
     {
@@ -55,6 +60,8 @@ const abuseCases: AbuseCase[] = [
         requestSummary: 'POST /attendances — 1초 간격 12회 연속',
         detectedAt: '2026-09-26T22:58:00Z',
         status: 'pending',
+        reviewStatus: 'PENDING',
+        excludedFromEvent: false,
         review: null,
     },
     {
@@ -68,6 +75,8 @@ const abuseCases: AbuseCase[] = [
         requestSummary: 'POST /games/dino/results — 동일 점수 30회 연속 제출',
         detectedAt: '2026-09-26T09:40:00Z',
         status: 'pending',
+        reviewStatus: 'PENDING',
+        excludedFromEvent: false,
         review: null,
     },
     {
@@ -81,6 +90,8 @@ const abuseCases: AbuseCase[] = [
         requestSummary: 'POST /events/evt-142/entries — 멱등키 동일 4회 (네트워크 재시도 의심)',
         detectedAt: '2026-09-25T11:20:00Z',
         status: 'allowed',
+        reviewStatus: 'ALLOWED',
+        excludedFromEvent: false,
         review: {
             reviewer: 'admin-01',
             reviewedAt: '2026-09-25T13:05:00Z',
@@ -98,6 +109,8 @@ const abuseCases: AbuseCase[] = [
         requestSummary: 'POST /events/evt-099/entries — 1시간 내 42회',
         detectedAt: '2026-09-24T16:47:00Z',
         status: 'excluded',
+        reviewStatus: 'CONFIRMED',
+        excludedFromEvent: true,
         review: {
             reviewer: 'admin-01',
             reviewedAt: '2026-09-24T18:02:00Z',
@@ -118,7 +131,7 @@ export const abuseHandlers = [
         const userId = url.searchParams.get('userId');
 
         const filtered = abuseCases.filter((item) => {
-            if (reviewStatus && item.status !== STATUS_BY_REVIEW_STATUS[reviewStatus]) return false;
+            if (reviewStatus && item.reviewStatus !== reviewStatus) return false;
             if (userId && item.userId !== userId) return false;
             if (sourceType) {
                 if (sourceType === 'ENTRY') return item.target === 'entry';
@@ -158,8 +171,12 @@ export const abuseHandlers = [
             return fail(400, 'COMMON-002', '추첨 대상 제외 시 안내 사유가 필요합니다');
         }
 
-        const exclude = body.decision === 'CONFIRM' && body.excludeFromEvent === true;
-        target.status = exclude ? 'excluded' : 'allowed';
+        const confirmed = body.decision === 'CONFIRM';
+        const exclude = confirmed && body.excludeFromEvent === true;
+        // 검토 결정과 추첨 제외는 별개 — CONFIRM이어도 제외를 안 걸면 결정만 CONFIRMED로 남는다
+        target.reviewStatus = confirmed ? 'CONFIRMED' : 'ALLOWED';
+        target.excludedFromEvent = exclude;
+        target.status = confirmed ? 'excluded' : 'allowed';
         target.review = {
             reviewer: 'admin-01',
             reviewedAt: mockNow().toISOString(),
@@ -168,7 +185,7 @@ export const abuseHandlers = [
         return ok(
             {
                 caseId: target.id,
-                reviewStatus: body.decision === 'ALLOW' ? 'ALLOWED' : 'CONFIRMED',
+                reviewStatus: target.reviewStatus,
                 reviewedBy: 'admin-01',
                 reviewedAt: target.review.reviewedAt,
                 eligibilityStatus: exclude ? 'EXCLUDED' : 'ELIGIBLE',
