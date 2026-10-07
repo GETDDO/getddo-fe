@@ -88,6 +88,14 @@ export const adminRoutes: RouteObject[] = [
                 ),
             },
             {
+                path: 'audit',
+                element: lazyPage(() =>
+                    import('@pages/admin/audit/AdminAuditPage').then((m) => ({
+                        default: m.AdminAuditPage,
+                    })),
+                ),
+            },
+            {
                 path: 'banners',
                 element: lazyPage(() =>
                     import('@pages/admin/banners/AdminBannersPage').then((m) => ({
