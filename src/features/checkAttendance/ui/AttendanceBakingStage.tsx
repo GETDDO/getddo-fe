@@ -43,6 +43,7 @@ export function AttendanceBakingStage({
         <div
             role="status"
             aria-label={BAKING_LABEL}
+            // 굽는 장면 뒤에는 배경 없이 둔다
             className={`flex flex-col items-center justify-center gap-3 ${className ?? ''}`}
         >
             <div

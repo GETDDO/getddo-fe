@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { useMissionList } from '@entities/mission';
+import { MissionRewardDialog, useMissionList } from '@entities/mission';
 import {
     ATTENDANCE_WIDEN_MS,
     AttendanceCheckCard,
@@ -10,27 +10,22 @@ import { cn } from '@shared/lib/utils';
 import { GameRail } from '@widgets/gameRail';
 
 import { MissionCard } from './ui/MissionCard';
+import { MissionDialog } from './ui/MissionDialog';
 import { SectionHeader } from './ui/SectionHeader';
 import { TicketHistoryCard } from './ui/TicketHistoryCard';
 
 const CONTAINER = 'mx-auto w-full max-w-312 px-6';
 
-/** 출석 카드 펼침 여부 — 새로고침해도 유지하도록 이 탭의 세션 저장소에 둔다 */
-const ATTENDANCE_EXPANDED_KEY = 'getddo:attendance-expanded';
-
-// 개인 정보 보호 모드 등에서는 저장소 접근이 막힐 수 있어, 실패하면 접힌 상태로 시작한다
-function readAttendanceExpanded() {
-    try {
-        return sessionStorage.getItem(ATTENDANCE_EXPANDED_KEY) === 'true';
-    } catch {
-        return false;
-    }
-}
-
 export function MissionListPage() {
     const { data: missions, isPending, isError } = useMissionList();
-    // 출석 카드를 펼치면(펼쳐보기·출석 완료) 출석 카드가 넓어지고 응모권 내역 카드가 좁아진다
-    const [attendanceExpanded, setAttendanceExpanded] = useState(readAttendanceExpanded);
+    // 출석 카드를 펼치면(펼쳐보기·출석 완료) 출석 카드가 넓어지고 응모권 내역 카드가 좁아진다.
+    // 펼침 상태는 저장하지 않는다 — 페이지에 들어올 때마다 접힌 상태로 새로 시작한다
+    const [attendanceExpanded, setAttendanceExpanded] = useState(false);
+
+    // 설문·퀴즈 풀이 모달로 연 미션, 완료 직후 보상 모달에 보여줄 응모권 수
+    const [openMissionId, setOpenMissionId] = useState<string | null>(null);
+    // 응모권 수는 닫히는 동안에도 남겨 두어야 닫힘 애니메이션에서 0장으로 바뀌지 않는다
+    const [reward, setReward] = useState({ open: false, tickets: 0 });
 
     // 출석 카드를 펼치고 접을 때 두 카드의 열 너비가 부드럽게 바뀐다
     const [widening, setWidening] = useState(false);
@@ -47,19 +42,11 @@ export function MissionListPage() {
         return () => clearTimeout(timer);
     }, [widening]);
 
-    useEffect(() => {
-        try {
-            sessionStorage.setItem(ATTENDANCE_EXPANDED_KEY, String(attendanceExpanded));
-        } catch {
-            // 저장하지 못해도 화면 동작에는 영향이 없다
-        }
-    }, [attendanceExpanded]);
-
     return (
         <main className="flex flex-col pt-20 pb-28">
             <div className={CONTAINER}>
                 <h1 className="text-title-1 text-fg-primary">응모권</h1>
-                <p className="text-body text-fg-primary">
+                <p className="text-body-sm text-fg-secondary">
                     출석, 미션, 게임에 참여하고 응모권을 획득하세요.
                 </p>
 
@@ -93,17 +80,12 @@ export function MissionListPage() {
                 </div>
             </div>
 
-            {/*
-              게임 섹션 — 회색 띠 위에 놓인다 (티켓 펀칭은 실제로 도려내서 띠 색이 그대로 비친다).
-              카드 목록은 홈 화면처럼 콘텐츠 폭(최대 1200px) 안에서 자르고 그 안에서 넘긴다
-            */}
-            <div className="bg-surface-canvas mt-20 py-10">
-                <div className={CONTAINER}>
-                    <GameRail
-                        title="게임"
-                        caption="게임마다 하루 한 번 응모권을 받을 수 있어요. 매일 오전 9시 초기화"
-                    />
-                </div>
+            {/* 게임 섹션 — 홈과 같이 배경 띠 없이 다른 섹션과 같은 간격(80). 카드 목록은 콘텐츠 폭(최대 1200px) 안에서 넘긴다 */}
+            <div className={`${CONTAINER} mt-20`}>
+                <GameRail
+                    title="게임"
+                    caption="게임마다 하루 한 번 응모권을 받을 수 있어요. 매일 오전 9시 초기화"
+                />
             </div>
 
             {/* 설문·퀴즈 */}
@@ -124,13 +106,33 @@ export function MissionListPage() {
                     </p>
                 )}
                 {missions && missions.length > 0 && (
-                    <div className="flex flex-col gap-4">
+                    // 설문·퀴즈 카드는 넓은 화면에서 2열로 둔다
+                    <div className="grid gap-4 md:grid-cols-2">
                         {missions.map((mission) => (
-                            <MissionCard key={mission.id} mission={mission} />
+                            <MissionCard
+                                key={mission.id}
+                                mission={mission}
+                                onOpen={setOpenMissionId}
+                            />
                         ))}
                     </div>
                 )}
             </section>
+
+            <MissionDialog
+                missionId={openMissionId}
+                onClose={() => setOpenMissionId(null)}
+                onRewarded={(tickets) => {
+                    // 풀이 모달을 닫고 보상 모달을 띄운다
+                    setOpenMissionId(null);
+                    setReward({ open: true, tickets });
+                }}
+            />
+            <MissionRewardDialog
+                open={reward.open}
+                onOpenChange={(open) => setReward((prev) => ({ ...prev, open }))}
+                tickets={reward.tickets}
+            />
         </main>
     );
 }

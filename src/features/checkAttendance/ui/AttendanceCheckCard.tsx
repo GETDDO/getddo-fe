@@ -18,7 +18,6 @@ import {
     toAttendanceDate,
 } from '../lib/attendanceWeek';
 import { ATTENDANCE_WIDEN_MS } from '../model/attendanceMotion';
-import { AttendanceBaking } from './AttendanceBaking';
 import { AttendanceBakingStage, BAKING_SPRITE_SRC } from './AttendanceBakingStage';
 import { AttendanceMonthGrid } from './AttendanceMonthGrid';
 import { AttendanceWeekStrip } from './AttendanceWeekStrip';
@@ -92,9 +91,7 @@ function AttendanceStat({
             <span className={`text-fg-tertiary ${compact ? 'text-caption' : 'text-body-sm'}`}>
                 {label}
             </span>
-            <span
-                className={`text-fg-primary ${compact ? 'text-body-sm-bold' : 'text-title-3 tracking-normal'}`}
-            >
+            <span className={`text-fg-primary ${compact ? 'text-body-sm-bold' : 'text-body-bold'}`}>
                 {value}
             </span>
         </div>
@@ -239,9 +236,10 @@ export function AttendanceCheckCard({
         }
     };
 
-    // 펼친 출석판 머리의 작은 출석 버튼 — 이번 달 출석일수 옆에 둔다
+    // 펼친 출석판 머리의 작은 출석 버튼 — 이번 달 출석일수 옆에 둔다.
+    // 굽는 동안에는 아래 굽기 장면이 같은 내용을 보여주므로 자리만 비워 둔다
     const compactCheckButton = baking ? (
-        <AttendanceBaking compact />
+        <div aria-hidden className={`h-10 ${COMPACT_CHECK_WIDTH}`} />
     ) : status?.attended ? (
         <Button disabled className={COMPACT_CHECK_WIDTH}>
             오늘 출석 완료
@@ -364,7 +362,7 @@ export function AttendanceCheckCard({
                                     // 펼친 출석판에서 출석하기 — 출석판 자리만 굽기 장면으로 바뀐다
                                     <AttendanceBakingStage
                                         durationMs={BAKING_MIN_MS}
-                                        className="bg-surface-canvas min-h-80 rounded-lg"
+                                        className="min-h-80"
                                     />
                                 ) : (
                                     <Rise order={1} enter={contentEnter}>

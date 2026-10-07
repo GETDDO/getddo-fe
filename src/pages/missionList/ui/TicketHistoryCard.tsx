@@ -2,7 +2,6 @@ import { Ticket } from 'lucide-react';
 import { Fragment, useState } from 'react';
 
 import { useTicketWallets, useTicketHistory } from '@entities/ticket';
-import { formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { useCountUp } from '@shared/lib/useCountUp';
 import { cn } from '@shared/lib/utils';
@@ -10,19 +9,40 @@ import { useVirtualClock } from '@shared/lib/virtualClock';
 
 import { summarizeMonthlyTickets } from '../lib/monthlyTicketSummary';
 import { useFreshIds } from '../lib/useFreshIds';
+import { TicketHistoryRow } from './TicketHistoryRow';
 
-function SummaryItem({ label, value }: { label: string; value: number | undefined }) {
+/** 요약 한 칸 — 넓을 때는 '사용 가능 10장' 한 줄, 좁을 때(stacked)는 이름 아래 수량 두 줄(가운데 정렬) */
+function SummaryItem({
+    label,
+    value,
+    stacked,
+}: {
+    label: string;
+    value: number | undefined;
+    stacked: boolean;
+}) {
     return (
-        <p className="text-caption text-fg-primary whitespace-nowrap">
-            <span className="text-fg-tertiary">{label} </span>
-            <span className="text-body-sm-bold">{value == null ? '-' : formatNumber(value)}</span>장
+        // 공용 cn은 글자 크기 토큰(text-caption)과 글자색 토큰을 같은 묶음으로 보고 크기를 지우므로 cn 없이 이어 붙인다
+        <p
+            className={`text-caption text-fg-primary whitespace-nowrap ${stacked ? 'flex flex-col items-center text-center' : ''}`}
+        >
+            <span className="text-fg-tertiary">
+                {label}
+                {!stacked && ' '}
+            </span>
+            <span className="whitespace-nowrap">
+                <span className="text-body-sm-bold">
+                    {value == null ? '-' : formatNumber(value)}
+                </span>
+                장
+            </span>
         </p>
     );
 }
 
 /**
- * 보유 응모권·이번 달 적립/사용 요약과 최근 지급·차감 이력.
- * 높이는 옆 출석 카드를 따라가도록 내용을 absolute로 띄우고, compact면 좁은 폭에 맞춰 요약 라벨을 줄인다.
+ * 사용 가능 응모권·이번 달 적립/사용 요약과 최근 지급·차감 이력(누르면 상세가 펼쳐지는 아코디언).
+ * 높이는 옆 출석 카드를 따라가도록 내용을 absolute로 띄우고, compact(좁은 폭)면 요약을 이름·수량 두 줄로 나눈다.
  */
 export function TicketHistoryCard({
     compact = false,
@@ -41,6 +61,14 @@ export function TicketHistoryCard({
     const balanceDisplay = useCountUp(wallets?.availableBalance);
     const earnedDisplay = useCountUp(monthly?.earned);
     const freshIds = useFreshIds(history?.map((item) => item.id));
+    const summaryItems = [
+        { label: '사용 가능', value: balanceDisplay },
+        // 좁을 때는 '이번 달'이 칸을 넘어 레이아웃이 깨져 '이달'로 줄인다
+        { label: compact ? '이달 적립' : '이번 달 적립', value: earnedDisplay },
+        { label: compact ? '이달 사용' : '이번 달 사용', value: monthly?.used },
+    ];
+    // 상세는 한 번에 하나만 펼친다
+    const [openId, setOpenId] = useState<string | null>(null);
 
     return (
         <div
@@ -50,19 +78,32 @@ export function TicketHistoryCard({
             )}
         >
             <div className="absolute inset-0 flex flex-col gap-2 p-4">
-                <div
-                    className={cn(
-                        'bg-surface-canvas flex flex-wrap items-center gap-y-2 rounded-lg p-4',
-                        compact ? 'gap-x-4.5' : 'gap-x-5',
-                    )}
-                >
-                    {!compact && <Ticket className="text-fg-primary size-4.5" aria-hidden />}
-                    <SummaryItem label={compact ? '보유' : '보유 응모권'} value={balanceDisplay} />
-                    <span aria-hidden className="bg-border-strong h-4 w-px rounded-full" />
-                    <SummaryItem label={compact ? '적립' : '이번 달 적립'} value={earnedDisplay} />
-                    <span aria-hidden className="bg-border-strong h-4 w-px rounded-full" />
-                    <SummaryItem label={compact ? '사용' : '이번 달 사용'} value={monthly?.used} />
-                </div>
+                {compact ? (
+                    // 좁을 때 — 세 칸을 같은 폭으로 나란히 두고, 칸마다 이름 아래 수량 두 줄
+                    <div className="bg-surface-canvas divide-border-strong grid grid-cols-3 divide-x rounded-lg py-3">
+                        {summaryItems.map(({ label, value }) => (
+                            <div key={label} className="min-w-0 px-1">
+                                <SummaryItem label={label} value={value} stacked />
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    // 넓을 때 — '사용 가능 10장 | 이번 달 적립 0장 | 이번 달 사용 0장' 한 줄
+                    <div className="bg-surface-canvas flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg p-4">
+                        <Ticket className="text-fg-primary size-4.5" aria-hidden />
+                        {summaryItems.map(({ label, value }, index) => (
+                            <Fragment key={label}>
+                                {index > 0 && (
+                                    <span
+                                        aria-hidden
+                                        className="bg-border-strong h-4 w-px rounded-full"
+                                    />
+                                )}
+                                <SummaryItem label={label} value={value} stacked={false} />
+                            </Fragment>
+                        ))}
+                    </div>
+                )}
 
                 {/*
                   항상 보이는 얇은 border/strong 색 스크롤바(4px, 손잡이 최소 64px).
@@ -83,38 +124,21 @@ export function TicketHistoryCard({
                     )}
                     {history && history.length > 0 && (
                         <ul>
-                            {history.map((item, index) => {
-                                return (
-                                    <Fragment key={item.id}>
-                                        {index > 0 && (
-                                            <li aria-hidden className="bg-border-default h-px" />
-                                        )}
-                                        <li
-                                            // 방금 받은 내역 강조 — play/yellow-soft 배경을 위아래로 4px 들여 그려 구분선에 닿지 않게 하고, 끝나면 서서히 사라진다
-                                            className={cn(
-                                                'before:bg-play-yellow-soft relative isolate flex items-center justify-between gap-4 p-4 before:absolute before:inset-x-0 before:inset-y-1 before:-z-10 before:rounded-lg before:transition-opacity before:duration-700',
-                                                freshIds.has(item.id)
-                                                    ? 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-3 before:opacity-100 motion-safe:duration-500'
-                                                    : 'before:opacity-0',
-                                            )}
-                                        >
-                                            <div className="flex min-w-0 flex-col gap-1">
-                                                <p className="text-body-sm-bold text-fg-primary truncate">
-                                                    {item.reason}
-                                                </p>
-                                                <p className="text-caption text-fg-tertiary">
-                                                    {formatKst(item.createdAt)}
-                                                </p>
-                                            </div>
-                                            <span className="text-body-bold text-fg-primary shrink-0">
-                                                {item.quantity > 0
-                                                    ? `+${item.quantity}`
-                                                    : item.quantity}
-                                            </span>
-                                        </li>
-                                    </Fragment>
-                                );
-                            })}
+                            {history.map((item, index) => (
+                                <Fragment key={item.id}>
+                                    {index > 0 && (
+                                        <li aria-hidden className="bg-border-default h-px" />
+                                    )}
+                                    <TicketHistoryRow
+                                        item={item}
+                                        open={openId === item.id}
+                                        onToggle={() =>
+                                            setOpenId((prev) => (prev === item.id ? null : item.id))
+                                        }
+                                        fresh={freshIds.has(item.id)}
+                                    />
+                                </Fragment>
+                            ))}
                         </ul>
                     )}
                 </div>
