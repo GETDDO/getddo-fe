@@ -12,7 +12,9 @@
 
 **Spec:** `../getddo-spec/05-api/event.md` (AE01~AE08, 검토 대기 초안), `../getddo-spec/05-api/common.md` (봉투·Page), `../getddo-spec/02-domain/event.md` (수정·삭제·중단·재개·취소 규칙), `../getddo-spec/00-requirements/functional-requirements.md` §1·§11
 
-**Spec 동기화 (2026-10-06):** spec 최신화(`ea7e82a` 추첨 ERD·최초 발표 지연, `9cc15f9`/`7e1febc` 등급 응모권·담당 조정)를 확인했다. AE01~AE08 계약과 이벤트 도메인 규칙은 변경 없어 이 계획·구현에 영향이 없다. ADR-014(등급 응모권)는 추첨 가중치 계산만 바꾸고 `maxTicketsPerUser`는 실제 장수 기준 상한으로 유지된다 — 등급별 차감 선택 계약은 미결정이라 응모·지갑 UI에는 아직 반영하지 않는다. `docs/CONTEXT.md`·`docs/product-context.md`에 반영 완료.
+**Spec 동기화 (2026-10-06):** spec 최신화(`ea7e82a` 추첨 ERD·최초 발표 지연, `9cc15f9`/`7e1febc` 등급 응모권·담당 조정)를 확인했다. ADR-014(등급 응모권)는 추첨 가중치 계산만 바꾸고 `maxTicketsPerUser`는 실제 장수 기준 상한으로 유지된다 — 등급별 차감 선택 계약은 미결정이라 응모·지갑 UI에는 아직 반영하지 않는다. `docs/CONTEXT.md`·`docs/product-context.md`에 반영 완료.
+
+> ⚠️ **이후 폐기 (2026-10-06, ADR-015):** 이벤트 일시 중단·재개가 요구사항에서 제외됐다. 이 계획의 중단/재개 관련 내용(AE06·AE07, `SUSPENDED` 상태, `suspendedAt`·`suspendedFromStatus` 필드, suspend/resume 액션·다이얼로그·목업 시드·테스트)은 폐기됐으며 GD-100에서 코드에서 제거했다. 취소(AE08)·삭제는 유지한다.
 
 ## Global Constraints
 

@@ -12,7 +12,6 @@ import {
 import { EventActionDialog } from '@features/manageEvent';
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
-import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
@@ -39,7 +38,6 @@ export function AdminEventDetailPage() {
     const navigate = useNavigate();
     const { data: event, isPending, isError } = useAdminEvent(eventId);
     const [action, setAction] = useState<EventActionKind | null>(null);
-    const { now } = useVirtualClock();
 
     if (isPending) {
         return <p className="text-body-sm text-fg-tertiary pb-10">불러오는 중…</p>;
@@ -59,11 +57,8 @@ export function AdminEventDetailPage() {
         );
     }
 
-    // spec event.md 운영 규칙 — 수정·삭제는 진행 예정(SCHEDULED)만, 중단은 진행 관련 상태만, 취소는 종료 전까지
+    // spec event.md 운영 규칙 — 수정·삭제는 진행 예정(SCHEDULED)만, 취소는 종료 전까지
     const canEdit = event.status === 'SCHEDULED';
-    const canSuspend = ['SCHEDULED', 'OPEN', 'CLOSED'].includes(event.status);
-    const canResume =
-        event.status === 'SUSPENDED' && now().getTime() < new Date(event.endsAt).getTime();
     const canCancel = event.status !== 'CANCELED';
     const status = ADMIN_STATUS_META[event.status];
 
@@ -89,16 +84,6 @@ export function AdminEventDetailPage() {
                             onClick={() => void navigate(`/admin/events/${event.id}/edit`)}
                         >
                             수정
-                        </Button>
-                    )}
-                    {canSuspend && (
-                        <Button variant="outline" onClick={() => setAction('suspend')}>
-                            중단
-                        </Button>
-                    )}
-                    {canResume && (
-                        <Button variant="outline" onClick={() => setAction('resume')}>
-                            재개
                         </Button>
                     )}
                     {canEdit && (
@@ -140,13 +125,6 @@ export function AdminEventDetailPage() {
                 <InfoRow label="발표 예정">
                     {formatKst(event.publicationScheduledAt, KST_YMD_HM)} (KST)
                 </InfoRow>
-                {event.suspendedAt && (
-                    <InfoRow label="중단 이력">
-                        {formatKst(event.suspendedAt, KST_YMD_HM)}
-                        {event.suspendedFromStatus &&
-                            ` · ${ADMIN_STATUS_META[event.suspendedFromStatus].label}에서 중단`}
-                    </InfoRow>
-                )}
                 {event.canceledAt && (
                     <InfoRow label="취소 이력">{formatKst(event.canceledAt, KST_YMD_HM)}</InfoRow>
                 )}

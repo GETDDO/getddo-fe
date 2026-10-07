@@ -13,7 +13,7 @@ import {
 import { apiClient } from '@shared/api/client';
 import { envelopeSchema } from '@shared/api/envelopeSchema';
 
-type EventAction = 'suspend' | 'resume' | 'cancel';
+type EventAction = 'cancel';
 
 interface EventActionInput {
     eventId: string;
@@ -62,7 +62,7 @@ export function useDeleteEvent() {
     });
 }
 
-// 중단·재개·취소는 같은 요청 형태(POST .../{action} {reason})와 응답(EventOperationResult)을 공유한다
+// 취소는 POST .../cancel {reason} 요청에 EventOperationResult 응답을 돌려준다
 export function useEventAction(action: EventAction) {
     const queryClient = useQueryClient();
 

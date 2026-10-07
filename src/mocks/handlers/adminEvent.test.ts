@@ -69,16 +69,16 @@ describe('관리자 이벤트 목업 핸들러', () => {
         expect(page.items.length).toBeGreaterThan(0);
         expect(page.totalElements).toBeGreaterThanOrEqual(page.items.length);
 
-        // 상태 필터 — 중단 상태 시드만 남아야 한다
-        const suspended = await call('get', '/admin/events?status=SUSPENDED');
-        const suspendedItems = (suspended.data as Envelope<{ items: AdminEventBody[] }>).data.items;
-        expect(suspendedItems.length).toBeGreaterThan(0);
-        expect(suspendedItems.every((e) => e.status === 'SUSPENDED')).toBe(true);
+        // 상태 필터 — 취소 상태 시드만 남아야 한다
+        const canceled = await call('get', '/admin/events?status=CANCELED');
+        const canceledItems = (canceled.data as Envelope<{ items: AdminEventBody[] }>).data.items;
+        expect(canceledItems.length).toBeGreaterThan(0);
+        expect(canceledItems.every((e) => e.status === 'CANCELED')).toBe(true);
 
         // 키워드 필터
-        const searched = await call('get', `/admin/events?keyword=${encodeURIComponent('중단된')}`);
+        const searched = await call('get', `/admin/events?keyword=${encodeURIComponent('취소된')}`);
         const searchedItems = (searched.data as Envelope<{ items: AdminEventBody[] }>).data.items;
-        expect(searchedItems.some((e) => e.id === 'adm-901')).toBe(true);
+        expect(searchedItems.some((e) => e.id === 'adm-902')).toBe(true);
 
         // 페이지 슬라이스 — 2페이지는 1페이지와 다른 항목을 가진다
         const p1 = await call('get', '/admin/events?page=1&size=2');
@@ -150,54 +150,6 @@ describe('관리자 이벤트 목업 핸들러', () => {
         // evt-001은 진행 중(open) 시드다
         const res = await call('put', '/admin/events/evt-001', validBody());
         expect(res.status).toBe(409);
-    });
-
-    it('중단하면 SUSPENDED가 되고 응모가 거절되며, 재개하면 응모가 다시 된다', async () => {
-        const userId = `suspend-test-${Date.now()}`;
-        const enter = () =>
-            apiClient.post(
-                '/events/evt-001/entries',
-                { ticketCount: 1 },
-                {
-                    headers: { [IDEMPOTENCY_HEADER]: `susp-${Date.now()}`, 'X-User-ID': userId },
-                    validateStatus: () => true,
-                },
-            );
-
-        const suspended = await call('post', '/admin/events/evt-001/suspend', {
-            reason: '운영 점검',
-        });
-        expect(suspended.status).toBe(200);
-        const suspendedResult = (suspended.data as Envelope<EventOperationResult>).data;
-        expect(suspendedResult.status).toBe('SUSPENDED');
-        expect(suspendedResult.refundedTicketCount).toBe(0);
-
-        // 중단된 이벤트는 이후 응모를 거절한다
-        expect((await enter()).status).toBe(409);
-
-        const resumed = await call('post', '/admin/events/evt-001/resume', {
-            reason: '점검 완료',
-        });
-        const resumedResult = (resumed.data as Envelope<EventOperationResult>).data;
-        // evt-001은 응모 기간 중이므로 진행 중으로 돌아간다
-        expect(resumedResult.status).toBe('OPEN');
-
-        expect((await enter()).status).toBe(201);
-    });
-
-    it('중단 상태가 아닌 이벤트는 재개할 수 없다', async () => {
-        // adm-903은 NO_ENTRANTS 시드다 — 중단이 아니므로 재개 불가
-        const res = await call('post', '/admin/events/adm-903/resume', { reason: '재개 시도' });
-        expect(res.status).toBe(409);
-    });
-
-    it('마감 상태에서 중단을 요청하면 즉시 취소되고 반환된다', async () => {
-        // evt-106은 마감 후 발표 대기 구간의 시드다
-        const res = await call('post', '/admin/events/evt-106/suspend', { reason: '긴급 중단' });
-        expect(res.status).toBe(200);
-        const result = (res.data as Envelope<EventOperationResult>).data;
-        expect(result.status).toBe('CANCELED');
-        expect(result.refundedTicketCount).toBeGreaterThan(0);
     });
 
     it('취소하면 CANCELED가 되고 사용자 목록에서 사라진다', async () => {

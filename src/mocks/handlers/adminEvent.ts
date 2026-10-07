@@ -48,8 +48,6 @@ interface MockAdminEvent {
     createdBy: string;
     createdAt: string;
     updatedAt: string;
-    suspendedFromStatus: 'SCHEDULED' | 'OPEN' | null;
-    suspendedAt: string | null;
     canceledAt: string | null;
     entryCount: number;
     usedTicketTotal: number;
@@ -88,8 +86,6 @@ function toAdminSeed(e: (typeof mockEvents)[number]): MockAdminEvent {
         createdBy: 'admin-01',
         createdAt: e.startsAt,
         updatedAt: e.startsAt,
-        suspendedFromStatus: null,
-        suspendedAt: null,
         canceledAt: null,
         entryCount: e.participantCount ?? 0,
         usedTicketTotal: e.usedTicketCount ?? 0,
@@ -111,8 +107,6 @@ function adminSeed(
         createdBy: 'admin-01',
         createdAt: over.startsAt,
         updatedAt: over.startsAt,
-        suspendedFromStatus: null,
-        suspendedAt: null,
         canceledAt: null,
         entryCount: 0,
         usedTicketTotal: 0,
@@ -120,31 +114,8 @@ function adminSeed(
     };
 }
 
-// 관리자 전용 시드 — 시간만으로는 나오지 않는 운영 상태(중단·취소·재추첨·대상 없음 종료)를 시연용으로 채운다
+// 관리자 전용 시드 — 시간만으로는 나오지 않는 운영 상태(취소·재추첨·대상 없음 종료)를 시연용으로 채운다
 const extraSeeds: MockAdminEvent[] = [
-    adminSeed({
-        id: 'adm-901',
-        title: '중단된 VIP 데이터 래플',
-        description: '운영 정책 확인으로 일시 중단된 이벤트. 재개하면 응모를 다시 받는다.',
-        membershipRule: 'vip',
-        startsAt: sessionFixedTime('adm-901-starts', -24 * 60 * MINUTE),
-        endsAt: sessionFixedTime('adm-901-ends', 48 * 60 * MINUTE),
-        status: 'SUSPENDED',
-        suspendedFromStatus: 'OPEN',
-        suspendedAt: sessionFixedTime('adm-901-suspended', -60 * MINUTE),
-        entryCount: 120,
-        usedTicketTotal: 300,
-        prizes: [
-            {
-                id: 'adm-901-p1',
-                rank: 1,
-                name: 'U+ 데이터 쿠폰 10GB',
-                description: null,
-                imageUrl: null,
-                winnerCount: 5,
-            },
-        ],
-    }),
     adminSeed({
         id: 'adm-902',
         title: '취소된 오픈 기념 이벤트',
@@ -229,23 +200,11 @@ const mockAdminEvents: MockAdminEvent[] = [...mockEvents.map(toAdminSeed), ...ex
 
 /**
  * 응답 시점의 운영 상태 — 서버가 시간·운영으로 바꾸는 값이라 저장값을 그대로 쓰지 않고 재계산한다.
- * 중단 중 마감이 지나면 도메인 규칙대로 자동 취소이므로 저장 상태에도 반영해 이후 재개를 막는다.
  */
 function effectiveStatus(item: MockAdminEvent, now: number): AdminEventStatus {
     const starts = new Date(item.startsAt).getTime();
     const ends = new Date(item.endsAt).getTime();
 
-    if (item.status === 'SUSPENDED') {
-        if (now >= ends) {
-            // 중단 중 마감 도달 — 자동 취소(응모권 반환 규칙 적용 대상). 저장 상태에 남겨 재개를 차단한다
-            refundAndRelease(item);
-            item.status = 'CANCELED';
-            item.canceledAt = new Date(now).toISOString();
-            item.updatedAt = new Date(now).toISOString();
-            return 'CANCELED';
-        }
-        return 'SUSPENDED';
-    }
     if (item.status === 'SCHEDULED' || item.status === 'OPEN' || item.status === 'CLOSED') {
         if (now < starts) return 'SCHEDULED';
         if (now < ends) return 'OPEN';
@@ -326,12 +285,6 @@ function refundAndRelease(item: MockAdminEvent): number {
     item.usedTicketTotal = 0;
     removeUserProjection(item.id);
     return total;
-}
-
-// 중단은 목록에 남기고 응모만 막고(도메인 규칙: 이후 응모 거절), 취소는 사용자 모델이 표현 못 해 목록에서 제거한다
-function setEntryBlocked(eventId: string, blocked: boolean) {
-    const event = mockEvents.find((e) => e.id === eventId);
-    if (event) event.entryBlocked = blocked;
 }
 
 /* ── 요청 본문 검증 — spec EventWriteRequest 제약을 목업도 그대로 적용한다 ── */
@@ -446,8 +399,6 @@ function writeBodyToItem(body: EventWriteBody, id: string, nowIso: string): Mock
         createdBy: 'admin-01',
         createdAt: nowIso,
         updatedAt: nowIso,
-        suspendedFromStatus: null,
-        suspendedAt: null,
         canceledAt: null,
         entryCount: 0,
         usedTicketTotal: 0,
@@ -576,54 +527,6 @@ export const adminEventHandlers = [
         mockAdminEvents.splice(mockAdminEvents.indexOf(item), 1);
         removeUserProjection(item.id);
         return ok(null);
-    }),
-
-    // AE06 — 중단: SCHEDULED/OPEN → SUSPENDED, 마감 상태에 요청하면 즉시 취소+반환으로 전환한다
-    http.post(api('/admin/events/:eventId/suspend'), async ({ params, request }) => {
-        const item = findItem(params.eventId);
-        if (!item) return fail(404, 'RESOURCE_NOT_FOUND', '이벤트를 찾을 수 없습니다');
-        const reason = await readReason(request);
-        if (!reason) return fail(400, 'COMMON-002', '사유를 입력해야 합니다');
-
-        const now = mockNow();
-        const previous = effectiveStatus(item, now.getTime());
-        if (previous !== 'SCHEDULED' && previous !== 'OPEN' && previous !== 'CLOSED') {
-            return fail(409, 'STATE_CONFLICT', '중단할 수 없는 상태입니다');
-        }
-        if (previous === 'CLOSED') {
-            // 이미 마감된 이벤트의 중단 요청은 즉시 취소로 전환하고 같은 반환 규칙을 적용한다
-            const refunded = refundAndRelease(item);
-            item.status = 'CANCELED';
-            item.canceledAt = now.toISOString();
-            item.updatedAt = now.toISOString();
-            return ok(operationResult(item, previous, refunded, now));
-        }
-        item.status = 'SUSPENDED';
-        item.suspendedFromStatus = previous;
-        item.suspendedAt = now.toISOString();
-        item.updatedAt = now.toISOString();
-        setEntryBlocked(item.id, true);
-        return ok(operationResult(item, previous, 0, now));
-    }),
-
-    // AE07 — 재개: 마감 전 SUSPENDED만 허용, 현재 시각으로 SCHEDULED/OPEN 중 맞는 상태로 돌아간다
-    http.post(api('/admin/events/:eventId/resume'), async ({ params, request }) => {
-        const item = findItem(params.eventId);
-        if (!item) return fail(404, 'RESOURCE_NOT_FOUND', '이벤트를 찾을 수 없습니다');
-        const reason = await readReason(request);
-        if (!reason) return fail(400, 'COMMON-002', '사유를 입력해야 합니다');
-
-        const now = mockNow();
-        const previous = effectiveStatus(item, now.getTime());
-        if (item.status !== 'SUSPENDED' || now.getTime() >= new Date(item.endsAt).getTime()) {
-            return fail(409, 'STATE_CONFLICT', '재개할 수 없는 상태입니다');
-        }
-        item.status = now.getTime() < new Date(item.startsAt).getTime() ? 'SCHEDULED' : 'OPEN';
-        item.suspendedFromStatus = null;
-        item.suspendedAt = null;
-        item.updatedAt = now.toISOString();
-        setEntryBlocked(item.id, false);
-        return ok(operationResult(item, previous, 0, now));
     }),
 
     // AE08 — 취소: 상태와 관계없이 허용. 취소와 대상 차감분 반환이 함께 완료되어야 성공이다

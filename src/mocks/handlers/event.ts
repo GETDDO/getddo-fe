@@ -90,7 +90,6 @@ function raffleDetail(intro: string, prizeComposition: string) {
 /**
  * 사용자 화면용 목 이벤트 항목.
  * 관리자 목업(adminEvent.ts)이 등록·수정·취소를 이 배열에도 반영해 사용자 목록과 동기화한다.
- * entryBlocked는 관리자의 중단 상태를 응모 핸들러에 전달하는 목업 전용 플래그다.
  */
 export interface MockEvent {
     id: string;
@@ -112,7 +111,6 @@ export interface MockEvent {
     usedTicketCount: number | null;
     myEntryCount: number | null;
     myTicketCount: number | null;
-    entryBlocked?: boolean;
 }
 
 // requiredTickets > 0 은 모은 응모권을 차감해 응모하는 이벤트, 0 은 응모권 없이 참여하는 이벤트다.

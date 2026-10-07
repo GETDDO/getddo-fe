@@ -19,27 +19,15 @@ import { Input } from '@shared/ui/input';
 
 import { useDeleteEvent, useEventAction } from '../api/queries';
 
-export type EventActionKind = 'suspend' | 'resume' | 'cancel' | 'delete';
+export type EventActionKind = 'cancel' | 'delete';
 
 const ACTION_META: Record<
     EventActionKind,
     { title: string; description: string; submitLabel: string; pendingLabel: string }
 > = {
-    suspend: {
-        title: '이벤트 중단',
-        description: '응모를 일시 정지합니다. 마감 시각 전에는 재개할 수 있습니다.',
-        submitLabel: '중단',
-        pendingLabel: '중단 중…',
-    },
-    resume: {
-        title: '이벤트 재개',
-        description: '중단을 해제하고 응모를 다시 받습니다.',
-        submitLabel: '재개',
-        pendingLabel: '재개 중…',
-    },
     cancel: {
         title: '이벤트 취소',
-        description: '이벤트를 최종 종료합니다. 취소 후에는 재개할 수 없으며 응모권이 반환됩니다.',
+        description: '이벤트를 최종 종료합니다. 취소는 되돌릴 수 없으며 응모권이 반환됩니다.',
         submitLabel: '취소',
         pendingLabel: '취소 중…',
     },
@@ -63,7 +51,7 @@ interface EventActionDialogProps {
     onDeleted?: () => void;
 }
 
-// 사유 입력 다이얼로그 — spec상 중단·재개·취소는 사유가 필수, 삭제는 확인만 거친다
+// 사유 입력 다이얼로그 — spec상 취소는 사유가 필수, 삭제는 확인만 거친다
 export function EventActionDialog({
     event,
     action,
@@ -72,7 +60,7 @@ export function EventActionDialog({
     onDeleted,
 }: EventActionDialogProps) {
     const [reason, setReason] = useState('');
-    const eventAction = useEventAction(action === 'delete' || !action ? 'suspend' : action);
+    const eventAction = useEventAction('cancel');
     const deleteEvent = useDeleteEvent();
 
     if (!event || !action) {
@@ -81,11 +69,6 @@ export function EventActionDialog({
 
     const meta = ACTION_META[action];
     const mutation = action === 'delete' ? deleteEvent : eventAction;
-    // 마감(CLOSED) 이벤트의 중단은 서버에서 즉시 취소+응모권 반환으로 전환되므로 취소급 경고를 띄운다
-    const closedSuspend = action === 'suspend' && event.status === 'CLOSED';
-    const description = closedSuspend
-        ? '이미 마감된 이벤트입니다. 중단하면 즉시 취소되고 응모권이 반환되며 되돌릴 수 없습니다.'
-        : meta.description;
     const reasonRequired = action !== 'delete';
     const canSubmit = !mutation.isPending && (!reasonRequired || reason.trim().length > 0);
 
@@ -128,7 +111,7 @@ export function EventActionDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <p className="text-body-sm text-fg-secondary">{description}</p>
+                <p className="text-body-sm text-fg-secondary">{meta.description}</p>
 
                 {reasonRequired && (
                     <div className="flex flex-col gap-2">
@@ -167,8 +150,7 @@ export function EventActionDialog({
                     <Button
                         className={cn(
                             'text-body-bold h-10 flex-1',
-                            (DESTRUCTIVE.has(action) || closedSuspend) &&
-                                'bg-destructive hover:bg-destructive/80',
+                            DESTRUCTIVE.has(action) && 'bg-destructive hover:bg-destructive/80',
                         )}
                         disabled={!canSubmit}
                         onClick={submit}
