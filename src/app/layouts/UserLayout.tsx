@@ -8,6 +8,7 @@ import { VirtualUserSwitcher } from '@features/switchVirtualUser';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
+import { RouteErrorBoundary, RouteErrorFallback } from '@shared/ui/route-error-boundary';
 import { NotificationBell } from '@widgets/notificationBell';
 
 import profileAvatar from './assets/profile-avatar.png';
@@ -198,7 +199,10 @@ export function UserLayout() {
                 </div>
             </header>
             <div className="flex-1">
-                <Outlet />
+                {/* 화면 렌더 오류가 나도 헤더·푸터를 유지하고 라우트 전환으로 복구한다 */}
+                <RouteErrorBoundary resetKey={pathname} fallback={<RouteErrorFallback />}>
+                    <Outlet />
+                </RouteErrorBoundary>
             </div>
             {/* 피그마 홈 푸터 — 약관 줄, 회사 주소, 고객센터·가입문의, 저작권 (글자 12) */}
             <footer className="bg-surface-inverse text-caption">

@@ -2,6 +2,7 @@ import { NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router-do
 
 import { VirtualClockTicker } from '@features/controlVirtualClock';
 import { cn } from '@shared/lib/utils';
+import { RouteErrorBoundary, RouteErrorFallback } from '@shared/ui/route-error-boundary';
 
 import { ADMIN_NAV_ITEMS } from './adminNavItems';
 
@@ -87,7 +88,10 @@ export function AdminLayout() {
                     </NavLink>
                 </nav>
                 <main className="flex-1 p-4 md:pt-5 md:pr-0 md:pl-10">
-                    <Outlet />
+                    {/* 화면 렌더 오류가 나도 사이드바·헤더를 유지하고 라우트 전환으로 복구한다 */}
+                    <RouteErrorBoundary resetKey={pathname} fallback={<RouteErrorFallback />}>
+                        <Outlet />
+                    </RouteErrorBoundary>
                 </main>
             </div>
         </div>

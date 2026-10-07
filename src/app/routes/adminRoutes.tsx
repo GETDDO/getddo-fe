@@ -3,6 +3,9 @@ import type { RouteObject } from 'react-router-dom';
 
 import { lazy, Suspense } from 'react';
 
+import { NotFoundPage } from '@pages/notFound/NotFoundPage';
+import { RouteErrorFallback } from '@shared/ui/route-error-boundary';
+
 import { AdminGuard } from './AdminGuard';
 
 // 관리자 화면 전체를 lazy로 분리해 유저 번들에 섞이지 않게 한다.
@@ -30,6 +33,8 @@ export const adminRoutes: RouteObject[] = [
                 </Suspense>
             </AdminGuard>
         ),
+        // 레이아웃·가드·lazy 자체가 깨질 때의 최후 방어선 (관리자 셸 없이 표시)
+        errorElement: <RouteErrorFallback />,
         children: [
             {
                 index: true,
@@ -111,6 +116,9 @@ export const adminRoutes: RouteObject[] = [
                     })),
                 ),
             },
+            // 관리자 영역 안의 미매칭 경로 — 관리자 셸을 유지한 채 404를 보여준다.
+            // 사용자 라우트도 같은 페이지를 정적 import하므로 lazy 대상이 되지 않아 직접 참조한다
+            { path: '*', element: <NotFoundPage /> },
         ],
     },
 ];
