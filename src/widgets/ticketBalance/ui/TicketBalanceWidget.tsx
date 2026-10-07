@@ -165,7 +165,15 @@ export function TicketBalanceWidget({
                                             오늘 참여 완료
                                         </Button>
                                     ) : (
-                                        <Button asChild size="lg" className="mt-2 w-full">
+                                        <Button
+                                            asChild
+                                            // 출석만 primary(검정), 게임·미션 카드는 secondary로 한 단계 낮춘다
+                                            variant={
+                                                card.id === 'attendance' ? 'primary' : 'secondary'
+                                            }
+                                            size="lg"
+                                            className="mt-2 w-full"
+                                        >
                                             <Link to={card.href}>{card.actionLabel}</Link>
                                         </Button>
                                     )}

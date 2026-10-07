@@ -10,7 +10,7 @@ export const ticketTransactionTypeSchema = z.enum([
     'CORRECTION',
 ]);
 
-// 화면이 쓰는 원장 항목 — spec TicketTransaction에서 지갑·수량·사후 잔액·사유·시각만 받는다 (연결 ID는 목업이 내리지 않는다)
+// 화면이 쓰는 원장 항목 — spec TicketTransaction에서 지갑·수량·사후 잔액·사유·시각과 연결 이벤트 ID를 받는다 (목업은 아직 eventId를 내리지 않는다)
 export const ticketHistorySchema = z.object({
     id: z.string(),
     walletId: z.string(),
@@ -21,6 +21,8 @@ export const ticketHistorySchema = z.object({
     balanceAfter: z.number().int(),
     reason: z.string(),
     createdAt: z.iso.datetime(),
+    /** 응모·반환이 연결된 이벤트 — spec TicketTransaction.eventId (없으면 null 또는 생략) */
+    eventId: z.string().nullable().optional(),
 });
 
 export type TicketTransactionType = z.infer<typeof ticketTransactionTypeSchema>;

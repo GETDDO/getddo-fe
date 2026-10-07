@@ -7,12 +7,7 @@ import type { AttendanceMonthDay } from '../lib/attendanceWeek';
 import type { TodayRevealStage } from './AttendanceTodayReveal';
 
 import { isStreakBonusDate } from '../lib/attendanceWeek';
-import {
-    REVEAL_BAKE_MS,
-    REVEAL_HIT_AT,
-    REVEAL_LAND_MS,
-    REVEAL_SHAKE_MS,
-} from '../model/attendanceMotion';
+import { REVEAL_BAKE_MS, REVEAL_LAND_MS } from '../model/attendanceMotion';
 import { BATTER_MASCOT, DIZZY_MASCOT, getAttendanceMascot } from '../model/mascots';
 import { AttendanceTodayReveal } from './AttendanceTodayReveal';
 
@@ -49,28 +44,21 @@ export function AttendanceMonthGrid({
     /** 오늘 칸 연출이 끝났을 때 — 다시 펼쳐도 연출이 반복되지 않도록 부모가 revealDate를 지운다 */
     onRevealEnd?: () => void;
 }) {
-    // 오늘 칸 연출 단계: 굽기 → 떨어져 찍힘 → 끝(찍히는 순간 판 전체가 한 번 흔들린다)
+    // 오늘 칸 연출 단계: 굽기 → 떨어져 찍힘 → 끝 (판 흔들림은 없앴다)
     const [revealStage, setRevealStage] = useState<TodayRevealStage | 'done'>(() =>
         revealDate ? 'baking' : 'done',
     );
-    const [shaking, setShaking] = useState(false);
 
     useEffect(() => {
         if (!revealDate) return;
         const landAt = REVEAL_BAKE_MS;
-        const hitAt = REVEAL_BAKE_MS + REVEAL_LAND_MS * REVEAL_HIT_AT;
         const doneAt = REVEAL_BAKE_MS + REVEAL_LAND_MS;
         const timers = [
             setTimeout(() => setRevealStage('landing'), landAt),
-            setTimeout(() => setShaking(true), hitAt),
-            setTimeout(() => setRevealStage('done'), doneAt),
-            setTimeout(
-                () => {
-                    setShaking(false);
-                    onRevealEnd?.();
-                },
-                Math.max(doneAt, hitAt + REVEAL_SHAKE_MS),
-            ),
+            setTimeout(() => {
+                setRevealStage('done');
+                onRevealEnd?.();
+            }, doneAt),
         ];
         return () => timers.forEach(clearTimeout);
     }, [revealDate, onRevealEnd]);
@@ -113,12 +101,7 @@ export function AttendanceMonthGrid({
     };
 
     return (
-        // 타코야끼가 찍히는 순간 판 전체가 좌우로 두세 번 흔들리다 멈춘다
-        <motion.ol
-            animate={shaking ? { x: [0, -6, 6, -4, 4, -2, 0] } : { x: 0 }}
-            transition={{ duration: shaking ? REVEAL_SHAKE_MS / 1000 : 0 }}
-            className="bg-surface-canvas grid w-full grid-cols-8 gap-x-1.5 gap-y-3 rounded-lg p-4 sm:gap-x-4"
-        >
+        <ol className="bg-surface-canvas grid w-full grid-cols-8 gap-x-1.5 gap-y-3 rounded-lg p-4 sm:gap-x-4">
             {days.map((day) => {
                 const isBonus = isStreakBonusDate(day.date, bonusDays);
                 const bonusTickets = isBonus ? bonusRewards?.get(day.day) : undefined;
@@ -233,6 +216,6 @@ export function AttendanceMonthGrid({
                     </li>
                 );
             })}
-        </motion.ol>
+        </ol>
     );
 }

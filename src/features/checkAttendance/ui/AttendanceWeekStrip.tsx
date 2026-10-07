@@ -35,8 +35,13 @@ export function AttendanceWeekStrip({
                                 )}
                             />
                         </span>
+                        {/* 오늘은 펼친 출석판의 '오늘' 태그와 같은 응모권 노랑 알약 — 마젠타는 브랜드 강조에만 남긴다 */}
                         <span
-                            className={`text-caption ${day.isToday ? 'text-fg-brand' : 'text-fg-tertiary'}`}
+                            className={
+                                day.isToday
+                                    ? 'text-caption bg-ticket-primary text-ticket-on rounded-full px-1.5 whitespace-nowrap'
+                                    : 'text-caption text-fg-tertiary'
+                            }
                         >
                             {day.label}
                         </span>

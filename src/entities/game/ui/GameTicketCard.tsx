@@ -1,7 +1,6 @@
 import { Gamepad2, Ticket } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
 import { TicketCard } from '@shared/ui/ticket-card';
 
@@ -27,12 +26,7 @@ export function GameTicketCard({
 
     return (
         <TicketCard
-            // 호버하면 살짝 떠오른다 — 이 카드가 놓이는 곳마다 같은 효과를 주려고 컴포넌트 안에 둔다
-            // (동작 줄이기 설정이면 움직이지 않는다)
-            className={cn(
-                'transition-[translate] duration-200 motion-safe:hover:-translate-y-1',
-                className,
-            )}
+            className={className}
             cardClassName="h-90 w-66.25"
             stub={
                 <>
@@ -46,8 +40,8 @@ export function GameTicketCard({
                             </span>
                         )}
                     </div>
-                    {/* 공용 버튼 primary Large(48) — 피그마 홈 응모권 카드와 같다 */}
-                    <Button asChild size="lg" className="mt-2 w-full">
+                    {/* 공용 버튼 secondary Large(48) — 응모권 카드는 출석만 primary, 게임·미션은 한 단계 낮춘다 */}
+                    <Button asChild variant="secondary" size="lg" className="mt-2 w-full">
                         <Link to={href}>{rewarded ? '한 번 더 하기' : '게임하러 가기'}</Link>
                     </Button>
                 </>

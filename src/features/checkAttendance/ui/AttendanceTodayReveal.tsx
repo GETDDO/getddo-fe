@@ -8,7 +8,7 @@ export type TodayRevealStage = 'baking' | 'landing';
 /**
  * 출석 직후 오늘 칸 연출.
  * 1) baking — 옅은 회색 반죽이 통통 흔들리며 점점 진한 색으로 구워진다
- * 2) landing — 오늘의 타코야끼가 위에서 곧장 떨어져 '쾅' 찍히며 납작하게 눌렸다 돌아온다 (판 흔들림은 출석판이 맡는다)
+ * 2) landing — 오늘의 타코야끼가 위에서 곧장 떨어져 '쾅' 찍히며 납작하게 눌렸다 돌아온다
  */
 export function AttendanceTodayReveal({
     stage,
