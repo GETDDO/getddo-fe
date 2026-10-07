@@ -9,52 +9,97 @@ import { fail, ok } from './response';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
+const MINUTE = 60 * 1000;
+
+const DEMO_EPOCH_KEY = 'getddo-mock-demo-epoch';
+
 /**
- * 데모용 상대 시각을 브라우저 세션에 한 번만 정해 두고 재사용한다.
+ * 시연 창의 길이 — 기준 시각에서 이만큼 지나면 응모할 수 있는 래플이 하나도 남지 않는다.
+ * 아래 HERO 창(기준 +60분)과 같은 값이어야 한다.
+ */
+const DEMO_WINDOW_MS = 60 * MINUTE;
+
+/**
+ * 시연 기준 시각.
  *
  * Date.now() + n으로 매번 계산하면 페이지를 새로 열 때마다 마감이 그만큼 뒤로 밀려서
- * 카운트다운이 리셋된다 — docs/CONTEXT.md가 금지하는 동작이다.
- * 벽시계 경계에 붙이는 방법도 경계를 넘는 순간 한 칸 밀리므로, 세션에 저장해 고정한다.
+ * 카운트다운이 리셋된다 — docs/CONTEXT.md가 금지하는 동작이다. 그래서 세션에 저장해 고정한다.
+ *
+ * 다만 지난 값을 무조건 재사용하면, 탭을 한참 열어 둔 뒤 돌아왔을 때 모든 창이 과거로
+ * 넘어가 응모할 래플이 하나도 없게 된다. 창이 전부 끝난 경우에만 기준을 다시 잡는다 —
+ * 진행 중인 창은 그대로 두므로 새로고침으로 카운트다운이 밀리지는 않는다.
+ *
+ * 앵커를 따로따로 저장하지 않고 이 한 값에서 파생시킨다. 개별 저장은 그중 일부만
+ * 다시 잡혔을 때 시작이 마감보다 늦는 창을 만든다.
  */
-export function sessionFixedTime(key: string, offsetMs: number): string {
-    const storageKey = `getddo-mock-${key}`;
+function demoEpoch(): number {
+    const now = mockNow().getTime();
+
     try {
-        const saved = sessionStorage.getItem(storageKey);
-        if (saved) return saved;
+        const saved = sessionStorage.getItem(DEMO_EPOCH_KEY);
+        if (saved) {
+            const at = new Date(saved).getTime();
+            if (!Number.isNaN(at) && now < at + DEMO_WINDOW_MS) return at;
+        }
     } catch {
-        // 저장소를 쓸 수 없는 환경(테스트 등)에서는 매번 계산한다
+        // 저장소를 쓸 수 없는 환경(테스트 등)에서는 매번 현재 시각을 쓴다
     }
 
-    const value = new Date(mockNow().getTime() + offsetMs).toISOString();
     try {
-        sessionStorage.setItem(storageKey, value);
+        sessionStorage.setItem(DEMO_EPOCH_KEY, new Date(now).toISOString());
     } catch {
         // 저장에 실패해도 이번 로드 동안은 같은 값을 쓴다
     }
-    return value;
+    return now;
 }
 
-const MINUTE = 60 * 1000;
+const DEMO_EPOCH = demoEpoch();
+
+/** 시연 기준 시각에서 offsetMs 만큼 떨어진 시각 */
+function demoTime(offsetMs: number): string {
+    return new Date(DEMO_EPOCH + offsetMs).toISOString();
+}
+
+/**
+ * 세션에 고정된 상대 시각 — 관리자 목업(adminEvent.ts)이 등록·중단·취소 시각에 쓴다.
+ *
+ * 키마다 따로 저장하지 않고 기준 시각에서 파생시킨다. 개별 저장은 창이 지난 뒤에도
+ * 과거 값을 그대로 돌려줘서, 탭을 오래 열어 두면 되살아나지 않는다.
+ * key는 호출부에서 어떤 시각인지 읽히도록 남겨 둔다.
+ */
+export function sessionFixedTime(key: string, offsetMs: number): string {
+    void key;
+    return demoTime(offsetMs);
+}
 
 // 홈 화면 "오늘의 타임 래플" 배너 데모용 — 세션이 유지되는 동안 마감 시각이 움직이지 않는다
-const HERO_STARTS_AT = sessionFixedTime('hero-starts-at', -30 * MINUTE);
-const HERO_ENDS_AT = sessionFixedTime('hero-ends-at', 60 * MINUTE);
-const UPCOMING_OPENS_AT = sessionFixedTime('upcoming-opens-at', 3 * 60 * MINUTE);
+const HERO_STARTS_AT = demoTime(-30 * MINUTE);
+const HERO_ENDS_AT = demoTime(DEMO_WINDOW_MS);
+const UPCOMING_OPENS_AT = demoTime(3 * 60 * MINUTE);
 
 /*
  * 시연 플로우용 시각 — 응모 → 마감 → 발표 대기 → 발표 완료를 몇 분 안에 한 번 돌려보기 위한 것이다.
  * 세션 시작 시점에 고정되므로 새로고침해도 기준이 밀리지 않고, 시간이 실제로 흐른다.
  * 더 빨리 보고 싶으면 관리자 가상 시계(/admin/virtual-clock)로 시간을 앞으로 옮기면 된다.
  */
-// 지금 응모할 수 있고 3분 뒤 마감된다 (발표는 ADR-009에 따라 마감 + 5분)
-const FLOW_STARTS_AT = sessionFixedTime('flow-starts-at', -5 * MINUTE);
-const FLOW_ENDS_AT = sessionFixedTime('flow-ends-at', 3 * MINUTE);
+// 지금 응모할 수 있고 10분 뒤 마감된다 (발표는 ADR-009에 따라 마감 + 5분)
+const FLOW_STARTS_AT = demoTime(-5 * MINUTE);
+const FLOW_ENDS_AT = demoTime(10 * MINUTE);
 // 이미 마감돼 발표를 기다리는 래플 — 화면을 열자마자 발표 대기 상태를 볼 수 있다
-const AWAITING_STARTS_AT = sessionFixedTime('awaiting-starts-at', -62 * MINUTE);
-const AWAITING_ENDS_AT = sessionFixedTime('awaiting-ends-at', -2 * MINUTE);
+const AWAITING_STARTS_AT = demoTime(-62 * MINUTE);
+const AWAITING_ENDS_AT = demoTime(-2 * MINUTE);
 // 아직 열리지 않은 래플 — 오늘 몇 시 식으로 고정하면 늦은 시각에 데모할 때 오픈 예정이 하나도 남지 않는다
-const PENDING_STARTS_AT = sessionFixedTime('pending-starts-at', 2 * 60 * MINUTE);
-const PENDING_ENDS_AT = sessionFixedTime('pending-ends-at', 3 * 60 * MINUTE);
+const PENDING_STARTS_AT = demoTime(2 * 60 * MINUTE);
+const PENDING_ENDS_AT = demoTime(3 * 60 * MINUTE);
+/*
+ * 고정 시각(오늘 16시·17시)으로 두면 새벽·오전에 데모를 돌릴 때 진행 중인 래플이
+ * 구조적으로 0개가 된다. 대표 래플은 '진행 중' 섹션에서 빠지므로 섹션도 같이 비어 버린다.
+ * 그래서 두 개는 시각과 무관하게 열려 있도록 기준 시각에 붙여 둔다.
+ */
+const OPEN_A_STARTS_AT = demoTime(-45 * MINUTE);
+const OPEN_A_ENDS_AT = demoTime(40 * MINUTE);
+const OPEN_B_STARTS_AT = demoTime(-20 * MINUTE);
+const OPEN_B_ENDS_AT = demoTime(55 * MINUTE);
 
 /**
  * KST 기준 dayOffset일 뒤 hour시의 UTC ISO 문자열.
@@ -213,7 +258,7 @@ export const mockEvents: MockEvent[] = [
         title: 'VVIP 전용 데이터 쿠폰 래플',
         description: 'VVIP·VIP 등급 대상 데이터 쿠폰 추첨 이벤트. 응모권 3장이 필요해요.',
         bannerImageUrl: null,
-        startsAt: sessionFixedTime('evt-010-starts-at', 5 * 60 * MINUTE),
+        startsAt: demoTime(5 * 60 * MINUTE),
         endsAt: '2026-10-20T14:59:59Z',
         status: 'upcoming',
         requiredTickets: 3,
@@ -506,8 +551,8 @@ export const mockEvents: MockEvent[] = [
         description:
             '지하철과 카페의 소음을 눌러 주는 노이즈 캔슬링 이어폰입니다. 실리콘 팁이 세 가지 크기로 들어 있어 귀에 맞는 것을 골라 쓸 수 있습니다.',
         bannerImageUrl: null,
-        startsAt: kstAt(0, 16),
-        endsAt: kstAt(0, 22),
+        startsAt: OPEN_A_STARTS_AT,
+        endsAt: OPEN_A_ENDS_AT,
         status: 'open',
         isTimeRaffle: true,
         raffleDetail: raffleDetail(
@@ -529,8 +574,8 @@ export const mockEvents: MockEvent[] = [
         description:
             '무너와 친구들 네 캐릭터를 인형으로 옮긴 세트입니다. 이번 시즌 생산분만으로 구성했고 추가 제작 계획은 없습니다.',
         bannerImageUrl: null,
-        startsAt: kstAt(0, 17),
-        endsAt: kstAt(0, 22),
+        startsAt: OPEN_B_STARTS_AT,
+        endsAt: OPEN_B_ENDS_AT,
         status: 'open',
         isTimeRaffle: true,
         raffleDetail: raffleDetail(
@@ -833,7 +878,7 @@ function toResponse<T extends { startsAt: string; endsAt: string }>(event: T, no
     return {
         ...event,
         status: statusAt(event.startsAt, event.endsAt, now),
-        announceAt: new Date(ends + ANNOUNCE_DELAY_MS).toISOString(),
+        publicationScheduledAt: new Date(ends + ANNOUNCE_DELAY_MS).toISOString(),
     };
 }
 

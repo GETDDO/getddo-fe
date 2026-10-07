@@ -10,7 +10,7 @@ interface EventResponse {
     status: EventStatus;
     startsAt: string;
     endsAt: string;
-    announceAt: string;
+    publicationScheduledAt: string;
     isTimeRaffle?: boolean;
 }
 
@@ -27,7 +27,7 @@ describe('이벤트 목업 핸들러', () => {
         for (const event of await events()) {
             const starts = new Date(event.startsAt).getTime();
             const ends = new Date(event.endsAt).getTime();
-            const announces = new Date(event.announceAt).getTime();
+            const announces = new Date(event.publicationScheduledAt).getTime();
 
             const expected: EventStatus =
                 now < starts
@@ -44,7 +44,8 @@ describe('이벤트 목업 핸들러', () => {
 
     it('발표 예정 시각은 마감 + 5분이다 (ADR-009)', async () => {
         for (const event of await events()) {
-            const gap = new Date(event.announceAt).getTime() - new Date(event.endsAt).getTime();
+            const gap =
+                new Date(event.publicationScheduledAt).getTime() - new Date(event.endsAt).getTime();
             expect(gap, event.id).toBe(5 * 60 * 1000);
         }
     });
