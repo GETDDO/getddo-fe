@@ -1,21 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { z } from 'zod';
 
 import { apiClient } from '@shared/api/client';
-import { envelopeSchema } from '@shared/api/envelopeSchema';
+import { envelopeSchema, pageSchema } from '@shared/api/envelopeSchema';
 import { queryPresets } from '@shared/api/queryPresets';
 
 import type { AdminEventStatus, EventType } from '../model/adminTypes';
 
 import { adminEventSchema } from '../model/adminTypes';
 
-// spec 공통 계약 초안의 Page<T> — items/page/size/totalElements (페이지는 1부터)
-const adminEventPageSchema = z.object({
-    items: z.array(adminEventSchema),
-    page: z.number().int(),
-    size: z.number().int(),
-    totalElements: z.number().int(),
-});
+const adminEventPageSchema = pageSchema(adminEventSchema);
 
 export const ADMIN_EVENTS_KEY = ['admin', 'events'] as const;
 

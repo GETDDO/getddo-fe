@@ -54,9 +54,10 @@ async function createEvent(over: Record<string, unknown> = {}) {
     return (res.data as Envelope<AdminEventBody>).data;
 }
 
+// 사용자 목록이 Page 봉투+페이지로 오므로 관리 목업 수(33건)를 덮는 size로 요청한다
 async function userEventIds() {
-    const { data } = await apiClient.get<{ id: string }[]>('/events');
-    return data.map((e) => e.id);
+    const { data } = await apiClient.get<{ data: { items: { id: string }[] } }>('/events?size=100');
+    return data.data.items.map((e) => e.id);
 }
 
 describe('관리자 이벤트 목업 핸들러', () => {
@@ -190,10 +191,10 @@ describe('관리자 이벤트 목업 핸들러', () => {
 
         const balanceOf = async () =>
             (
-                await apiClient.get<{ balance: number }>('/tickets/balance', {
+                await apiClient.get<{ data: { availableBalance: number } }>('/tickets/wallets/me', {
                     headers: { 'X-User-ID': userId },
                 })
-            ).data.balance;
+            ).data.data.availableBalance;
 
         const first = await call('post', `/admin/events/${created.id}/cancel`, {
             reason: '경품 수급 문제',

@@ -1,21 +1,12 @@
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
 
 import type { AuditLogDetail, AuditLogSummary } from '@entities/audit';
 
 import { env } from '@shared/config/env';
 
-const api = (path: string) => `${env.apiBaseUrl}${path}`;
+import { fail, ok } from './response';
 
-const okBody = (data: unknown) => ({
-    success: true,
-    code: 'SUCCESS',
-    message: '성공했습니다.',
-    data,
-});
-const failBody = (code: string, message: string) => ({ success: false, code, message, data: null });
-const ok = (data: unknown, status = 200) => HttpResponse.json(okBody(data), { status });
-const fail = (status: number, code: string, message: string) =>
-    HttpResponse.json(failBody(code, message), { status });
+const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
 /**
  * 감사 로그 시드 — 추첨 실행·추첨 대상 제외·당첨 취소·정책 변경 유형.

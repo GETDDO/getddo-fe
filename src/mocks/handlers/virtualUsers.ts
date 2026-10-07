@@ -1,8 +1,10 @@
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
 
 import type { VirtualUser } from '@entities/user';
 
 import { env } from '@shared/config/env';
+
+import { ok } from './response';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
@@ -15,6 +17,5 @@ const virtualUsers: VirtualUser[] = [
     { id: 'vu-admin', name: '관리자', role: 'ADMIN', personaLabel: null },
 ];
 
-export const virtualUserHandlers = [
-    http.get(api('/virtual-users'), () => HttpResponse.json(virtualUsers)),
-];
+// /virtual-users는 spec에 없는 시연 전용 경로다 — 가상 사용자 선택 UI가 쓴다. 봉투 형태만 공통 계약을 따른다
+export const virtualUserHandlers = [http.get(api('/virtual-users'), () => ok(virtualUsers))];

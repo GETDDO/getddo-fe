@@ -2,10 +2,12 @@ import type { TicketHistory } from '@entities/ticket';
 
 import { summarizeMonthlyTickets } from './monthlyTicketSummary';
 
-const item = (id: string, amount: number, createdAt: string): TicketHistory => ({
+const item = (id: string, quantity: number, createdAt: string): TicketHistory => ({
     id,
-    type: amount >= 0 ? 'earn' : 'use',
-    amount,
+    walletId: 'wallet-test',
+    transactionType: quantity >= 0 ? 'GRANT' : 'SPEND',
+    quantity,
+    balanceAfter: 0,
     reason: '테스트',
     createdAt,
 });

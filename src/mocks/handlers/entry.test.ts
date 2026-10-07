@@ -14,8 +14,10 @@ const FREE_EVENT_ID = 'evt-012';
 const FREE_EVENT_ID_2 = 'evt-013';
 
 async function balance() {
-    const { data } = await apiClient.get<{ balance: number }>('/tickets/balance');
-    return data.balance;
+    const { data } = await apiClient.get<{ data: { availableBalance: number } }>(
+        '/tickets/wallets/me',
+    );
+    return data.data.availableBalance;
 }
 
 function enter(key: string, ticketCount: unknown, eventId = EVENT_ID, userId?: string) {

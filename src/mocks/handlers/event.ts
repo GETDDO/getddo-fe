@@ -1,10 +1,11 @@
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
 
 import type { EventStatus } from '@entities/event';
 
 import { env } from '@shared/config/env';
 
 import { mockNow } from '../now';
+import { fail, ok } from './response';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
@@ -837,18 +838,28 @@ function toResponse<T extends { startsAt: string; endsAt: string }>(event: T, no
 }
 
 export const eventHandlers = [
-    http.get(api('/events'), () => {
+    // E01 초안 — Page 봉투 + status 필터. 목업 항목은 시연 표시용 필드(참여자 수·내 응모 등)를 더 싣는다
+    http.get(api('/events'), ({ request }) => {
+        const url = new URL(request.url);
+        const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
+        const size = Math.max(1, Number(url.searchParams.get('size')) || 20);
+        const status = url.searchParams.get('status');
         const now = mockNow().getTime();
-        return HttpResponse.json(mockEvents.map((event) => toResponse(event, now)));
+        const items = mockEvents
+            .map((event) => toResponse(event, now))
+            .filter((event) => !status || event.status === status);
+        return ok({
+            items: items.slice((page - 1) * size, page * size),
+            page,
+            size,
+            totalElements: items.length,
+        });
     }),
     http.get(api('/events/:eventId'), ({ params }) => {
         const event = mockEvents.find((e) => e.id === params.eventId);
         if (!event) {
-            return HttpResponse.json(
-                { code: 'EVENT_NOT_FOUND', message: '이벤트를 찾을 수 없습니다' },
-                { status: 404 },
-            );
+            return fail(404, 'RESOURCE_NOT_FOUND', '이벤트를 찾을 수 없습니다');
         }
-        return HttpResponse.json(toResponse(event, mockNow().getTime()));
+        return ok(toResponse(event, mockNow().getTime()));
     }),
 ];

@@ -1,7 +1,7 @@
 export {
     ABUSE_CASES_API_PATH,
     ABUSE_CASES_KEY,
-    abuseCaseReviewApiPath,
+    abuseCaseDecisionsApiPath,
     useAbuseCases,
 } from './api/queries';
 export {
@@ -10,6 +10,7 @@ export {
     abuseCaseStatusSchema,
     abuseCaseTargetSchema,
     abuseDecisionSchema,
+    reviewDecisionResultSchema,
     rewardSourceSchema,
 } from './model/types';
 export type {
@@ -18,6 +19,7 @@ export type {
     AbuseCaseStatus,
     AbuseCaseTarget,
     AbuseDecision,
+    ReviewDecisionResult,
     RewardSource,
 } from './model/types';
 export { AbuseCaseTable } from './ui/AbuseCaseTable';

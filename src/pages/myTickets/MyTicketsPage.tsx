@@ -1,18 +1,26 @@
 import { Ticket } from 'lucide-react';
 
-import { TicketHistoryItem, useTicketBalance, useTicketHistory } from '@entities/ticket';
+import { TicketHistoryItem, useTicketWallets, useTicketHistory } from '@entities/ticket';
 import { formatKst, kstNextMonthStart } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 
 export function MyTicketsPage() {
-    const { data: balance, isPending: balancePending, isError: balanceError } = useTicketBalance();
+    const { data: balance, isPending: balancePending, isError: balanceError } = useTicketWallets();
     const { data: history, isPending: historyPending, isError: historyError } = useTicketHistory();
 
     // 일반 지급분의 만료 시각은 다음 달 1일 00:00 KST (getddo-spec ticket.md)
     const clock = useVirtualClock();
     const expiryAt = kstNextMonthStart(clock.now());
     const expiryLabel = `${formatKst(expiryAt, { month: 'long', day: 'numeric' })} 00:00(KST)`;
+    // 지갑별 만료일이 다음 달 경계에 닿는 활성 잔액의 합 — "expiryLabel에 N장 만료 예정" 문구의 수치
+    const expiringThisMonth =
+        balance?.wallets
+            .filter(
+                (w) =>
+                    w.status === 'ACTIVE' && new Date(w.expiresAt).getTime() <= expiryAt.getTime(),
+            )
+            .reduce((sum, w) => sum + w.balance, 0) ?? 0;
     const sortedHistory = [...(history ?? [])].sort((a, b) =>
         b.createdAt.localeCompare(a.createdAt),
     );
@@ -35,13 +43,12 @@ export function MyTicketsPage() {
                 {balance && (
                     <div className="flex flex-col gap-1">
                         <p className="text-display text-fg-primary">
-                            {formatNumber(balance.balance)}
+                            {formatNumber(balance.availableBalance)}
                             <span className="text-title-3"> 장</span>
                         </p>
-                        {balance.expiringThisMonth > 0 && (
+                        {expiringThisMonth > 0 && (
                             <p className="text-body-sm text-fg-secondary">
-                                {expiryLabel}에 {formatNumber(balance.expiringThisMonth)}장 만료
-                                예정
+                                {expiryLabel}에 {formatNumber(expiringThisMonth)}장 만료 예정
                             </p>
                         )}
                     </div>

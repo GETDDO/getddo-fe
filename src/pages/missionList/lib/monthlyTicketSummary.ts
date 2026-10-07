@@ -17,9 +17,9 @@ export function summarizeMonthlyTickets(history: TicketHistory[], now: Date) {
         .filter((item) => isThisMonth(item.createdAt))
         .reduce(
             (sum, item) =>
-                item.amount >= 0
-                    ? { ...sum, earned: sum.earned + item.amount }
-                    : { ...sum, used: sum.used - item.amount },
+                item.quantity >= 0
+                    ? { ...sum, earned: sum.earned + item.quantity }
+                    : { ...sum, used: sum.used - item.quantity },
             { earned: 0, used: 0 },
         );
 }

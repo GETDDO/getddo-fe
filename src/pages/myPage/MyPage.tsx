@@ -35,7 +35,7 @@ export function MyPage() {
                 )}
                 <VirtualUserSwitcher
                     trigger={
-                        <Button variant="outline" className="self-start">
+                        <Button variant="secondary" className="self-start">
                             <Repeat className="size-4" />
                             가상 사용자 전환
                         </Button>
@@ -46,12 +46,12 @@ export function MyPage() {
             <section className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-5">
                 <h2 className="text-subhead text-fg-primary">내 활동</h2>
                 <div className="flex flex-wrap gap-3">
-                    <Button asChild variant="outline">
+                    <Button asChild variant="secondary">
                         <Link to="/my-tickets">
                             <Ticket className="size-4" />내 응모권
                         </Link>
                     </Button>
-                    <Button asChild variant="outline">
+                    <Button asChild variant="secondary">
                         <Link to="/my-entries">
                             <ClipboardList className="size-4" />내 응모 내역
                         </Link>
