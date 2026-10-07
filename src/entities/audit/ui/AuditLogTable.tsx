@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
+import { Button } from '@shared/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
 import type { AuditLogSummary } from '../model/types';
@@ -87,8 +88,25 @@ export function AuditLogTable({
                         );
                     },
                 }),
+                // 행 onClick만으로는 키보드가 상세를 열 수 없다 — 이름 있는 버튼으로 동일 경로를 제공한다
+                helper.display({
+                    id: 'detail',
+                    header: '상세',
+                    cell: ({ row }) => (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onRowClick?.(row.original);
+                            }}
+                        >
+                            상세
+                        </Button>
+                    ),
+                }),
             ]),
-        [],
+        [onRowClick],
     );
 
     const table = useTable({ features, columns, data: logs });
