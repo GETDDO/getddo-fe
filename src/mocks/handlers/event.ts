@@ -31,9 +31,14 @@ const DEMO_WINDOW_MS = 60 * MINUTE;
  *
  * 앵커를 따로따로 저장하지 않고 이 한 값에서 파생시킨다. 개별 저장은 그중 일부만
  * 다시 잡혔을 때 시작이 마감보다 늦는 창을 만든다.
+ *
+ * 기준을 다시 잡을지는 가상 시계가 아니라 실제로 흐른 시간으로 판단한다.
+ * 앞당긴 시각으로 저장해 버리면 실제 시각으로 돌아왔을 때 모든 창이 미래가 되어
+ * 래플이 전부 '오픈 예정'이 된다. 가상 시계는 이 창 위를 지나가는 역할만 한다 —
+ * 시각을 앞으로 옮기면 마감·발표로 넘어가고, 창 자체는 그대로 남는다.
  */
 function demoEpoch(): number {
-    const now = mockNow().getTime();
+    const now = Date.now();
 
     try {
         const saved = sessionStorage.getItem(DEMO_EPOCH_KEY);

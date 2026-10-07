@@ -21,19 +21,22 @@ interface LiveRaffleCardProps {
 
 export function LiveRaffleCard({ event, updatedAt }: LiveRaffleCardProps) {
     const { now } = useVirtualClock();
-    const [tick, setTick] = useState(() => now().getTime());
+    // 마감까지 남은 시간은 가상 시계를, 받아온 지 얼마나 됐는지는 실제 시계를 본다.
+    // updatedAt은 쿼리가 실제 시각으로 적는 값이라, 가상 시계로 시간을 옮기면
+    // 섞어 뺀 값이 몇 시간 전으로 튄다
+    const [ticks, setTicks] = useState(() => ({ virtual: now().getTime(), real: Date.now() }));
 
     useEffect(() => {
-        const update = () => setTick(now().getTime());
+        const update = () => setTicks({ virtual: now().getTime(), real: Date.now() });
         // 가상 시계를 옮기면 now가 새로 내려오므로 다음 초를 기다리지 않고 바로 맞춘다
         update();
         const id = setInterval(update, 1000);
         return () => clearInterval(id);
     }, [now]);
 
-    const remainingMs = new Date(event.endsAt).getTime() - tick;
+    const remainingMs = new Date(event.endsAt).getTime() - ticks.virtual;
     // 참여 현황은 폴링으로 따라가는 값이라 지금 이 순간의 수가 아니다 — 언제 기준인지 같이 적는다
-    const staleSeconds = Math.max(0, Math.floor((tick - updatedAt) / 1000));
+    const staleSeconds = Math.max(0, Math.floor((ticks.real - updatedAt) / 1000));
 
     const stats = [
         { label: '당첨 인원', value: `${formatNumber(event.winnerCount)}명` },

@@ -77,11 +77,13 @@ export function ClosedRaffleList({ events, now }: ClosedRaffleListProps) {
 
 function ClosedRaffleRow({ event, now }: { event: Event; now: Date }) {
     const isDrawn = event.status === 'drawn';
-    // 발표 전에는 결과가 없다 — '결과 보기'로 적으면 열 수 없는 화면을 약속하게 된다
-    const statusLabel =
-        isDrawn || event.publicationScheduledAt == null
-            ? '발표 완료'
-            : `${formatKst(event.publicationScheduledAt, KST_HOUR_MINUTE)} 발표 예정`;
+    // 발표 여부는 status로만 판단한다. 예정 시각이 없다고 발표된 것으로 적으면,
+    // 아직 기다리는 중인 래플에 '발표 완료'가 붙어 결과가 나온 것처럼 보인다
+    const statusLabel = isDrawn
+        ? '발표 완료'
+        : event.publicationScheduledAt == null
+          ? '발표 대기'
+          : `${formatKst(event.publicationScheduledAt, KST_HOUR_MINUTE)} 발표 예정`;
 
     const meta = [
         `${kstDayLabel(event.endsAt, now)} ${formatKst(event.endsAt, KST_HOUR_MINUTE)} 마감`,
