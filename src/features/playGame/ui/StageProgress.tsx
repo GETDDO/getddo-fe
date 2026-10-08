@@ -1,20 +1,9 @@
 import type { Ref } from 'react';
 
-import characterUrl from '../assets/takkoRun/character.png';
 import { STAGE_MARKS } from '../model/takkoRun';
-import { CHARACTER_FRAMES, pick } from '../model/takkoRunAtlas';
+import { TakkoFace } from './TakkoFace';
 
-// 타코야끼 대기 얼굴 — 캐릭터 시트의 첫 칸만 보이도록 배경 위치를 맞춘다
 const FACE_SIZE = 34;
-const [, , frameWidth, frameHeight] = pick(CHARACTER_FRAMES, 0);
-const SHEET_WIDTH = 1422;
-const FACE_STYLE = {
-    width: FACE_SIZE,
-    height: FACE_SIZE,
-    backgroundImage: `url(${characterUrl})`,
-    backgroundSize: `${(SHEET_WIDTH * FACE_SIZE) / frameWidth}px ${(frameHeight * FACE_SIZE) / frameWidth}px`,
-    backgroundPosition: '0 0',
-};
 
 /** 스테이지별 게이지 색 — 스테이지 배지(피그마 image 118)의 노랑·분홍·파랑·보라에 맞춘 토큰 */
 const STAGE_COLORS = [
@@ -64,9 +53,9 @@ export function StageProgress({
             {/* 지금 위치 — 타코야끼 대기 얼굴 */}
             {/* 길 전체 폭의 틀을 진행도만큼 옮겨, 그 왼쪽 끝에 붙은 얼굴이 따라가게 한다 */}
             <div ref={faceRef} aria-hidden className="absolute inset-0 will-change-transform">
-                <div
+                <TakkoFace
+                    size={FACE_SIZE}
                     className="absolute top-1/2 left-0 -translate-x-1/2 -translate-y-[62%] drop-shadow-md"
-                    style={FACE_STYLE}
                 />
             </div>
         </div>

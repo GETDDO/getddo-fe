@@ -22,8 +22,13 @@ export function GameGuideDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
+                // 열릴 때 초점을 버튼이 아닌 모달 상자에 둬, 게임 시작 버튼에 초점 테두리가 먼저 생기지 않게 한다 (Tab을 누르면 버튼으로 간다)
+                onOpenAutoFocus={(event) => {
+                    event.preventDefault();
+                    (event.currentTarget as HTMLElement | null)?.focus();
+                }}
                 // 글자색을 fg/primary 토큰으로 고정 — 공용 Dialog의 테마 변수 색은 다크 모드에서 흰색으로 바뀐다
-                className="bg-surface-page border-border-default text-fg-primary flex max-w-[calc(100%-2rem)] flex-col items-center gap-6 rounded-2xl border p-8 shadow-md ring-0 sm:max-w-120"
+                className="bg-surface-page border-border-default text-fg-primary flex max-w-[calc(100%-2rem)] flex-col items-center gap-6 rounded-2xl border p-8 shadow-md ring-0 outline-none sm:max-w-120"
             >
                 <div className="flex w-full flex-col items-center gap-4">
                     {/*
@@ -56,10 +61,22 @@ export function GameGuideDialog({
                                 <span className="bg-border-default flex size-9 shrink-0 items-center justify-center rounded-full">
                                     <step.icon aria-hidden className="text-fg-primary size-5" />
                                 </span>
-                                {/* 안내 문구의 줄바꿈(\n)을 그대로 살려 문장 단위로 끊어 보여준다 */}
-                                <span className="text-body-sm text-fg-primary whitespace-pre-line">
+                                {/* 안내 문구의 줄바꿈(\n)을 그대로 살려 문장 단위로 끊어 보여준다. 조작 키는 키 모양으로 앞에 둔다 */}
+                                <p className="text-body-sm text-fg-primary whitespace-pre-line">
+                                    {step.keys && (
+                                        <span className="mr-1.5 inline-flex gap-1 align-middle">
+                                            {step.keys.map((key) => (
+                                                <kbd
+                                                    key={key}
+                                                    className="border-border-strong bg-surface-elevated text-caption text-fg-primary inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-b-2 px-1.5 font-semibold"
+                                                >
+                                                    {key}
+                                                </kbd>
+                                            ))}
+                                        </span>
+                                    )}
                                     {step.text}
-                                </span>
+                                </p>
                             </div>
                         </li>
                     ))}
@@ -72,8 +89,8 @@ export function GameGuideDialog({
                     className="aspect-[314/160] w-full rounded-2xl object-cover"
                 />
 
-                {/* 공용 버튼 emphasis(강조) Large(48) */}
-                <Button variant="emphasis" size="lg" className="w-full" onClick={onStart}>
+                {/* 공용 버튼 primary(검정, 모달의 주 행동) Large(48) */}
+                <Button size="lg" className="w-full" onClick={onStart}>
                     게임 시작
                 </Button>
             </DialogContent>

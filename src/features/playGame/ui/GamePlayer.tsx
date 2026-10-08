@@ -6,6 +6,9 @@ import { GameImageButton } from './GameImageButton';
 const TakkoRunGame = lazy(() =>
     import('./TakkoRunGame').then((m) => ({ default: m.TakkoRunGame })),
 );
+const ColorWordGame = lazy(() =>
+    import('./ColorWordGame').then((m) => ({ default: m.ColorWordGame })),
+);
 
 /** 게임 id에 맞는 미니게임 플레이 화면 — 있는지는 hasGamePlayer로 먼저 확인한다 */
 export function GamePlayer({
@@ -35,6 +38,17 @@ export function GamePlayer({
                 }
             >
                 <TakkoRunGame bestScore={bestScore} onExit={onExit} onGameOver={onGameOver} />
+            </Suspense>
+        );
+    }
+    if (gameId === 'game-color') {
+        return (
+            <Suspense
+                fallback={
+                    <div className="bg-surface-page border-fg-primary aspect-[840/546] w-full rounded-2xl border-2 shadow-md" />
+                }
+            >
+                <ColorWordGame bestScore={bestScore} onExit={onExit} onGameOver={onGameOver} />
             </Suspense>
         );
     }
