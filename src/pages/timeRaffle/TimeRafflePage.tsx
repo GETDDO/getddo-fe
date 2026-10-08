@@ -1,16 +1,23 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 import { useEventList } from '@entities/event';
-import { Button } from '@shared/ui/button';
+import { useVirtualClock } from '@shared/lib/virtualClock';
 
-import { TimeRaffleHero } from './ui/TimeRaffleHero';
-import { TimeRaffleSection } from './ui/TimeRaffleSection';
+import { ClosedRaffleList } from './ui/ClosedRaffleList';
+import { LiveRaffleSection } from './ui/LiveRaffleSection';
 import { TimeRaffleTrustNotice } from './ui/TimeRaffleTrustNotice';
+import { UpcomingRaffleCard } from './ui/UpcomingRaffleCard';
 
 const CONTAINER = 'mx-auto w-full max-w-312 px-6 pt-20 pb-54';
 
+/** ADR-010 — 가중치 적용 이벤트는 사용자·이벤트별 누적 5장까지만 쓸 수 있다 */
+const ENTRY_TICKET_LIMIT = 5;
+
 export function TimeRafflePage() {
-    const { data: events, isPending, isError } = useEventList();
+    const { data: events, isPending, isError, dataUpdatedAt } = useEventList();
+    const clock = useVirtualClock();
+    // 날짜 머리말('오늘/어제') 표기 전용이라 마운트 시각으로 충분하다 — 마감 판정에는 쓰지 않는다
+    const [now] = useState(() => clock.now());
 
     if (isPending) {
         return (
@@ -29,56 +36,58 @@ export function TimeRafflePage() {
     }
 
     const raffles = events.filter((event) => event.isTimeRaffle);
-    const openRaffles = raffles.filter((event) => event.status === 'open');
+    const liveRaffles = raffles.filter((event) => event.status === 'open');
     const upcomingRaffles = raffles.filter((event) => event.status === 'upcoming');
+    // 마감 이후는 한 목록에 두되 줄마다 발표 대기·발표 완료를 적는다 (시안 '마감한 래플')
     const closedRaffles = raffles.filter(
         (event) => event.status === 'closed' || event.status === 'drawn',
     );
 
-    // 대표 래플 — 마감이 가장 임박한 진행 중 래플 (ISO 8601 UTC 문자열이라 문자열 비교로 정렬 가능)
-    const [featured] = [...openRaffles].sort((a, b) => a.endsAt.localeCompare(b.endsAt));
+    // 마감이 임박한 래플을 먼저 보여 준다.
+    // 같은 시각을 소수점 자리수만 다르게 받으면 문자열 비교가 어긋나므로 시각으로 비교한다
+    const byEndsAtAsc = [...liveRaffles].sort(
+        (a, b) => new Date(a.endsAt).getTime() - new Date(b.endsAt).getTime(),
+    );
+    const byOpensAtAsc = [...upcomingRaffles].sort(
+        (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
+    );
+    // 마감 목록은 최근에 끝난 것이 위로 온다
+    const byEndsAtDesc = [...closedRaffles].sort(
+        (a, b) => new Date(b.endsAt).getTime() - new Date(a.endsAt).getTime(),
+    );
 
     return (
         <main className={CONTAINER}>
-            <div className="flex flex-col gap-2">
-                <h1 className="text-title-1 text-fg-primary">겟또타임</h1>
-                <p className="text-body text-fg-tertiary">
-                    정해진 시간에만 열리는 한정 굿즈 래플입니다. 응모권을 사용해 당첨 기회를
-                    높이세요.
-                </p>
-                {featured && (
-                    <TimeRaffleHero
-                        event={featured}
-                        cta={
-                            <Button asChild variant="secondary" className="h-12 w-full">
-                                <Link to={`/time-raffle/${featured.id}`}>
-                                    <span className="text-body-bold">응모하러 가기</span>
-                                </Link>
-                            </Button>
-                        }
-                    />
-                )}
-            </div>
+            <div className="flex flex-col gap-18">
+                <div className="flex flex-col gap-2">
+                    <h1 className="text-title-1 text-fg-primary">겟또타임</h1>
+                    <p className="text-body-sm text-fg-tertiary">
+                        정해진 시간에만 열리는 응모예요. 응모권을 쓸수록 당첨 기회가 높아져요.
+                    </p>
+                </div>
 
-            <div className="mt-20 flex flex-col gap-20">
-                <TimeRaffleSection
-                    title="진행 중인 래플"
-                    events={openRaffles.filter((event) => event.id !== featured?.id)}
-                    emptyMessage="진행 중인 래플이 없습니다."
-                />
-                <TimeRaffleSection
-                    title="오픈 예정인 래플"
-                    events={upcomingRaffles}
-                    emptyMessage="오픈 예정인 래플이 없습니다."
-                />
-                <TimeRaffleSection
-                    title="마감한 래플"
-                    events={closedRaffles}
-                    emptyMessage="마감한 래플이 없습니다."
-                />
-            </div>
+                <LiveRaffleSection events={byEndsAtAsc} updatedAt={dataUpdatedAt} />
 
-            <div className="mt-20">
+                <section className="flex flex-col gap-5">
+                    <h2 className="text-title-3 text-fg-primary">오픈 예정</h2>
+                    {byOpensAtAsc.length === 0 ? (
+                        <p className="text-body-sm text-fg-tertiary">오픈 예정인 래플이 없어요.</p>
+                    ) : (
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                            {byOpensAtAsc.map((event) => (
+                                <UpcomingRaffleCard
+                                    key={event.id}
+                                    event={event}
+                                    now={now}
+                                    ticketLimit={ENTRY_TICKET_LIMIT}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </section>
+
+                <ClosedRaffleList events={byEndsAtDesc} now={now} />
+
                 <TimeRaffleTrustNotice />
             </div>
         </main>

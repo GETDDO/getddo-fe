@@ -70,20 +70,12 @@ export function EntryConfirmDialog({
 
                 <div className="flex gap-4">
                     <DialogClose asChild>
-                        <Button
-                            variant="secondary"
-                            className="bg-surface-sunken border-border-default hover:bg-surface-pressed h-10 flex-1"
-                        >
-                            <span className="text-body-bold text-fg-primary">취소</span>
+                        <Button variant="secondary" className="flex-1">
+                            취소
                         </Button>
                     </DialogClose>
-                    <Button
-                        variant="secondary"
-                        className="h-10 flex-1"
-                        disabled={pending}
-                        onClick={onConfirm}
-                    >
-                        <span className="text-body-bold">{pending ? '처리 중…' : '응모하기'}</span>
+                    <Button className="flex-1" disabled={pending} onClick={onConfirm}>
+                        {pending ? '처리 중…' : '응모하기'}
                     </Button>
                 </div>
             </DialogContent>
