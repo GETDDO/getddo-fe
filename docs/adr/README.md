@@ -10,7 +10,7 @@
 | [ADR-0003](./ADR-0003-state-management-roles.md)     | 상태관리 도구 4분할 (Query/Zustand/Redux/RHF) | accepted |
 | [ADR-0004](./ADR-0004-utc-kst-virtual-clock.md)      | UTC 수신 + KST 표시 + 가상 시계               | accepted |
 | [ADR-0005](./ADR-0005-idempotency-key.md)            | 중복 위험 요청에 멱등키 적용                  | accepted |
-| [ADR-0006](./ADR-0006-entry-audit-slice-boundary.md) | 응모 기록·감사 로그 슬라이스 경계             | proposed |
-| [ADR-0007](./ADR-0007-live-entry-status-refresh.md)  | 실시간 응모 현황 갱신 (E03 전용 훅 폴링)      | proposed |
-| [ADR-0008](./ADR-0008-api-error-message-mapping.md)  | API 오류 문구 결정 순서                       | proposed |
-| [ADR-0009](./ADR-0009-list-pagination-ui.md)         | 목록 페이지네이션 UI 패턴                     | proposed |
+| [ADR-0006](./ADR-0006-entry-audit-slice-boundary.md) | 응모 기록·감사 로그 슬라이스 경계             | accepted |
+| [ADR-0007](./ADR-0007-live-entry-status-refresh.md)  | 실시간 응모 현황 갱신 (E03 전용 훅 폴링)      | accepted |
+| [ADR-0008](./ADR-0008-api-error-message-mapping.md)  | API 오류 문구 결정 순서                       | accepted |
+| [ADR-0009](./ADR-0009-list-pagination-ui.md)         | 목록 페이지네이션 UI 패턴                     | accepted |
