@@ -1,8 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@shared/api/client';
 import { envelopeSchema, pageSchema } from '@shared/api/envelopeSchema';
 import { queryPresets } from '@shared/api/queryPresets';
+
+import type { DrawRunStatus } from '../model/types';
 
 import { isDrawRunInProgress } from '../model/runStatus';
 import {
@@ -52,19 +54,28 @@ export function useEventDraws(eventId: string, params: PageParams) {
     });
 }
 
+async function fetchDrawRun(drawId: string) {
+    const { data } = await apiClient.get<unknown>(drawApiPath(drawId));
+    return envelopeSchema(drawRunDetailSchema).parse(data).data;
+}
+
+const drawRunOptions = (drawId: string | null) => ({
+    ...queryPresets.realtime,
+    refetchInterval: (query: { state: { data?: { status: DrawRunStatus } } }) =>
+        query.state.data && isDrawRunInProgress(query.state.data.status) ? POLL_MS : false,
+    queryKey: [...DRAWS_KEY, 'detail', drawId],
+    queryFn: () => fetchDrawRun(drawId!),
+    enabled: Boolean(drawId),
+});
+
 // AD02 — 실행 상세
 export function useDrawRun(drawId: string | null) {
-    return useQuery({
-        ...queryPresets.realtime,
-        refetchInterval: (query) =>
-            query.state.data && isDrawRunInProgress(query.state.data.status) ? POLL_MS : false,
-        queryKey: [...DRAWS_KEY, 'detail', drawId],
-        queryFn: async () => {
-            const { data } = await apiClient.get<unknown>(drawApiPath(drawId!));
-            return envelopeSchema(drawRunDetailSchema).parse(data).data;
-        },
-        enabled: Boolean(drawId),
-    });
+    return useQuery(drawRunOptions(drawId));
+}
+
+// 여러 실행의 상세를 한 번에 — 재추첨이 취소한 원본 결과의 공개 이력을 확인할 때 쓴다
+export function useDrawRuns(drawIds: string[]) {
+    return useQueries({ queries: drawIds.map((id) => drawRunOptions(id)) });
 }
 
 // AD03 — 해당 실행이 실제 사용한 후보 명단. 실행 시점에 고정된 스냅샷이다
