@@ -35,7 +35,6 @@ interface MockAdminEvent {
     /** 저장 상태 — SCHEDULED/OPEN/CLOSED는 응답 시각에 시간으로 재계산된다 */
     status: AdminEventStatus;
     prizes: AdminPrize[];
-    createdBy: string;
     createdAt: string;
     updatedAt: string;
     canceledAt: string | null;
@@ -73,7 +72,6 @@ function toAdminSeed(e: (typeof mockEvents)[number]): MockAdminEvent {
                 winnerCount: e.winnerCount,
             },
         ],
-        createdBy: 'admin-01',
         createdAt: e.startsAt,
         updatedAt: e.startsAt,
         canceledAt: null,
@@ -94,7 +92,6 @@ function adminSeed(
         maxTicketsPerUser: 5,
         membershipRule: 'excellent',
         prizes: [],
-        createdBy: 'admin-01',
         createdAt: over.startsAt,
         updatedAt: over.startsAt,
         canceledAt: null,
@@ -386,7 +383,6 @@ function writeBodyToItem(body: EventWriteBody, id: string, nowIso: string): Mock
         endsAt: new Date(body.endsAt as string).toISOString(),
         status: 'SCHEDULED',
         prizes,
-        createdBy: 'admin-01',
         createdAt: nowIso,
         updatedAt: nowIso,
         canceledAt: null,
@@ -493,7 +489,6 @@ export const adminEventHandlers = [
 
         const updated = writeBodyToItem(body, item.id, mockNow().toISOString());
         Object.assign(item, updated, {
-            createdBy: item.createdBy,
             createdAt: item.createdAt,
             entryCount: item.entryCount,
             usedTicketTotal: item.usedTicketTotal,
