@@ -8,6 +8,7 @@ import {
     LayoutDashboard,
     ScrollText,
     ShieldAlert,
+    Users,
 } from 'lucide-react';
 
 export interface AdminNavItem {
@@ -26,4 +27,5 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     { to: '/admin/audit', label: '감사 로그', icon: ScrollText },
     { to: '/admin/banners', label: '배너 관리', icon: Images },
     { to: '/admin/virtual-clock', label: '가상 시계', icon: Clock },
+    { to: '/admin/virtual-users', label: '가상 사용자', icon: Users },
 ];
