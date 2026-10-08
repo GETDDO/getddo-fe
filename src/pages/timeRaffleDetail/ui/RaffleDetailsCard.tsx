@@ -1,11 +1,14 @@
 import type { Event } from '@entities/event';
 
+import { useEntryStatistics } from '@entities/entry';
 import { useTicketWallets } from '@entities/ticket';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 
 export function RaffleDetailsCard({ event }: { event: Event }) {
     const { data: ticket } = useTicketWallets();
+    // 히어로와 같은 쿼리 키라 요청은 합쳐진다
+    const { data: statistics } = useEntryStatistics(event.id, { isOpen: event.status === 'open' });
 
     const detail = event.raffleDetail;
     const entryCount = event.myEntryCount ?? 0;
@@ -15,8 +18,8 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
 
     // 응모 1건당 requiredTickets장이 차감되므로, 총 차감량을 나누면 응모 건수가 된다
     const entryTotal =
-        event.usedTicketCount != null && event.requiredTickets > 0
-            ? event.usedTicketCount / event.requiredTickets
+        statistics && event.requiredTickets > 0
+            ? statistics.totalSpentTicketCount / event.requiredTickets
             : null;
 
     const specs: { label: string; value: string | null }[] = [
@@ -48,14 +51,12 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
         },
         {
             label: '응모자 수',
-            value:
-                event.participantCount != null ? `${formatNumber(event.participantCount)}명` : null,
+            value: statistics ? `${formatNumber(statistics.participantCount)}명` : null,
         },
         { label: '응모 건수', value: entryTotal != null ? `${formatNumber(entryTotal)}건` : null },
         {
             label: '총 차감 응모권',
-            value:
-                event.usedTicketCount != null ? `${formatNumber(event.usedTicketCount)}장` : null,
+            value: statistics ? `${formatNumber(statistics.totalSpentTicketCount)}장` : null,
         },
     ];
 

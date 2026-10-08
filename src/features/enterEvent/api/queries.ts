@@ -42,6 +42,7 @@ export function useEnterEvent(eventId: string) {
             // 다음 응모는 재시도가 아니라 새 건이다
             attemptRef.current = null;
 
+            // E03(응모 현황)은 ENTRIES_KEY 하위 키라 함께 무효화된다. E07(자격 사전 조회)은 훅이 생기면 그 키를 더한다.
             // Promise를 반환하면 갱신이 끝날 때까지 isPending이 유지된다.
             // 먼저 완료 안내를 열어 버리면 갱신 전 남은 한도로 추가 응모를 시작하게 된다.
             return Promise.all([

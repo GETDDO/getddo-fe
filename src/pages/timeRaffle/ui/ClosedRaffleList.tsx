@@ -91,7 +91,6 @@ function ClosedRaffleRow({ event, now }: { event: Event; now: Date }) {
     const meta = [
         `${kstDayLabel(event.endsAt, now)} ${formatKst(event.endsAt, KST_HOUR_MINUTE)} 마감`,
         `당첨 ${formatNumber(event.winnerCount)}명`,
-        event.participantCount != null ? `${formatNumber(event.participantCount)}명 참여` : null,
     ].filter(Boolean);
 
     return (

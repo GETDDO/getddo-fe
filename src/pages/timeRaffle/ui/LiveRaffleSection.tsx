@@ -9,11 +9,9 @@ import { LiveRaffleCard } from './LiveRaffleCard';
 
 interface LiveRaffleSectionProps {
     events: Event[];
-    /** 목록을 마지막으로 받아온 시각 */
-    updatedAt: number;
 }
 
-export function LiveRaffleSection({ events, updatedAt }: LiveRaffleSectionProps) {
+export function LiveRaffleSection({ events }: LiveRaffleSectionProps) {
     const [index, setIndex] = useState(0);
 
     // 폴링으로 목록이 줄면 보던 자리가 범위를 벗어난다.
@@ -63,7 +61,7 @@ export function LiveRaffleSection({ events, updatedAt }: LiveRaffleSectionProps)
             </div>
 
             {current ? (
-                <LiveRaffleCard event={current} updatedAt={updatedAt} />
+                <LiveRaffleCard event={current} />
             ) : (
                 <p className="text-body-sm text-fg-tertiary">지금 진행 중인 래플이 없어요.</p>
             )}

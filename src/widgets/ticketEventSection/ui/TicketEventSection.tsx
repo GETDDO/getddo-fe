@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 
 import type { Event } from '@entities/event';
 
+import { useEntryStatistics } from '@entities/entry';
 import { FeaturedEventCard, UpcomingEventCard } from '@entities/event';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
@@ -52,7 +53,7 @@ export function TicketEventSection({
             )}
             {(featured || upcomingEvents.length > 0) && (
                 <div className="grid items-stretch gap-4 lg:grid-cols-2">
-                    {featured && <FeaturedEventCard event={featured} />}
+                    {featured && <FeaturedEvent event={featured} />}
                     {upcomingEvents.length > 0 &&
                         (featured ? (
                             // featured 카드가 행 높이를 결정하고 캐러셀은 그 안에서 늘어난다 — 내용물 높이가 행을 밀지 않도록 absolute로 띄운다
@@ -69,6 +70,18 @@ export function TicketEventSection({
                 </div>
             )}
         </section>
+    );
+}
+
+/** 대표 이벤트의 응모 현황(E03)을 조회해 카드에 내려준다 — 진행 중이므로 30초 폴링 (ADR-0007) */
+function FeaturedEvent({ event }: { event: Event }) {
+    const { data: statistics } = useEntryStatistics(event.id, { isOpen: true });
+    return (
+        <FeaturedEventCard
+            event={event}
+            participantCount={statistics?.participantCount}
+            totalSpentTicketCount={statistics?.totalSpentTicketCount}
+        />
     );
 }
 

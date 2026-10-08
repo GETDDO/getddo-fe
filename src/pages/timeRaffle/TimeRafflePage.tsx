@@ -14,7 +14,7 @@ const CONTAINER = 'mx-auto w-full max-w-312 px-6 pt-20 pb-54';
 const ENTRY_TICKET_LIMIT = 5;
 
 export function TimeRafflePage() {
-    const { data: events, isPending, isError, dataUpdatedAt } = useEventList();
+    const { data: events, isPending, isError } = useEventList();
     const clock = useVirtualClock();
     // 날짜 머리말('오늘/어제') 표기 전용이라 마운트 시각으로 충분하다 — 마감 판정에는 쓰지 않는다
     const [now] = useState(() => clock.now());
@@ -66,7 +66,7 @@ export function TimeRafflePage() {
                     </p>
                 </div>
 
-                <LiveRaffleSection events={byEndsAtAsc} updatedAt={dataUpdatedAt} />
+                <LiveRaffleSection events={byEndsAtAsc} />
 
                 <section className="flex flex-col gap-5">
                     <h2 className="text-title-3 text-fg-primary">오픈 예정</h2>

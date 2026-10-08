@@ -36,7 +36,7 @@ export function useEventList() {
             }
             return events;
         },
-        // 실시간 현황 자동 갱신 (getddo-spec 기능 요구사항 7절 — 갱신 주기는 구현 재량) — 홈 배너의 참여자/응모권 수를 주기적으로 다시 가져온다
+        // 폴링은 이벤트 상태 전환(open → closed 등) 감지용이다. 응모 현황 수치는 E03(useEntryStatistics)이 맡는다 (ADR-0007)
     });
 }
 
@@ -48,7 +48,7 @@ export function useEvent(eventId: string) {
             const { data } = await apiClient.get<unknown>(eventApiPath(eventId));
             return envelopeSchema(eventSchema).parse(data).data;
         },
-        // 실시간 현황 자동 갱신 (기능 요구사항 7절) — 마감 상태도 결과 발표(closed → drawn) 전환을 감지해야 하므로 추첨 완료 전까지 30초 폴링을 유지한다
+        // 상태 전환 감지용 폴링 (ADR-0007) — 마감 상태도 결과 발표(closed → drawn) 전환을 감지해야 하므로 추첨 완료 전까지 30초 폴링을 유지한다
         refetchInterval: (query) => {
             const status = query.state.data?.status;
             return status === 'drawn' ? false : queryPresets.realtime.refetchInterval;
