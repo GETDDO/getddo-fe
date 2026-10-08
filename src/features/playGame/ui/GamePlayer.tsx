@@ -10,6 +10,20 @@ const ColorWordGame = lazy(() =>
     import('./ColorWordGame').then((m) => ({ default: m.ColorWordGame })),
 );
 
+/** 게임 코드를 내려받는 동안의 화면 — 게임 영역과 나가기 버튼을 유지해 느린 네트워크에서도 화면이 비거나 갇히지 않게 한다 (모든 게임 공통) */
+function GameLoading({ onExit }: { onExit: () => void }) {
+    return (
+        <div className="bg-surface-page border-fg-primary relative aspect-[840/546] w-full overflow-hidden rounded-2xl border-2 shadow-md">
+            <div className="absolute top-2 left-2">
+                <GameImageButton kind="exit" size="small" onClick={onExit} />
+            </div>
+            <p className="text-body text-fg-secondary flex h-full items-center justify-center">
+                게임을 불러오는 중이에요
+            </p>
+        </div>
+    );
+}
+
 /** 게임 id에 맞는 미니게임 플레이 화면 — 있는지는 hasGamePlayer로 먼저 확인한다 */
 export function GamePlayer({
     gameId,
@@ -24,30 +38,14 @@ export function GamePlayer({
 }) {
     if (gameId === 'game-dino') {
         return (
-            // 청크 다운로드 중에도 게임 영역과 나가기 버튼은 유지한다 — 느린 네트워크에서 화면이 통째로 사라지지 않게
-            <Suspense
-                fallback={
-                    <div className="bg-surface-page border-fg-primary relative aspect-[840/546] w-full overflow-hidden rounded-2xl border-2 shadow-md">
-                        <div className="absolute top-2 left-2">
-                            <GameImageButton kind="exit" size="small" onClick={onExit} />
-                        </div>
-                        <p className="text-body text-fg-secondary flex h-full items-center justify-center">
-                            게임을 불러오는 중이에요
-                        </p>
-                    </div>
-                }
-            >
+            <Suspense fallback={<GameLoading onExit={onExit} />}>
                 <TakkoRunGame bestScore={bestScore} onExit={onExit} onGameOver={onGameOver} />
             </Suspense>
         );
     }
     if (gameId === 'game-color') {
         return (
-            <Suspense
-                fallback={
-                    <div className="bg-surface-page border-fg-primary aspect-[840/546] w-full rounded-2xl border-2 shadow-md" />
-                }
-            >
+            <Suspense fallback={<GameLoading onExit={onExit} />}>
                 <ColorWordGame bestScore={bestScore} onExit={onExit} onGameOver={onGameOver} />
             </Suspense>
         );
