@@ -13,13 +13,27 @@ interface ApiErrorBody {
 export class ApiError extends Error {
     readonly code: string;
     readonly status: number;
+    /** 429 응답의 `Retry-After`를 초 단위로 환산한 값 — 헤더가 없거나 해석할 수 없으면 undefined */
+    readonly retryAfterSeconds?: number;
 
-    constructor(code: string, message: string, status: number) {
+    constructor(code: string, message: string, status: number, retryAfterSeconds?: number) {
         super(message);
         this.name = 'ApiError';
         this.code = code;
         this.status = status;
+        this.retryAfterSeconds = retryAfterSeconds;
     }
+}
+
+/** `Retry-After`는 초 단위 정수 또는 HTTP-date다 (RFC 9110) — 둘 다 남은 초로 환산한다 */
+export function parseRetryAfter(value: unknown, now = Date.now()): number | undefined {
+    if (typeof value !== 'string' && typeof value !== 'number') return undefined;
+    const raw = String(value).trim();
+    if (raw === '') return undefined;
+    if (/^\d+$/.test(raw)) return Number(raw);
+    const at = Date.parse(raw);
+    if (Number.isNaN(at)) return undefined;
+    return Math.max(0, Math.ceil((at - now) / 1000));
 }
 
 export const apiClient = axios.create({
@@ -39,6 +53,7 @@ apiClient.interceptors.response.use(
                     body.code,
                     body.message ?? '요청 처리에 실패했습니다',
                     error.response?.status ?? 0,
+                    parseRetryAfter(error.response?.headers?.['retry-after']),
                 ),
             );
         }

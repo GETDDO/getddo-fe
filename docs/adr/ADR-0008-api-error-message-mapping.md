@@ -36,4 +36,4 @@
 
 - 오류 코드가 확정되기 전에도 화면이 깨지지 않는다 — 모르는 업무 오류 코드는 서버 공개 문구, 그 밖의 오류는 기본 문구로 떨어진다
 - 코드 체계가 확정되면 매핑 테이블에 행만 추가한다
-- 후속 작업: `getErrorMessage` 추가, 기존 `error instanceof ApiError ? error.message` 4곳(`EventActionDialog`, `QuizForm`, `SurveyForm`, `AdminEventFormPage`) 교체, 인터셉터에서 `Retry-After` 보존
+- 후속 작업(GD-124에서 처리): `shared/api/errorMessage.ts`에 `getErrorMessage` 추가, 기존 `error instanceof ApiError ? error.message` 4곳(`EventActionDialog`, `QuizForm`, `SurveyForm`, `AdminEventFormPage`) 교체, 인터셉터에서 `Retry-After`를 `ApiError.retryAfterSeconds`로 보존

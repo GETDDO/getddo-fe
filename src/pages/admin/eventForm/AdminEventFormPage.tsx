@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 import { EVENT_TYPE_LABEL, MEMBERSHIP_LABEL, useAdminEvent } from '@entities/event';
 import { useCreateEvent, useUpdateEvent } from '@features/manageEvent';
-import { ApiError } from '@shared/api/client';
+import { getErrorMessage } from '@shared/api/errorMessage';
 import { utcIsoToKstInput } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
@@ -378,9 +378,10 @@ export function AdminEventFormPage() {
 
             {mutation.isError && (
                 <p className={cn(FIELD_ERROR, 'text-body-sm')}>
-                    {mutation.error instanceof ApiError
-                        ? mutation.error.message
-                        : '저장에 실패했습니다. 입력값과 이벤트 상태를 확인한 뒤 다시 시도해주세요.'}
+                    {getErrorMessage(
+                        mutation.error,
+                        '저장에 실패했습니다. 입력값과 이벤트 상태를 확인한 뒤 다시 시도해주세요.',
+                    )}
                 </p>
             )}
 

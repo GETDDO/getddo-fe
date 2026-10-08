@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 
 import type { MissionAnswer, MissionDetail, MissionSubmissionResult } from '@entities/mission';
 
-import { ApiError } from '@shared/api/client';
+import { getErrorMessage } from '@shared/api/errorMessage';
 
 import { useSubmitMission } from '../api/queries';
 import { MissionAnswersForm } from './MissionAnswersForm';
@@ -40,9 +40,7 @@ export function QuizForm({
             },
             onError: (error) => {
                 toast.error(
-                    error instanceof ApiError
-                        ? error.message
-                        : '제출에 실패했습니다. 잠시 후 다시 시도해 주세요.',
+                    getErrorMessage(error, '제출에 실패했습니다. 잠시 후 다시 시도해 주세요.'),
                 );
             },
         });
