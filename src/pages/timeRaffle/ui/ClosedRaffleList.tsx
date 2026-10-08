@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 
 import type { Event } from '@entities/event';
 
+import { useEntryStatistics } from '@entities/entry';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { cn } from '@shared/lib/utils';
@@ -76,6 +77,9 @@ export function ClosedRaffleList({ events, now }: ClosedRaffleListProps) {
 }
 
 function ClosedRaffleRow({ event, now }: { event: Event; now: Date }) {
+    // 마감 이후라 값이 더 늘지 않는다 — 폴링 없이 행마다 1회 조회한다.
+    // TODO: 행마다 E03을 부르는 구조는 최적화 대상이다 (Obsidian 20261008-progress-roadmap 참조)
+    const { data: statistics } = useEntryStatistics(event.id);
     const isDrawn = event.status === 'drawn';
     // 예정 시각은 '원래 예정'이고 실제 공개는 늦어질 수 있다 (getddo-spec 05-api/drawing.md).
     // 그 시각이 지났는데 아직 발표 전이면 '19:10 발표 예정'은 이미 틀린 말이다 —
@@ -91,6 +95,7 @@ function ClosedRaffleRow({ event, now }: { event: Event; now: Date }) {
     const meta = [
         `${kstDayLabel(event.endsAt, now)} ${formatKst(event.endsAt, KST_HOUR_MINUTE)} 마감`,
         `당첨 ${formatNumber(event.winnerCount)}명`,
+        statistics ? `${formatNumber(statistics.participantCount)}명 참여` : null,
     ].filter(Boolean);
 
     return (
