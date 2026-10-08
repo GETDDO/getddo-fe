@@ -48,9 +48,10 @@
 
 요구사항 원본은 기능 요구사항 7절이다. 갱신 주기와 방식은 구현 담당자 재량으로 위임됐고 `05-api/entry.md`는 E03 재조회 제안과 함께 SSE·WebSocket을 필수로 두지 않는다고 명시한다.
 
-- **30초 폴링**으로 확정했다 — `useEventList`·`useEvent`의 `refetchInterval`이 담당하며, 상세는 추첨 완료(`drawn`)까지 폴링한다 (마감 상태는 결과 발표 전환을 감지해야 한다)
-- **응모 성공 직후 즉시 재조회**는 `useEnterEvent`의 `onSuccess` 무효화(`['events']`·`['tickets']`·`['entries']`)가 담당한다
-- 표시 지표는 `Event`의 `participantCount`·`usedTicketCount`·`myEntryCount`다. E03의 `serverTime`·`mySpentTicketCount`는 초안 전용 필드라 계약 확정 시 전환을 검토한다
+- 현황 수치는 **E03 전용 조회** `useEntryStatistics(eventId)`(`entities/entry`)로 받는다 (ADR-0007). 진행 중(`open`) 이벤트만 **30초 폴링**하고, 그 외 상태는 폴링하지 않는다. 홈 배너처럼 여러 이벤트가 겹치는 곳은 현재 보이는 항목만 켠다
+- `useEventList`·`useEvent`의 폴링은 현황이 아니라 **상태 전환 감지** 용도다 — 상세는 추첨 완료(`drawn`)까지 폴링한다 (마감 상태는 결과 발표 전환을 감지해야 한다)
+- **응모 성공 직후 즉시 재조회**는 `useEnterEvent`의 `onSuccess` 무효화(`['events']`·`['tickets']`·`['entries']`)가 담당한다. E03은 `['entries', 'statistics', eventId]`라 함께 무효화된다
+- 표시 지표는 E03의 `participantCount`·`totalSpentTicketCount`·`mySpentTicketCount`다. `Event`에는 응모 현황 필드가 없다 (`myEntryCount`는 본인 응모 건수 표시용으로 남아 있다). 당첨 확률은 표시하지 않는다
 
 ## 시간 규칙 — 반드시 지킬 것
 

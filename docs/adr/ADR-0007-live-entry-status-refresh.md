@@ -28,4 +28,4 @@ spec 초안(`../getddo-spec/05-api/entry.md`)은 "E03 재조회 방식, 폴링 �
 
 - 현황 수치용 요청이 보이는 이벤트별 E03 1건으로 한정된다. 다만 이벤트 목록·상세 폴링(상태 전환 감지용, 전체 페이지 조회)은 계속되므로 전체 API 호출량이 줄어든다고 보지 않는다 — E03 요청이 추가되는 만큼 오히려 늘 수 있다. 홈 배너처럼 여러 이벤트를 동시에 보이는 화면은 현재 보이는 슬라이드만 `enabled`로 폴링한다
 - 30초 주기는 서버 부하 확인 대상이다 — 백엔드가 다른 값을 요청하면 `queryPresets.realtime` 한 곳만 바꾼다
-- 후속 작업: E03 MSW 핸들러 추가, `useEntryStatistics` 구현, `LiveEntryStatus`·`RaffleDetailHero`·`LiveRaffleCard`·`FeaturedEventCard` 전환, `eventSchema`의 임시 필드 제거
+- 후속 작업(GD-124에서 처리): E03 MSW 핸들러 추가, `useEntryStatistics` 구현, `LiveEntryStatus`·`RaffleDetailHero`·`LiveRaffleCard`·`FeaturedEventCard` 전환, `eventSchema`의 임시 필드 제거
