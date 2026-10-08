@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 
 import { Gamepad2, Target, Ticket } from 'lucide-react';
 
+import colorWordGuide from '../assets/color-word-guide.jpg';
 import guideBanner from '../assets/guide-banner.jpg';
 import takkoRunGuide from '../assets/takko-run-guide.jpg';
 import takoyakiHero from '../assets/takoyaki-hero.jpg';
@@ -9,6 +10,8 @@ import takoyakiHero from '../assets/takoyaki-hero.jpg';
 export interface GameGuideStep {
     icon: LucideIcon;
     text: string;
+    /** 글 앞에 키 모양으로 보여 줄 조작 키 */
+    keys?: string[];
 }
 
 /** 게임 상세 화면·게임 방법 모달에 쓰는 게임별 소개 콘텐츠 (미니게임 구현 쪽에서 관리) */
@@ -40,25 +43,46 @@ const CONTENTS: Record<string, GameContent> = {
         // 16:9 이미지라 좌우 약 7%씩 잘린다. 제목(타꼬런)이 오른쪽 끝에 붙어 있어 기준을 오른쪽으로 옮긴다
         heroImagePosition: '85% 50%',
         guide: {
-            title: '달리고, 피하고, 응모권까지',
-            subtitle: '조작은 점프 하나면 끝나요',
+            title: '게임 방법',
+            subtitle: '점프만 하면 끝!',
             steps: [
                 {
                     icon: Gamepad2,
-                    text: '스페이스바, 위 방향키(↑), 화면을 눌러 점프해요.\n길게 누르면 높이 뛰어요.',
+                    keys: ['Space', '↑'],
+                    text: '또는 화면을 눌러 점프해요.\n길게 누르면 높이 뛰어요.',
                 },
                 { icon: Target, text: '오래 버틸수록 점수가 쭉쭉 올라가요.' },
                 REWARD_STEP,
             ],
-            // 게임 방법 모달 이미지 — 피그마 image 78 (실제 게임 장면)
+            // 게임 방법 모달 이미지 — 피그마 image 178 (실제 게임 장면)
             image: takkoRunGuide,
+        },
+    },
+    'game-color': {
+        tagline: '글자 뜻에 속지 말고 글자 색깔을 고르세요.',
+        // 대표 이미지 — 피그마 image 163 (16:9라 대표 영역 840:546에서 좌우가 조금 잘린다)
+        heroImage: '/images/games/color-word.jpg',
+        guide: {
+            title: '게임 방법',
+            subtitle: '글자 뜻이 아니라 글자 색이 정답!',
+            steps: [
+                {
+                    icon: Gamepad2,
+                    keys: ['1', '2', '3', '4'],
+                    text: '또는 글자에 칠해진 색 버튼을 눌러요.',
+                },
+                { icon: Target, text: '목숨은 3개, 맞힐수록 제한 시간이 짧아져요.' },
+                REWARD_STEP,
+            ],
+            // 게임 방법 모달 이미지 — 피그마 image 179 (실제 게임 장면)
+            image: colorWordGuide,
         },
     },
     'game-takoyaki': {
         tagline: '60초 안에 타코야끼를 구워내세요.',
         heroImage: takoyakiHero,
         guide: {
-            title: '뒤집고, 굽고, 응모권까지',
+            title: '게임 방법',
             subtitle: '타이밍 맞춰 누르기만 하면 돼요',
             steps: [
                 { icon: Gamepad2, text: '노릇하게 익었을 때 눌러서 뒤집어요.' },

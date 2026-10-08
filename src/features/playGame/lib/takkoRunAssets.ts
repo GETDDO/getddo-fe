@@ -1,4 +1,5 @@
 import type { TakkoRunImageKey, TakkoRunImages } from './drawTakkoRun';
+import type { GameSound } from './gameSounds';
 
 import completeUrl from '../assets/audio/complete.wav';
 import bgmUrl from '../assets/audio/flowerbed_fields.m4a';
@@ -29,14 +30,18 @@ import stage4TownUrl from '../assets/takkoRun/stage4/town.webp';
 import starsUrl from '../assets/takkoRun/stars.png';
 import townUrl from '../assets/takkoRun/town.png';
 
-export const TAKKO_RUN_BGM_URL = bgmUrl;
+/** 배경 음악 — 원본 평균 약 -22dB라 그대로 쓴다 */
+export const TAKKO_RUN_BGM: GameSound = { url: bgmUrl, volume: 1 };
 
-/** 효과음 — 점프, 스테이지가 바뀔 때, 게임이 끝날 때 */
+/**
+ * 효과음 — 점프, 스테이지가 바뀔 때, 게임이 끝날 때 (크기는 GameSound 기준에 맞춘 배율).
+ * 점프는 원본이 아주 커서(약 -7dB) 줄이고, 종소리·완료음은 작아서 키운다
+ */
 export const TAKKO_RUN_SOUNDS = {
-    jump: jumpUrl,
-    stageUp: bellUrl,
-    gameOver: completeUrl,
-} as const;
+    jump: { url: jumpUrl, volume: 0.35 },
+    stageUp: { url: bellUrl, volume: 3 },
+    gameOver: { url: completeUrl, volume: 1.6 },
+} as const satisfies Record<string, GameSound>;
 
 const IMAGE_SOURCES: Record<TakkoRunImageKey, string> = {
     character: characterUrl,
@@ -91,5 +96,5 @@ export function loadTakkoRunImages(): Promise<TakkoRunImages> {
 export function preloadTakkoRun() {
     loadTakkoRunImages().catch(() => undefined);
     // 음악은 브라우저 캐시에 받아만 두고, 재생할 때 다시 요청하면 캐시에서 바로 온다
-    fetch(TAKKO_RUN_BGM_URL).catch(() => undefined);
+    fetch(TAKKO_RUN_BGM.url).catch(() => undefined);
 }
