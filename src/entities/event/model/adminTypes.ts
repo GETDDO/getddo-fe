@@ -42,7 +42,6 @@ export const adminEventSchema = z.object({
     publicationScheduledAt: z.iso.datetime(),
     serverTime: z.iso.datetime(),
     prizes: z.array(adminPrizeSchema),
-    createdBy: z.string(),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
     canceledAt: z.iso.datetime().nullable(),
