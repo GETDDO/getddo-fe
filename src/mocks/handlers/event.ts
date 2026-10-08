@@ -158,6 +158,7 @@ export interface MockEvent {
     tags?: string[];
     prizeName: string;
     winnerCount: number;
+    // 응모 현황 원천 — 이벤트 응답(E01/E02)에는 싣지 않고 E03 응모 통계로만 내려간다 (ADR-0007)
     participantCount: number | null;
     usedTicketCount: number | null;
     myEntryCount: number | null;
@@ -852,6 +853,17 @@ export function recordMockEventEntry(
     event.usedTicketCount = (event.usedTicketCount ?? 0) + ticketCount;
 }
 
+/** E03 응모 통계 — 목업의 시드·접수 카운터를 EntryStatistics 모양으로 바꾼다 */
+export function getMockEventStatistics(event: NonNullable<ReturnType<typeof findMockEvent>>) {
+    return {
+        eventId: event.id,
+        participantCount: event.participantCount ?? 0,
+        totalSpentTicketCount: event.usedTicketCount ?? 0,
+        mySpentTicketCount: event.myTicketCount ?? 0,
+        serverTime: mockNow().toISOString(),
+    };
+}
+
 /** ADR-009 — 유형과 무관하게 마감 + 5분 검토 후 자동으로 최초 발표한다 */
 const ANNOUNCE_DELAY_MS = 5 * 60 * 1000;
 
@@ -878,10 +890,21 @@ function statusAt(startsAt: string, endsAt: string, now: number): EventStatus {
  * 발표 카운트다운은 서버가 준 시각으로 계산해야 새로고침에 리셋되지 않으므로(docs/CONTEXT.md),
  * 화면에서 마감 + 5분을 더하지 않도록 목업이 서버 몫을 대신 계산한다.
  */
-function toResponse<T extends { startsAt: string; endsAt: string }>(event: T, now: number) {
+function toResponse<
+    T extends {
+        startsAt: string;
+        endsAt: string;
+        participantCount: number | null;
+        usedTicketCount: number | null;
+    },
+>(event: T, now: number) {
+    // 응모 현황은 E03 전용이므로 이벤트 응답에서 뺀다
+    const { participantCount, usedTicketCount, ...rest } = event;
+    void participantCount;
+    void usedTicketCount;
     const ends = new Date(event.endsAt).getTime();
     return {
-        ...event,
+        ...rest,
         status: statusAt(event.startsAt, event.endsAt, now),
         publicationScheduledAt: new Date(ends + ANNOUNCE_DELAY_MS).toISOString(),
     };

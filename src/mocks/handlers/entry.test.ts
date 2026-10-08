@@ -162,4 +162,58 @@ describe('응모 목업 핸들러', () => {
         const aEntries = await myEntries(userA);
         expect(aEntries.some((entry) => entry.eventId === FREE_EVENT_ID_2)).toBe(true);
     });
+
+    describe('E03 응모 통계', () => {
+        interface Statistics {
+            eventId: string;
+            participantCount: number;
+            totalSpentTicketCount: number;
+            mySpentTicketCount: number;
+            serverTime: string;
+        }
+
+        const statistics = async (eventId: string) => {
+            const { data } = await apiClient.get<Envelope<Statistics>>(
+                `/events/${eventId}/statistics`,
+            );
+            return data;
+        };
+
+        it('공통 봉투에 EntryStatistics 필드를 담아 돌려준다', async () => {
+            const body = await statistics('evt-011');
+            expect(body.success).toBe(true);
+            expect(body.data.eventId).toBe('evt-011');
+            for (const value of [
+                body.data.participantCount,
+                body.data.totalSpentTicketCount,
+                body.data.mySpentTicketCount,
+            ]) {
+                expect(Number.isInteger(value)).toBe(true);
+            }
+            expect(Number.isNaN(Date.parse(body.data.serverTime))).toBe(false);
+            // 당첨 확률은 반환하지 않는다
+            expect(Object.keys(body.data)).not.toContain('winProbability');
+        });
+
+        it('응모가 접수되면 응모자 수가 오른다', async () => {
+            const before = await statistics('evt-011');
+            const entered = await enter(
+                `test-stat-${Date.now()}`,
+                0,
+                'evt-011',
+                `stat-${Date.now()}`,
+            );
+            expect(entered.status).toBe(201);
+            const after = await statistics('evt-011');
+            expect(after.data.participantCount).toBe(before.data.participantCount + 1);
+        });
+
+        it('없는 이벤트는 404 봉투로 거절한다', async () => {
+            const res = await apiClient.get('/events/evt-none/statistics', {
+                validateStatus: () => true,
+            });
+            expect(res.status).toBe(404);
+            expect(res.data).toMatchObject({ success: false, code: 'EVENT_NOT_FOUND' });
+        });
+    });
 });
