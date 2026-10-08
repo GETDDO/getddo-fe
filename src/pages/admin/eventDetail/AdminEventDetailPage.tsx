@@ -56,6 +56,11 @@ export function AdminEventDetailPage() {
     // spec event.md 운영 규칙 — 수정·삭제는 진행 예정(SCHEDULED)만, 취소는 CANCELED 외 모든 상태에서 허용
     const canEdit = event.status === 'SCHEDULED';
     const canCancel = event.status !== 'CANCELED';
+    // 추첨이 확정된 이후 단계에서만 추첨 관리 화면으로 연결한다
+    const hasDraw =
+        event.status === 'DRAW_CONFIRMED' ||
+        event.status === 'PUBLISHED' ||
+        event.status === 'REDRAWING';
     const status = ADMIN_STATUS_META[event.status];
 
     return (
@@ -74,6 +79,11 @@ export function AdminEventDetailPage() {
                     {status.label}
                 </span>
                 <div className="ml-auto flex gap-2">
+                    {hasDraw && (
+                        <Button variant="secondary" asChild>
+                            <Link to={`/admin/draw?eventId=${event.id}`}>추첨 관리</Link>
+                        </Button>
+                    )}
                     {canEdit && (
                         <Button variant="secondary" asChild>
                             <Link to={`/admin/events/${event.id}/edit`}>수정</Link>
