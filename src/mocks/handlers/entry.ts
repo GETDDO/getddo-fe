@@ -96,12 +96,16 @@ export const entryHandlers = [
         });
     }),
     // E03 — 이벤트별 응모 현황. 당첨 확률은 반환하지 않는다
-    http.get(api('/events/:eventId/statistics'), ({ params }) => {
+    http.get(api('/events/:eventId/statistics'), ({ params, request }) => {
         const event = findMockEvent(String(params.eventId));
         if (!event) {
             return fail(404, 'EVENT_NOT_FOUND', '이벤트를 찾을 수 없습니다');
         }
-        return ok(getMockEventStatistics(event));
+        // 본인 차감 수는 공유 이벤트 카운터가 아니라 요청 사용자의 접수 기록에서 센다
+        const mySpentTicketCount = myEntriesFor(userIdOf(request))
+            .filter((entry) => entry.eventId === event.id && entry.status === 'ACCEPTED')
+            .reduce((sum, entry) => sum + entry.deductedTicketCount, 0);
+        return ok({ ...getMockEventStatistics(event), mySpentTicketCount });
     }),
     http.post(api('/events/:eventId/entries'), async ({ params, request }) => {
         const idempotencyKey = request.headers.get(IDEMPOTENCY_HEADER);

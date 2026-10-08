@@ -208,6 +208,23 @@ describe('응모 목업 핸들러', () => {
             expect(after.data.participantCount).toBe(before.data.participantCount + 1);
         });
 
+        it('본인 차감 수는 요청 사용자의 접수 기록만 센다', async () => {
+            const userA = `stat-a-${Date.now()}`;
+            const userB = `stat-b-${Date.now()}`;
+            const entered = await enter(`test-mine-${Date.now()}`, 1, 'evt-003', userA);
+            expect(entered.status).toBe(201);
+
+            const read = async (userId: string) => {
+                const { data } = await apiClient.get<Envelope<Statistics>>(
+                    '/events/evt-003/statistics',
+                    { headers: { 'X-User-ID': userId } },
+                );
+                return data.data.mySpentTicketCount;
+            };
+            expect(await read(userA)).toBe(1);
+            expect(await read(userB)).toBe(0);
+        });
+
         it('없는 이벤트는 404 봉투로 거절한다', async () => {
             const res = await apiClient.get('/events/evt-none/statistics', {
                 validateStatus: () => true,

@@ -39,7 +39,10 @@ function formatWait(seconds: number): string {
 export function getErrorMessage(error: unknown, fallback: string = DEFAULT_ERROR_MESSAGE): string {
     if (!(error instanceof ApiError)) return fallback;
 
-    const mapped = ERROR_MESSAGES[error.code];
+    // __proto__ 같은 상속 키가 매핑으로 잡히지 않도록 자체 속성만 본다
+    const mapped = Object.hasOwn(ERROR_MESSAGES, error.code)
+        ? ERROR_MESSAGES[error.code]
+        : undefined;
     if (mapped) {
         if (error.code === 'RATE_LIMIT_EXCEEDED' && error.retryAfterSeconds != null) {
             return `요청이 너무 많습니다. ${formatWait(error.retryAfterSeconds)} 후에 다시 시도해 주세요.`;

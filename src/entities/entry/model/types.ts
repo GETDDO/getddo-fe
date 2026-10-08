@@ -30,7 +30,8 @@ export const entryStatisticsSchema = z.object({
     totalSpentTicketCount: z.number().int().nonnegative(),
     /** 내가 이 이벤트에 차감한 응모권 수 */
     mySpentTicketCount: z.number().int().nonnegative(),
-    serverTime: z.iso.datetime(),
+    // 서버 시각은 UTC 또는 명시적 오프셋(+09:00 등)을 허용한다 (docs/CONTEXT.md)
+    serverTime: z.iso.datetime({ offset: true }),
 });
 
 export type EntryStatistics = z.infer<typeof entryStatisticsSchema>;

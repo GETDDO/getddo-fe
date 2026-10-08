@@ -16,12 +16,6 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
     const usedTickets = event.myTicketCount ?? entryCount * event.requiredTickets;
     const paragraphs = detail?.paragraphs ?? [event.description];
 
-    // 응모 1건당 requiredTickets장이 차감되므로, 총 차감량을 나누면 응모 건수가 된다
-    const entryTotal =
-        statistics && event.requiredTickets > 0
-            ? statistics.totalSpentTicketCount / event.requiredTickets
-            : null;
-
     const specs: { label: string; value: string | null }[] = [
         { label: '상품 구성', value: detail?.prizeComposition ?? event.prizeName },
         {
@@ -53,7 +47,6 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
             label: '응모자 수',
             value: statistics ? `${formatNumber(statistics.participantCount)}명` : null,
         },
-        { label: '응모 건수', value: entryTotal != null ? `${formatNumber(entryTotal)}건` : null },
         {
             label: '총 차감 응모권',
             value: statistics ? `${formatNumber(statistics.totalSpentTicketCount)}장` : null,

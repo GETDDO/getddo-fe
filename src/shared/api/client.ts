@@ -30,7 +30,11 @@ export function parseRetryAfter(value: unknown, now = Date.now()): number | unde
     if (typeof value !== 'string' && typeof value !== 'number') return undefined;
     const raw = String(value).trim();
     if (raw === '') return undefined;
-    if (/^\d+$/.test(raw)) return Number(raw);
+    if (/^\d+$/.test(raw)) {
+        // 지나치게 긴 숫자 문자열은 Infinity가 되므로 유한한 값만 인정한다
+        const seconds = Number(raw);
+        return Number.isFinite(seconds) ? seconds : undefined;
+    }
     const at = Date.parse(raw);
     if (Number.isNaN(at)) return undefined;
     return Math.max(0, Math.ceil((at - now) / 1000));
