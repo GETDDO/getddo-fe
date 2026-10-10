@@ -73,7 +73,7 @@ export function AdminDrawPage() {
                 </p>
             )}
 
-            {eventId && <DrawEventPanel eventId={eventId} />}
+            {eventId && <DrawEventPanel key={eventId} eventId={eventId} />}
         </div>
     );
 }

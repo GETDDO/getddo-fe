@@ -26,12 +26,12 @@ export function DrawEventPanel({ eventId }: { eventId: string }) {
     const { data: event } = useAdminEvent(eventId);
     // 사용자가 고르지 않으면 가장 최근 실행을 본다 — AD01 첫 페이지 캐시를 목록과 공유한다
     const latest = useEventDraws(eventId, { page: 1, size: DRAW_RUN_PAGE_SIZE });
-    const [chosenId, setChosenId] = useState<{ eventId: string; drawId: string } | null>(null);
+    const [chosenId, setChosenId] = useState<string | null>(null);
     const [tab, setTab] = useState<PanelTab>('runs');
 
-    const chosen = chosenId?.eventId === eventId ? chosenId.drawId : null;
-    const selectedId = chosen ?? latest.data?.items[0]?.id ?? null;
-    const select = (drawId: string) => setChosenId({ eventId, drawId });
+    // 이벤트가 바뀌면 부모가 key로 패널을 새로 만들어 선택·페이지·탭이 초기화된다
+    const selectedId = chosenId ?? latest.data?.items[0]?.id ?? null;
+    const select = (drawId: string) => setChosenId(drawId);
 
     const status = event ? ADMIN_STATUS_META[event.status] : null;
     const awaitingFirstPublication = event?.status === 'DRAW_CONFIRMED';
