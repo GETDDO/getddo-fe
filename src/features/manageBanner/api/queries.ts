@@ -17,7 +17,8 @@ import { envelopeSchema } from '@shared/api/envelopeSchema';
 // 모든 변경은 서버의 최신 목록으로 다시 맞춘다 — 순서(displayOrder)는 서버가 정한다
 function useInvalidateBanners() {
     const queryClient = useQueryClient();
-    return () => void queryClient.invalidateQueries({ queryKey: ADMIN_BANNERS_KEY });
+    // Promise를 반환해 재조회가 끝날 때까지 mutation을 pending으로 유지한다 — 순서 변경이 이전 목록으로 계산되지 않게
+    return () => queryClient.invalidateQueries({ queryKey: ADMIN_BANNERS_KEY });
 }
 
 export function useCreateBanner() {
