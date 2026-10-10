@@ -140,6 +140,10 @@ function RunDetailBody({
     const selectedResults = run.results.filter((r) => r.resultType === 'SELECTED');
     const alreadyPublished =
         selectedResults.length > 0 && selectedResults.every((r) => r.wasPublished);
+    // 공개 전에 취소된 결과가 남은 실행을 반영하면 공개 명단에 빈 자리가 생긴다 — 취소의 재추첨 결과로 반영한다
+    const hasUnpublishedCanceledResult = selectedResults.some(
+        (r) => r.isCanceled && !r.wasPublished,
+    );
 
     const canPublish =
         isRedraw &&
@@ -147,6 +151,7 @@ function RunDetailBody({
         !eventCanceled &&
         !stillLoading &&
         !anyBeforeFirstPublication &&
+        !hasUnpublishedCanceledResult &&
         !alreadyPublished;
     const canResume = isRedraw && !confirmed && run.cancellations.length > 0 && !eventCanceled;
     const cancelable = confirmed && !eventCanceled;
