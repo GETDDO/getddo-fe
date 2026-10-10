@@ -8,13 +8,13 @@ import {
     DRAW_EXECUTION_TYPE_LABEL,
     DRAW_RUN_STATUS_META,
     DRAWS_KEY,
-    drawErrorMessage,
     isDrawRunInProgress,
     useDrawRun,
     useDrawRuns,
 } from '@entities/drawResult';
 import { CancelWinDialog } from '@features/runDraw';
 import { PublishRedrawDialog, useStartRedraw } from '@features/runRedraw';
+import { getErrorMessage } from '@shared/api/errorMessage';
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
@@ -215,7 +215,7 @@ function RunDetailBody({
                 )}
                 {start.isError && (
                     <p role="alert" className="text-destructive text-body-sm">
-                        {drawErrorMessage(start.error, '재추첨을 시작·재개하지 못했습니다.')}
+                        {getErrorMessage(start.error, '재추첨을 시작·재개하지 못했습니다.')}
                     </p>
                 )}
                 {eventCanceled && (

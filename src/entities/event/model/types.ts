@@ -42,9 +42,7 @@ export const eventSchema = z.object({
     tags: z.array(z.string()).optional(),
     prizeName: z.string(),
     winnerCount: z.number().int().positive(),
-    // 실시간 응모 현황 — CONTEXT.md: 당첨 확률은 노출 금지, 아래 지표까지만 표시 가능
-    participantCount: z.number().int().nonnegative().nullable().optional(),
-    usedTicketCount: z.number().int().nonnegative().nullable().optional(),
+    // 응모 현황(응모자 수·차감 합계)은 E03 전용 조회(entities/entry의 useEntryStatistics)로 받는다 — ADR-0007
     myEntryCount: z.number().int().nonnegative().nullable().optional(),
     // 내가 이 이벤트에 지금까지 쓴 응모권 수 — 추가 응모로 한도(ADR-010)까지 얼마나 남았는지 계산하는 값.
     // 한 번에 여러 장을 쓸 수 있어서 myEntryCount × requiredTickets로는 실제 사용량을 알 수 없다.

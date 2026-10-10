@@ -4,11 +4,13 @@ import { toast } from 'sonner';
 
 import type { Event } from '@entities/event';
 
+import { useEventResults } from '@entities/drawResult';
 import { useEvent } from '@entities/event';
 import { useTicketWallets } from '@entities/ticket';
 import { useEnterEvent } from '@features/enterEvent';
 import { Button } from '@shared/ui/button';
 
+import { DrawResultSection } from './ui/DrawResultSection';
 import { EntryCompleteDialog } from './ui/EntryCompleteDialog';
 import { EntryConfirmDialog } from './ui/EntryConfirmDialog';
 import { InsufficientTicketsDialog } from './ui/InsufficientTicketsDialog';
@@ -34,6 +36,12 @@ export function TimeRaffleDetailPage() {
     const { id = '' } = useParams();
     const { data: event, isPending, isError } = useEvent(id);
     const { data: ticket } = useTicketWallets();
+    // 마감 전에는 결과가 존재하지 않으므로 묻지 않는다
+    // 마감 전에는 결과가 존재하지 않으므로 묻지 않는다
+    const { data: results } = useEventResults(
+        id,
+        event?.status === 'closed' || event?.status === 'drawn',
+    );
     const enterEvent = useEnterEvent(id);
     const [quantity, setQuantity] = useState(1);
     const [confirmOpen, setConfirmOpen] = useState(false);
@@ -102,27 +110,15 @@ export function TimeRaffleDetailPage() {
                                       ? '추가 응모하기'
                                       : '응모하기'}
                             </Button>
-                        ) : event.status === 'drawn' ? (
-                            // 발표 여부는 서버가 내려준 status로만 판단한다 —
-                            // 화면의 카운트다운이 0이 됐다고 결과를 열어 주지 않는다 (docs/CONTEXT.md)
-                            <Button
-                                variant="emphasis"
-                                size="lg"
-                                onClick={() => {
-                                    // TODO: 결과 화면은 GD-24 「추첨 결과 페이지 프론트 화면 개발」에서 연결한다
-                                    toast.info('당첨 결과 발표 화면은 준비 중이에요.');
-                                }}
-                                className="w-full"
-                            >
-                                당첨 결과 발표 보기
-                            </Button>
-                        ) : (
+                        ) : // 발표가 끝난 래플은 결과가 바로 아래에 있어 따로 누를 것이 없다
+                        event.status === 'drawn' ? undefined : (
                             <Button disabled size="lg" className="w-full">
                                 {STATUS_LABEL[event.status]}
                             </Button>
                         )
                     }
                 />
+                {results && <DrawResultSection event={event} results={results} />}
                 <MyTicketCard event={event} />
                 <RaffleDetailsCard event={event} />
                 <RaffleRulesCard event={event} />

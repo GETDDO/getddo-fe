@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 
 import type { DrawResult } from '@entities/drawResult';
 
-import { drawErrorMessage } from '@entities/drawResult';
+import { getErrorMessage } from '@shared/api/errorMessage';
 import { createIdempotencyKey } from '@shared/lib/idempotencyKey';
 import { Button } from '@shared/ui/button';
 import {
@@ -109,7 +109,7 @@ export function CancelWinDialog({ result, open, onOpenChange, onCanceled }: Canc
 
                 {cancel.isError && (
                     <p id="cancel-win-error" role="alert" className="text-destructive text-body-sm">
-                        {drawErrorMessage(
+                        {getErrorMessage(
                             cancel.error,
                             '당첨 취소에 실패했습니다. 상태를 확인한 뒤 다시 시도해주세요.',
                         )}

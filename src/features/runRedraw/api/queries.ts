@@ -1,6 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { cancellationRedrawsApiPath, DRAWS_KEY, drawRunSchema } from '@entities/drawResult';
+import {
+    cancellationRedrawsApiPath,
+    DRAW_RESULTS_KEY,
+    DRAWS_KEY,
+    drawRunSchema,
+} from '@entities/drawResult';
 import {
     drawPublicationApiPath,
     publicationUpdateResultSchema,
@@ -48,6 +53,8 @@ export function usePublishRedraw() {
             // 결과의 공개 이력(wasPublished)과 변경 이력이 함께 바뀐다
             void queryClient.invalidateQueries({ queryKey: DRAWS_KEY });
             void queryClient.invalidateQueries({ queryKey: RESULT_CHANGES_KEY });
+            // 공개 명단이 바뀌었으므로 사용자용 공개 결과(E08)도 다시 받는다 — 관리자 키(DRAWS_KEY)와는 별개 캐시다
+            void queryClient.invalidateQueries({ queryKey: DRAW_RESULTS_KEY });
         },
     });
 }

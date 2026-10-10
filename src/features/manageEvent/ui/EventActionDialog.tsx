@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 
 import type { AdminEvent } from '@entities/event';
 
-import { ApiError } from '@shared/api/client';
+import { getErrorMessage } from '@shared/api/errorMessage';
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
@@ -132,9 +132,10 @@ export function EventActionDialog({
 
                 {mutation.isError && (
                     <p className="text-destructive text-body-sm">
-                        {mutation.error instanceof ApiError
-                            ? mutation.error.message
-                            : `${meta.title}에 실패했습니다. 상태를 확인한 뒤 다시 시도해주세요.`}
+                        {getErrorMessage(
+                            mutation.error,
+                            `${meta.title}에 실패했습니다. 상태를 확인한 뒤 다시 시도해주세요.`,
+                        )}
                     </p>
                 )}
 

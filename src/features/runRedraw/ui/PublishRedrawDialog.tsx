@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 
 import type { DrawRun } from '@entities/drawResult';
 
-import { drawErrorMessage } from '@entities/drawResult';
+import { getErrorMessage } from '@shared/api/errorMessage';
 import { Button } from '@shared/ui/button';
 import {
     Dialog,
@@ -107,7 +107,7 @@ export function PublishRedrawDialog({ run, open, onOpenChange }: PublishRedrawDi
                         role="alert"
                         className="text-destructive text-body-sm"
                     >
-                        {drawErrorMessage(
+                        {getErrorMessage(
                             publish.error,
                             '공개 명단 반영에 실패했습니다. 잠시 후 다시 시도해주세요.',
                         )}

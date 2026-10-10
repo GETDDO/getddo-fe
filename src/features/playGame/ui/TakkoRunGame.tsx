@@ -14,8 +14,9 @@ import {
     type TakkoRunImages,
     type TakkoRunPalette,
 } from '../lib/drawTakkoRun';
-import { PIXEL_FONT } from '../lib/pixelFont';
-import { loadTakkoRunImages, TAKKO_RUN_BGM_URL, TAKKO_RUN_SOUNDS } from '../lib/takkoRunAssets';
+import { PAUSE_SOUNDS } from '../lib/gameSounds';
+import { isInteractive } from '../lib/isInteractive';
+import { loadTakkoRunImages, TAKKO_RUN_BGM, TAKKO_RUN_SOUNDS } from '../lib/takkoRunAssets';
 import { useLoopingBgm } from '../lib/useLoopingBgm';
 import {
     createRun,
@@ -30,7 +31,9 @@ import {
     WORLD_HEIGHT,
     WORLD_WIDTH,
 } from '../model/takkoRun';
+import { GameCountdown } from './GameCountdown';
 import { GameImageButton } from './GameImageButton';
+import { GameKey } from './GameKey';
 import { RewardDialog } from './RewardDialog';
 import { ScoreBoard } from './ScoreBoard';
 import { StageProgress } from './StageProgress';
@@ -53,9 +56,6 @@ const SCROLL_KEYS = new Set([
     'Home',
     'End',
 ]);
-const isInteractive = (target: EventTarget | null) =>
-    target instanceof HTMLElement &&
-    (target.isContentEditable || !!target.closest('button, a, input, textarea, select'));
 
 const padScore = (score: number) => String(score).padStart(5, '0');
 
@@ -73,17 +73,6 @@ const STAGE_BANNER_MS = 1100;
  * 게임 위에 떠 있는 안내 칩 — 마을 실루엣에서 뽑은 짙은 갈색(--takko-ink)을 반투명하게 깔아 노을 배경과 어우러지게 한다
  */
 const HUD_CHIP = 'bg-(--takko-ink)/55 text-fg-on-brand rounded-lg backdrop-blur-sm';
-
-/** 키보드 키 모양 표시 */
-function Key({ children, className = '' }: { children: string; className?: string }) {
-    return (
-        <kbd
-            className={`border-fg-on-brand/50 bg-fg-on-brand/15 text-caption inline-flex h-6 items-center rounded-md border border-b-2 px-2 ${className}`}
-        >
-            {children}
-        </kbd>
-    );
-}
 
 /**
  * 타꼬런 — 타코야끼가 소스병·꼬치를 뛰어넘으며 달리는 미니게임 (크롬 공룡 달리기 방식).
@@ -112,13 +101,13 @@ export function TakkoRunGame({
     const restartRef = useRef<HTMLButtonElement>(null);
     const runRef = useRef(createRun());
     const overAtRef = useRef(0);
-    const bgm = useLoopingBgm(TAKKO_RUN_BGM_URL);
+    const bgm = useLoopingBgm(TAKKO_RUN_BGM);
     // 게임 시작을 누르고 게임 화면이 열리면 바로 배경 음악을 튼다 (썸네일 화면에서는 나오지 않는다).
     // 브라우저가 막으면 첫 점프 때 다시 튼다
     const { play: playBgm, preloadEffects } = bgm;
     useEffect(() => {
         playBgm();
-        preloadEffects(Object.values(TAKKO_RUN_SOUNDS));
+        preloadEffects([...Object.values(TAKKO_RUN_SOUNDS), ...Object.values(PAUSE_SOUNDS)]);
     }, [playBgm, preloadEffects]);
     /** 마지막으로 소리를 낸 점프 횟수 — 늘어나면 점프음을 낸다 (착지 직전 예약된 점프도 포함) */
     const jumpsRef = useRef(0);
@@ -201,11 +190,15 @@ export function TakkoRunGame({
         setBest((prev) => Math.max(prev, score));
         // 응답이 늦게 와도 그사이 다시 시작한 판에는 띄우지 않는다
         const play = playRef.current;
-        void Promise.resolve(onGameOver?.(score)).then((result) => {
-            if (!result || playRef.current !== play || result.ticketsGranted <= 0) return;
-            setTicketsGranted(result.ticketsGranted);
-            setRewardOpen(true);
-        });
+        // 저장 요청이 실패하거나 바로 오류를 던져도 게임 화면은 그대로 둔다 (실패 안내는 게임 상세 페이지가 한다)
+        Promise.resolve()
+            .then(() => onGameOver?.(score))
+            .then((result) => {
+                if (!result || playRef.current !== play || result.ticketsGranted <= 0) return;
+                setTicketsGranted(result.ticketsGranted);
+                setRewardOpen(true);
+            })
+            .catch(() => undefined);
     });
 
     // 그리기 — 화면 크기에 맞춰 캔버스 해상도를 바꾸고 매 프레임 한 칸씩 진행한다
@@ -326,7 +319,7 @@ export function TakkoRunGame({
         const run = runRef.current;
         if (run.phase === 'paused') {
             setCountdown(null);
-            bgm.pause();
+            bgm.pause(PAUSE_SOUNDS.pause);
             return;
         }
         if (run.phase !== 'running') return;
@@ -334,13 +327,13 @@ export function TakkoRunGame({
         releaseJump(run);
         setPhase('paused');
         revealGame();
-        bgm.pause();
+        bgm.pause(PAUSE_SOUNDS.pause);
     };
 
     /** 이어 하기 — 음악을 이어 틀고 3, 2, 1을 센 뒤 달린다 */
     const startResume = () => {
         if (runRef.current.phase !== 'paused' || countdown != null) return;
-        bgm.resume();
+        bgm.resume(PAUSE_SOUNDS.resume);
         setCountdown(RESUME_COUNTDOWN);
     };
     useEffect(() => {
@@ -448,21 +441,13 @@ export function TakkoRunGame({
             {phase === 'paused' && (
                 <div className="absolute inset-0 flex items-center justify-center bg-(--takko-ink)/50 px-6 backdrop-blur-[2px]">
                     {countdown != null ? (
-                        <motion.p
-                            key={countdown}
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 420, damping: 18 }}
-                            className={`text-display text-ticket-accent ${PIXEL_FONT}`}
-                        >
-                            {countdown}
-                        </motion.p>
+                        <GameCountdown value={countdown} />
                     ) : (
                         <div className="flex flex-col items-center gap-3 text-center">
                             <p className="text-title-3 text-ticket-accent">일시정지</p>
                             <p className="text-body-sm text-ticket-accent flex flex-wrap items-center justify-center gap-1">
                                 <span className="flex items-center gap-1 [@media(hover:none)]:hidden">
-                                    <Key>Space</Key>
+                                    <GameKey>Space</GameKey>
                                     <span className="ml-0.5">또는</span>
                                 </span>
                                 화면을 눌러 계속하기
@@ -547,8 +532,8 @@ export function TakkoRunGame({
                         <p className="text-body-bold sm:text-subhead flex flex-wrap items-center justify-center gap-2">
                             {/* 컴퓨터는 스페이스바·↑ 키와 화면 클릭, 터치 기기(마우스 올리기 없음)는 화면 누르기로 안내한다 */}
                             <span className="flex items-center gap-1 [@media(hover:none)]:hidden">
-                                <Key className="motion-safe:animate-pulse">Space</Key>
-                                <Key className="motion-safe:animate-pulse">↑</Key>
+                                <GameKey className="motion-safe:animate-pulse">Space</GameKey>
+                                <GameKey className="motion-safe:animate-pulse">↑</GameKey>
                                 <span className="ml-1">또는 화면을 눌러 시작</span>
                             </span>
                             <span className="hidden [@media(hover:none)]:inline">
@@ -557,10 +542,10 @@ export function TakkoRunGame({
                         </p>
                         <p className="text-caption sm:text-body-sm flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
                             <span className="flex items-center gap-1.5">
-                                <Key>짧게</Key> 낮게 점프
+                                <GameKey>짧게</GameKey> 낮게 점프
                             </span>
                             <span className="flex items-center gap-1.5">
-                                <Key>길게</Key> 높게 점프
+                                <GameKey>길게</GameKey> 높게 점프
                             </span>
                         </p>
                     </div>

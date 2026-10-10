@@ -158,6 +158,7 @@ export interface MockEvent {
     tags?: string[];
     prizeName: string;
     winnerCount: number;
+    // 응모 현황 원천 — 이벤트 응답(E01/E02)에는 싣지 않고 E03 응모 통계로만 내려간다 (ADR-0007)
     participantCount: number | null;
     usedTicketCount: number | null;
     myEntryCount: number | null;
@@ -712,6 +713,30 @@ export const mockEvents: MockEvent[] = [
         myTicketCount: 0,
     },
     {
+        // 등수가 여럿이고 당첨자가 많은 래플 — 결과 화면의 등수 카드와 명단 스크롤을 확인한다
+        id: 'evt-113',
+        title: '무너 컬렉터 패키지 대형 래플',
+        description:
+            '피규어와 키링, 굿즈 박스를 등수별로 나눠 드리는 대형 래플입니다. 1등부터 3등까지 당첨자를 한 번에 뽑았습니다.',
+        bannerImageUrl: null,
+        startsAt: kstAt(-1, 10),
+        endsAt: kstAt(-1, 12),
+        status: 'drawn',
+        isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '무너 컬렉터 패키지를 등수별로 나눠 드립니다. 1등 메탈릭 피규어, 2등 아크릴 키링 세트, 3등 굿즈 박스 구성입니다.',
+            '1등 무너 메탈릭 피규어 · 2등 무너 아크릴 키링 세트 · 3등 무너 굿즈 박스',
+        ),
+        requiredTickets: 2,
+        tags: ['한정 굿즈'],
+        prizeName: '무너 메탈릭 피규어',
+        winnerCount: 56,
+        participantCount: 4820,
+        usedTicketCount: 9640,
+        myEntryCount: 0,
+        myTicketCount: 0,
+    },
+    {
         id: 'evt-108',
         title: '다이슨 에어랩',
         description:
@@ -852,8 +877,19 @@ export function recordMockEventEntry(
     event.usedTicketCount = (event.usedTicketCount ?? 0) + ticketCount;
 }
 
+/** E03 응모 통계 — 목업의 시드·접수 카운터를 EntryStatistics 모양으로 바꾼다 */
+export function getMockEventStatistics(event: NonNullable<ReturnType<typeof findMockEvent>>) {
+    return {
+        eventId: event.id,
+        participantCount: event.participantCount ?? 0,
+        totalSpentTicketCount: event.usedTicketCount ?? 0,
+        mySpentTicketCount: event.myTicketCount ?? 0,
+        serverTime: mockNow().toISOString(),
+    };
+}
+
 /** ADR-009 — 유형과 무관하게 마감 + 5분 검토 후 자동으로 최초 발표한다 */
-const ANNOUNCE_DELAY_MS = 5 * 60 * 1000;
+export const ANNOUNCE_DELAY_MS = 5 * 60 * 1000;
 
 /**
  * 응답 시점의 이벤트 상태.
@@ -878,10 +914,21 @@ function statusAt(startsAt: string, endsAt: string, now: number): EventStatus {
  * 발표 카운트다운은 서버가 준 시각으로 계산해야 새로고침에 리셋되지 않으므로(docs/CONTEXT.md),
  * 화면에서 마감 + 5분을 더하지 않도록 목업이 서버 몫을 대신 계산한다.
  */
-function toResponse<T extends { startsAt: string; endsAt: string }>(event: T, now: number) {
+function toResponse<
+    T extends {
+        startsAt: string;
+        endsAt: string;
+        participantCount: number | null;
+        usedTicketCount: number | null;
+    },
+>(event: T, now: number) {
+    // 응모 현황은 E03 전용이므로 이벤트 응답에서 뺀다
+    const { participantCount, usedTicketCount, ...rest } = event;
+    void participantCount;
+    void usedTicketCount;
     const ends = new Date(event.endsAt).getTime();
     return {
-        ...event,
+        ...rest,
         status: statusAt(event.startsAt, event.endsAt, now),
         publicationScheduledAt: new Date(ends + ANNOUNCE_DELAY_MS).toISOString(),
     };

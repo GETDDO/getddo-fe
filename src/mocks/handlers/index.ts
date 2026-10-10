@@ -4,6 +4,7 @@ import { attendanceHandlers } from './attendance';
 import { auditHandlers } from './audit';
 import { bannerHandlers } from './banner';
 import { drawHandlers } from './draw';
+import { drawResultHandlers } from './drawResult';
 import { entryHandlers } from './entry';
 import { eventHandlers } from './event';
 import { gameHandlers } from './game';
@@ -19,6 +20,7 @@ export const handlers = [
     ...auditHandlers,
     ...bannerHandlers,
     ...drawHandlers,
+    ...drawResultHandlers,
     ...entryHandlers,
     ...eventHandlers,
     ...gameHandlers,

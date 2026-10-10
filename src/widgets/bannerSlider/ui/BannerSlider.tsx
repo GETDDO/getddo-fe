@@ -25,8 +25,11 @@ const SHOW_MASCOT = true;
 export function BannerSlider({
     renderStatus,
 }: {
-    /** 현재 배너 이벤트의 실시간 현황 pill을 배너 안에 렌더링한다 — 위젯 간 참조를 피하기 위해 페이지가 슬롯으로 주입한다 */
-    renderStatus?: (event: Event) => ReactNode;
+    /**
+     * 배너 이벤트의 실시간 현황 pill을 배너 안에 렌더링한다 — 위젯 간 참조를 피하기 위해 페이지가 슬롯으로 주입한다.
+     * isActive는 지금 보이는 슬라이드인지 여부라, 보이지 않는 슬라이드의 현황 조회를 멈추는 데 쓴다
+     */
+    renderStatus?: (event: Event, isActive: boolean) => ReactNode;
 }) {
     const { data: events, isPending, isError } = useEventList();
     const [index, setIndex] = useState(0);
@@ -150,7 +153,7 @@ export function BannerSlider({
                                             <p className="text-body text-fg-primary break-keep whitespace-pre-line">
                                                 {event.description}
                                             </p>
-                                            {renderStatus?.(event)}
+                                            {renderStatus?.(event, slideIndex === safeIndex)}
                                         </div>
                                     </div>
                                     {/* 버튼은 배너 아래에서 35px 위에 고정 — 설명이 한 줄이어도 피그마와 같은 자리 */}

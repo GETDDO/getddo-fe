@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { drawErrorMessage, useDrawVerifications } from '@entities/drawResult';
+import { useDrawVerifications } from '@entities/drawResult';
 import { useVerifyDraw } from '@features/runDraw';
+import { getErrorMessage } from '@shared/api/errorMessage';
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
@@ -63,7 +64,7 @@ export function DrawVerificationsSection({ drawId, canVerify }: DrawVerification
             )}
             {verify.isError && (
                 <p role="alert" className="text-destructive text-body-sm">
-                    {drawErrorMessage(verify.error, '정합성 검증을 실행하지 못했습니다.')}
+                    {getErrorMessage(verify.error, '정합성 검증을 실행하지 못했습니다.')}
                 </p>
             )}
 

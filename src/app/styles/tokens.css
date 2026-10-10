@@ -31,6 +31,12 @@
     /* 텍스트·버튼에는 사용 금지 — 일러스트 전용 */
     --color-play-lavender: #a78bfa;
 
+    /* Game — 글자색깔 맞추기 문제 글자 (밝기·채도를 고르게 맞춘 깔끔한 원색 4가지, 게임 화면 전용 · 다크 모드에도 그대로) */
+    --color-game-red: #f03e3e;
+    --color-game-blue: #1c7ed6;
+    --color-game-yellow: #f59f00;
+    --color-game-green: #37b24d;
+
     /* Surface — 배경 레이어 */
     --color-surface-page: #ffffff;
     --color-surface-canvas: #f4f5f7;

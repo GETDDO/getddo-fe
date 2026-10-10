@@ -1,4 +1,12 @@
 export {
+    drawDisplayStatusSchema,
+    maskedWinnerSchema,
+    publicResultsSchema,
+    publishedPrizeSchema,
+} from './model/types';
+export type { DrawDisplayStatus, MaskedWinner, PublicResults, PublishedPrize } from './model/types';
+export { DRAW_RESULTS_KEY, eventResultsApiPath, useEventResults } from './api/queries';
+export {
     cancellationRedrawsApiPath,
     DRAWS_KEY,
     drawApiPath,
@@ -12,7 +20,6 @@ export {
     useEventDraws,
 } from './api/queries';
 export type { PageParams } from './api/queries';
-export { drawErrorMessage } from './lib/drawErrorMessage';
 export {
     DRAW_EXECUTION_TYPE_LABEL,
     DRAW_RUN_STATUS_META,

@@ -40,10 +40,12 @@ const mockGames: GameMeta[] = [
         dailyLimit: 1,
     },
     {
-        id: 'game-card',
-        title: '카드 뒤집기',
-        description: '같은 그림 카드 짝을 맞춰요',
-        thumbnailUrl: null,
+        // 카드 뒤집기 자리를 글자색깔 맞추기로 바꿨다 (게임 담당자 결정)
+        id: 'game-color',
+        title: '글자색깔 맞추기',
+        description: '글자 뜻 말고 글자 색을 골라요',
+        // 피그마 image 163
+        thumbnailUrl: '/images/games/color-word.jpg',
         dailyLimit: 1,
     },
     {
@@ -77,7 +79,7 @@ const seedPlayState: Record<string, GamePlayState> = {
         rewardedToday: true,
         remainingPlays: 0,
     },
-    'game-card': { bestScore: 960, todayPlayCount: 0, rewardedToday: false, remainingPlays: 1 },
+    'game-color': { bestScore: 120, todayPlayCount: 0, rewardedToday: false, remainingPlays: 1 },
     'game-mole': { todayPlayCount: 0, rewardedToday: false, remainingPlays: 1 },
 };
 
