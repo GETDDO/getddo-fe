@@ -712,6 +712,30 @@ export const mockEvents: MockEvent[] = [
         myTicketCount: 0,
     },
     {
+        // 등수가 여럿이고 당첨자가 많은 래플 — 결과 화면의 등수 카드와 명단 스크롤을 확인한다
+        id: 'evt-113',
+        title: '무너 컬렉터 패키지 대형 래플',
+        description:
+            '피규어와 키링, 굿즈 박스를 등수별로 나눠 드리는 대형 래플입니다. 1등부터 3등까지 당첨자를 한 번에 뽑았습니다.',
+        bannerImageUrl: null,
+        startsAt: kstAt(-1, 10),
+        endsAt: kstAt(-1, 12),
+        status: 'drawn',
+        isTimeRaffle: true,
+        raffleDetail: raffleDetail(
+            '무너 컬렉터 패키지를 등수별로 나눠 드립니다. 1등 메탈릭 피규어, 2등 아크릴 키링 세트, 3등 굿즈 박스 구성입니다.',
+            '1등 무너 메탈릭 피규어 · 2등 무너 아크릴 키링 세트 · 3등 무너 굿즈 박스',
+        ),
+        requiredTickets: 2,
+        tags: ['한정 굿즈'],
+        prizeName: '무너 메탈릭 피규어',
+        winnerCount: 56,
+        participantCount: 4820,
+        usedTicketCount: 9640,
+        myEntryCount: 0,
+        myTicketCount: 0,
+    },
+    {
         id: 'evt-108',
         title: '다이슨 에어랩',
         description:
@@ -853,7 +877,7 @@ export function recordMockEventEntry(
 }
 
 /** ADR-009 — 유형과 무관하게 마감 + 5분 검토 후 자동으로 최초 발표한다 */
-const ANNOUNCE_DELAY_MS = 5 * 60 * 1000;
+export const ANNOUNCE_DELAY_MS = 5 * 60 * 1000;
 
 /**
  * 응답 시점의 이벤트 상태.
