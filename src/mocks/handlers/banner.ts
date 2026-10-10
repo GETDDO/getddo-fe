@@ -1,23 +1,204 @@
 import { http } from 'msw';
 
+import { BANNER_MAX_COUNT } from '@entities/banner';
 import { env } from '@shared/config/env';
 
-import { ok } from './response';
+import { mockNow } from '../now';
+import { findMockEvent } from './event';
+import { fail, ok } from './response';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
+/** 목업 배너 항목 — AdminBanner(spec AB01) 응답 필드와 같다. imageUrl은 imageKey에서 파생한다 */
+interface MockBanner {
+    id: string;
+    eventId: string;
+    imageKey: string;
+    displayOrder: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+// 실제 이미지 변환 계약이 없으므로 imageKey를 새긴 단색 SVG를 imageUrl로 돌려준다
+function imageUrlOf(imageKey: string) {
+    const label = imageKey.slice(0, 40).replace(/[<>&"]/g, '');
+    const svg =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="120">' +
+        '<rect width="320" height="120" fill="#e5e7eb"/>' +
+        `<text x="160" y="66" font-size="14" text-anchor="middle" fill="#4b5563">${label}</text>` +
+        '</svg>';
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+const seedAt = '2026-10-01T00:00:00.000Z';
+
+const mockBanners: MockBanner[] = [
+    {
+        id: 'bnr-1',
+        eventId: 'evt-001',
+        imageKey: 'banners/weekly-buds.png',
+        displayOrder: 0,
+        createdAt: seedAt,
+        updatedAt: seedAt,
+    },
+    {
+        id: 'bnr-2',
+        eventId: 'evt-002',
+        imageKey: 'banners/attendance-challenge.png',
+        displayOrder: 1,
+        createdAt: seedAt,
+        updatedAt: seedAt,
+    },
+    {
+        id: 'bnr-3',
+        eventId: 'evt-005',
+        imageKey: 'banners/starbucks-ecard.png',
+        displayOrder: 2,
+        createdAt: seedAt,
+        updatedAt: seedAt,
+    },
+];
+
+// 노출 순서는 displayOrder ASC, id ASC (spec B01 제안)
+const sorted = () =>
+    [...mockBanners].sort((a, b) => a.displayOrder - b.displayOrder || a.id.localeCompare(b.id));
+
+const toAdminResponse = (item: MockBanner) => ({ ...item, imageUrl: imageUrlOf(item.imageKey) });
+
+/** 이벤트 삭제 시 연결된 배너도 함께 삭제한다 (spec 이벤트 도메인 규칙) — adminEvent 목업이 호출한다 */
+export function removeMockBannersOfEvent(eventId: string) {
+    for (let i = mockBanners.length - 1; i >= 0; i -= 1) {
+        if (mockBanners[i]?.eventId === eventId) mockBanners.splice(i, 1);
+    }
+}
+
+interface BannerWriteBody {
+    eventId?: unknown;
+    imageKey?: unknown;
+    displayOrder?: unknown;
+}
+
+// BannerWrite 검증 — 형식 오류와 존재하지 않는 이벤트를 구분해 상태 코드를 돌려준다
+function validateWriteBody(body: BannerWriteBody): { status: number; message: string } | null {
+    if (typeof body.eventId !== 'string' || !body.eventId) {
+        return { status: 400, message: '연결할 이벤트를 선택하세요' };
+    }
+    if (
+        typeof body.imageKey !== 'string' ||
+        body.imageKey.trim().length < 1 ||
+        body.imageKey.length > 500
+    ) {
+        return { status: 400, message: '이미지 키는 1~500자로 입력하세요' };
+    }
+    if (
+        typeof body.displayOrder !== 'number' ||
+        !Number.isInteger(body.displayOrder) ||
+        body.displayOrder < 0
+    ) {
+        return { status: 400, message: '노출 순서는 0 이상의 정수여야 합니다' };
+    }
+    if (!findMockEvent(body.eventId)) {
+        return { status: 404, message: '연결할 이벤트를 찾을 수 없습니다' };
+    }
+    return null;
+}
+
+const readBody = async (request: Request) =>
+    (await request.json().catch(() => null)) as BannerWriteBody | null;
+
 export const bannerHandlers = [
-    // B01 초안 — 공개 배너 목록 (spec 초안은 배열을 data에 싣는다)
+    // B01 — 공개 배너 목록: Banner = id/eventId/imageUrl/displayOrder (spec 초안, 배열을 data에 싣는다)
     http.get(api('/banners'), () =>
-        ok([
-            {
-                id: 'bnr-1',
-                title: '9월 응모 이벤트 오픈',
-                imageUrl: null,
-                linkUrl: '/events/evt-001',
-                displayOrder: 1,
-                visible: true,
-            },
-        ]),
+        ok(
+            sorted().map(({ id, eventId, imageKey, displayOrder }) => ({
+                id,
+                eventId,
+                imageUrl: imageUrlOf(imageKey),
+                displayOrder,
+            })),
+        ),
     ),
+
+    // AB01 — 관리자 목록
+    http.get(api('/admin/banners'), () => ok(sorted().map(toAdminResponse))),
+
+    // AB02 — 등록: 최대 5개를 넘으면 409
+    http.post(api('/admin/banners'), async ({ request }) => {
+        const body = await readBody(request);
+        if (!body) return fail(400, 'COMMON-002', '요청 본문이 올바르지 않습니다');
+        const error = validateWriteBody(body);
+        if (error) return fail(error.status, 'COMMON-002', error.message);
+        if (mockBanners.length >= BANNER_MAX_COUNT) {
+            return fail(
+                409,
+                'STATE_CONFLICT',
+                `배너는 최대 ${BANNER_MAX_COUNT}개까지 등록할 수 있습니다`,
+            );
+        }
+
+        const at = mockNow().toISOString();
+        const item: MockBanner = {
+            id: crypto.randomUUID(),
+            eventId: body.eventId as string,
+            imageKey: (body.imageKey as string).trim(),
+            displayOrder: body.displayOrder as number,
+            createdAt: at,
+            updatedAt: at,
+        };
+        mockBanners.push(item);
+        return ok(toAdminResponse(item), 201);
+    }),
+
+    // AB05 — 순서 변경: 현재 배너 전체 ID를 중복 없이 노출 순서대로 받아 원자적으로 반영한다.
+    // 정적 경로라 :bannerId 경로보다 먼저 등록한다
+    http.put(api('/admin/banners/order'), async ({ request }) => {
+        const body = (await request.json().catch(() => null)) as { bannerIds?: unknown } | null;
+        const ids = body?.bannerIds;
+        if (!Array.isArray(ids) || ids.some((id) => typeof id !== 'string')) {
+            return fail(400, 'COMMON-002', 'bannerIds는 ID 배열이어야 합니다');
+        }
+        const requested = ids as string[];
+        const current = new Set(mockBanners.map((b) => b.id));
+        if (
+            requested.length !== current.size ||
+            new Set(requested).size !== requested.length ||
+            requested.some((id) => !current.has(id))
+        ) {
+            return fail(409, 'STATE_CONFLICT', '현재 배너 목록과 일치하지 않습니다');
+        }
+
+        const at = mockNow().toISOString();
+        requested.forEach((id, index) => {
+            const item = mockBanners.find((b) => b.id === id);
+            if (item && item.displayOrder !== index) {
+                item.displayOrder = index;
+                item.updatedAt = at;
+            }
+        });
+        return ok(sorted().map(toAdminResponse));
+    }),
+
+    // AB03 — 수정
+    http.put(api('/admin/banners/:bannerId'), async ({ params, request }) => {
+        const item = mockBanners.find((b) => b.id === params.bannerId);
+        if (!item) return fail(404, 'RESOURCE_NOT_FOUND', '배너를 찾을 수 없습니다');
+        const body = await readBody(request);
+        if (!body) return fail(400, 'COMMON-002', '요청 본문이 올바르지 않습니다');
+        const error = validateWriteBody(body);
+        if (error) return fail(error.status, 'COMMON-002', error.message);
+
+        item.eventId = body.eventId as string;
+        item.imageKey = (body.imageKey as string).trim();
+        item.displayOrder = body.displayOrder as number;
+        item.updatedAt = mockNow().toISOString();
+        return ok(toAdminResponse(item));
+    }),
+
+    // AB04 — 삭제
+    http.delete(api('/admin/banners/:bannerId'), ({ params }) => {
+        const index = mockBanners.findIndex((b) => b.id === params.bannerId);
+        if (index < 0) return fail(404, 'RESOURCE_NOT_FOUND', '배너를 찾을 수 없습니다');
+        mockBanners.splice(index, 1);
+        return ok(null);
+    }),
 ];

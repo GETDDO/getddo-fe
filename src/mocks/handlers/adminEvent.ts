@@ -5,6 +5,7 @@ import type { AdminEventStatus, AdminPrize, MembershipRule } from '@entities/eve
 import { env } from '@shared/config/env';
 
 import { mockNow } from '../now';
+import { removeMockBannersOfEvent } from './banner';
 import { mockEntryTicketTotals, mockEventHasEntries } from './entry';
 import { mockEvents, sessionFixedTime } from './event';
 import { fail, ok } from './response';
@@ -508,7 +509,8 @@ export const adminEventHandlers = [
         if (item.entryCount > 0 || mockEventHasEntries(item.id)) {
             return fail(409, 'STATE_CONFLICT', '응모 이력이 있는 이벤트는 삭제할 수 없습니다');
         }
-        // 도메인 규칙: 연결된 배너도 함께 삭제 — 배너 목업이 단일 고정 항목이라 생략한다
+        // 도메인 규칙: 연결된 배너도 함께 삭제한다
+        removeMockBannersOfEvent(item.id);
         mockAdminEvents.splice(mockAdminEvents.indexOf(item), 1);
         removeUserProjection(item.id);
         return ok(null);
