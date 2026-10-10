@@ -21,5 +21,19 @@ export const entrySchema = z.object({
     rejectionReason: z.string().nullable(),
 });
 
+// E03 EntryStatistics (getddo-spec/05-api/entry.md) — 당첨 확률은 계약에 없고 화면에도 노출하지 않는다
+export const entryStatisticsSchema = z.object({
+    eventId: z.string(),
+    /** 접수 완료된 응모자 수(중복 제거) */
+    participantCount: z.number().int().nonnegative(),
+    /** 접수 완료 건의 차감 합계 — 반환을 빼지 않는다 */
+    totalSpentTicketCount: z.number().int().nonnegative(),
+    /** 내가 이 이벤트에 차감한 응모권 수 */
+    mySpentTicketCount: z.number().int().nonnegative(),
+    // 서버 시각은 UTC 또는 명시적 오프셋(+09:00 등)을 허용한다 (docs/CONTEXT.md)
+    serverTime: z.iso.datetime({ offset: true }),
+});
+
+export type EntryStatistics = z.infer<typeof entryStatisticsSchema>;
 export type EntryStatus = z.infer<typeof entryStatusSchema>;
 export type Entry = z.infer<typeof entrySchema>;

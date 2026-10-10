@@ -4,6 +4,7 @@ import { Clock, Gift, Ticket, UsersRound } from 'lucide-react';
 
 import type { Event } from '@entities/event';
 
+import { useEntryStatistics } from '@entities/entry';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 
@@ -33,6 +34,8 @@ interface RaffleDetailHeroProps {
 
 /** 상세 화면 대표 카드 — 목록 히어로와 달리 이미지가 카드에 꽉 차고, 현황은 칩으로 줄어든다 */
 export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHeroProps) {
+    // 응모 현황은 E03 전용 조회로 받는다 — 진행 중일 때만 30초 폴링 (ADR-0007)
+    const { data: statistics } = useEntryStatistics(event.id, { isOpen: event.status === 'open' });
     const hasPublicationSchedule = event.publicationScheduledAt != null;
 
     return (
@@ -80,18 +83,17 @@ export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHe
                             {formatKst(event.startsAt, KST_HOUR_MINUTE)} ~{' '}
                             {formatKst(event.endsAt, KST_HOUR_MINUTE)}
                         </span>
-                        {/* 참여 현황 — 이벤트 상세 쿼리가 진행 중 30초 폴링으로 갱신한다 */}
-                        {event.participantCount != null && (
-                            <span className={`${CHIP} text-fg-primary`}>
-                                <UsersRound className="size-5" />
-                                {formatNumber(event.participantCount)}명 참여 중
-                            </span>
-                        )}
-                        {event.usedTicketCount != null && (
-                            <span className={`${CHIP} text-fg-primary`}>
-                                <Ticket className="size-5" />
-                                {formatNumber(event.usedTicketCount)}장 사용
-                            </span>
+                        {statistics && (
+                            <>
+                                <span className={`${CHIP} text-fg-primary`}>
+                                    <UsersRound className="size-5" />
+                                    {formatNumber(statistics.participantCount)}명 참여 중
+                                </span>
+                                <span className={`${CHIP} text-fg-primary`}>
+                                    <Ticket className="size-5" />
+                                    {formatNumber(statistics.totalSpentTicketCount)}장 사용
+                                </span>
+                            </>
                         )}
                     </div>
 

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 
 import type { Event } from '@entities/event';
 
+import { useEntryStatistics } from '@entities/entry';
 import { formatNumber } from '@shared/lib/format';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
@@ -15,11 +16,11 @@ const CHIP = 'text-caption flex items-center rounded-full px-2.5 py-1';
 
 interface LiveRaffleCardProps {
     event: Event;
-    /** 목록을 마지막으로 받아온 시각 — 참여 수가 언제 기준인지 알린다 */
-    updatedAt: number;
 }
 
-export function LiveRaffleCard({ event, updatedAt }: LiveRaffleCardProps) {
+export function LiveRaffleCard({ event }: LiveRaffleCardProps) {
+    // 이 카드는 현재 보이는 진행 중 래플 1건이라 이 이벤트의 E03만 폴링한다 (ADR-0007)
+    const { data: statistics, dataUpdatedAt } = useEntryStatistics(event.id, { isOpen: true });
     const { now } = useVirtualClock();
     // 마감까지 남은 시간은 가상 시계를, 받아온 지 얼마나 됐는지는 실제 시계를 본다.
     // updatedAt은 쿼리가 실제 시각으로 적는 값이라, 가상 시계로 시간을 옮기면
@@ -36,18 +37,17 @@ export function LiveRaffleCard({ event, updatedAt }: LiveRaffleCardProps) {
 
     const remainingMs = new Date(event.endsAt).getTime() - ticks.virtual;
     // 참여 현황은 폴링으로 따라가는 값이라 지금 이 순간의 수가 아니다 — 언제 기준인지 같이 적는다
-    const staleSeconds = Math.max(0, Math.floor((ticks.real - updatedAt) / 1000));
+    const staleSeconds = Math.max(0, Math.floor((ticks.real - dataUpdatedAt) / 1000));
 
     const stats = [
         { label: '당첨 인원', value: `${formatNumber(event.winnerCount)}명` },
         {
             label: '참여 중',
-            value:
-                event.participantCount != null ? `${formatNumber(event.participantCount)}명` : '-',
+            value: statistics ? `${formatNumber(statistics.participantCount)}명` : '-',
         },
         {
             label: '사용된 응모권',
-            value: event.usedTicketCount != null ? `${formatNumber(event.usedTicketCount)}장` : '-',
+            value: statistics ? `${formatNumber(statistics.totalSpentTicketCount)}장` : '-',
         },
     ];
 
@@ -96,9 +96,11 @@ export function LiveRaffleCard({ event, updatedAt }: LiveRaffleCardProps) {
                             </div>
                         ))}
                     </dl>
-                    <p className="text-caption text-fg-tertiary">
-                        참여 수는 {staleSeconds}초 전 기준이에요.
-                    </p>
+                    {statistics && (
+                        <p className="text-caption text-fg-tertiary">
+                            참여 수는 {staleSeconds}초 전 기준이에요.
+                        </p>
+                    )}
                 </div>
 
                 <Button asChild variant="emphasis" size="lg" className="w-full">

@@ -15,13 +15,27 @@ const TIME_ONLY: Intl.DateTimeFormatOptions = {
     hour12: false,
 };
 
+interface FeaturedEventCardProps {
+    event: Event;
+    /**
+     * 응모 현황(E03) — entities끼리는 서로 참조할 수 없어 호출하는 위젯이 조회해 내려준다.
+     * 값이 없으면 해당 칸은 숨긴다
+     */
+    participantCount?: number;
+    totalSpentTicketCount?: number;
+}
+
 /** 홈 '타임 래플 · 응모권 사용' 섹션의 대표 진행 이벤트 카드 — 마감이 가장 임박한 open 이벤트 1개를 크게 노출한다 */
-export function FeaturedEventCard({ event }: { event: Event }) {
+export function FeaturedEventCard({
+    event,
+    participantCount,
+    totalSpentTicketCount,
+}: FeaturedEventCardProps) {
     const stats = [
         {
             key: 'participants',
             label: '총 참여자',
-            value: event.participantCount,
+            value: participantCount,
             unit: '명',
             icon: UsersRound,
             accent: false,
@@ -29,7 +43,7 @@ export function FeaturedEventCard({ event }: { event: Event }) {
         {
             key: 'tickets',
             label: '사용된 응모권',
-            value: event.usedTicketCount,
+            value: totalSpentTicketCount,
             unit: '장',
             icon: Ticket,
             accent: false,
