@@ -136,7 +136,9 @@ function PrizeCard({ prize }: { prize: PublishedPrize }) {
             >
                 {prize.winners.map((winner, index) => (
                     <li
-                        key={`${winner.maskedName}-${winner.maskedPhoneNum ?? index}`}
+                        // 마스킹된 이름·뒷자리는 서로 겹칠 수 있고 응답에 당첨자 식별자가 없다.
+                        // 명단은 다시 정렬되지 않으므로 순번을 키에 쓴다
+                        key={`${prize.prizeId}-${index}`}
                         className="bg-surface-canvas flex shrink-0 items-center justify-between rounded-lg px-4 py-2"
                     >
                         <span className="text-caption text-fg-secondary">{winner.maskedName}</span>

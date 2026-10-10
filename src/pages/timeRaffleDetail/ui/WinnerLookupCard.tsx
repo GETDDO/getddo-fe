@@ -50,9 +50,10 @@ export function WinnerLookupCard({ prizes }: { prizes: PublishedPrize[] }) {
                 <>
                     <h3 className="text-title-3 text-fg-primary">당첨을 축하드립니다!</h3>
                     <ul className="flex flex-col items-center gap-2">
-                        {matches.map((match) => (
+                        {matches.map((match, index) => (
                             <li
-                                key={`${match.prizeName}-${match.maskedName}`}
+                                // 같은 뒷자리를 가진 당첨자가 여럿일 수 있어 이름만으로는 구분되지 않는다
+                                key={`${match.prizeName}-${index}`}
                                 className="flex flex-wrap items-center justify-center gap-x-8 gap-y-1"
                             >
                                 <span className="text-body-bold text-fg-primary">
