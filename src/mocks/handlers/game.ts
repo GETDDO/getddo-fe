@@ -46,7 +46,7 @@ const mockGames: GameMeta[] = [
         id: 'game-color',
         title: '글자색깔 맞추기',
         description: '글자 뜻 말고 글자 색을 골라요',
-        // 피그마 image 186
+        // 피그마 image 189
         thumbnailUrl: '/images/games/color-word.jpg',
         dailyLimit: 1,
     },
@@ -127,12 +127,13 @@ export const gameHandlers = [
         state.bestScore = Math.max(state.bestScore ?? 0, score);
         state.todayPlayCount += 1;
         const ticketsGranted = state.rewardedToday ? 0 : 1;
-        if (ticketsGranted > 0) {
+        // 게임 보상은 등급 응모권 1장 — 서버가 확률로 등급 하나를 결정한다 (getddo-spec ticket.md)
+        const grade = ticketsGranted > 0 ? drawMockTicketGrade() : null;
+        if (ticketsGranted > 0 && grade) {
             state.rewardedToday = true;
             state.remainingPlays = 0;
-            // 게임 보상은 등급 응모권 1장 — 서버가 확률로 등급 하나를 결정한다 (getddo-spec ticket.md)
             recordMockTicketGrant(userId, ticketsGranted, `${game.title} 게임 보상`, {
-                grade: drawMockTicketGrade(),
+                grade,
                 gameId: game.id,
             });
         }
@@ -143,6 +144,8 @@ export const gameHandlers = [
                 bestScore: state.bestScore,
                 todayPlayCount: state.todayPlayCount,
                 ticketsGranted,
+                // 받은 보상 — 색깔 게임 연동 계약의 reward 모양 (지급·만료 시각은 응모권 쪽 값이라 생략)
+                reward: grade ? { ticketCount: ticketsGranted, grade } : null,
             },
             201,
         );

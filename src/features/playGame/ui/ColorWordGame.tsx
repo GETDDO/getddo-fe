@@ -1,7 +1,10 @@
 import { animate, motion, useAnimate, useMotionValue, useMotionValueEvent } from 'framer-motion';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
+import type { TicketGrade } from '@entities/ticket';
+
 import type { ColorWordColorId, ColorWordRound } from '../model/colorWord';
+import type { GameOverHandler } from '../model/types';
 
 import background from '../assets/colorWord/background.jpg';
 import mascotCorrect from '../assets/colorWord/mascot-correct.png';
@@ -71,7 +74,7 @@ export function ColorWordGame({
 }: {
     bestScore?: number;
     onExit: () => void;
-    onGameOver?: (score: number) => Promise<{ ticketsGranted: number } | void> | void;
+    onGameOver?: GameOverHandler;
 }) {
     const [phase, setPhase] = useState<Phase>('ready');
     const [countdown, setCountdown] = useState(COUNTDOWN_FROM);
@@ -86,6 +89,7 @@ export function ColorWordGame({
     const [newBest, setNewBest] = useState(false);
     const [rewardOpen, setRewardOpen] = useState(false);
     const [ticketsGranted, setTicketsGranted] = useState(0);
+    const [rewardGrade, setRewardGrade] = useState<TicketGrade | null>(null);
     const [boardScope, animateBoard] = useAnimate();
     const restartRef = useRef<HTMLButtonElement>(null);
     // 이번 판 — 보상 응답이 늦게 와도 그사이 다시 시작한 판에는 띄우지 않는다
@@ -134,6 +138,7 @@ export function ColorWordGame({
             .then((result) => {
                 if (!result || playRef.current !== play || result.ticketsGranted <= 0) return;
                 setTicketsGranted(result.ticketsGranted);
+                setRewardGrade(result.reward?.grade ?? null);
                 setRewardOpen(true);
             })
             .catch(() => undefined);
@@ -437,6 +442,7 @@ export function ColorWordGame({
                 onOpenChange={setRewardOpen}
                 onClosed={() => restartRef.current?.focus()}
                 tickets={ticketsGranted}
+                grade={rewardGrade}
             />
 
             {/* 스크린리더 — 문제와 결과를 알린다 */}

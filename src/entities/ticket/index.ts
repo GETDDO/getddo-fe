@@ -17,3 +17,4 @@ export {
 } from './api/queries';
 export { useTicketHistories } from './api/history';
 export { TicketHistoryItem } from './ui/TicketHistoryItem';
+export { TicketGradeReveal } from './ui/TicketGradeReveal';

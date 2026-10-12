@@ -507,6 +507,8 @@ export const missionHandlers = [
                   });
 
         const receivedAt = now.toISOString();
+        // 미션 보상은 등급 응모권 — 보상 건의 등급을 확률로 추첨해 응답과 지급 이력에 같은 등급을 쓴다
+        const grade = isCompleted ? drawMockTicketGrade() : null;
         const result: MissionSubmissionResult = {
             submissionId: crypto.randomUUID(),
             missionId,
@@ -516,6 +518,7 @@ export const missionHandlers = [
                 ? {
                       claimId: crypto.randomUUID(),
                       ticketCount: mission.rewardTicketCount,
+                      grade,
                       grantedAt: receivedAt,
                       expiresAt: null,
                   }
@@ -523,10 +526,10 @@ export const missionHandlers = [
             createdAt: receivedAt,
         };
 
-        if (isCompleted) {
-            // 미션 보상은 등급 응모권 — 보상 건의 등급을 확률로 추첨한다. 지급 장수는 미션 계약 재검토 후 정합한다
+        if (isCompleted && grade) {
+            // 지급 장수는 미션 계약 재검토 후 정합한다
             recordMockTicketGrant(userId, mission.rewardTicketCount, `${mission.title} 보상`, {
-                grade: drawMockTicketGrade(),
+                grade,
                 missionId,
             });
         }

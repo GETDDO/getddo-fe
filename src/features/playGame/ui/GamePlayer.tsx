@@ -1,5 +1,7 @@
 import { lazy, Suspense } from 'react';
 
+import type { GameOverHandler } from '../model/types';
+
 import { GameImageButton } from './GameImageButton';
 
 // 게임 엔진·캔버스·에셋 로더는 시작 시점에만 필요하므로 별도 청크로 나눠 유저 번들에서 뺀다
@@ -37,7 +39,7 @@ export function GamePlayer({
     gameId: string;
     bestScore?: number;
     onExit: () => void;
-    onGameOver?: (score: number) => Promise<{ ticketsGranted: number } | void> | void;
+    onGameOver?: GameOverHandler;
 }) {
     if (gameId === 'game-dino') {
         return (

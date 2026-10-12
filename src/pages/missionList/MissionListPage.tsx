@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { MissionRewardDialog, useMissionList } from '@entities/mission';
+import { TICKET_GRADE_LABEL, type TicketGrade, TicketGradeReveal } from '@entities/ticket';
 import {
     ATTENDANCE_WIDEN_MS,
     AttendanceCheckCard,
@@ -26,7 +27,11 @@ export function MissionListPage() {
     // 설문·퀴즈 풀이 모달로 연 미션, 완료 직후 보상 모달에 보여줄 응모권 수
     const [openMissionId, setOpenMissionId] = useState<string | null>(null);
     // 응모권 수는 닫히는 동안에도 남겨 두어야 닫힘 애니메이션에서 0장으로 바뀌지 않는다
-    const [reward, setReward] = useState({ open: false, tickets: 0 });
+    const [reward, setReward] = useState<{
+        open: boolean;
+        tickets: number;
+        grade: TicketGrade | null;
+    }>({ open: false, tickets: 0, grade: null });
 
     // 출석 카드를 펼치고 접을 때 두 카드의 열 너비가 부드럽게 바뀐다
     const [widening, setWidening] = useState(false);
@@ -129,16 +134,19 @@ export function MissionListPage() {
             <MissionDialog
                 missionId={openMissionId}
                 onClose={() => setOpenMissionId(null)}
-                onRewarded={(tickets) => {
+                onRewarded={(tickets, grade) => {
                     // 풀이 모달을 닫고 보상 모달을 띄운다
                     setOpenMissionId(null);
-                    setReward({ open: true, tickets });
+                    setReward({ open: true, tickets, grade });
                 }}
             />
             <MissionRewardDialog
                 open={reward.open}
                 onOpenChange={(open) => setReward((prev) => ({ ...prev, open }))}
                 tickets={reward.tickets}
+                // 받은 등급을 응모권 카드가 뒤집히며 보여 준다 (게임 보상 모달과 같은 연출)
+                gradeLabel={reward.grade ? TICKET_GRADE_LABEL[reward.grade] : undefined}
+                reveal={reward.grade ? <TicketGradeReveal grade={reward.grade} /> : undefined}
             />
         </main>
     );

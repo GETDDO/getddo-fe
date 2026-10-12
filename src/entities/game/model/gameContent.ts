@@ -60,10 +60,10 @@ const CONTENTS: Record<string, GameContent> = {
     },
     'game-color': {
         tagline: '글자 뜻에 속지 말고 글자 색깔을 고르세요.',
-        // 대표 이미지 — 피그마 image 186 (16:9라 대표 영역 840:546에서 좌우 합쳐 약 13%가 잘린다)
+        // 대표 이미지 — 피그마 image 189 (16:9라 대표 영역 840:546에서 좌우 합쳐 약 13%가 잘린다)
         heroImage: '/images/games/color-word.jpg',
-        // 오른쪽 끝의 타코야끼와 물음표가 잘리지 않게 기준을 오른쪽으로 옮긴다 (왼쪽 빨강 버튼은 남는다)
-        heroImagePosition: '80% 50%',
+        // 왼쪽 빨강 버튼(9.8%)과 오른쪽 물음표(96%)가 모두 남도록 기준을 조금 오른쪽으로 옮긴다
+        heroImagePosition: '71% 50%',
         guide: {
             title: '게임 방법',
             subtitle: '글자 뜻이 아니라 글자 색이 정답!',
