@@ -101,7 +101,7 @@
 
 - 멱등키 생성 주체·전달 방식 — 헤더명 `Idempotency-Key`는 `05-api/common.md` 초안을 코드에 선반영했으나 계약 자체는 검토 대기 상태다
 - 에러 코드 체계·페이지네이션 형식 — `05-api/common.md` 초안으로 제안됨(응답 봉투 `success/code/message/data`, `Page<T>`/`Cursor<T>` 형식, 1-base 페이지). 확정 시 `shared/api/client.ts` 인터셉터에 매핑 추가
-- 사용자 문맥 헤더 — spec 권고안은 `X-User-ID` 필수+`X-User-Membership` 선택이고 `X-User-Role`은 받지 않는다고 명시하지만, BE `CurrentUserArgumentResolver`는 `X-User-Role`을 필수로 요구한다. 어느 쪽으로 맞출지 합의 전이며 FE는 `X-User-ID`만 전송한다
+- 사용자 문맥 헤더 — spec 권고안은 `X-User-ID` 필수+`X-User-Membership` 선택이고 `X-User-Role`은 받지 않는다고 명시하지만, BE `CurrentUserArgumentResolver`는 `X-User-Role`을 필수로 요구한다. 어느 쪽으로 맞출지 합의 전이며 FE는 `X-User-ID`와 `X-User-Membership`을 전송한다 (GD-150)
 - 당첨자 마스킹 세부 규칙 — 담당자 결정 대기
 - 최초 발표 관련 후속 계약(2026-10-05 정책 반영 후에도 남은 항목) — 최초 공개 전 재추첨의 관리자 확인 API, 발표 지연 안내 문구·새 예정 시각 제공 여부, 발표 후 취소~갱신 사이의 취소자 임시 표시와 본인 중간 결과, 장애·정합성 오류의 복구·재시도·취소 전환 기준, 취소 요청의 `abuseCaseId` 연계 방식(어뷰징 검토 후 재논의)
 - 추첨·결과 API 초안이 2026-10-05 재구성됐다 — 사용자 E09는 `GET /events/{eventId}/my-result`, 관리자는 AD01~AD09(`GET /admin/draws`, `POST /admin/wins/{winId}/cancellations`, `POST /admin/cancellations/{id}/redraws` 등). 어느 초안과도 맞지 않던 구 목업 `src/mocks/handlers/draw.ts`는 삭제했으므로(GD-102) 추첨 관련 구현 시 AD01~AD09 초안으로 새 목업을 만든다. 가중치 계산도 `ticketCount` 그대로에서 등급별 장수×장당 가중치 합산으로 바뀌었다(ADR-014) — `ticketCount`(실제 장수)와 `weight`를 구분해 반영한다. 2026-10-11 ADR-018로 `displayStatus`의 `NO_ELIGIBLE_ENTRANTS`, `MyResult.result`의 `EXCLUDED`·`exclusionReason`, `TicketRefund.reasonType`의 `PARTICIPANT_EXCLUDED`가 계약에서 빠졌다 — 신규 코드·목업에 반영하지 않고 기존 값의 조회 호환만 남긴다
