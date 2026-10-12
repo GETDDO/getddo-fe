@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { CalendarCheck, ChevronRight, ClipboardList, Gamepad2, Ticket } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { useAttendanceStatus } from '@entities/attendance';
+import { useAttendanceToday } from '@entities/attendance';
 import { useGameList } from '@entities/game';
 import { useMissionList } from '@entities/mission';
 import { useDragScroll } from '@shared/lib/useDragScroll';
@@ -45,7 +45,7 @@ export function TicketBalanceWidget({
     sortCompletedLast?: boolean;
     hideMoreLink?: boolean;
 } = {}) {
-    const { data: attendance } = useAttendanceStatus();
+    const { data: attendance } = useAttendanceToday();
     const { data: missions } = useMissionList();
     const { data: games } = useGameList();
     // 마우스 드래그 + 관성 스크롤은 공용 훅을 쓴다 (터치는 브라우저 네이티브 스크롤)
@@ -60,7 +60,7 @@ export function TicketBalanceWidget({
                       title: '오늘 출석 체크',
                       description: '하루 한 번, 누르면 바로 받아요',
                       rewardKind: '브론즈 응모권',
-                      rewardTickets: 1,
+                      rewardTickets: attendance.dailyRewardTicketCount,
                       href: '/missions',
                       actionLabel: '출석하러 가기',
                       completed: attendance.attended,

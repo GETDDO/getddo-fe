@@ -1,34 +1,55 @@
 import { z } from 'zod';
 
-export const attendanceStatusSchema = z.object({
+// getddo-spec 05-api/attendance.md AT01~AT03 초안 DTO와 같은 필드명을 쓴다
+
+/** 연속 출석 단계 — 단계 일수는 1~28, 보상 수량은 1장 이상 (02-domain/attendance.md) */
+export const attendanceMilestoneSchema = z.object({
+    milestoneDays: z.number().int().min(1).max(28),
+    rewardTicketCount: z.number().int().positive(),
+    claimed: z.boolean(),
+    claimedAt: z.iso.datetime().nullable(),
+});
+
+/** AT01 `GET /attendances/today` 응답 */
+export const attendanceTodaySchema = z.object({
+    attendanceDate: z.string(),
     attended: z.boolean(),
     consecutiveDays: z.number().int().nonnegative(),
-    /** 출석 기준일(KST 날짜, YYYY-MM-DD) 목록 — AT03 조회 형태는 확정 전 임시 계약 */
-    checkedDates: z.array(z.string()),
+    dailyRewardTicketCount: z.number().int().nonnegative(),
+    milestones: z.array(attendanceMilestoneSchema),
+    nextResetAt: z.iso.datetime(),
+    serverTime: z.iso.datetime(),
 });
 
-export const checkAttendanceResultSchema = z.object({
-    attended: z.boolean(),
+/** AT02 영수증의 보상 1건 — rewardType이 보상 구분 필드다 */
+export const rewardReceiptSchema = z.object({
+    claimId: z.string(),
+    rewardType: z.enum(['DAILY', 'STREAK']),
+    milestoneDays: z.number().int().min(1).max(28).nullable(),
+    ticketCount: z.number().int().nonnegative(),
+    grantedAt: z.iso.datetime().nullable(),
+    expiresAt: z.iso.datetime().nullable(),
+});
+
+/** AT02 `POST /attendances` 응답 — 같은 날 재요청은 이미 확정한 rewards를 그대로 돌려준다 */
+export const attendanceReceiptSchema = z.object({
+    attendanceId: z.string(),
+    attendanceDate: z.string(),
     consecutiveDays: z.number().int().nonnegative(),
-    /** 이번 출석에서 확정한 보상 응모권 수 — 같은 날 재요청은 이미 확정한 값을 그대로 돌려준다 */
-    ticketsGranted: z.number().int().nonnegative(),
+    rewards: z.array(rewardReceiptSchema),
+    createdAt: z.iso.datetime(),
 });
 
-/**
- * 출석 정책 — 관리자가 연속 출석 보상 단계(일수·보상 응모권 수)를 여러 개 설정한다.
- * 단계 일수는 1~28일 범위에서 중복 없이 오름차순 (getddo-spec 출석 규칙).
- * 조회 API(GET /attendances/policy)와 응답 형태는 백엔드와 확정 전 임시 계약이다
- */
-export const attendancePolicySchema = z.object({
-    dailyRewardTickets: z.number().int().nonnegative(),
-    streakBonuses: z.array(
-        z.object({
-            days: z.number().int().min(1).max(28),
-            rewardTickets: z.number().int().positive(),
-        }),
-    ),
+/** AT03 `GET /attendances?month=YYYY-MM` 응답 */
+export const attendanceMonthSchema = z.object({
+    month: z.string(),
+    attendanceDates: z.array(z.string()),
+    milestones: z.array(attendanceMilestoneSchema),
+    serverTime: z.iso.datetime(),
 });
 
-export type AttendanceStatus = z.infer<typeof attendanceStatusSchema>;
-export type AttendancePolicy = z.infer<typeof attendancePolicySchema>;
-export type CheckAttendanceResult = z.infer<typeof checkAttendanceResultSchema>;
+export type AttendanceMilestone = z.infer<typeof attendanceMilestoneSchema>;
+export type AttendanceToday = z.infer<typeof attendanceTodaySchema>;
+export type RewardReceipt = z.infer<typeof rewardReceiptSchema>;
+export type AttendanceReceipt = z.infer<typeof attendanceReceiptSchema>;
+export type AttendanceMonth = z.infer<typeof attendanceMonthSchema>;

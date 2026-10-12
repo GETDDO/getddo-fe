@@ -3,7 +3,7 @@ import { ChevronRight, ChevronUp } from 'lucide-react';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 
-import { useAttendancePolicy, useAttendanceStatus } from '@entities/attendance';
+import { useAttendanceMonth, useAttendanceToday } from '@entities/attendance';
 import { cn } from '@shared/lib/utils';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
@@ -21,6 +21,8 @@ import { ATTENDANCE_WIDEN_MS } from '../model/attendanceMotion';
 import { AttendanceBakingStage, BAKING_SPRITE_SRC } from './AttendanceBakingStage';
 import { AttendanceMonthGrid } from './AttendanceMonthGrid';
 import { AttendanceWeekStrip } from './AttendanceWeekStrip';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** 굽기 스프라이트 재생 시간 — 응답이 빨라도 이만큼은 보여주고 끝나면 출석판을 펼친다 */
 const BAKING_MIN_MS = 1600;
@@ -42,7 +44,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 /** 펼친 출석판 머리의 출석 버튼·완료 표시·굽는 중 표시가 모두 같은 너비를 쓰도록 고정한다 */
 const COMPACT_CHECK_WIDTH = 'w-32';
 
-/** 정책을 아직 못 받았거나 실패했을 때 쓰는 보상 단계(일 → 추가 응모권) — getddo-spec 출석 규칙의 초기 설정 */
+/** AT01을 아직 못 받았거나 실패했을 때 쓰는 보상 단계(일 → 추가 응모권) — getddo-spec 출석 규칙의 초기 설정 */
 const DEFAULT_BONUS_REWARDS: ReadonlyMap<number, number> = new Map([
     [7, 1],
     [14, 3],
@@ -111,14 +113,8 @@ export function AttendanceCheckCard({
     onExpandedChange: (expanded: boolean, options?: AttendanceExpandOptions) => void;
     className?: string;
 }) {
-    const { data: status, isPending, isError } = useAttendanceStatus();
+    const { data: status, isPending, isError } = useAttendanceToday();
     const checkAttendance = useCheckAttendance();
-    const { data: policy } = useAttendancePolicy();
-    // 연속 출석 보상일과 추가 응모권 수는 관리자가 여러 개 설정할 수 있어 정책에서 받는다
-    const bonusRewards: ReadonlyMap<number, number> = policy
-        ? new Map(policy.streakBonuses.map((bonus) => [bonus.days, bonus.rewardTickets]))
-        : DEFAULT_BONUS_REWARDS;
-    const bonusDays: ReadonlySet<number> = new Set(bonusRewards.keys());
     // 출석 판정은 서버가 하고, 여기서는 표시용 날짜 계산에만 쓴다
     const clock = useVirtualClock();
     const [now, setNow] = useState(() => clock.now());
@@ -129,6 +125,22 @@ export function AttendanceCheckCard({
         setNow(clock.now());
     }
     const today = toAttendanceDate(now);
+    const month = today.slice(0, 7);
+    // 최근 7일이 지난달에 걸치면 그 달 출석일도 같이 받는다 — 주간 스트립이 월 경계를 넘을 수 있다
+    const weekStartMonth = toAttendanceDate(new Date(now.getTime() - 6 * DAY_MS)).slice(0, 7);
+    const { data: monthData } = useAttendanceMonth(month);
+    const { data: prevMonthData } = useAttendanceMonth(weekStartMonth, {
+        enabled: weekStartMonth !== month,
+    });
+    const checkedDates = [
+        ...(prevMonthData?.attendanceDates ?? []),
+        ...(monthData?.attendanceDates ?? []),
+    ];
+    // 연속 출석 보상일과 추가 응모권 수는 이번 달 단계 묶음(AT01 milestones)에서 받는다
+    const bonusRewards: ReadonlyMap<number, number> = status
+        ? new Map(status.milestones.map((m) => [m.milestoneDays, m.rewardTicketCount]))
+        : DEFAULT_BONUS_REWARDS;
+    const bonusDays: ReadonlySet<number> = new Set(bonusRewards.keys());
 
     // 화면을 열어 둔 채 출석 기준일(00:00 KST)이 지나도 오늘 표시가 따라오도록 주기적으로 확인한다.
     // 기준일이 바뀌지 않았으면 이전 Date를 돌려줘 리렌더를 일으키지 않는다
@@ -222,11 +234,12 @@ export function AttendanceCheckCard({
         setBaking(true);
         setStageFull(fromCollapsed);
         try {
-            const { ticketsGranted } = await checkAttendance.mutateAsync({
+            const receipt = await checkAttendance.mutateAsync({
                 minDurationMs: BAKING_MIN_MS,
             });
+            const granted = receipt.rewards.reduce((sum, reward) => sum + reward.ticketCount, 0);
             setRevealDate(today);
-            toast.success(`출석 완료! 응모권 ${ticketsGranted}장을 받았어요.`);
+            toast.success(`출석 완료! 응모권 ${granted}장을 받았어요.`);
             // 굽기 장면을 띄운 채로 카드가 넓어지고, 자라기 시작할 때 굽기 장면을 출석판으로 바꾼다
             if (fromCollapsed) await expandWithMotion(endBaking);
         } catch {
@@ -251,9 +264,7 @@ export function AttendanceCheckCard({
     );
 
     // 굽는 동안에는 결과를 미리 보여주지 않도록 오늘을 출석 전으로 둔다
-    const shownDates = baking
-        ? (status?.checkedDates ?? []).filter((date) => date !== today)
-        : (status?.checkedDates ?? []);
+    const shownDates = baking ? checkedDates.filter((date) => date !== today) : checkedDates;
     const shownCheckedToday = !!status?.attended && !baking;
 
     const checkButton = status?.attended ? (
@@ -269,7 +280,7 @@ export function AttendanceCheckCard({
     const stats = status && (
         <AttendanceStatPair
             streak={status.consecutiveDays}
-            monthly={countMonthlyAttendance(status.checkedDates, status.attended, now)}
+            monthly={countMonthlyAttendance(checkedDates, status.attended, now)}
             compact={showExpanded}
         />
     );
