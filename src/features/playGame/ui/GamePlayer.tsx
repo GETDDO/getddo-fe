@@ -1,10 +1,15 @@
 import { lazy, Suspense } from 'react';
 
+import type { GameOverHandler } from '../model/types';
+
 import { GameImageButton } from './GameImageButton';
 
 // 게임 엔진·캔버스·에셋 로더는 시작 시점에만 필요하므로 별도 청크로 나눠 유저 번들에서 뺀다
 const TakkoRunGame = lazy(() =>
     import('./TakkoRunGame').then((m) => ({ default: m.TakkoRunGame })),
+);
+const TakkoTimingGame = lazy(() =>
+    import('./TakkoTimingGame').then((m) => ({ default: m.TakkoTimingGame })),
 );
 const ColorWordGame = lazy(() =>
     import('./ColorWordGame').then((m) => ({ default: m.ColorWordGame })),
@@ -34,7 +39,7 @@ export function GamePlayer({
     gameId: string;
     bestScore?: number;
     onExit: () => void;
-    onGameOver?: (score: number) => Promise<{ ticketsGranted: number } | void> | void;
+    onGameOver?: GameOverHandler;
 }) {
     if (gameId === 'game-dino') {
         return (
@@ -47,6 +52,13 @@ export function GamePlayer({
         return (
             <Suspense fallback={<GameLoading onExit={onExit} />}>
                 <ColorWordGame bestScore={bestScore} onExit={onExit} onGameOver={onGameOver} />
+            </Suspense>
+        );
+    }
+    if (gameId === 'game-timing') {
+        return (
+            <Suspense fallback={<GameLoading onExit={onExit} />}>
+                <TakkoTimingGame bestScore={bestScore} onExit={onExit} onGameOver={onGameOver} />
             </Suspense>
         );
     }

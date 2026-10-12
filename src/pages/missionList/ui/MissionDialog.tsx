@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 
 import type { MissionSubmissionResult } from '@entities/mission';
+import type { TicketGrade } from '@entities/ticket';
 
 import { useMissionDetail } from '@entities/mission';
 import { QuizForm, SurveyForm } from '@features/submitMission';
@@ -22,7 +23,7 @@ const PERIOD_FORMAT: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric
 /**
  * 설문·퀴즈 풀이 모달 — 미션 목록 위에서 바로 풀고 제출한다 (멘토링: 지금 분량이면 페이지 이동보다 모달).
  * 문항 수는 관리자가 정하므로 머리(제목·기간)는 고정하고 문항 영역만 스크롤한다.
- * 이번 제출로 막 완료되면 onRewarded로 받은 응모권 수를 올려 목록이 보상 모달을 띄운다
+ * 이번 제출로 막 완료되면 onRewarded로 받은 응모권 수·등급을 올려 목록이 보상 모달을 띄운다
  */
 export function MissionDialog({
     missionId,
@@ -32,7 +33,7 @@ export function MissionDialog({
     /** 연 미션 — null이면 닫힘 */
     missionId: string | null;
     onClose: () => void;
-    onRewarded: (tickets: number) => void;
+    onRewarded: (tickets: number, grade: TicketGrade | null) => void;
 }) {
     return (
         <Dialog
@@ -62,7 +63,7 @@ function MissionDialogBody({
 }: {
     missionId: string;
     onClose: () => void;
-    onRewarded: (tickets: number) => void;
+    onRewarded: (tickets: number, grade: TicketGrade | null) => void;
 }) {
     const { data: mission, isPending, isError } = useMissionDetail(missionId);
     // 기간 판정은 서버 몫 — 여기의 now 비교는 표시용 안내에만 쓴다 (시간 규칙)
@@ -85,7 +86,10 @@ function MissionDialogBody({
     const handleCompleted = (result: MissionSubmissionResult, isNewSubmission: boolean) => {
         // 보상 모달은 이번 제출로 막 완료됐을 때(201)만 — 재제출 재생(200)은 안내만 하고 닫는다
         if (isNewSubmission) {
-            onRewarded(result.reward?.ticketCount ?? mission.rewardTicketCount);
+            onRewarded(
+                result.reward?.ticketCount ?? mission.rewardTicketCount,
+                result.reward?.grade ?? null,
+            );
         } else {
             toast.info('이미 완료한 미션이에요.');
             onClose();

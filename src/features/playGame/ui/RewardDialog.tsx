@@ -2,6 +2,9 @@ import { motion } from 'framer-motion';
 import { XIcon } from 'lucide-react';
 import { Dialog as DialogPrimitive } from 'radix-ui';
 
+import type { TicketGrade } from '@entities/ticket';
+
+import { TICKET_GRADE_LABEL, TicketGradeReveal } from '@entities/ticket';
 import rewardMascot from '@shared/assets/ui/reward-mascot.png';
 import { Button } from '@shared/ui/button';
 import {
@@ -24,12 +27,15 @@ export function RewardDialog({
     onOpenChange,
     onClosed,
     tickets,
+    grade,
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     /** 닫힌 뒤 초점을 둘 곳으로 옮긴다 (예: '다시 하기') */
     onClosed?: () => void;
     tickets: number;
+    /** 받은 응모권 등급 — 있으면 응모권 카드가 뒤집히며 등급을 보여 준다 */
+    grade?: TicketGrade | null;
 }) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -58,22 +64,28 @@ export function RewardDialog({
                         <span className="sr-only">Close</span>
                     </Button>
                 </DialogClose>
-                {/* 응모권을 든 타코야끼(피그마 image 114)가 톡 튀어나온다 */}
-                <motion.img
-                    src={rewardMascot}
-                    alt=""
-                    initial={{ opacity: 0, scale: 0.5, y: 12 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ type: 'spring', stiffness: 380, damping: 16, delay: 0.1 }}
-                    className="mt-2 h-24 w-auto"
-                />
+                {/* 등급을 알면 응모권 카드가 뒤집히며 등급을 보여 주고, 모르면 응모권을 든 타코야끼(피그마 image 114)가 톡 튀어나온다 */}
+                {grade ? (
+                    <TicketGradeReveal grade={grade} />
+                ) : (
+                    <motion.img
+                        src={rewardMascot}
+                        alt=""
+                        initial={{ opacity: 0, scale: 0.5, y: 12 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        transition={{ type: 'spring', stiffness: 380, damping: 16, delay: 0.1 }}
+                        className="mt-2 h-24 w-auto"
+                    />
+                )}
                 {/*
                   공용 DialogTitle·Description의 기본 글자 스타일 위에 덮어쓴다 (GameGuideDialog와 같은 방식).
                   공용 cn이 글자 크기와 색 토큰을 한 그룹으로 보고 하나를 지우므로 색은 안쪽 글자에 준다
                 */}
                 <div className="flex flex-col items-center gap-1">
                     <DialogTitle className="text-body-bold! leading-6">
-                        응모권 {tickets}장을 적립했어요
+                        {grade
+                            ? `${TICKET_GRADE_LABEL[grade]} 응모권 ${tickets}장을 받았어요`
+                            : `응모권 ${tickets}장을 적립했어요`}
                     </DialogTitle>
                     <DialogDescription className="text-body-sm!">
                         <span className="text-fg-secondary">오늘의 게임 보상이에요.</span>

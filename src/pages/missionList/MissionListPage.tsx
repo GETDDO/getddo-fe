@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { MissionRewardDialog, useMissionList } from '@entities/mission';
+import { TICKET_GRADE_LABEL, type TicketGrade, TicketGradeReveal } from '@entities/ticket';
 import {
     ATTENDANCE_WIDEN_MS,
     AttendanceCheckCard,
@@ -9,11 +10,12 @@ import {
 import { cn } from '@shared/lib/utils';
 import { GameRail } from '@widgets/gameRail';
 
+import { MISSION_SECTION_IDS } from './model/sectionIds';
 import { MissionCard } from './ui/MissionCard';
 import { MissionDialog } from './ui/MissionDialog';
 import { SectionHeader } from './ui/SectionHeader';
 import { TicketHistoryCard } from './ui/TicketHistoryCard';
-import { TicketSummaryCard } from './ui/TicketSummaryCard';
+import { TodayRewardsBanner } from './ui/TodayRewardsBanner';
 
 const CONTAINER = 'mx-auto w-full max-w-312 px-6';
 
@@ -26,7 +28,11 @@ export function MissionListPage() {
     // 설문·퀴즈 풀이 모달로 연 미션, 완료 직후 보상 모달에 보여줄 응모권 수
     const [openMissionId, setOpenMissionId] = useState<string | null>(null);
     // 응모권 수는 닫히는 동안에도 남겨 두어야 닫힘 애니메이션에서 0장으로 바뀌지 않는다
-    const [reward, setReward] = useState({ open: false, tickets: 0 });
+    const [reward, setReward] = useState<{
+        open: boolean;
+        tickets: number;
+        grade: TicketGrade | null;
+    }>({ open: false, tickets: 0, grade: null });
 
     // 출석 카드를 펼치고 접을 때 두 카드의 열 너비가 부드럽게 바뀐다
     const [widening, setWidening] = useState(false);
@@ -44,22 +50,14 @@ export function MissionListPage() {
     }, [widening]);
 
     return (
-        <main className="flex flex-col pt-20 pb-28">
+        <main className="flex flex-col pt-12 pb-28">
             <div className={CONTAINER}>
-                {/* 피그마 미션 페이지 머리 — 왼쪽 제목·설명, 오른쪽 응모권 요약 카드 (좁은 화면에서는 아래로) */}
-                <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                    <div className="flex flex-col gap-1.5">
-                        <h1 className="text-title-1 text-fg-primary">응모권</h1>
-                        <p className="text-body-sm text-fg-secondary">
-                            출석, 미션, 게임에 참여하고 응모권을 획득하세요.
-                        </p>
-                    </div>
-                    <TicketSummaryCard />
-                </div>
+                {/* 페이지 머리 — 오늘의 적립: 오늘 더 받을 응모권·진행 세 칸과 내 응모권 지갑 */}
+                <TodayRewardsBanner />
 
                 <div
                     className={cn(
-                        'mt-7.5 grid gap-x-4 gap-y-10',
+                        'mt-14 grid gap-x-4 gap-y-10',
                         attendanceExpanded
                             ? 'lg:grid-cols-[885fr_300fr]'
                             : 'lg:grid-cols-[393fr_791fr]',
@@ -72,7 +70,10 @@ export function MissionListPage() {
                             : undefined
                     }
                 >
-                    <section className="flex min-w-0 flex-col gap-6">
+                    <section
+                        id={MISSION_SECTION_IDS.attendance}
+                        className="flex min-w-0 scroll-mt-24 flex-col gap-6"
+                    >
                         {/* 출석 기준일은 00:00 UTC(09:00 KST)에 바뀐다 — getddo-spec 출석 규칙 */}
                         <SectionHeader title="출석체크" caption="하루 1회 · 오전 9시 초기화" />
                         <AttendanceCheckCard
@@ -82,13 +83,13 @@ export function MissionListPage() {
                     </section>
                     <section className="flex min-w-0 flex-col gap-6">
                         <SectionHeader title="응모권 적립 · 사용 내역" />
-                        <TicketHistoryCard compact={attendanceExpanded} className="flex-1" />
+                        <TicketHistoryCard className="flex-1" />
                     </section>
                 </div>
             </div>
 
             {/* 게임 섹션 — 홈과 같이 배경 띠 없이 다른 섹션과 같은 간격(80). 카드 목록은 콘텐츠 폭(최대 1200px) 안에서 넘긴다 */}
-            <div className={`${CONTAINER} mt-20`}>
+            <div id={MISSION_SECTION_IDS.games} className={`${CONTAINER} mt-20 scroll-mt-24`}>
                 <GameRail
                     title="게임"
                     caption="게임마다 하루 한 번 응모권을 받을 수 있어요. 매일 오전 9시 초기화"
@@ -96,7 +97,10 @@ export function MissionListPage() {
             </div>
 
             {/* 설문·퀴즈 */}
-            <section className={`${CONTAINER} mt-20 flex flex-col gap-6`}>
+            <section
+                id={MISSION_SECTION_IDS.missions}
+                className={`${CONTAINER} mt-20 flex scroll-mt-24 flex-col gap-6`}
+            >
                 <SectionHeader
                     title="설문 · 퀴즈"
                     caption="미션마다 한 번만 응모권을 받을 수 있어요."
@@ -129,16 +133,19 @@ export function MissionListPage() {
             <MissionDialog
                 missionId={openMissionId}
                 onClose={() => setOpenMissionId(null)}
-                onRewarded={(tickets) => {
+                onRewarded={(tickets, grade) => {
                     // 풀이 모달을 닫고 보상 모달을 띄운다
                     setOpenMissionId(null);
-                    setReward({ open: true, tickets });
+                    setReward({ open: true, tickets, grade });
                 }}
             />
             <MissionRewardDialog
                 open={reward.open}
                 onOpenChange={(open) => setReward((prev) => ({ ...prev, open }))}
                 tickets={reward.tickets}
+                // 받은 등급을 응모권 카드가 뒤집히며 보여 준다 (게임 보상 모달과 같은 연출)
+                gradeLabel={reward.grade ? TICKET_GRADE_LABEL[reward.grade] : undefined}
+                reveal={reward.grade ? <TicketGradeReveal grade={reward.grade} /> : undefined}
             />
         </main>
     );
