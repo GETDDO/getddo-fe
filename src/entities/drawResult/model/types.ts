@@ -129,6 +129,33 @@ export const drawVerificationSchema = z.object({
     verifiedBy: z.string(),
 });
 
+// 확정 결과 항목 — getddo-spec 05-api/drawing.md GD-138 절(AD09)·GD-87 절(최초 재개). DrawResult와 필드명이 다르다(resultId·rank)
+export const drawConfirmationResultSchema = z.object({
+    resultId: z.string(),
+    prizeId: z.string(),
+    rank: z.number().int(),
+    slotNumber: z.number().int(),
+    selectionOrder: z.number().int().nullable(),
+    candidateId: z.string().nullable(),
+    userId: z.string().nullable(),
+    resultType: z.enum(['SELECTED', 'UNFILLED']),
+});
+
+export const drawConfirmationSchema = z.object({
+    confirmedAt: z.iso.datetime(),
+    results: z.array(drawConfirmationResultSchema),
+});
+
+/**
+ * 추첨 실행 시작·재개 응답 (최초 재개 `POST /admin/draws/{runId}/resume`, AD09 공통).
+ * confirmation은 확정 전 null이고, 확정(200)이면 저장된 결과를 그대로 돌려준다 — 202는 확정 성공을 보장하지 않는다.
+ */
+export const drawExecutionResponseSchema = z.object({
+    runId: z.string(),
+    status: drawRunStatusSchema,
+    confirmation: drawConfirmationSchema.nullable(),
+});
+
 export type DrawRunStatus = z.infer<typeof drawRunStatusSchema>;
 export type DrawRun = z.infer<typeof drawRunSchema>;
 export type CancellationSummary = z.infer<typeof cancellationSummarySchema>;
@@ -136,3 +163,6 @@ export type DrawResult = z.infer<typeof drawResultSchema>;
 export type DrawRunDetail = z.infer<typeof drawRunDetailSchema>;
 export type DrawCandidate = z.infer<typeof drawCandidateSchema>;
 export type DrawVerification = z.infer<typeof drawVerificationSchema>;
+export type DrawConfirmationResult = z.infer<typeof drawConfirmationResultSchema>;
+export type DrawConfirmation = z.infer<typeof drawConfirmationSchema>;
+export type DrawExecutionResponse = z.infer<typeof drawExecutionResponseSchema>;

@@ -1,6 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { DRAWS_KEY, drawChecksApiPath, drawVerificationSchema } from '@entities/drawResult';
+import {
+    DRAWS_KEY,
+    drawChecksApiPath,
+    drawExecutionResponseSchema,
+    drawResumeApiPath,
+    drawVerificationSchema,
+} from '@entities/drawResult';
 import { awardCancellationResultSchema, winCancellationsApiPath } from '@entities/winner';
 import { apiClient } from '@shared/api/client';
 import { envelopeSchema } from '@shared/api/envelopeSchema';
@@ -14,6 +20,22 @@ export function useVerifyDraw() {
         mutationFn: async (drawId: string) => {
             const { data } = await apiClient.post<unknown>(drawChecksApiPath(drawId));
             return envelopeSchema(drawVerificationSchema).parse(data).data;
+        },
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: DRAWS_KEY });
+        },
+    });
+}
+
+// 실패한 최초 추첨 실행의 재개(GD-87) — 본문 없음. 200은 저장된 확정 결과, 202는 진행 중·미확정이라 같은 실행을 다시 조회한다.
+// 멱등은 실행 ID로 서버가 보장해 멱등 헤더가 없다. 새 최초 실행을 만들지 않는다
+export function useResumeDraw() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (runId: string) => {
+            const { data } = await apiClient.post<unknown>(drawResumeApiPath(runId));
+            return envelopeSchema(drawExecutionResponseSchema).parse(data).data;
         },
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: DRAWS_KEY });

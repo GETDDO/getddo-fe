@@ -7,6 +7,8 @@ apiClient.interceptors.request.use((config) => {
     const user = useSessionStore.getState().user;
     if (user) {
         config.headers['X-User-ID'] = user.id;
+        // 필수 헤더 — 서버가 DB 역할과 대조만 하며 헤더로 권한이 올라가지 않는다 (05-api/common.md)
+        config.headers['X-User-Role'] = user.role;
         // 선택 헤더 — 보내면 서버가 DB 멤버십과 대조해 응모 자격을 판정한다 (05-api/common.md)
         config.headers['X-User-Membership'] = user.membership;
     }
