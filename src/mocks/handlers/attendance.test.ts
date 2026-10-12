@@ -112,6 +112,20 @@ describe('출석 목업 핸들러', () => {
         expect(again.data).toEqual(first.data);
     });
 
+    it('시드 날짜에 다시 출석하면 보상을 다시 지급하지 않는다', async () => {
+        const userId = uniqueUser();
+        // 10-21 기준으로 시드 생성 — checkedDates에 10-20(어제)가 포함된다
+        freezeAt('2026-10-21');
+        await today(userId);
+
+        freezeAt('2026-10-20');
+        const res = await check(userId);
+        expect(res.status).toBe(200);
+        expect(res.data.data.rewards).toEqual([
+            expect.objectContaining({ rewardType: 'DAILY', ticketCount: 1 }),
+        ]);
+    });
+
     it('연속 단계에 도달하면 STREAK 보상을 붙이고 그 달에는 한 번만 지급한다', async () => {
         const userId = uniqueUser();
         // 시드 3일에서 시작해 4·5·6·7일째를 채운다 — 7일째에 첫 단계 보상

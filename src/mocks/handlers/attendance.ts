@@ -44,12 +44,43 @@ interface AttendanceState {
     receiptsByDate: Map<string, AttendanceReceipt>;
 }
 
+const seedCheckedDates = () => [daysAgo(5), daysAgo(3), daysAgo(2), daysAgo(1)];
+
+/** 시연용 시드 날짜의 합성 영수증 — 같은 날짜에 다시 출석하면 보상을 중복 지급하지 않는다 */
+const seedReceiptFor = (date: string): AttendanceReceipt => {
+    const createdAt = new Date(`${date}T09:00:00+09:00`).toISOString();
+    const expiresAt = kstNextMonthStart(new Date(`${date}T00:00:00+09:00`)).toISOString();
+    return {
+        attendanceId: crypto.randomUUID(),
+        attendanceDate: date,
+        consecutiveDays: 1,
+        rewards: [
+            {
+                claimId: crypto.randomUUID(),
+                rewardType: 'DAILY',
+                milestoneDays: null,
+                ticketCount: policy.dailyRewardTickets,
+                grantedAt: createdAt,
+                expiresAt,
+            },
+        ],
+        createdAt,
+    };
+};
+
 // 시연용 초기 상태 — 어제까지 3일 연속 출석(중간에 하루 빠진 이력 포함)으로 시작한다
-const seedState = (): AttendanceState => ({
-    checkedDates: [daysAgo(5), daysAgo(3), daysAgo(2), daysAgo(1)],
-    claimedMilestones: new Map(),
-    receiptsByDate: new Map(),
-});
+const seedState = (): AttendanceState => {
+    const checkedDates = seedCheckedDates();
+    const receiptsByDate = new Map<string, AttendanceReceipt>();
+    for (const date of checkedDates) {
+        receiptsByDate.set(date, seedReceiptFor(date));
+    }
+    return {
+        checkedDates,
+        claimedMilestones: new Map(),
+        receiptsByDate,
+    };
+};
 
 // X-User-ID별로 분리한다 — 한 사용자의 출석이 다른 사용자에게 보이거나 보상을 막지 않도록
 const stateByUser = new Map<string, AttendanceState>();
