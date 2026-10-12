@@ -224,7 +224,8 @@ export const mockEvents: MockEvent[] = [
         id: 'evt-002',
         isRecommended: true,
         title: '출석왕 챌린지',
-        description: '이번 달 출석 미션 완주자 대상 추첨. 응모권 3장으로 참여해요.',
+        description:
+            '이번 달 출석 미션 완주자 대상 추첨. 응모권 1장부터 참여하고 많이 쓸수록 당첨 확률이 올라가요.',
         bannerImageUrl: null,
         startsAt: '2026-09-01T00:00:00Z',
         endsAt: '2026-10-31T14:59:59Z',
@@ -293,7 +294,7 @@ export const mockEvents: MockEvent[] = [
     {
         id: 'evt-010',
         title: 'VVIP 전용 데이터 쿠폰 래플',
-        description: 'VVIP·VIP 등급 대상 데이터 쿠폰 추첨 이벤트. 응모권 3장이 필요해요.',
+        description: 'VVIP·VIP 등급 대상 데이터 쿠폰 추첨 이벤트. 응모권 1장부터 참여할 수 있어요.',
         // 유일한 멤버십 제한 시드 — 우수 등급 사용자는 ENTRY-003으로 거절된다
         membershipRule: 'vip',
         bannerImageUrl: null,
@@ -403,8 +404,8 @@ export const mockEvents: MockEvent[] = [
         // 진행 중인 멤버십 제한 시드 — 우수 등급은 ENTRY-003으로 거절돼 화면에서 안내가 보인다
         membershipRule: 'vip',
         bannerImageUrl: null,
-        startsAt: '2026-10-01T00:00:00Z',
-        endsAt: '2026-10-31T14:59:59Z',
+        startsAt: demoTime(-10 * 24 * 60 * MINUTE),
+        endsAt: demoTime(20 * 24 * 60 * MINUTE),
         status: 'open',
         requiredTickets: 1,
         tags: ['멤버십 혜택'],
@@ -507,7 +508,8 @@ export const mockEvents: MockEvent[] = [
         id: 'evt-206',
         isRecommended: true,
         title: 'CGV 영화 관람권 응모',
-        description: '응모권 2장으로 참여하는 영화 관람권 추첨 이벤트',
+        description:
+            '응모권 1장부터 참여하고 많이 쓸수록 당첨 확률이 올라가는 영화 관람권 추첨 이벤트',
         bannerImageUrl: null,
         startsAt: '2026-09-03T00:00:00Z',
         endsAt: '2026-10-27T14:59:59Z',
@@ -525,7 +527,7 @@ export const mockEvents: MockEvent[] = [
         id: 'evt-207',
         isRecommended: true,
         title: '에어팟 4 응모',
-        description: '응모권 2장으로 참여하는 이어폰 추첨 이벤트',
+        description: '응모권 1장부터 참여하고 많이 쓸수록 당첨 확률이 올라가는 이어폰 추첨 이벤트',
         bannerImageUrl: null,
         startsAt: '2026-09-06T00:00:00Z',
         endsAt: '2026-10-06T14:59:59Z',
