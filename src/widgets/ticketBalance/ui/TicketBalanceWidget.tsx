@@ -17,6 +17,8 @@ interface EarnCard {
     category: string;
     title: string;
     description: string;
+    /** 스텁에 적는 보상 단위 — 출석은 브론즈 고정, 미션·게임은 지급 시 확률 추첨의 등급 응모권 (getddo-spec ticket.md) */
+    rewardKind: string;
     rewardTickets: number;
     href: string;
     actionLabel: string;
@@ -57,6 +59,7 @@ export function TicketBalanceWidget({
                       category: 'ATTENDANCE',
                       title: '오늘 출석 체크',
                       description: '하루 한 번, 누르면 바로 받아요',
+                      rewardKind: '브론즈 응모권',
                       rewardTickets: 1,
                       href: '/missions',
                       actionLabel: '출석하러 가기',
@@ -70,7 +73,8 @@ export function TicketBalanceWidget({
             id: mission.id,
             category: 'MISSION',
             title: mission.title,
-            description: '미션마다 1장씩, 한 번만 받을 수 있어요',
+            description: '미션 완료 시 등급 추첨 응모권을 받아요',
+            rewardKind: '등급 응모권',
             rewardTickets: mission.rewardTicketCount,
             href: '/missions',
             actionLabel: '미션하러 가기',
@@ -82,7 +86,8 @@ export function TicketBalanceWidget({
             id: game.id,
             category: 'GAME',
             title: game.title,
-            description: `하루 최대 ${game.dailyLimit}회, 참여마다 응모권을 받아요`,
+            description: `하루 최대 ${game.dailyLimit}회, 보상은 등급 추첨 응모권 1장`,
+            rewardKind: '등급 응모권',
             rewardTickets: 1,
             href: `/missions/games/${game.id}`,
             actionLabel: '게임하러 가기',
@@ -154,7 +159,7 @@ export function TicketBalanceWidget({
                                 <>
                                     <div className="mt-3.75 flex h-4.5 items-center justify-between gap-2">
                                         <span className="text-fg-tertiary text-caption">
-                                            응모권
+                                            {card.rewardKind}
                                         </span>
                                         <span className="text-ticket-on text-body-sm-bold flex items-center gap-1">
                                             <Ticket className="size-4.5" />+{card.rewardTickets}

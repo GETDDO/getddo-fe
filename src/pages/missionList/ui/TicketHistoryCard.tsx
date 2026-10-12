@@ -1,7 +1,7 @@
 import { Ticket } from 'lucide-react';
 import { Fragment, useState } from 'react';
 
-import { useTicketWallets, useTicketHistory } from '@entities/ticket';
+import { useMyTickets, useTicketHistories } from '@entities/ticket';
 import { formatNumber } from '@shared/lib/format';
 import { useCountUp } from '@shared/lib/useCountUp';
 import { cn } from '@shared/lib/utils';
@@ -51,14 +51,14 @@ export function TicketHistoryCard({
     compact?: boolean;
     className?: string;
 }) {
-    const { data: wallets } = useTicketWallets();
-    const { data: history, isPending, isError } = useTicketHistory();
+    const { data: tickets } = useMyTickets();
+    const { data: history, isPending, isError } = useTicketHistories();
     // 이번 달 판정은 표시용이므로 마운트 시각을 쓴다
     const clock = useVirtualClock();
     const [now] = useState(() => clock.now());
     const monthly = history ? summarizeMonthlyTickets(history, now) : undefined;
     // 출석 등으로 응모권을 받으면 숫자가 굴러 올라가고, 새 내역이 위에서 들어오며 잠깐 강조된다
-    const balanceDisplay = useCountUp(wallets?.availableBalance);
+    const balanceDisplay = useCountUp(tickets?.availableCount);
     const earnedDisplay = useCountUp(monthly?.earned);
     const freshIds = useFreshIds(history?.map((item) => item.id));
     const summaryItems = [

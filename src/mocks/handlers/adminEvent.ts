@@ -266,7 +266,9 @@ function removeUserProjection(eventId: string) {
 function refundAndRelease(item: MockAdminEvent): number {
     let refunded = 0;
     for (const [userId, count] of mockEntryTicketTotals(item.id)) {
-        recordMockTicketRefund(userId, count, `${item.title} 이벤트 취소 응모권 반환`);
+        recordMockTicketRefund(userId, count, `${item.title} 이벤트 취소 응모권 반환`, {
+            eventId: item.id,
+        });
         refunded += count;
     }
     const total = Math.max(item.usedTicketTotal, refunded);

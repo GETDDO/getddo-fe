@@ -2,7 +2,7 @@ import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { useTicketHistory, useTicketWallets } from '@entities/ticket';
+import { useMyTickets, useTicketHistories } from '@entities/ticket';
 import { formatNumber } from '@shared/lib/format';
 import { useCountUp } from '@shared/lib/useCountUp';
 import { useVirtualClock } from '@shared/lib/virtualClock';
@@ -15,14 +15,14 @@ import { summarizeMonthlyTickets } from '../lib/monthlyTicketSummary';
  * 응모권을 든 캐릭터, 사용 가능 응모권(크게), 이번 달 적립·사용, 적립·사용 내역 바로가기
  */
 export function TicketSummaryCard() {
-    const { data: wallets } = useTicketWallets();
-    const { data: history } = useTicketHistory();
+    const { data: tickets } = useMyTickets();
+    const { data: history } = useTicketHistories();
     // 이번 달 판정은 표시용이므로 마운트 시각을 쓴다
     const clock = useVirtualClock();
     const [now] = useState(() => clock.now());
     const monthly = history ? summarizeMonthlyTickets(history, now) : undefined;
     // 출석 등으로 응모권을 받으면 숫자가 굴러 올라간다
-    const balance = useCountUp(wallets?.availableBalance);
+    const balance = useCountUp(tickets?.availableCount);
     const format = (n: number | undefined) => (n == null ? '-' : formatNumber(n));
 
     return (

@@ -59,33 +59,33 @@ describe('출석 목업 핸들러', () => {
         expect(statusA.data.data.attended).toBe(true);
     });
 
-    it('응모권 잔액·이력도 사용자별로 분리된다', async () => {
+    it('보유 응모권·이력도 사용자별로 분리된다', async () => {
         freezeDate('2026-10-02T12:00:00Z');
         const userA = `user-tkt-a-${Date.now()}`;
         const userB = `user-tkt-b-${Date.now()}`;
 
         const { data: beforeB } = await apiClient.get<{
-            data: { availableBalance: number };
-        }>('/tickets/wallets/me', {
+            data: { availableCount: number };
+        }>('/tickets/me', {
             headers: { 'X-User-ID': userB },
         });
 
-        // A가 출석 보상을 받아도 B의 잔액은 변하지 않는다
+        // A가 출석 보상을 받아도 B의 보유 장수는 변하지 않는다
         await check(userA);
-        const { data: afterB } = await apiClient.get<{ data: { availableBalance: number } }>(
-            '/tickets/wallets/me',
+        const { data: afterB } = await apiClient.get<{ data: { availableCount: number } }>(
+            '/tickets/me',
             {
                 headers: { 'X-User-ID': userB },
             },
         );
-        expect(afterB.data.availableBalance).toBe(beforeB.data.availableBalance);
+        expect(afterB.data.availableCount).toBe(beforeB.data.availableCount);
 
-        const { data: afterA } = await apiClient.get<{ data: { availableBalance: number } }>(
-            '/tickets/wallets/me',
+        const { data: afterA } = await apiClient.get<{ data: { availableCount: number } }>(
+            '/tickets/me',
             {
                 headers: { 'X-User-ID': userA },
             },
         );
-        expect(afterA.data.availableBalance).toBeGreaterThan(beforeB.data.availableBalance);
+        expect(afterA.data.availableCount).toBeGreaterThan(beforeB.data.availableCount);
     });
 });

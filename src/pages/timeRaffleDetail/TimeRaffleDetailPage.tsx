@@ -6,7 +6,7 @@ import type { Event } from '@entities/event';
 
 import { useEventResults } from '@entities/drawResult';
 import { useEvent } from '@entities/event';
-import { useTicketWallets } from '@entities/ticket';
+import { useMyTickets } from '@entities/ticket';
 import { useEnterEvent } from '@features/enterEvent';
 import { Button } from '@shared/ui/button';
 
@@ -35,7 +35,7 @@ const STATUS_LABEL: Record<Exclude<Event['status'], 'drawn'>, string> = {
 export function TimeRaffleDetailPage() {
     const { id = '' } = useParams();
     const { data: event, isPending, isError } = useEvent(id);
-    const { data: ticket } = useTicketWallets();
+    const { data: ticket } = useMyTickets();
     // 마감 전에는 결과가 존재하지 않으므로 묻지 않는다
     // 마감 전에는 결과가 존재하지 않으므로 묻지 않는다
     const { data: results } = useEventResults(
@@ -76,7 +76,7 @@ export function TimeRaffleDetailPage() {
     const maxQuantity = Math.max(0, ENTRY_TICKET_LIMIT - alreadyUsed);
     const canEnter = isOpen && maxQuantity >= 1;
     // 잔액을 아직 못 받았으면 부족하다고 단정하지 않고 확인 모달로 보낸다 (최종 판정은 서버 응답)
-    const hasEnoughTickets = ticket == null || ticket.availableBalance >= quantity;
+    const hasEnoughTickets = ticket == null || ticket.availableCount >= quantity;
 
     return (
         <main className={CONTAINER}>
@@ -129,7 +129,7 @@ export function TimeRaffleDetailPage() {
                 onOpenChange={setConfirmOpen}
                 title={event.title}
                 quantity={quantity}
-                balance={ticket?.availableBalance ?? null}
+                balance={ticket?.availableCount ?? null}
                 returnFocusTo={entryButtonRef}
                 pending={enterEvent.isPending}
                 onConfirm={() => {

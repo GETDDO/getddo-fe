@@ -8,7 +8,7 @@ import { IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
 import { mockNow } from '../now';
 import { findMockEvent, getMockEventStatistics, recordMockEventEntry } from './event';
 import { fail, failBody, ok, okBody } from './response';
-import { getMockTicketBalance, recordMockTicketGrant } from './ticket';
+import { getMockAvailableTicketCount, recordMockTicketUse } from './ticket';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
@@ -183,21 +183,27 @@ export const entryHandlers = [
         }
 
         // 화면에서도 막고 있지만, 최종 접수 여부는 서버가 정한다는 원칙대로 여기서도 검사한다
-        if (ticketCount > getMockTicketBalance(userId)) {
+        if (ticketCount > getMockAvailableTicketCount(userId)) {
             return remember(409, failBody('INSUFFICIENT_TICKETS', '보유 응모권이 부족합니다'));
         }
         if ((event.myTicketCount ?? 0) + ticketCount > ENTRY_TICKET_LIMIT) {
             return remember(409, failBody('TICKET_LIMIT_EXCEEDED', '응모 한도를 초과했습니다'));
         }
 
+        // 접수 건의 ID를 먼저 만들어 USE 이력의 eventEntryId에 연결한다
+        const entryId = crypto.randomUUID();
         recordMockEventEntry(event, ticketCount);
         if (ticketCount > 0) {
-            recordMockTicketGrant(userId, -ticketCount, `${event.title} 응모`);
+            // 한 응모에 여러 장을 쓰면 장마다 USE 이력이 생기고 같은 eventEntryId를 가진다 (spec T02)
+            recordMockTicketUse(userId, ticketCount, `${event.title} 응모`, {
+                eventId,
+                eventEntryId: entryId,
+            });
         }
 
         const now = mockNow().toISOString();
         const responseBody: EntryReceipt = {
-            id: crypto.randomUUID(),
+            id: entryId,
             eventId,
             eventTitle: event.title,
             requestedTicketCount: ticketCount,

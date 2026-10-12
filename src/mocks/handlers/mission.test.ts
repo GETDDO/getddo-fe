@@ -51,11 +51,10 @@ async function missionCompleted(missionId: string, userId: string) {
 }
 
 async function balance(userId: string) {
-    const { data } = await apiClient.get<Envelope<{ availableBalance: number }>>(
-        '/tickets/wallets/me',
-        { headers: { 'X-User-ID': userId } },
-    );
-    return data.data.availableBalance;
+    const { data } = await apiClient.get<Envelope<{ availableCount: number }>>('/tickets/me', {
+        headers: { 'X-User-ID': userId },
+    });
+    return data.data.availableCount;
 }
 
 describe('미션 목업 핸들러', () => {

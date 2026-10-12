@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 
 import type { TicketHistory } from '@entities/ticket';
 
+import { TICKET_GRADE_LABEL, TICKET_OPERATION_DELTA } from '@entities/ticket';
 import { formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { cn } from '@shared/lib/utils';
@@ -17,8 +18,8 @@ const FOCUS =
 const signed = (n: number) => (n > 0 ? `+${formatNumber(n)}` : formatNumber(n));
 
 /**
- * 응모권 내역 한 줄 — 누르면 아래로 상세(구분·사유·일시·변동·잔액)가 펼쳐지는 아코디언.
- * 래플 응모처럼 이어서 볼 화면이 있으면 상세 맨 아래에 링크를 둔다 (연결된 래플이 있으면 그 래플로)
+ * 응모권 내역 한 줄 — 누르면 아래로 상세(구분·등급·사유·일시·변동·만료)가 펼쳐지는 아코디언.
+ * 이력 한 건은 응모권 한 장의 처리다. 래플 응모처럼 이어서 볼 화면이 있으면 상세 맨 아래에 링크를 둔다
  */
 export function TicketHistoryRow({
     item,
@@ -33,7 +34,8 @@ export function TicketHistoryRow({
     fresh?: boolean;
 }) {
     const detailId = useId();
-    const meta = TICKET_HISTORY_META[item.transactionType];
+    const meta = TICKET_HISTORY_META[item.operationType];
+    const delta = TICKET_OPERATION_DELTA[item.operationType];
     const link = getTicketHistoryLink(item);
 
     return (
@@ -58,13 +60,16 @@ export function TicketHistoryRow({
                         {item.reason}
                     </span>
                     <span className="text-caption text-fg-tertiary truncate">
-                        {meta.label} · {formatKst(item.createdAt)}
+                        {meta.label} · {TICKET_GRADE_LABEL[item.grade]} ·{' '}
+                        {formatKst(item.createdAt)}
                     </span>
                 </span>
                 <span className="flex shrink-0 items-center gap-2">
-                    <span className="text-body-bold text-fg-primary tabular-nums">
-                        {signed(item.quantity)}
-                    </span>
+                    {delta !== null && (
+                        <span className="text-body-bold text-fg-primary tabular-nums">
+                            {signed(delta)}
+                        </span>
+                    )}
                     <ChevronDown
                         aria-hidden
                         className={cn(
@@ -79,19 +84,24 @@ export function TicketHistoryRow({
                     <dl className="text-caption grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
                         <dt className="text-fg-tertiary">구분</dt>
                         <dd className="text-fg-primary text-right">{meta.label}</dd>
+                        <dt className="text-fg-tertiary">등급</dt>
+                        <dd className="text-fg-primary text-right">
+                            {TICKET_GRADE_LABEL[item.grade]}
+                        </dd>
                         <dt className="text-fg-tertiary">사유</dt>
                         <dd className="text-fg-primary text-right break-keep">{item.reason}</dd>
                         <dt className="text-fg-tertiary">일시</dt>
                         <dd className="text-fg-primary text-right">{formatKst(item.createdAt)}</dd>
-                        <dt className="text-fg-tertiary">응모권 변동</dt>
-                        <dd className="text-fg-primary text-right tabular-nums">
-                            {signed(item.quantity)}장
-                        </dd>
-                        {/* balanceAfter는 전체 합계가 아니라 이 거래가 속한 월 지갑의 잔액이다 */}
-                        <dt className="text-fg-tertiary">처리 후 지갑 잔액</dt>
-                        <dd className="text-fg-primary text-right tabular-nums">
-                            {formatNumber(item.balanceAfter)}장
-                        </dd>
+                        {delta !== null && (
+                            <>
+                                <dt className="text-fg-tertiary">응모권 변동</dt>
+                                <dd className="text-fg-primary text-right tabular-nums">
+                                    {signed(delta)}장
+                                </dd>
+                            </>
+                        )}
+                        <dt className="text-fg-tertiary">만료</dt>
+                        <dd className="text-fg-primary text-right">{formatKst(item.expiresAt)}</dd>
                     </dl>
                     {link && (
                         <Link

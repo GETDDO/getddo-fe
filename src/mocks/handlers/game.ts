@@ -3,7 +3,7 @@ import { http } from 'msw';
 import { env } from '@shared/config/env';
 
 import { fail, ok } from './response';
-import { recordMockTicketGrant } from './ticket';
+import { drawMockTicketGrade, recordMockTicketGrant } from './ticket';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
@@ -133,7 +133,11 @@ export const gameHandlers = [
         if (ticketsGranted > 0) {
             state.rewardedToday = true;
             state.remainingPlays = 0;
-            recordMockTicketGrant(userId, ticketsGranted, `${game.title} 게임 보상`);
+            // 게임 보상은 등급 응모권 1장 — 서버가 확률로 등급 하나를 결정한다 (getddo-spec ticket.md)
+            recordMockTicketGrant(userId, ticketsGranted, `${game.title} 게임 보상`, {
+                grade: drawMockTicketGrade(),
+                gameId: game.id,
+            });
         }
         return ok(
             {
