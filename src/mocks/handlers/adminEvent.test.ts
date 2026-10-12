@@ -54,6 +54,12 @@ async function createEvent(over: Record<string, unknown> = {}) {
     return (res.data as Envelope<AdminEventBody>).data;
 }
 
+// 응모가 가능한 진행 중 창 — 고정 날짜는 지나면 이벤트가 closed가 돼 실행 시점에 따라 실패한다
+const openWindow = () => ({
+    startsAt: new Date(Date.now() - 60 * 1000).toISOString(),
+    endsAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+});
+
 // 사용자 목록이 Page 봉투+페이지로 오므로 관리 목업 수(33건)를 덮는 size로 요청한다
 async function userEventIds() {
     const { data } = await apiClient.get<{ data: { items: { id: string }[] } }>('/events?size=100');
@@ -169,16 +175,18 @@ describe('관리자 이벤트 목업 핸들러', () => {
 
     it('취소를 반복해도 차감된 응모권을 한 번만 반환한다', async () => {
         const userId = `cancel-${Date.now()}`;
+        // 응모할 수 있는 진행 중 창으로 만든다 — 진행 예정 이벤트는 응모가 거절된다 (ENTRY-005)
         const created = await createEvent({
             eventType: 'TICKET',
             weightingEnabled: true,
             maxTicketsPerUser: 5,
+            ...openWindow(),
         });
 
         // 사용자가 응모권 3장으로 응모한다 (잔액 10 → 7)
         const entered = await apiClient.post(
             `/events/${created.id}/entries`,
-            { ticketCount: 3 },
+            { tickets: { BRONZE: 3 } },
             {
                 headers: {
                     [IDEMPOTENCY_HEADER]: `cancel-${Date.now()}`,
@@ -218,14 +226,18 @@ describe('관리자 이벤트 목업 핸들러', () => {
         expect(res.status).toBe(400);
     });
 
-    it('응모 이력이 없는 진행 예정 이벤트만 삭제된다', async () => {
+    it('진행 예정 이벤트만 삭제되고 진행 중인 이벤트는 삭제되지 않는다', async () => {
         const deletable = await createEvent();
-        const withEntry = await createEvent({ title: '응모 이력 있는 이벤트' });
+        // 진행 중 창으로 만든다 — 진행 중에는 상태상 삭제가 막힌다 (ENTRY-005로 응모도 불가한 진행 예정은 응모 이력을 가질 수 없다)
+        const open = await createEvent({
+            title: '진행 중인 이벤트',
+            ...openWindow(),
+        });
 
-        // withEntry에 응모를 넣는다 (NO_TICKET은 0장으로 접수)
+        // 진행 중 이벤트에 응모를 넣어 사용자 목록에도 실제 이력이 생겼는지 확인한다
         const entered = await apiClient.post(
-            `/events/${withEntry.id}/entries`,
-            { ticketCount: 0 },
+            `/events/${open.id}/entries`,
+            { tickets: {} },
             {
                 headers: {
                     [IDEMPOTENCY_HEADER]: `del-${Date.now()}`,
@@ -236,7 +248,7 @@ describe('관리자 이벤트 목업 핸들러', () => {
         );
         expect(entered.status).toBe(201);
 
-        const blocked = await call('delete', `/admin/events/${withEntry.id}`);
+        const blocked = await call('delete', `/admin/events/${open.id}`);
         expect(blocked.status).toBe(409);
 
         const removed = await call('delete', `/admin/events/${deletable.id}`);

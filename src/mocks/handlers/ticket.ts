@@ -2,6 +2,7 @@ import { http } from 'msw';
 
 import type { TicketGrade, TicketHistory, TicketOperationType } from '@entities/ticket';
 
+import { ticketGradeSchema } from '@entities/ticket';
 import { env } from '@shared/config/env';
 import { kstNextMonthStart, toKst } from '@shared/lib/date';
 
@@ -229,6 +230,18 @@ export function getMockAvailableTicketCount(userId: string) {
     return state.tickets.filter((ticket) => isUsable(ticket, mockNow().getTime())).length;
 }
 
+/** 등급별 보유량 — 미적용 이벤트의 브론즈 판정·등급별 부족(TICKET-006) 검증에 쓴다 */
+export function getMockAvailableTicketCountByGrade(userId: string): Record<TicketGrade, number> {
+    const state = stateFor(userId);
+    syncExpired(state);
+    const now = mockNow().getTime();
+    const counts: Record<TicketGrade, number> = { BRONZE: 0, SILVER: 0, GOLD: 0 };
+    for (const ticket of state.tickets) {
+        if (isUsable(ticket, now)) counts[ticket.grade] += 1;
+    }
+    return counts;
+}
+
 interface GrantOptions extends HistoryExtra {
     grade: TicketGrade;
     /** 기본은 지급 KST월 다음 달 1일 00:00 KST — 보상 영수증이 정한 만료를 그대로 쓸 때 넘긴다 */
@@ -258,24 +271,30 @@ export function recordMockTicketGrant(
 }
 
 /**
- * 응모 차감을 기록할 때 쓴다 — 만료가 이른 장부터 꺼내 SPENT로 두고 장당 USE 이력을 남긴다.
- * 사용자가 등급별 장수를 고르는 요청 계약(GD-133)은 후속이라, 그 전까지는 전체 보유에서 만료순 차감이다
+ * 응모 차감을 기록할 때 쓴다 — 요청한 등급별 장수만큼 각 등급에서 만료가 이른 장부터 꺼내
+ * SPENT로 두고 장당 USE 이력을 남긴다 (spec 02-domain/ticket.md — 같은 등급 안에서는 만료 임박순).
+ * 보유량 검증은 호출부(응모 핸들러)가 먼저 한다
  */
 export function recordMockTicketUse(
     userId: string,
-    count: number,
+    tickets: Partial<Record<TicketGrade, number>>,
     reason: string,
     options: HistoryExtra = {},
 ) {
     const state = stateFor(userId);
     syncExpired(state);
     const nowIso = mockNow().toISOString();
-    const usable = state.tickets
-        .filter((ticket) => isUsable(ticket, mockNow().getTime()))
-        .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt));
-    for (const ticket of usable.slice(0, count)) {
-        ticket.status = 'SPENT';
-        pushHistory(state, ticket, 'USE', reason, nowIso, options);
+    const now = mockNow().getTime();
+    for (const grade of ticketGradeSchema.options) {
+        const count = tickets[grade] ?? 0;
+        if (count <= 0) continue;
+        const usable = state.tickets
+            .filter((ticket) => ticket.grade === grade && isUsable(ticket, now))
+            .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt));
+        for (const ticket of usable.slice(0, count)) {
+            ticket.status = 'SPENT';
+            pushHistory(state, ticket, 'USE', reason, nowIso, options);
+        }
     }
 }
 

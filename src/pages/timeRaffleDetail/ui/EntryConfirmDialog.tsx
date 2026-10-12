@@ -1,5 +1,8 @@
 import type { RefObject } from 'react';
 
+import type { EntryTickets } from '@entities/entry';
+
+import { TICKET_GRADE_LABEL, ticketGradeSchema } from '@entities/ticket';
 import { Button } from '@shared/ui/button';
 import {
     Dialog,
@@ -14,8 +17,8 @@ interface EntryConfirmDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     title: string;
-    /** 이번 응모에 쓰는 응모권 수 */
-    quantity: number;
+    /** 이번 응모에 쓰는 등급별 장수 — 생략된 등급은 0이다 */
+    tickets: EntryTickets;
     /** 지금 보유 중인 응모권 — 잔액을 못 불러왔으면 null */
     balance: number | null;
     onConfirm: () => void;
@@ -25,16 +28,27 @@ interface EntryConfirmDialogProps {
     returnFocusTo?: RefObject<HTMLElement | null>;
 }
 
+/** 등급별 장수를 '브론즈 1장·골드 2장'처럼 읽히게 만든다 — 0인 등급은 뺀다 */
+function summarizeTickets(tickets: EntryTickets) {
+    const parts = ticketGradeSchema.options
+        .filter((grade) => (tickets[grade] ?? 0) > 0)
+        .map((grade) => `${TICKET_GRADE_LABEL[grade]} ${tickets[grade]}장`);
+    return parts.length > 0 ? parts.join('·') : '0장';
+}
+
 export function EntryConfirmDialog({
     open,
     onOpenChange,
     title,
-    quantity,
+    tickets,
     balance,
     onConfirm,
     pending = false,
     returnFocusTo,
 }: EntryConfirmDialogProps) {
+    const summary = summarizeTickets(tickets);
+    const total = ticketGradeSchema.options.reduce((sum, grade) => sum + (tickets[grade] ?? 0), 0);
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
@@ -51,14 +65,14 @@ export function EntryConfirmDialog({
                         응모하시겠습니까?
                     </DialogTitle>
                     <DialogDescription className="text-body text-fg-secondary">
-                        응모권 {quantity}장을 사용하여 {title}에 참여합니다.
+                        응모권 {total}장을 사용하여 {title}에 참여합니다.
                     </DialogDescription>
                 </DialogHeader>
 
                 <dl className="flex flex-col gap-3">
                     <div className="text-body-bold text-brand-primary flex items-center justify-between">
                         <dt>응모권 사용</dt>
-                        <dd>{quantity}장</dd>
+                        <dd>{summary}</dd>
                     </div>
                     <div className="text-body-bold flex items-center justify-between">
                         <dt className="text-fg-secondary">보유 응모권</dt>

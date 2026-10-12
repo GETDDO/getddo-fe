@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { useEntryStatistics } from './queries';
+import { useEntryEligibility, useEntryStatistics } from './queries';
 
 function setup() {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -42,6 +42,27 @@ describe('useEntryStatistics', () => {
     it('enabled가 false면 요청하지 않는다', () => {
         const { wrapper } = setup();
         const { result } = renderHook(() => useEntryStatistics('evt-001', { enabled: false }), {
+            wrapper,
+        });
+        expect(result.current.fetchStatus).toBe('idle');
+    });
+});
+
+describe('useEntryEligibility', () => {
+    it('E07 응답을 EntryEligibility로 파싱한다', async () => {
+        const { wrapper } = setup();
+        const { result } = renderHook(() => useEntryEligibility('evt-002'), { wrapper });
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true));
+        // evt-002는 가중치 적용 이벤트 — 신규 사용자(익명)는 브론즈 7·실버 2·골드 1로 10장을 쓸 수 있다
+        expect(result.current.data?.eventId).toBe('evt-002');
+        expect(result.current.data?.canEnter).toBe(true);
+        expect(result.current.data?.availableTicketBalance).toBe(10);
+    });
+
+    it('enabled가 false면 요청하지 않는다', () => {
+        const { wrapper } = setup();
+        const { result } = renderHook(() => useEntryEligibility('evt-002', { enabled: false }), {
             wrapper,
         });
         expect(result.current.fetchStatus).toBe('idle');

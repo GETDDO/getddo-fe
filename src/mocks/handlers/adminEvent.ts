@@ -7,7 +7,7 @@ import { env } from '@shared/config/env';
 import { mockNow } from '../now';
 import { removeMockBannersOfEvent } from './banner';
 import { mockEntryTicketTotals, mockEventHasEntries } from './entry';
-import { mockEvents, sessionFixedTime } from './event';
+import { entryRuleOf, mockEvents, sessionFixedTime } from './event';
 import { fail, ok } from './response';
 import { recordMockTicketRefund } from './ticket';
 
@@ -49,17 +49,18 @@ interface MockAdminEvent {
  * 관리자에서 만든 변경은 사용자 목록에 projection으로 다시 싣는다(아래 upsertUserProjection).
  */
 function toAdminSeed(e: (typeof mockEvents)[number]): MockAdminEvent {
-    const usesTicket = e.requiredTickets > 0;
+    // 사용자·관리자 목업이 같은 응모 규칙을 보게 같은 파생 함수를 쓴다 (GD-150)
+    const rule = entryRuleOf(e);
     return {
         id: e.id,
         title: e.title,
         description: e.description,
         imageUrl: e.bannerImageUrl,
         imageKey: null,
-        eventType: usesTicket ? 'TICKET' : 'NO_TICKET',
-        weightingEnabled: usesTicket,
-        maxTicketsPerUser: usesTicket ? 5 : null,
-        membershipRule: e.tags?.includes('멤버십 혜택') ? 'vip' : 'excellent',
+        eventType: rule.eventType,
+        weightingEnabled: rule.weightingEnabled,
+        maxTicketsPerUser: rule.maxTicketsPerUser,
+        membershipRule: rule.membershipRule,
         startsAt: e.startsAt,
         endsAt: e.endsAt,
         status: 'SCHEDULED',
@@ -233,6 +234,11 @@ function toUserProjection(item: MockAdminEvent) {
         // status는 응답에서 시간으로 재계산된다 — 저장값은 의미 없는 placeholder
         status: 'upcoming' as const,
         requiredTickets: item.eventType === 'TICKET' ? 1 : 0,
+        // 응모 규칙 필드는 그대로 실어야 응모 목업이 유형별 규칙을 같은 값으로 판정한다
+        eventType: item.eventType,
+        weightingEnabled: item.weightingEnabled,
+        maxTicketsPerUser: item.maxTicketsPerUser,
+        membershipRule: item.membershipRule,
         tags: item.membershipRule === 'excellent' ? [] : ['멤버십 혜택'],
         prizeName:
             item.prizes.length > 1

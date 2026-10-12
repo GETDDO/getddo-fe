@@ -8,6 +8,19 @@ export const DEFAULT_ERROR_MESSAGE = '요청을 처리하지 못했습니다. �
  * 값은 코드→문구 데이터일 뿐이고, 화면별 분기는 문구가 아니라 `error.code`로 판단한다.
  */
 const ERROR_MESSAGES: Record<string, string> = {
+    // E04 응모 계열 번호 코드 (getddo-spec 05-api/common.md) — 같은 의미의 이름 코드는 아래에 둔다
+    'ENTRY-001': '응모 요청 형식이 올바르지 않습니다.',
+    'ENTRY-002': '관리자는 이벤트에 응모할 수 없습니다.',
+    'ENTRY-003': '응모 가능한 멤버십 등급이 아닙니다.',
+    'ENTRY-004': '이벤트를 찾을 수 없습니다.',
+    'ENTRY-005': '지금은 응모할 수 있는 시간이 아닙니다.',
+    'ENTRY-006': '이미 응모한 이벤트입니다.',
+    'ENTRY-007': '이 이벤트의 응모 한도를 초과했습니다.',
+    'ENTRY-008': '이 이벤트는 브론즈 응모권이 필요합니다.',
+    'ENTRY-009': '이미 처리 중인 요청과 내용이 다릅니다. 화면을 새로고침한 뒤 다시 시도해 주세요.',
+    'TICKET-006': '보유한 응모권이 부족합니다.',
+    USER_MEMBERSHIP_MISMATCH:
+        '사용자 멤버십 정보가 일치하지 않습니다. 사용자를 다시 선택해 주세요.',
     INSUFFICIENT_TICKETS: '보유한 응모권이 부족합니다.',
     TICKET_LIMIT_EXCEEDED: '이 이벤트의 응모 한도를 초과했습니다.',
     ALREADY_ENTERED: '이미 응모한 이벤트입니다.',
