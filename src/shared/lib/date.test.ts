@@ -1,4 +1,10 @@
-import { kstInputToUtcIso, kstNextMonthStart, utcIsoToKstInput } from './date';
+import {
+    kstDateStartUtcIso,
+    kstInputToUtcIso,
+    kstNextDateStartUtcIso,
+    kstNextMonthStart,
+    utcIsoToKstInput,
+} from './date';
 
 describe('kstNextMonthStart', () => {
     it('다음 달 1일 00:00 KST를 반환한다', () => {
@@ -31,5 +37,20 @@ describe('kstInputToUtcIso / utcIsoToKstInput', () => {
     it('KST 자정 경계를 넘나들어도 날짜가 맞다', () => {
         expect(kstInputToUtcIso('2026-10-07T00:30')).toBe('2026-10-06T15:30:00.000Z');
         expect(utcIsoToKstInput('2026-10-06T15:30:00.000Z')).toBe('2026-10-07T00:30');
+    });
+});
+
+describe('kstDateStartUtcIso / kstNextDateStartUtcIso', () => {
+    it('날짜 입력을 KST 00:00의 UTC 시각으로 바꾼다', () => {
+        expect(kstDateStartUtcIso('2026-10-12')).toBe('2026-10-11T15:00:00.000Z');
+    });
+
+    it('종료일은 다음 날 00:00 KST로 바꿔 종료일 전체를 포함한다', () => {
+        expect(kstNextDateStartUtcIso('2026-10-12')).toBe('2026-10-12T15:00:00.000Z');
+    });
+
+    it('월말·연말 경계를 넘긴다', () => {
+        expect(kstNextDateStartUtcIso('2026-10-31')).toBe('2026-10-31T15:00:00.000Z');
+        expect(kstNextDateStartUtcIso('2026-12-31')).toBe('2026-12-31T15:00:00.000Z');
     });
 });
