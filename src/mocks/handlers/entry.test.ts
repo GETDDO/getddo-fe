@@ -19,8 +19,10 @@ const FREE_EVENT_ID_2 = 'evt-013';
 const FREE_EVENT_ID_FOR_STATS = 'evt-202';
 /** 진행 예정 이벤트 — 아직 응모할 수 없다 */
 const UPCOMING_EVENT_ID = 'evt-005';
-/** vip 이상만 응모할 수 있는 진행 예정 이벤트 — 시드에서 유일하게 멤버십 규칙이 걸려 있다 */
+/** vip 이상만 응모할 수 있는 진행 예정 이벤트 */
 const VIP_EVENT_ID = 'evt-010';
+/** vip 이상만 응모할 수 있는 진행 중 이벤트 — 우수 등급은 ENTRY-003, vip 이상은 정상 접수된다 */
+const VIP_OPEN_EVENT_ID = 'evt-014';
 
 type Grade = 'BRONZE' | 'SILVER' | 'GOLD';
 type GradeMap = Record<Grade, number>;
@@ -342,6 +344,26 @@ describe('응모 목업 핸들러', () => {
         );
         expect(response.status).toBe(403);
         expect(response.data).toMatchObject({ success: false, code: 'ENTRY-003' });
+    });
+
+    it('진행 중 VIP 이벤트는 vip 사용자가 응모하고 우수 등급은 ENTRY-003으로 거절된다', async () => {
+        // vu-doyoon은 우수(excellent), vu-seoyeon은 vip 등급의 시드 가상 사용자다
+        const denied = await enter(
+            uniqueKey('vip-denied'),
+            { BRONZE: 1 },
+            VIP_OPEN_EVENT_ID,
+            'vu-doyoon',
+        );
+        expect(denied.status).toBe(403);
+        expect(denied.data).toMatchObject({ success: false, code: 'ENTRY-003' });
+
+        const accepted = await enter(
+            uniqueKey('vip-ok'),
+            { BRONZE: 1 },
+            VIP_OPEN_EVENT_ID,
+            'vu-seoyeon',
+        );
+        expect(accepted.status).toBe(201);
     });
 
     it('헤더 멤버십이 사용자 멤버십과 다르면 409로 거절한다', async () => {
