@@ -81,21 +81,21 @@ const CONTENTS: Record<string, GameContent> = {
         },
     },
     'game-timing': {
-        tagline: '달리는 타꼬가 금색 구간에 오면, 딱 맞춰 콕 꽂으세요.',
+        tagline: '왔다 갔다 하는 이쑤시개를 타꼬 위에서 딱 맞춰 콕 꽂으세요.',
         // 대표 이미지 — 피그마 image 184 (16:9라 대표 영역 840:546에서 좌우가 조금 잘린다)
         heroImage: '/images/games/takko-timing.jpg',
         guide: {
             title: '게임 방법',
-            subtitle: '금색 구간에서 딱 맞춰 꽂기!',
+            subtitle: '타꼬 위에서 딱 맞춰 꽂기!',
             steps: [
                 {
                     icon: Gamepad2,
                     keys: ['Space'],
-                    text: '또는 화면을 눌러 이쑤시개로 콕 꽂아요.',
+                    text: '또는 화면을 눌러 움직이는 이쑤시개를 콕 꽂아요.',
                 },
                 {
                     icon: Target,
-                    text: '구간 가운데에 꽂으면 퍼펙트로 점수 2배!\n목숨은 3개, 성공할수록 빨라지고 구간이 좁아져요.',
+                    text: '타꼬 한가운데에 꽂으면 퍼펙트로 점수 2배!\n한 번 빗나가면 끝, 성공할수록 빨라지고 구간이 좁아져요.',
                 },
                 REWARD_STEP,
             ],

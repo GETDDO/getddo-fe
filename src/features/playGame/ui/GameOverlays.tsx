@@ -48,19 +48,22 @@ export function GameStartHint({ onStart, children }: { onStart: () => void; chil
             type="button"
             onClick={onStart}
             aria-label="게임 시작"
-            className="focus-visible:ring-border-focus absolute inset-0 flex cursor-pointer items-center justify-center px-4 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset sm:px-6"
+            className="focus-visible:ring-border-focus absolute inset-0 cursor-pointer focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
         >
-            <span className="bg-surface-inverse/55 text-fg-on-brand flex flex-col items-center gap-2 rounded-2xl px-4 py-3 text-center backdrop-blur-sm sm:gap-3 sm:px-6 sm:py-4">
-                <span className="text-body-bold sm:text-subhead flex flex-wrap items-center justify-center gap-2">
-                    {/* 컴퓨터는 스페이스바·Enter와 화면 클릭, 터치 기기(마우스 올리기 없음)는 화면 누르기로 안내한다 */}
-                    <span className="flex items-center gap-1 [@media(hover:none)]:hidden">
-                        <GameKey className="motion-safe:animate-pulse">Space</GameKey>
-                        <GameKey className="motion-safe:animate-pulse">Enter</GameKey>
-                        <span className="ml-1">또는 화면을 눌러 시작</span>
+            {/* 세 게임(타꼬런·글자색깔 맞추기·타꼬 타이밍)이 같은 자리에 안내를 띄운다 — 휴대폰은 위쪽 버튼 줄 아래(42%), 넓은 화면은 22% */}
+            <span className="absolute inset-x-0 top-[42%] flex justify-center px-4 sm:top-[22%] sm:px-6">
+                <span className="bg-surface-inverse/55 text-fg-on-brand flex flex-col items-center gap-2 rounded-2xl px-4 py-3 text-center backdrop-blur-sm sm:gap-3 sm:px-6 sm:py-4">
+                    <span className="text-body-bold sm:text-subhead flex flex-wrap items-center justify-center gap-2">
+                        {/* 컴퓨터는 스페이스바·Enter와 화면 클릭, 터치 기기(마우스 올리기 없음)는 화면 누르기로 안내한다 */}
+                        <span className="flex items-center gap-1 [@media(hover:none)]:hidden">
+                            <GameKey className="motion-safe:animate-pulse">Space</GameKey>
+                            <GameKey className="motion-safe:animate-pulse">Enter</GameKey>
+                            <span className="ml-1">또는 화면을 눌러 시작</span>
+                        </span>
+                        <span className="hidden [@media(hover:none)]:inline">화면을 눌러 시작</span>
                     </span>
-                    <span className="hidden [@media(hover:none)]:inline">화면을 눌러 시작</span>
+                    {children}
                 </span>
-                {children}
             </span>
         </button>
     );

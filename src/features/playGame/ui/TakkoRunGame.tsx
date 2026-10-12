@@ -529,7 +529,7 @@ export function TakkoRunGame({
                 <ScoreBoard valueRef={scoreRef} value={padScore(0)} />
             </div>
 
-            {/* 시작 안내 — 조작키와 짧게·길게 점프 */}
+            {/* 시작 안내 — 조작키와 짧게·길게 점프. 위치는 다른 게임의 공용 시작 안내(GameStartHint)와 같다 */}
             {images && phase === 'ready' && (
                 <div className="pointer-events-none absolute inset-x-0 top-[42%] flex justify-center px-4 sm:top-[22%] sm:px-6">
                     <div

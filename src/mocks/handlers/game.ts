@@ -36,7 +36,7 @@ const mockGames: GameMeta[] = [
         // 룰렛 돌리기 자리를 타꼬 타이밍 맞추기로 바꿨다 (게임 담당자 결정)
         id: 'game-timing',
         title: '타꼬 타이밍 맞추기',
-        description: '달리는 타꼬를 금색 구간에서 딱 맞춰 꽂아요',
+        description: '왔다 갔다 하는 이쑤시개로 타꼬를 딱 맞춰 꽂아요',
         // 피그마 image 184
         thumbnailUrl: '/images/games/takko-timing.jpg',
         dailyLimit: 1,
