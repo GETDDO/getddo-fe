@@ -6,8 +6,8 @@ import { GameImageButton } from './GameImageButton';
 const TakkoRunGame = lazy(() =>
     import('./TakkoRunGame').then((m) => ({ default: m.TakkoRunGame })),
 );
-const MascotCatchGame = lazy(() =>
-    import('./MascotCatchGame').then((m) => ({ default: m.MascotCatchGame })),
+const TakkoTimingGame = lazy(() =>
+    import('./TakkoTimingGame').then((m) => ({ default: m.TakkoTimingGame })),
 );
 const ColorWordGame = lazy(() =>
     import('./ColorWordGame').then((m) => ({ default: m.ColorWordGame })),
@@ -53,10 +53,10 @@ export function GamePlayer({
             </Suspense>
         );
     }
-    if (gameId === 'game-catch') {
+    if (gameId === 'game-timing') {
         return (
             <Suspense fallback={<GameLoading onExit={onExit} />}>
-                <MascotCatchGame bestScore={bestScore} onExit={onExit} onGameOver={onGameOver} />
+                <TakkoTimingGame bestScore={bestScore} onExit={onExit} onGameOver={onGameOver} />
             </Suspense>
         );
     }

@@ -33,11 +33,12 @@ const mockGames: GameMeta[] = [
         dailyLimit: 1,
     },
     {
-        // 룰렛 돌리기 자리를 마스코트 캐치로 바꿨다 (게임 담당자 결정)
-        id: 'game-catch',
-        title: '마스코트 캐치',
-        description: '금색 구간에 타코야끼를 딱 멈춰요',
-        thumbnailUrl: null,
+        // 룰렛 돌리기 자리를 타꼬 타이밍 맞추기로 바꿨다 (게임 담당자 결정)
+        id: 'game-timing',
+        title: '타꼬 타이밍 맞추기',
+        description: '달리는 타꼬를 금색 구간에서 딱 맞춰 꽂아요',
+        // 피그마 image 184
+        thumbnailUrl: '/images/games/takko-timing.jpg',
         dailyLimit: 1,
     },
     {
@@ -45,7 +46,7 @@ const mockGames: GameMeta[] = [
         id: 'game-color',
         title: '글자색깔 맞추기',
         description: '글자 뜻 말고 글자 색을 골라요',
-        // 피그마 image 163
+        // 피그마 image 186
         thumbnailUrl: '/images/games/color-word.jpg',
         dailyLimit: 1,
     },
@@ -74,7 +75,7 @@ const seedPlayState: Record<string, GamePlayState> = {
         rewardedToday: false,
         remainingPlays: 1,
     },
-    'game-catch': { bestScore: 0, todayPlayCount: 0, rewardedToday: false, remainingPlays: 1 },
+    'game-timing': { bestScore: 0, todayPlayCount: 0, rewardedToday: false, remainingPlays: 1 },
     'game-color': { bestScore: 120, todayPlayCount: 0, rewardedToday: false, remainingPlays: 1 },
     'game-mole': { todayPlayCount: 0, rewardedToday: false, remainingPlays: 1 },
 };

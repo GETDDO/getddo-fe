@@ -7,25 +7,26 @@ import {
 } from 'framer-motion';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
-import type { MascotCatchResult, MascotCatchRound } from '../model/mascotCatch';
+import type { TakkoTimingResult, TakkoTimingRound } from '../model/takkoTiming';
 
 import background from '../assets/colorWord/background.jpg';
 import mascotCorrect from '../assets/colorWord/mascot-correct.png';
 import mascotIdle from '../assets/colorWord/mascot-idle.png';
 import mascotWrong from '../assets/colorWord/mascot-wrong.png';
+import toothpick from '../assets/colorWord/toothpick.png';
 import wordBoard from '../assets/colorWord/word-board.png';
 import { PAUSE_SOUNDS } from '../lib/gameSounds';
 import { isInteractive } from '../lib/isInteractive';
-import { MASCOT_CATCH_BGM, MASCOT_CATCH_SOUNDS } from '../lib/mascotCatchAssets';
+import { TAKKO_TIMING_BGM, TAKKO_TIMING_SOUNDS } from '../lib/takkoTimingAssets';
 import { useLoopingBgm } from '../lib/useLoopingBgm';
 import {
-    createMascotCatchRound,
-    judgeMascotCatch,
-    MASCOT_CATCH_LIVES,
-    MASCOT_CATCH_TIME_LIMIT_MS,
-    mascotCatchPoints,
-    mascotCatchPosition,
-} from '../model/mascotCatch';
+    createTakkoTimingRound,
+    judgeTakkoTiming,
+    TAKKO_TIMING_LIVES,
+    TAKKO_TIMING_TIME_LIMIT_MS,
+    takkoTimingPoints,
+    takkoTimingPosition,
+} from '../model/takkoTiming';
 import { GameBoardButton } from './GameBoardButton';
 import { GameCountdown } from './GameCountdown';
 import { GameImageButton } from './GameImageButton';
@@ -58,27 +59,27 @@ const STOP_KEYS = new Set([' ', 'Enter']);
 
 /** 방금 멈춘 결과 — result가 null이면 시간 초과 */
 interface Reveal {
-    result: MascotCatchResult | null;
+    result: TakkoTimingResult | null;
     points: number;
 }
 
 const padScore = (score: number) => String(score).padStart(5, '0');
 const percent = (value: number) => `${value * 100}%`;
 
-const RESULT_CHIP: Record<MascotCatchResult | 'timeUp', string> = {
+const RESULT_CHIP: Record<TakkoTimingResult | 'timeUp', string> = {
     perfect: '퍼펙트! +20',
-    hit: '캐치! +10',
-    miss: '아쉬워요!',
+    hit: '콕! +10',
+    miss: '빗나갔어요!',
     timeUp: '시간 초과!',
 };
 
 /**
- * 마스코트 캐치 — 좌우로 오가는 타코야끼를 금색 구간 안에서 멈춘다 (화면 클릭·터치, 스페이스바·Enter).
+ * 타꼬 타이밍 맞추기 — 좌우로 오가는 타꼬가 금색 구간에 왔을 때 이쑤시개로 콕 꽂는다 (화면 클릭·터치, 스페이스바·Enter).
  * 구간 안이면 +10점, 가운데 가까이면 퍼펙트 +20점. 구간 밖이거나 제한 시간이 지나면 목숨이 하나 줄고,
  * 성공할수록 타코야끼가 빨라지고 금색 구간이 좁아진다.
  * 시작·이어 하기 3·2·1, 일시정지(Esc·P, 다른 탭·창으로 가면 자동), 결과 표시는 글자색깔 맞추기와 같은 틀이다
  */
-export function MascotCatchGame({
+export function TakkoTimingGame({
     bestScore = 0,
     onExit,
     onGameOver,
@@ -89,14 +90,14 @@ export function MascotCatchGame({
 }) {
     const [phase, setPhase] = useState<Phase>('ready');
     const [countdown, setCountdown] = useState(COUNTDOWN_FROM);
-    const [round, setRound] = useState<MascotCatchRound>(() =>
-        createMascotCatchRound(Math.random, 0),
+    const [round, setRound] = useState<TakkoTimingRound>(() =>
+        createTakkoTimingRound(Math.random, 0),
     );
     // 한 판마다 바뀌는 번호 — 움직임과 제한 시간을 처음부터 다시 잰다
     const [roundKey, setRoundKey] = useState(0);
     const [successes, setSuccesses] = useState(0);
     const [score, setScore] = useState(0);
-    const [lives, setLives] = useState(MASCOT_CATCH_LIVES);
+    const [lives, setLives] = useState(TAKKO_TIMING_LIVES);
     const [reveal, setReveal] = useState<Reveal | null>(null);
     const [hurry, setHurry] = useState(false);
     const [best, setBest] = useState(bestScore);
@@ -111,7 +112,7 @@ export function MascotCatchGame({
     const pauseRequestedRef = useRef(false);
     // 이번 판에서 흐른 시간(ms) — 일시정지 후 이어 할 때 여기서부터 다시 움직인다
     const elapsedRef = useRef(0);
-    const bgm = useLoopingBgm(MASCOT_CATCH_BGM);
+    const bgm = useLoopingBgm(TAKKO_TIMING_BGM);
 
     // 타코야끼 위치(0~1)와 남은 시간(1 → 0) — 매 프레임 바뀌므로 다시 그리지 않고 값만 옮긴다
     const position = useMotionValue(0);
@@ -119,8 +120,8 @@ export function MascotCatchGame({
     const timeLeft = useMotionValue(1);
     useMotionValueEvent(timeLeft, 'change', (value) => setHurry(value <= HURRY_RATIO));
 
-    const playSound = (key: keyof typeof MASCOT_CATCH_SOUNDS) =>
-        bgm.playEffect(MASCOT_CATCH_SOUNDS[key]);
+    const playSound = (key: keyof typeof TAKKO_TIMING_SOUNDS) =>
+        bgm.playEffect(TAKKO_TIMING_SOUNDS[key]);
 
     const resetRound = () => {
         elapsedRef.current = 0;
@@ -133,13 +134,13 @@ export function MascotCatchGame({
         pauseRequestedRef.current = false;
         // 시작은 항상 키·클릭 입력 안에서 불리므로 여기서 음악을 튼다 (브라우저 자동 재생 제한)
         bgm.play();
-        bgm.preloadEffects([...Object.values(MASCOT_CATCH_SOUNDS), ...Object.values(PAUSE_SOUNDS)]);
+        bgm.preloadEffects([...Object.values(TAKKO_TIMING_SOUNDS), ...Object.values(PAUSE_SOUNDS)]);
         setSuccesses(0);
         setScore(0);
-        setLives(MASCOT_CATCH_LIVES);
+        setLives(TAKKO_TIMING_LIVES);
         setReveal(null);
         setNewBest(false);
-        setRound((prev) => createMascotCatchRound(Math.random, 0, prev));
+        setRound((prev) => createTakkoTimingRound(Math.random, 0, prev));
         setRoundKey((key) => key + 1);
         resetRound();
         setCountdown(COUNTDOWN_FROM);
@@ -186,8 +187,8 @@ export function MascotCatchGame({
     // 멈추기(stopped) 또는 시간 초과(false) — 채점하고 잠깐 결과를 보여 준다
     const judge = (stopped: boolean) => {
         if (phase !== 'playing' || reveal) return;
-        const result = stopped ? judgeMascotCatch(position.get(), round) : null;
-        const points = result ? mascotCatchPoints(result) : 0;
+        const result = stopped ? judgeTakkoTiming(position.get(), round) : null;
+        const points = result ? takkoTimingPoints(result) : 0;
         setReveal({ result, points });
         if (points > 0) {
             setScore((n) => n + points);
@@ -225,18 +226,18 @@ export function MascotCatchGame({
         const tick = (now: number) => {
             let done = false;
             try {
-                const elapsed = Math.min(now - base, MASCOT_CATCH_TIME_LIMIT_MS);
+                const elapsed = Math.min(now - base, TAKKO_TIMING_TIME_LIMIT_MS);
                 elapsedRef.current = elapsed;
-                position.set(mascotCatchPosition(elapsed, round.sweepMs));
-                timeLeft.set(1 - elapsed / MASCOT_CATCH_TIME_LIMIT_MS);
-                if (elapsed >= MASCOT_CATCH_TIME_LIMIT_MS) {
+                position.set(takkoTimingPosition(elapsed, round.sweepMs));
+                timeLeft.set(1 - elapsed / TAKKO_TIMING_TIME_LIMIT_MS);
+                if (elapsed >= TAKKO_TIMING_TIME_LIMIT_MS) {
                     done = true;
                     timeUp();
                 }
             } catch (error) {
                 if (!errorLogged) {
                     errorLogged = true;
-                    console.error('마스코트 캐치 프레임 처리 중 오류가 발생했어요.', error);
+                    console.error('타꼬 타이밍 맞추기 프레임 처리 중 오류가 발생했어요.', error);
                 }
             } finally {
                 if (!done) frame = requestAnimationFrame(tick);
@@ -254,7 +255,7 @@ export function MascotCatchGame({
             return;
         }
         resetRound();
-        setRound((prev) => createMascotCatchRound(Math.random, successes, prev));
+        setRound((prev) => createTakkoTimingRound(Math.random, successes, prev));
         setRoundKey((key) => key + 1);
         if (pauseRequestedRef.current) {
             pauseRequestedRef.current = false;
@@ -344,7 +345,7 @@ export function MascotCatchGame({
                             />
                         )}
                     </div>
-                    <GameLives lives={lives} max={MASCOT_CATCH_LIVES} />
+                    <GameLives lives={lives} max={TAKKO_TIMING_LIVES} />
                     <ScoreBoard value={padScore(score)} />
                 </div>
 
@@ -353,7 +354,7 @@ export function MascotCatchGame({
                     <GameTimer timeLeft={timeLeft} hurry={hurry && phase !== 'ready'} />
                 </div>
 
-                {/* 가운데 — 결과 한마디, 판(image 170) 위 길과 금색 구간·타코야끼, 멈추기 버튼. 실패하면 이 부분이 흔들린다 */}
+                {/* 가운데 — 결과 한마디, 판(image 170) 위 길과 금색 구간·타코야끼, 꽂기 버튼. 실패하면 이 부분이 흔들린다 */}
                 <div
                     ref={boardScope}
                     className="flex flex-1 flex-col items-center justify-center gap-[3%] px-3 pb-[6%]"
@@ -370,7 +371,7 @@ export function MascotCatchGame({
                         )}
                     </div>
 
-                    {/* 판을 누르면 멈춘다 (위 버튼들은 제외) */}
+                    {/* 판을 누르면 꽂는다 (위 버튼들은 제외) */}
                     <div
                         className="relative aspect-[900/229] w-[min(82%,44rem)] cursor-pointer"
                         onPointerDown={(event) => {
@@ -403,6 +404,24 @@ export function MascotCatchGame({
                             >
                                 <span className="bg-game-yellow absolute inset-y-1 left-1/2 w-1 -translate-x-1/2 rounded-full" />
                             </motion.div>
+                            {/* 이쑤시개(피그마 image 182) — 금색 구간 가운데 위에서 기다리다가, 누르면 끝이 길에 닿도록 콕 꽂힌다.
+                                그림의 왼쪽 아래 끝이 이쑤시개 끝이라 그 점을 구간 가운데에 맞춘다. 시간 초과면 꽂지 않는다 */}
+                            <motion.img
+                                key={`pick-${roundKey}`}
+                                src={toothpick}
+                                alt=""
+                                aria-hidden
+                                draggable={false}
+                                initial={false}
+                                animate={reveal?.result ? { x: 0, y: 0 } : { x: '45%', y: '-45%' }}
+                                transition={
+                                    reveal?.result
+                                        ? { duration: 0.09, ease: 'easeIn' }
+                                        : { type: 'spring', stiffness: 260, damping: 20 }
+                                }
+                                className="pointer-events-none absolute bottom-[40%] z-10 w-[clamp(2.25rem,7vw,4rem)] drop-shadow-md [image-rendering:pixelated]"
+                                style={{ left: percent(round.center) }}
+                            />
                             {/* 타코야끼 — 길 전체 폭의 틀을 위치만큼 옮겨, 그 왼쪽 끝에 붙은 타코야끼가 따라가게 한다 */}
                             <motion.div
                                 aria-hidden
@@ -432,7 +451,7 @@ export function MascotCatchGame({
                         onClick={() => judge(true)}
                         className="w-[min(36%,15rem)] justify-center gap-2 text-sm sm:text-base"
                     >
-                        지금 멈추기!
+                        지금 꽂기!
                         {/* 키 모양 — 글자색깔 맞추기 번호 키와 같은 모양 */}
                         <span
                             aria-hidden
@@ -456,15 +475,13 @@ export function MascotCatchGame({
                 <GameStartHint onStart={start}>
                     <GameStartHintLine>
                         <span className="flex items-center gap-1.5 [@media(hover:none)]:hidden">
-                            화면 클릭 또는 <GameKey>Space</GameKey> 멈추기
+                            화면 클릭 또는 <GameKey>Space</GameKey> 꽂기
                         </span>
-                        <span className="hidden [@media(hover:none)]:inline">
-                            화면을 눌러 멈추기
-                        </span>
+                        <span className="hidden [@media(hover:none)]:inline">화면을 눌러 꽂기</span>
                         <GamePauseKeysHint />
                     </GameStartHintLine>
                     <GameStartHintLine>
-                        금색 구간에서 멈추면 성공 · 가운데면 퍼펙트 2배
+                        금색 구간에서 꽂으면 성공 · 가운데면 퍼펙트 2배
                     </GameStartHintLine>
                     <GameStartHintLine>목숨 3개 · 성공할수록 빨라져요</GameStartHintLine>
                 </GameStartHint>
@@ -500,9 +517,7 @@ export function MascotCatchGame({
 
             {/* 스크린리더 — 결과를 알린다 */}
             <p aria-live="polite" className="sr-only">
-                {phase === 'playing' && !reveal
-                    ? '타코야끼가 움직여요. 금색 구간에서 멈추세요'
-                    : ''}
+                {phase === 'playing' && !reveal ? '타꼬가 달려요. 금색 구간에 오면 꽂으세요' : ''}
                 {chip ?? ''}
                 {phase === 'paused' ? '일시정지' : ''}
                 {phase === 'over' ? `게임 끝. ${score}점` : ''}

@@ -13,7 +13,7 @@ const BUTTON_IMAGES = {
 
 /**
  * 판 위 도트 버튼 — 기본(image 170)·올렸을 때(image 172)·눌렀을 때(image 171) 그림을 상태별로 바꾼다.
- * 글자색깔 맞추기 색 버튼·마스코트 캐치 멈추기 버튼이 같이 쓴다. 안쪽 배치는 className으로 정한다
+ * 글자색깔 맞추기 색 버튼·타꼬 타이밍 맞추기 멈추기 버튼이 같이 쓴다. 안쪽 배치는 className으로 정한다
  */
 export function GameBoardButton({
     disabled,
