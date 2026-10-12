@@ -1,6 +1,6 @@
 import { http } from 'msw';
 
-import type { EventStatus } from '@entities/event';
+import type { EventStatus, MembershipRule } from '@entities/event';
 
 import { env } from '@shared/config/env';
 
@@ -155,6 +155,14 @@ export interface MockEvent {
     isTimeRaffle?: boolean;
     raffleDetail?: ReturnType<typeof raffleDetail>;
     requiredTickets: number;
+    /**
+     * spec의 이벤트 유형 필드 — 시드에서 비워 두면 entryRuleOf가 requiredTickets로 파생한다.
+     * 명시하면 파생보다 우선한다 (월말 소진용·멤버십 제한 등 조합을 직접 지정할 때 쓴다).
+     */
+    eventType?: 'NO_TICKET' | 'TICKET';
+    weightingEnabled?: boolean;
+    maxTicketsPerUser?: number | null;
+    membershipRule?: MembershipRule;
     tags?: string[];
     prizeName: string;
     winnerCount: number;
@@ -168,6 +176,28 @@ export interface MockEvent {
 // requiredTickets > 0 은 모은 응모권을 차감해 응모하는 이벤트, 0 은 응모권 없이 참여하는 이벤트다.
 // 이벤트 목록 화면이 이 값으로 위·아래 섹션을 가른다.
 // isTimeRaffle 이 true 면 타임래플 화면에만 노출하고 이벤트 목록에서는 뺀다.
+/**
+ * spec의 이벤트 유형 조합 — 시드가 비워 두면 requiredTickets로 파생한다.
+ * 0: 응모권 미사용, 1: 사용·가중치 미적용(브론즈 1장·사용자당 1회), 2장 이상: 일반 가중치(누적 5장).
+ * 월말 소진용(가중치 적용·상한 없음)은 시드가 weightingEnabled와 함께 maxTicketsPerUser: null을 명시한다.
+ * 멤버십 규칙은 표시 태그('멤버십 혜택')와 별개의 정책 필드다 — 기본은 excellent다.
+ */
+export function entryRuleOf(event: MockEvent) {
+    const eventType: 'NO_TICKET' | 'TICKET' =
+        event.eventType ?? (event.requiredTickets > 0 ? 'TICKET' : 'NO_TICKET');
+    const weightingEnabled = event.weightingEnabled ?? event.requiredTickets > 1;
+    const maxTicketsPerUser =
+        event.maxTicketsPerUser !== undefined
+            ? event.maxTicketsPerUser
+            : eventType === 'NO_TICKET'
+              ? null
+              : weightingEnabled
+                ? 5
+                : 1;
+    const membershipRule = event.membershipRule ?? 'excellent';
+    return { eventType, weightingEnabled, maxTicketsPerUser, membershipRule };
+}
+
 export const mockEvents: MockEvent[] = [
     {
         id: 'evt-001',
@@ -177,8 +207,9 @@ export const mockEvents: MockEvent[] = [
         bannerImageUrl: null,
         // 상세 화면 본문 이미지 — 실제 URL은 백엔드 연동 후 들어온다. 로컬에서 확인하려면 임의의 이미지 URL을 넣으면 된다
         detailImageUrl: null,
-        startsAt: '2026-09-01T00:00:00Z',
-        endsAt: '2026-10-31T14:59:59Z',
+        // 대표 시연 이벤트 — 세션 기준 상대 기간으로 두어 고정 마감일이 지나도 응모할 수 있다
+        startsAt: demoTime(-7 * 24 * 60 * MINUTE),
+        endsAt: demoTime(7 * 24 * 60 * MINUTE),
         status: 'open',
         requiredTickets: 1,
         tags: ['디지털기기'],
@@ -193,7 +224,8 @@ export const mockEvents: MockEvent[] = [
         id: 'evt-002',
         isRecommended: true,
         title: '출석왕 챌린지',
-        description: '이번 달 출석 미션 완주자 대상 추첨. 응모권 3장으로 참여해요.',
+        description:
+            '이번 달 출석 미션 완주자 대상 추첨. 응모권 1장부터 참여하고 많이 쓸수록 당첨 확률이 올라가요.',
         bannerImageUrl: null,
         startsAt: '2026-09-01T00:00:00Z',
         endsAt: '2026-10-31T14:59:59Z',
@@ -262,7 +294,9 @@ export const mockEvents: MockEvent[] = [
     {
         id: 'evt-010',
         title: 'VVIP 전용 데이터 쿠폰 래플',
-        description: 'VVIP·VIP 등급 대상 데이터 쿠폰 추첨 이벤트. 응모권 3장이 필요해요.',
+        description: 'VVIP·VIP 등급 대상 데이터 쿠폰 추첨 이벤트. 응모권 1장부터 참여할 수 있어요.',
+        // 유일한 멤버십 제한 시드 — 우수 등급 사용자는 ENTRY-003으로 거절된다
+        membershipRule: 'vip',
         bannerImageUrl: null,
         startsAt: demoTime(5 * 60 * MINUTE),
         endsAt: '2026-10-20T14:59:59Z',
@@ -362,6 +396,26 @@ export const mockEvents: MockEvent[] = [
         myEntryCount: 0,
         myTicketCount: 0,
     },
+    {
+        id: 'evt-014',
+        isTimeRaffle: true,
+        title: 'VIP 전용 10월 래플',
+        description: 'VIP 이상 멤버십 전용 추첨 이벤트. 브론즈 응모권 1장으로 참여해요.',
+        // 진행 중인 멤버십 제한 시드 — 우수 등급은 ENTRY-003으로 거절돼 화면에서 안내가 보인다
+        membershipRule: 'vip',
+        bannerImageUrl: null,
+        startsAt: demoTime(-10 * 24 * 60 * MINUTE),
+        endsAt: demoTime(20 * 24 * 60 * MINUTE),
+        status: 'open',
+        requiredTickets: 1,
+        tags: ['멤버십 혜택'],
+        prizeName: 'U+ 데이터 쿠폰 10GB',
+        winnerCount: 20,
+        participantCount: 210,
+        usedTicketCount: 210,
+        myEntryCount: 0,
+        myTicketCount: 0,
+    },
 
     {
         id: 'evt-201',
@@ -454,7 +508,8 @@ export const mockEvents: MockEvent[] = [
         id: 'evt-206',
         isRecommended: true,
         title: 'CGV 영화 관람권 응모',
-        description: '응모권 2장으로 참여하는 영화 관람권 추첨 이벤트',
+        description:
+            '응모권 1장부터 참여하고 많이 쓸수록 당첨 확률이 올라가는 영화 관람권 추첨 이벤트',
         bannerImageUrl: null,
         startsAt: '2026-09-03T00:00:00Z',
         endsAt: '2026-10-27T14:59:59Z',
@@ -472,7 +527,7 @@ export const mockEvents: MockEvent[] = [
         id: 'evt-207',
         isRecommended: true,
         title: '에어팟 4 응모',
-        description: '응모권 2장으로 참여하는 이어폰 추첨 이벤트',
+        description: '응모권 1장부터 참여하고 많이 쓸수록 당첨 확률이 올라가는 이어폰 추첨 이벤트',
         bannerImageUrl: null,
         startsAt: '2026-09-06T00:00:00Z',
         endsAt: '2026-10-06T14:59:59Z',
@@ -909,19 +964,17 @@ function statusAt(startsAt: string, endsAt: string, now: number): EventStatus {
     return 'drawn';
 }
 
+/** 응모·자격 목업이 응모 가능 상태를 판정할 때 쓴다 — 저장값이 아니라 시간으로 재계산한 상태 */
+export function mockEventEffectiveStatus(event: MockEvent): EventStatus {
+    return statusAt(event.startsAt, event.endsAt, mockNow().getTime());
+}
+
 /**
  * 목 이벤트를 응답 모양으로 바꾼다 — 상태를 지금 기준으로 다시 계산하고 발표 예정 시각을 싣는다.
  * 발표 카운트다운은 서버가 준 시각으로 계산해야 새로고침에 리셋되지 않으므로(docs/CONTEXT.md),
  * 화면에서 마감 + 5분을 더하지 않도록 목업이 서버 몫을 대신 계산한다.
  */
-function toResponse<
-    T extends {
-        startsAt: string;
-        endsAt: string;
-        participantCount: number | null;
-        usedTicketCount: number | null;
-    },
->(event: T, now: number) {
+function toResponse(event: MockEvent, now: number) {
     // 응모 현황은 E03 전용이므로 이벤트 응답에서 뺀다
     const { participantCount, usedTicketCount, ...rest } = event;
     void participantCount;
@@ -929,6 +982,7 @@ function toResponse<
     const ends = new Date(event.endsAt).getTime();
     return {
         ...rest,
+        ...entryRuleOf(event),
         status: statusAt(event.startsAt, event.endsAt, now),
         publicationScheduledAt: new Date(ends + ANNOUNCE_DELAY_MS).toISOString(),
     };

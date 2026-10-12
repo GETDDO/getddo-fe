@@ -5,7 +5,7 @@ import { apiClient } from '@shared/api/client';
 import { envelopeSchema } from '@shared/api/envelopeSchema';
 import { queryPresets } from '@shared/api/queryPresets';
 
-import { entrySchema, entryStatisticsSchema } from '../model/types';
+import { entryEligibilitySchema, entrySchema, entryStatisticsSchema } from '../model/types';
 
 // spec 공통 계약 초안의 Page<T> 봉투 — items/page/size/totalElements (페이지는 1부터)
 const myEntryPageSchema = z.object({
@@ -45,6 +45,7 @@ export function useMyEntries() {
 }
 
 export const entryStatisticsApiPath = (eventId: string) => `/events/${eventId}/statistics`;
+export const entryEligibilityApiPath = (eventId: string) => `/events/${eventId}/eligibility`;
 
 interface EntryStatisticsOptions {
     /** 응모 진행 중(open) 이벤트인가 — true일 때만 30초 폴링한다 (ADR-0007) */
@@ -70,5 +71,28 @@ export function useEntryStatistics(
         },
         enabled,
         refetchInterval: isOpen ? queryPresets.realtime.refetchInterval : false,
+    });
+}
+
+interface EntryEligibilityOptions {
+    /** 이벤트가 진행 중일 때만 자격을 조회할지 — 화면은 응모 버튼이 보이는 구간에서만 켠다 */
+    enabled?: boolean;
+}
+
+/**
+ * 응모 자격 조회(E07). 보유량 계산·버튼 게이팅·불가 사유 안내의 서버 판정 결과다.
+ * 응모가 접수되면 ENTRIES_KEY 접두사로 함께 무효화된다
+ */
+export function useEntryEligibility(
+    eventId: string,
+    { enabled = true }: EntryEligibilityOptions = {},
+) {
+    return useQuery({
+        queryKey: [...ENTRIES_KEY, 'eligibility', eventId],
+        queryFn: async () => {
+            const { data } = await apiClient.get<unknown>(entryEligibilityApiPath(eventId));
+            return envelopeSchema(entryEligibilitySchema).parse(data).data;
+        },
+        enabled,
     });
 }
