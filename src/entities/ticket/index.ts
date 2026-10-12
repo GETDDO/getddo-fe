@@ -17,3 +17,25 @@ export {
 } from './api/queries';
 export { useTicketHistories } from './api/history';
 export { TicketHistoryItem } from './ui/TicketHistoryItem';
+export {
+    adminTicketHistorySchema,
+    TICKET_OPERATION_LABEL,
+    TICKET_REFUND_REASON_LABEL,
+    TICKET_SOURCE_TYPE_LABEL,
+    TICKET_STATUS_LABEL,
+    ticketConsistencySchema,
+    ticketGrantSchema,
+    ticketInconsistencySchema,
+    ticketMismatchSchema,
+    ticketRefundSchema,
+    ticketSourceTypeSchema,
+} from './model/admin';
+export type {
+    AdminTicketHistory,
+    TicketConsistency,
+    TicketGrant,
+    TicketInconsistency,
+    TicketMismatch,
+    TicketRefund,
+    TicketSourceType,
+} from './model/admin';
