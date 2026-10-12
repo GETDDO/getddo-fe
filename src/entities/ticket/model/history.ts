@@ -1,29 +1,36 @@
 import { z } from 'zod';
 
-// spec T02 — TicketTransaction 유형. 지급·차감·반환·만료·회수 외에 관리자 정정(CORRECTION)도 이력으로 남는다
-export const ticketTransactionTypeSchema = z.enum([
-    'GRANT',
-    'SPEND',
-    'REFUND',
-    'EXPIRE',
-    'REVOKE',
-    'CORRECTION',
-]);
+import { ticketGradeSchema } from './types';
 
-// 화면이 쓰는 원장 항목 — spec TicketTransaction에서 지갑·수량·사후 잔액·사유·시각과 연결 이벤트 ID를 받는다 (목업은 아직 eventId를 내리지 않는다)
+// spec T02 — TicketHistory.operationType. 회수(REVOKE)는 이번 버전 처리 유형에서 제외다
+// (getddo-spec 05-api/ticket.md, 도메인 규칙 "응모권 회수 제외")
+export const ticketOperationTypeSchema = z.enum(['GRANT', 'USE', 'REFUND', 'EXPIRE', 'CORRECTION']);
+
+// spec T02 — 처리가 끝난 직후 응모권의 상태
+export const ticketStatusSchema = z.enum(['AVAILABLE', 'RETURNED', 'SPENT', 'EXPIRED']);
+
+// spec T02 — TicketHistory는 응모권 한 장의 처리 한 번이라 수량·누계 필드가 없다.
+// 한 응모에 여러 장을 쓰면 장마다 USE 이력이 생기고 같은 eventEntryId를 가진다.
+// originalUseHistoryId는 REFUND가 되돌리는 원본 USE 이력, correctedHistoryId는 CORRECTION이 정정하는 과거 이력이다
 export const ticketHistorySchema = z.object({
     id: z.string(),
-    walletId: z.string(),
-    transactionType: ticketTransactionTypeSchema,
-    /** 지급·반환은 양수, 차감·만료·회수는 음수 */
-    quantity: z.number().int(),
-    /** 처리 직후 해당 지갑의 잔액 — 전체 합계가 아니다 */
-    balanceAfter: z.number().int(),
+    ticketId: z.string(),
+    operationType: ticketOperationTypeSchema,
+    grade: ticketGradeSchema,
+    status: ticketStatusSchema,
+    expiresAt: z.iso.datetime(),
     reason: z.string(),
     createdAt: z.iso.datetime(),
-    /** 응모·반환이 연결된 이벤트 — spec TicketTransaction.eventId (없으면 null 또는 생략) */
-    eventId: z.string().nullable().optional(),
+    // 연결된 원본 행위 — 없으면 null 또는 생략
+    eventId: z.string().nullish(),
+    eventEntryId: z.string().nullish(),
+    missionId: z.string().nullish(),
+    gameId: z.string().nullish(),
+    attendanceDate: z.string().nullish(),
+    originalUseHistoryId: z.string().nullish(),
+    correctedHistoryId: z.string().nullish(),
 });
 
-export type TicketTransactionType = z.infer<typeof ticketTransactionTypeSchema>;
+export type TicketOperationType = z.infer<typeof ticketOperationTypeSchema>;
+export type TicketStatus = z.infer<typeof ticketStatusSchema>;
 export type TicketHistory = z.infer<typeof ticketHistorySchema>;

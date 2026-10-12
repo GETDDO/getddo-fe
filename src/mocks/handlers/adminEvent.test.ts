@@ -191,10 +191,10 @@ describe('관리자 이벤트 목업 핸들러', () => {
 
         const balanceOf = async () =>
             (
-                await apiClient.get<{ data: { availableBalance: number } }>('/tickets/wallets/me', {
+                await apiClient.get<{ data: { availableCount: number } }>('/tickets/me', {
                     headers: { 'X-User-ID': userId },
                 })
-            ).data.data.availableBalance;
+            ).data.data.availableCount;
 
         const first = await call('post', `/admin/events/${created.id}/cancel`, {
             reason: '경품 수급 문제',

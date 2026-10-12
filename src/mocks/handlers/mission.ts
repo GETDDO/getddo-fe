@@ -13,7 +13,7 @@ import { IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
 
 import { mockNow } from '../now';
 import { fail, failBody, ok, okBody } from './response';
-import { recordMockTicketGrant } from './ticket';
+import { drawMockTicketGrade, recordMockTicketGrant } from './ticket';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
@@ -524,7 +524,11 @@ export const missionHandlers = [
         };
 
         if (isCompleted) {
-            recordMockTicketGrant(userId, mission.rewardTicketCount, `${mission.title} 보상`);
+            // 미션 보상은 등급 응모권 — 보상 건의 등급을 확률로 추첨한다. 지급 장수는 미션 계약 재검토 후 정합한다
+            recordMockTicketGrant(userId, mission.rewardTicketCount, `${mission.title} 보상`, {
+                grade: drawMockTicketGrade(),
+                missionId,
+            });
         }
         submissionsFor(userId).unshift(result);
 

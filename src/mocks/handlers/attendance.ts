@@ -98,7 +98,11 @@ export const attendanceHandlers = [
         const bonus = policy.streakBonuses.find((b) => b.days === state.streak);
         const tickets = policy.dailyRewardTickets + (bonus?.rewardTickets ?? 0);
         state.todayGranted = tickets;
-        recordMockTicketGrant(userId, tickets, '매일 출석체크 리워드');
+        // 출석 보상은 브론즈 응모권 고정 (ADR-016) — 지급 이력에 출석 기준일을 연결한다
+        recordMockTicketGrant(userId, tickets, '매일 출석체크 리워드', {
+            grade: 'BRONZE',
+            attendanceDate: today,
+        });
 
         return ok({ attended: true, consecutiveDays: state.streak, ticketsGranted: tickets }, 201);
     }),

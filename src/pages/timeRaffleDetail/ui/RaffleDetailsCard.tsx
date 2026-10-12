@@ -1,12 +1,12 @@
 import type { Event } from '@entities/event';
 
 import { useEntryStatistics } from '@entities/entry';
-import { useTicketWallets } from '@entities/ticket';
+import { useMyTickets } from '@entities/ticket';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 
 export function RaffleDetailsCard({ event }: { event: Event }) {
-    const { data: ticket } = useTicketWallets();
+    const { data: ticket } = useMyTickets();
     // 히어로와 같은 쿼리 키라 요청은 합쳐진다
     const { data: statistics } = useEntryStatistics(event.id, { isOpen: event.status === 'open' });
 
@@ -37,7 +37,7 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
         },
         {
             label: '보유 응모권',
-            value: ticket ? `${formatNumber(ticket.availableBalance)}장` : null,
+            value: ticket ? `${formatNumber(ticket.availableCount)}장` : null,
         },
         {
             label: '이번 이벤트 차감',

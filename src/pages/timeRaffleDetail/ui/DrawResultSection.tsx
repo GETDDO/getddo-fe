@@ -10,7 +10,6 @@ import { WinnerLookupCard } from './WinnerLookupCard';
 /** 발표가 끝났지만 보여 줄 명단이 없는 경우의 안내 — 사유를 구분해 적는다 */
 const EMPTY_NOTICE: Record<string, string> = {
     NO_ENTRANTS: '응모한 사람이 없어 추첨을 진행하지 않았어요.',
-    NO_ELIGIBLE_ENTRANTS: '추첨 대상 조건을 만족한 응모가 없어 당첨자가 없어요.',
     CANCELED: '이벤트가 취소되어 당첨자를 발표하지 않아요.',
 };
 
