@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { formatKst } from '@shared/lib/date';
+import { Button } from '@shared/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@shared/ui/sheet';
 
 import type { AbuseCase } from '../model/types';
@@ -38,7 +39,12 @@ export function AbuseCaseDetailDrawer({
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
-    const { data: detail, isPending } = useAbuseCase(open ? (abuseCase?.id ?? null) : null);
+    const {
+        data: detail,
+        isPending,
+        isError,
+        refetch,
+    } = useAbuseCase(open ? (abuseCase?.id ?? null) : null);
     const shown = abuseCase;
 
     return (
@@ -80,6 +86,20 @@ export function AbuseCaseDetailDrawer({
                                       상세 정보를 불러오는 중…
                                   </p>
                               )}
+                        {isError && (
+                            <div className="flex items-center gap-3">
+                                <p className="text-destructive text-body-sm">
+                                    상세 정보를 불러오지 못했습니다.
+                                </p>
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => void refetch()}
+                                >
+                                    다시 시도
+                                </Button>
+                            </div>
+                        )}
                         <Field label="차단 기록 ID">{shown.id}</Field>
                     </div>
                 )}

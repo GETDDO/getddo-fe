@@ -120,22 +120,20 @@ export function AdminAbuseCasesPage() {
                 <p className="text-fg-tertiary text-body-sm py-6">해당하는 차단 내역이 없습니다.</p>
             )}
             {data && data.items.length > 0 && (
-                <>
-                    <AbuseCaseTable cases={data.items} onRowClick={setSelected} />
-                    <div className="flex items-center justify-between">
-                        <span className="text-body-sm text-fg-tertiary">
-                            총 {data.totalElements}건
-                        </span>
-                        <Pager
-                            current={page - 1}
-                            total={totalPages}
-                            onPrev={() => setPage((p) => p - 1)}
-                            onNext={() => setPage((p) => p + 1)}
-                            prevDisabled={page <= 1}
-                            nextDisabled={page >= totalPages}
-                        />
-                    </div>
-                </>
+                <AbuseCaseTable cases={data.items} onRowClick={setSelected} />
+            )}
+            {data && data.totalElements > 0 && (
+                <div className="flex items-center justify-between">
+                    <span className="text-body-sm text-fg-tertiary">총 {data.totalElements}건</span>
+                    <Pager
+                        current={page - 1}
+                        total={totalPages}
+                        onPrev={() => setPage((p) => p - 1)}
+                        onNext={() => setPage((p) => p + 1)}
+                        prevDisabled={page <= 1}
+                        nextDisabled={page >= totalPages}
+                    />
+                </div>
             )}
 
             <AbuseCaseDetailDrawer
