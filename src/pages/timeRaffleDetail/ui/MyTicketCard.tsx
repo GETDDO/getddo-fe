@@ -2,7 +2,7 @@ import { Ticket } from 'lucide-react';
 
 import type { Event } from '@entities/event';
 
-import { useMyTickets } from '@entities/ticket';
+import { TICKET_GRADE_LABEL, ticketGradeSchema, useMyTickets } from '@entities/ticket';
 import { formatNumber } from '@shared/lib/format';
 
 export function MyTicketCard({ event }: { event: Event }) {
@@ -15,6 +15,15 @@ export function MyTicketCard({ event }: { event: Event }) {
         {
             label: '보유 응모권',
             value: ticket ? `${formatNumber(ticket.availableCount)} 장` : '-',
+        },
+        {
+            // 등급 선택에 필요한 근거라 합계와 별도로 등급별 장수를 함께 보여준다
+            label: '등급별 보유',
+            value: ticket
+                ? ticketGradeSchema.options
+                      .map((grade) => `${TICKET_GRADE_LABEL[grade]} ${ticket.countByGrade[grade]}`)
+                      .join(' · ')
+                : '-',
         },
         { label: '이번 이벤트 응모 횟수', value: `${formatNumber(entryCount)} 회` },
         {

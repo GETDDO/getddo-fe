@@ -1,22 +1,55 @@
 import { http, HttpResponse } from 'msw';
 
-import type { Entry } from '@entities/entry';
+import type { Entry, TicketsByGrade } from '@entities/entry';
+import type { MembershipRule } from '@entities/event';
+import type { TicketGrade } from '@entities/ticket';
 
+import { ticketGradeSchema } from '@entities/ticket';
 import { env } from '@shared/config/env';
 import { IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
 
 import { mockNow } from '../now';
-import { findMockEvent, getMockEventStatistics, recordMockEventEntry } from './event';
+import {
+    entryRuleOf,
+    findMockEvent,
+    getMockEventStatistics,
+    mockEventEffectiveStatus,
+    recordMockEventEntry,
+} from './event';
 import { fail, failBody, ok, okBody } from './response';
-import { getMockAvailableTicketCount, recordMockTicketUse } from './ticket';
+import { getMockAvailableTicketCountByGrade, recordMockTicketUse } from './ticket';
+import { findMockVirtualUser } from './virtualUsers';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
-/** ADR-010 — 가중치 적용 이벤트는 사용자·이벤트별 누적 5장까지만 쓸 수 있다 */
-const ENTRY_TICKET_LIMIT = 5;
-
 // getddo-spec/05-api/entry.md 초안의 EntryReceipt — 계약 기준은 entities/entry의 entrySchema다
 type EntryReceipt = Entry;
+
+// 멤버십 규칙 비교 — 우수 < VIP < VVIP (getddo-spec 02-domain/event.md)
+const MEMBERSHIP_RANK: Record<MembershipRule, number> = { excellent: 0, vip: 1, vvip: 2 };
+
+const ZERO_TICKETS: TicketsByGrade = { BRONZE: 0, SILVER: 0, GOLD: 0 };
+
+/**
+ * E04 요청 본문의 tickets 맵을 세 등급이 채워진 모양으로 정규화한다 — 생략된 등급은 0이다.
+ * 등급 외 키·정수가 아닌 값·음수가 있으면 형식 오류(null)다 (spec EntryRequest)
+ */
+function parseTickets(raw: unknown): TicketsByGrade | null {
+    if (raw === undefined) return { ...ZERO_TICKETS };
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null;
+    const tickets: TicketsByGrade = { ...ZERO_TICKETS };
+    for (const [key, value] of Object.entries(raw)) {
+        if (!(ticketGradeSchema.options as readonly string[]).includes(key)) return null;
+        if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) return null;
+        tickets[key as TicketGrade] = value;
+    }
+    return tickets;
+}
+
+const totalOf = (tickets: TicketsByGrade) => tickets.BRONZE + tickets.SILVER + tickets.GOLD;
+
+const sameTickets = (a: TicketsByGrade, b: TicketsByGrade) =>
+    ticketGradeSchema.options.every((grade) => a[grade] === b[grade]);
 
 /**
  * 멱등키에 묶인 처음 처리 결과 — 성공뿐 아니라 업무 거절(4xx)도 저장한다.
@@ -25,7 +58,7 @@ type EntryReceipt = Entry;
 interface StoredAttempt {
     userId: string;
     eventId: string;
-    ticketCount: number;
+    tickets: TicketsByGrade;
     status: number;
     body: unknown;
 }
@@ -39,7 +72,9 @@ const seedEntry = (): EntryReceipt => ({
     eventId: 'evt-001',
     eventTitle: '갤럭시 버즈 위클리 래플',
     requestedTicketCount: 1,
+    requestedTicketsByGrade: { BRONZE: 1, SILVER: 0, GOLD: 0 },
     deductedTicketCount: 1,
+    deductedTicketsByGrade: { BRONZE: 1, SILVER: 0, GOLD: 0 },
     status: 'ACCEPTED',
     requestedAt: '2026-09-15T08:00:00Z',
     acceptedAt: '2026-09-15T08:00:00Z',
@@ -81,6 +116,15 @@ const myEntriesFor = (userId: string) => {
     return list;
 };
 
+/** 이 이벤트에 접수된 내 응모 — E04의 1회 제한·누적 상한 판정과 E07의 usedTicketCount가 같은 근거를 쓴다 */
+const myAcceptedFor = (userId: string, eventId: string) =>
+    myEntriesFor(userId).filter(
+        (entry) => entry.eventId === eventId && entry.status === 'ACCEPTED',
+    );
+
+const usedTicketCountOf = (userId: string, eventId: string) =>
+    myAcceptedFor(userId, eventId).reduce((sum, entry) => sum + entry.deductedTicketCount, 0);
+
 export const entryHandlers = [
     // E06 초안 — Page<EntryReceipt> 봉투, page·size 파라미터를 적용한다 (페이지는 1부터)
     http.get(api('/users/me/entries'), ({ request }) => {
@@ -99,27 +143,85 @@ export const entryHandlers = [
     http.get(api('/events/:eventId/statistics'), ({ params, request }) => {
         const event = findMockEvent(String(params.eventId));
         if (!event) {
-            return fail(404, 'EVENT_NOT_FOUND', '이벤트를 찾을 수 없습니다');
+            return fail(404, 'ENTRY-004', '이벤트를 찾을 수 없습니다');
         }
         // 본인 차감 수는 공유 이벤트 카운터가 아니라 요청 사용자의 접수 기록에서 센다
-        const mySpentTicketCount = myEntriesFor(userIdOf(request))
-            .filter((entry) => entry.eventId === event.id && entry.status === 'ACCEPTED')
-            .reduce((sum, entry) => sum + entry.deductedTicketCount, 0);
+        const mySpentTicketCount = usedTicketCountOf(userIdOf(request), event.id);
         return ok({ ...getMockEventStatistics(event), mySpentTicketCount });
     }),
+    // E07 — 응모 자격 조회. 서버가 판정한 불가 사유를 모두 돌려준다 (화면은 사전 차단보다 결과 안내에 쓴다)
+    http.get(api('/events/:eventId/eligibility'), ({ params, request }) => {
+        const event = findMockEvent(String(params.eventId));
+        if (!event) {
+            return fail(404, 'ENTRY-004', '이벤트를 찾을 수 없습니다');
+        }
+        const userId = userIdOf(request);
+        const user = findMockVirtualUser(userId);
+        const rule = entryRuleOf(event);
+        const reasons: string[] = [];
+
+        if (user?.role === 'ADMIN') reasons.push('ADMIN_ENTRY_FORBIDDEN');
+        if (
+            MEMBERSHIP_RANK[user?.membership ?? 'excellent'] < MEMBERSHIP_RANK[rule.membershipRule]
+        ) {
+            reasons.push('ENTRY_MEMBERSHIP_NOT_MET');
+        }
+        if (mockEventEffectiveStatus(event) !== 'open') reasons.push('EVENT_NOT_OPEN');
+
+        const usedTicketCount = usedTicketCountOf(userId, event.id);
+        const onceOnly = rule.eventType === 'NO_TICKET' || !rule.weightingEnabled;
+        if (onceOnly && myAcceptedFor(userId, event.id).length > 0) {
+            reasons.push('ALREADY_ENTERED');
+        }
+
+        const availableByGrade = getMockAvailableTicketCountByGrade(userId);
+        if (rule.eventType === 'TICKET') {
+            if (rule.weightingEnabled) {
+                if (rule.maxTicketsPerUser !== null && usedTicketCount >= rule.maxTicketsPerUser) {
+                    reasons.push('TICKET_LIMIT_EXCEEDED');
+                }
+                if (totalOf(availableByGrade) < 1) reasons.push('INSUFFICIENT_TICKETS');
+            } else if (availableByGrade.BRONZE < 1) {
+                reasons.push('BRONZE_REQUIRED');
+            }
+        }
+
+        // 미사용 이벤트는 수량 관련 값이 0이다 — 1회 제한은 reasons·canEnter로 확인한다 (spec E07)
+        const isFree = rule.eventType === 'NO_TICKET';
+        const remainingTicketLimit = isFree
+            ? 0
+            : rule.maxTicketsPerUser === null
+              ? null
+              : Math.max(0, rule.maxTicketsPerUser - usedTicketCount);
+        const availableTicketBalance = isFree
+            ? 0
+            : rule.weightingEnabled
+              ? totalOf(availableByGrade)
+              : availableByGrade.BRONZE;
+
+        return ok({
+            eventId: event.id,
+            canEnter: reasons.length === 0,
+            reasons,
+            usedTicketCount,
+            remainingTicketLimit,
+            availableTicketBalance,
+            serverTime: mockNow().toISOString(),
+        });
+    }),
+    // E04 — 응모 접수. 등급별 장수 맵(tickets)을 이벤트 유형별 규칙으로 검증해 차감한다 (GD-150)
     http.post(api('/events/:eventId/entries'), async ({ params, request }) => {
         const idempotencyKey = request.headers.get(IDEMPOTENCY_HEADER);
         if (!idempotencyKey) {
             return fail(400, 'COMMON-002', '멱등키가 필요합니다');
         }
         const userId = userIdOf(request);
-
         const eventId = String(params.eventId);
-        const body = (await request.json().catch(() => null)) as { ticketCount?: unknown } | null;
-        const ticketCount = body?.ticketCount;
-        // 숫자가 아닌 값을 임의로 1장으로 바꾸면 NaN이 그대로 잔액에 더해진다 — 받은 값을 그대로 검증한다
-        if (typeof ticketCount !== 'number' || !Number.isInteger(ticketCount) || ticketCount < 0) {
-            return fail(400, 'COMMON-002', '응모할 응모권 수가 올바르지 않습니다');
+
+        const body = (await request.json().catch(() => null)) as { tickets?: unknown } | null;
+        const tickets = parseTickets(body?.tickets);
+        if (!tickets) {
+            return fail(400, 'ENTRY-001', '응모권 장수 맵이 올바르지 않습니다');
         }
 
         const attempt = attempts.get(idempotencyKey);
@@ -128,13 +230,9 @@ export const entryHandlers = [
             if (
                 attempt.userId !== userId ||
                 attempt.eventId !== eventId ||
-                attempt.ticketCount !== ticketCount
+                !sameTickets(attempt.tickets, tickets)
             ) {
-                return fail(
-                    409,
-                    'IDEMPOTENCY_CONFLICT',
-                    '같은 멱등키로 다른 응모를 보낼 수 없습니다',
-                );
+                return fail(409, 'ENTRY-009', '같은 멱등키로 다른 응모를 보낼 수 없습니다');
             }
             // 같은 요청의 재전송 — 접수든 거절이든 처음 결과를 그대로 돌려준다 (E04).
             // 이미 접수된 건의 재전송이므로 201은 200으로 내려준다
@@ -147,7 +245,7 @@ export const entryHandlers = [
             attempts.set(idempotencyKey, {
                 userId,
                 eventId,
-                ticketCount,
+                tickets,
                 status,
                 body: responseBody,
             });
@@ -156,46 +254,77 @@ export const entryHandlers = [
 
         const event = findMockEvent(eventId);
         if (!event) {
-            return remember(404, failBody('EVENT_NOT_FOUND', '이벤트를 찾을 수 없습니다'));
+            return remember(404, failBody('ENTRY-004', '이벤트를 찾을 수 없습니다'));
         }
-        // 이벤트 유형별 수량 규칙 — 응모권 사용 이벤트는 1장 이상, 미사용 이벤트는 0장만 받는다
-        const usesTickets = event.requiredTickets > 0;
-        if (usesTickets && ticketCount < 1) {
-            return remember(
-                400,
-                failBody('COMMON-002', '응모권 사용 이벤트는 1장 이상 응모해야 합니다'),
-            );
+        const rule = entryRuleOf(event);
+
+        // 시연용 사용자 문맥 — 헤더 멤버십이 오면 등록된 멤버십과 같아야 한다 (05-api/common.md)
+        const user = findMockVirtualUser(userId);
+        const requestedMembership = request.headers.get('X-User-Membership');
+        if (user && requestedMembership && requestedMembership !== user.membership) {
+            return fail(409, 'USER_MEMBERSHIP_MISMATCH', '사용자 멤버십 정보가 일치하지 않습니다');
         }
-        if (!usesTickets && ticketCount !== 0) {
-            return remember(
-                400,
-                failBody('COMMON-002', '응모권 미사용 이벤트는 응모권을 쓸 수 없습니다'),
-            );
+        if (user?.role === 'ADMIN') {
+            return remember(403, failBody('ENTRY-002', '관리자는 이벤트에 응모할 수 없습니다'));
         }
-        // 응모권 미사용 이벤트는 사용자당 한 번만 접수된다
         if (
-            !usesTickets &&
-            myEntriesFor(userId).some(
-                (entry) => entry.eventId === eventId && entry.status === 'ACCEPTED',
-            )
+            MEMBERSHIP_RANK[user?.membership ?? 'excellent'] < MEMBERSHIP_RANK[rule.membershipRule]
         ) {
-            return remember(409, failBody('DUPLICATE_ENTRY', '이미 응모한 이벤트입니다'));
+            return remember(403, failBody('ENTRY-003', '응모 가능한 멤버십 등급이 아닙니다'));
+        }
+        if (mockEventEffectiveStatus(event) !== 'open') {
+            return remember(409, failBody('ENTRY-005', '지금은 응모할 수 있는 시간이 아닙니다'));
         }
 
-        // 화면에서도 막고 있지만, 최종 접수 여부는 서버가 정한다는 원칙대로 여기서도 검사한다
-        if (ticketCount > getMockAvailableTicketCount(userId)) {
-            return remember(409, failBody('INSUFFICIENT_TICKETS', '보유 응모권이 부족합니다'));
-        }
-        if ((event.myTicketCount ?? 0) + ticketCount > ENTRY_TICKET_LIMIT) {
-            return remember(409, failBody('TICKET_LIMIT_EXCEEDED', '응모 한도를 초과했습니다'));
+        const total = totalOf(tickets);
+        // 사용자당 1회 제한 — 미사용·가중치 미적용 이벤트
+        const onceOnly = rule.eventType === 'NO_TICKET' || !rule.weightingEnabled;
+        if (onceOnly && myAcceptedFor(userId, eventId).length > 0) {
+            return remember(409, failBody('ENTRY-006', '이미 응모한 이벤트입니다'));
         }
 
-        // 접수 건의 ID를 먼저 만들어 USE 이력의 eventEntryId에 연결한다
-        const entryId = crypto.randomUUID();
-        recordMockEventEntry(event, ticketCount);
-        if (ticketCount > 0) {
-            // 한 응모에 여러 장을 쓰면 장마다 USE 이력이 생기고 같은 eventEntryId를 가진다 (spec T02)
-            recordMockTicketUse(userId, ticketCount, `${event.title} 응모`, {
+        if (rule.eventType === 'NO_TICKET') {
+            if (total !== 0) {
+                return remember(
+                    400,
+                    failBody('ENTRY-001', '응모권 미사용 이벤트는 응모권을 쓸 수 없습니다'),
+                );
+            }
+        } else if (!rule.weightingEnabled) {
+            // 브론즈 1장 고정 — 다른 등급·장수나 브론즈 부족은 모두 BRONZE_REQUIRED로 구분 안내한다
+            const bronzeOnly = tickets.BRONZE === 1 && tickets.SILVER === 0 && tickets.GOLD === 0;
+            if (!bronzeOnly || getMockAvailableTicketCountByGrade(userId).BRONZE < 1) {
+                return remember(
+                    409,
+                    failBody('ENTRY-008', '이 이벤트는 브론즈 응모권 1장으로만 응모할 수 있습니다'),
+                );
+            }
+        } else {
+            if (total < 1) {
+                return remember(400, failBody('ENTRY-001', '응모권을 1장 이상 골라야 합니다'));
+            }
+            // 누적 상한은 시드 카운터가 아닌 접수 기록으로 센다 — 월말 소진용(null)은 상한이 없다
+            if (
+                rule.maxTicketsPerUser !== null &&
+                usedTicketCountOf(userId, eventId) + total > rule.maxTicketsPerUser
+            ) {
+                return remember(409, failBody('ENTRY-007', '이 이벤트의 응모 한도를 초과했습니다'));
+            }
+            const available = getMockAvailableTicketCountByGrade(userId);
+            const lacksGrade = ticketGradeSchema.options.some(
+                (grade) => tickets[grade] > available[grade],
+            );
+            if (lacksGrade) {
+                return remember(409, failBody('TICKET-006', '등급별 보유 응모권이 부족합니다'));
+            }
+        }
+
+        // 영수증 ID는 멱등키다 — 같은 키의 재전송이 같은 접수 건을 가리키게 한다 (ADR-0005)
+        const entryId = idempotencyKey;
+        recordMockEventEntry(event, total);
+        if (total > 0) {
+            // 한 응모에 여러 등급을 쓰면 장마다 USE 이력이 생기고 같은 eventEntryId를 가진다 (spec T02)
+            recordMockTicketUse(userId, tickets, `${event.title} 응모`, {
                 eventId,
                 eventEntryId: entryId,
             });
@@ -206,8 +335,10 @@ export const entryHandlers = [
             id: entryId,
             eventId,
             eventTitle: event.title,
-            requestedTicketCount: ticketCount,
-            deductedTicketCount: ticketCount,
+            requestedTicketCount: total,
+            requestedTicketsByGrade: { ...tickets },
+            deductedTicketCount: total,
+            deductedTicketsByGrade: { ...tickets },
             status: 'ACCEPTED',
             requestedAt: now,
             acceptedAt: now,

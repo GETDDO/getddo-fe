@@ -7,6 +7,8 @@ apiClient.interceptors.request.use((config) => {
     const user = useSessionStore.getState().user;
     if (user) {
         config.headers['X-User-ID'] = user.id;
+        // 선택 헤더 — 보내면 서버가 DB 멤버십과 대조해 응모 자격을 판정한다 (05-api/common.md)
+        config.headers['X-User-Membership'] = user.membership;
     }
     return config;
 });

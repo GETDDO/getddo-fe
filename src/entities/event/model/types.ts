@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { eventTypeSchema, membershipRuleSchema } from './adminTypes';
+
 export const eventStatusSchema = z.enum(['upcoming', 'open', 'closed', 'drawn']);
 
 // 서버 응답 스키마 — startsAt/endsAt은 UTC ISO 8601 문자열, 화면 표시 시 shared/lib/date의 KST 변환 사용
@@ -37,6 +39,15 @@ export const eventSchema = z.object({
             membershipNote: z.string(),
         })
         .optional(),
+    // spec EventSummary의 응모 규칙 필드 — 응모 요청(tickets 맵)의 허용 조합을 이 값으로 판정한다.
+    // 미사용은 NO_TICKET, 브론즈 1장 고정은 TICKET+weightingEnabled:false, 일반 가중치는 누적 상한이 있는
+    // weightingEnabled:true, 월말 소진용은 maxTicketsPerUser:null 조합이다 (getddo-spec 05-api/event.md)
+    eventType: eventTypeSchema,
+    weightingEnabled: z.boolean(),
+    maxTicketsPerUser: z.number().int().nullable(),
+    membershipRule: membershipRuleSchema,
+    // 레거시 표시용 필드 — 목록 섹션 분리·카드 표시에 쓴다. 응모 규칙 판정은 위 네 필드를 따른다.
+    // TODO: 응모권 필요 여부 표시를 eventType으로 옮기는 전환은 별도 작업
     requiredTickets: z.number().int().nonnegative(),
     // 카드 태그 칩 (예: "멤버십 혜택") — 없으면 칩 미노출
     tags: z.array(z.string()).optional(),
