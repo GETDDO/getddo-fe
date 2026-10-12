@@ -4,35 +4,39 @@ import { apiClient } from '@shared/api/client';
 import { envelopeSchema } from '@shared/api/envelopeSchema';
 import { queryPresets } from '@shared/api/queryPresets';
 
-import { attendancePolicySchema, attendanceStatusSchema } from '../model/types';
+import { attendanceMonthSchema, attendanceTodaySchema } from '../model/types';
 
-export const ATTENDANCE_STATUS_KEY = ['attendance', 'me'] as const;
-export const ATTENDANCE_POLICY_KEY = ['attendance', 'policy'] as const;
+export const ATTENDANCES_KEY = ['attendance'] as const;
+export const ATTENDANCE_TODAY_KEY = [...ATTENDANCES_KEY, 'today'] as const;
+export const ATTENDANCE_MONTHS_KEY = [...ATTENDANCES_KEY, 'months'] as const;
 
 // 출석 도메인의 엔드포인트 — 출석 처리(POST)를 하는 feature/checkAttendance도 이 상수를 재사용한다
 export const ATTENDANCES_API_PATH = '/attendances';
 export const ATTENDANCE_TODAY_API_PATH = `${ATTENDANCES_API_PATH}/today`;
-export const ATTENDANCE_POLICY_API_PATH = `${ATTENDANCES_API_PATH}/policy`;
 
-export function useAttendanceStatus() {
+/** AT01 — 오늘 출석 여부·연속 일수·일일 보상량·이번 달 단계 */
+export function useAttendanceToday() {
     return useQuery({
         // 화면을 열어 둔 채 기준일(00:00 KST)이 지나면 어제의 attended가 남아 버튼이 계속 비활성된다 — 주기적으로 다시 받는다
         ...queryPresets.realtime,
-        queryKey: ATTENDANCE_STATUS_KEY,
+        queryKey: ATTENDANCE_TODAY_KEY,
         queryFn: async () => {
             const { data } = await apiClient.get<unknown>(ATTENDANCE_TODAY_API_PATH);
-            return envelopeSchema(attendanceStatusSchema).parse(data).data;
+            return envelopeSchema(attendanceTodaySchema).parse(data).data;
         },
     });
 }
 
-/** 출석 정책(연속 출석 보상 단계 등) — 관리자 설정이 바뀔 수 있어 서버에서 받는다 */
-export function useAttendancePolicy() {
+/** AT03 — month는 KST 기준월 'YYYY-MM'이며 필수다. 기록 없는 달은 attendanceDates가 빈 목록 */
+export function useAttendanceMonth(month: string, options?: { enabled?: boolean }) {
     return useQuery({
-        queryKey: ATTENDANCE_POLICY_KEY,
+        queryKey: [...ATTENDANCE_MONTHS_KEY, month],
+        enabled: options?.enabled ?? true,
         queryFn: async () => {
-            const { data } = await apiClient.get<unknown>(ATTENDANCE_POLICY_API_PATH);
-            return envelopeSchema(attendancePolicySchema).parse(data).data;
+            const { data } = await apiClient.get<unknown>(ATTENDANCES_API_PATH, {
+                params: { month },
+            });
+            return envelopeSchema(attendanceMonthSchema).parse(data).data;
         },
     });
 }
