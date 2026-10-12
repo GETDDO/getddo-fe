@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type { AbuseCase } from '@entities/abuseCase';
 
 import { AbuseCaseDetailDrawer, AbuseCaseTable, useAbuseCases } from '@entities/abuseCase';
-import { kstInputToUtcIso } from '@shared/lib/date';
+import { kstDateStartUtcIso, kstNextDateStartUtcIso } from '@shared/lib/date';
 import { Button } from '@shared/ui/button';
 import { Input } from '@shared/ui/input';
 import { Pager } from '@shared/ui/pager';
@@ -19,13 +19,6 @@ const SOURCE_TYPE_OPTIONS = [
     { value: 'MISSION', label: '미션 지급' },
     { value: 'GAME', label: '게임 지급' },
 ];
-
-// 종료일 입력(YYYY-MM-DD, KST)을 다음 날 00:00 UTC ISO로 변환해 [from, to) 구간의 상한을 만든다
-const nextDay = (ymd: string) => {
-    const d = new Date(`${ymd}T00:00:00+09:00`);
-    d.setUTCDate(d.getUTCDate() + 1);
-    return d.toISOString();
-};
 
 export function AdminAbuseCasesPage() {
     const [page, setPage] = useState(1);
@@ -60,8 +53,8 @@ export function AdminAbuseCasesPage() {
                     onSubmit={(e) => {
                         e.preventDefault();
                         setUserId(userIdInput.trim());
-                        setFrom(fromInput ? kstInputToUtcIso(`${fromInput}T00:00`) : '');
-                        setTo(toInput ? nextDay(toInput) : '');
+                        setFrom(fromInput ? kstDateStartUtcIso(fromInput) : '');
+                        setTo(toInput ? kstNextDateStartUtcIso(toInput) : '');
                         resetPage();
                     }}
                 >

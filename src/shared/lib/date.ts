@@ -90,6 +90,18 @@ export function kstInputToUtcIso(local: string): string {
     return new Date(`${withSeconds}+09:00`).toISOString();
 }
 
+/** 날짜 입력("YYYY-MM-DD")을 그날 00:00 KST의 UTC ISO로 바꾼다 — `[from, to)` 구간의 시작 */
+export function kstDateStartUtcIso(ymd: string): string {
+    return kstInputToUtcIso(`${ymd}T00:00`);
+}
+
+/** 날짜 입력("YYYY-MM-DD")을 다음 날 00:00 KST의 UTC ISO로 바꾼다 — 종료일을 포함하는 `[from, to)` 구간의 상한 */
+export function kstNextDateStartUtcIso(ymd: string): string {
+    const d = new Date(kstDateStartUtcIso(ymd));
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString();
+}
+
 /** UTC ISO 문자열을 `datetime-local` 입력값("YYYY-MM-DDTHH:mm", KST 기준)으로 되돌린다 — 폼 초기값용 */
 export function utcIsoToKstInput(iso: string): string {
     const k = toKst(iso);
