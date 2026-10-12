@@ -1,13 +1,7 @@
 import { z } from 'zod';
 
 // getddo-spec 05-api/drawing.md의 PublicResults — 공개 결과 조회(E08) 계약
-export const drawDisplayStatusSchema = z.enum([
-    'WAITING',
-    'PUBLISHED',
-    'CANCELED',
-    'NO_ENTRANTS',
-    'NO_ELIGIBLE_ENTRANTS',
-]);
+export const drawDisplayStatusSchema = z.enum(['WAITING', 'PUBLISHED', 'CANCELED', 'NO_ENTRANTS']);
 
 /**
  * 공개된 당첨자.

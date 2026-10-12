@@ -10,7 +10,6 @@ export const adminEventStatusSchema = z.enum([
     'CANCELED',
     'REDRAWING',
     'NO_ENTRANTS',
-    'NO_ELIGIBLE_ENTRANTS',
 ]);
 
 export const eventTypeSchema = z.enum(['NO_TICKET', 'TICKET']);

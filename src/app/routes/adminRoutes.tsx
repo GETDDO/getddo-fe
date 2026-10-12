@@ -85,10 +85,10 @@ export const adminRoutes: RouteObject[] = [
                 ),
             },
             {
-                path: 'abuse-review',
+                path: 'abuse-cases',
                 element: lazyPage(() =>
-                    import('@pages/admin/abuseReview/AdminAbuseReviewPage').then((m) => ({
-                        default: m.AdminAbuseReviewPage,
+                    import('@pages/admin/abuseCases/AdminAbuseCasesPage').then((m) => ({
+                        default: m.AdminAbuseCasesPage,
                     })),
                 ),
             },
