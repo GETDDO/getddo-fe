@@ -32,9 +32,9 @@ const page = (items: Notification[], nextCursor: string | null, totalElements = 
     },
 });
 
-const renderDrawer = () => {
+const renderDrawer = (staleTime = 0) => {
     const queryClient = new QueryClient({
-        defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+        defaultOptions: { queries: { retry: false, staleTime }, mutations: { retry: false } },
     });
     render(
         <QueryClientProvider client={queryClient}>
@@ -66,6 +66,42 @@ describe('NotificationDrawer', () => {
         expect(await within(dialog).findByText('이벤트 시작 알림')).toBeInTheDocument();
         expect(within(dialog).getByText('읽지 않음 3개')).toBeInTheDocument();
         expect(within(dialog).queryByRole('button', { name: /삭제/ })).not.toBeInTheDocument();
+    });
+
+    it('재오픈하면 staleTime 안이어도 새 알림 목록을 조회한다', async () => {
+        let version = 1;
+        vi.spyOn(apiClient, 'get').mockImplementation(() =>
+            Promise.resolve(page([note(version)], null)),
+        );
+
+        renderDrawer(60_000);
+        let dialog = await open();
+        expect(await within(dialog).findByText('알림 1')).toBeInTheDocument();
+
+        await userEvent.click(within(dialog).getByRole('button', { name: '닫기' }));
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+        version = 2;
+        dialog = await open();
+        expect(await within(dialog).findByText('알림 2')).toBeInTheDocument();
+    });
+
+    it('재조회가 실패해도 더보기를 누르기 전에는 더보기 오류를 보이지 않는다', async () => {
+        const get = vi.spyOn(apiClient, 'get').mockResolvedValue(page([note(1)], 'cursor-1', 2));
+
+        renderDrawer(60_000);
+        let dialog = await open();
+        await within(dialog).findByText('알림 1');
+        await userEvent.click(within(dialog).getByRole('button', { name: '닫기' }));
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+        get.mockRejectedValue(new Error('network'));
+        dialog = await open();
+
+        await within(dialog).findByText('알림 1');
+        // 첫 오픈의 목록·미읽음 조회 2회 + 재오픈 목록 재조회 1회
+        await waitFor(() => expect(get).toHaveBeenCalledTimes(3));
+        expect(within(dialog).queryByText('알림을 더 불러오지 못했어요.')).not.toBeInTheDocument();
     });
 
     it('모두 읽음을 누르면 미읽음이 0이 된다', async () => {

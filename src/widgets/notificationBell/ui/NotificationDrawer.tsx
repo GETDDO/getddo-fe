@@ -53,8 +53,16 @@ export function NotificationDrawer() {
 }
 
 function DrawerBody({ onClose }: { onClose: () => void }) {
-    const { data, isPending, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
-        useNotificationList({ refetchOnMount: 'always' });
+    const {
+        data,
+        isPending,
+        isError,
+        isFetchNextPageError,
+        refetch,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = useNotificationList({ refetchOnMount: 'always' });
     const { data: unreadData } = useNotificationList({ isRead: false, size: 1 });
     const { mutate: markRead } = useMarkNotificationRead();
     const { mutate: markAllRead, isPending: isMarkingAll } = useMarkAllNotificationsRead();
@@ -118,7 +126,7 @@ function DrawerBody({ onClose }: { onClose: () => void }) {
                 )}
                 {hasNextPage && (
                     <div className="flex flex-col items-center gap-2 py-4">
-                        {isError && (
+                        {isFetchNextPageError && (
                             <p role="alert" className="text-body-sm text-fg-secondary">
                                 알림을 더 불러오지 못했어요.
                             </p>

@@ -3,5 +3,9 @@
  * '//'로 시작하는 프로토콜 상대 URL은 브라우저가 외부 출처로 해석하므로 제외한다
  */
 export function toInternalPath(linkUrl: string | null): string | null {
-    return linkUrl?.startsWith('/') && !linkUrl.startsWith('//') ? linkUrl : null;
+    // 역슬래시·제어 문자는 URL 파서가 슬래시로 바꾸거나 지워 외부 출처로 해석될 수 있어 거부한다
+    if (!linkUrl?.startsWith('/') || linkUrl.startsWith('//') || /[\p{Cc}\\]/u.test(linkUrl)) {
+        return null;
+    }
+    return linkUrl;
 }
