@@ -15,7 +15,8 @@ const NOTIFICATION_LIST_KEY = [...NOTIFICATIONS_KEY, 'list'] as const;
 export function useNotificationList({
     isRead,
     size = 20,
-}: { isRead?: boolean; size?: number } = {}) {
+    refetchOnMount,
+}: { isRead?: boolean; size?: number; refetchOnMount?: 'always' } = {}) {
     return useInfiniteQuery({
         queryKey: [...NOTIFICATION_LIST_KEY, { isRead, size }],
         initialPageParam: undefined as string | undefined,
@@ -27,5 +28,7 @@ export function useNotificationList({
             return envelopeSchema(notificationCursorSchema).parse(data).data;
         },
         getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+        // 알림 드로어는 열 때마다 최신 목록을 보여준다 — staleTime 안이어도 마운트 시 재조회
+        refetchOnMount,
     });
 }
