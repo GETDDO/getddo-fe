@@ -1,6 +1,6 @@
 import { http } from 'msw';
 
-import type { TicketHistory } from '@entities/ticket';
+import type { TicketGrade, TicketHistory, TicketOperationType } from '@entities/ticket';
 
 import { env } from '@shared/config/env';
 import { kstNextMonthStart, toKst } from '@shared/lib/date';
@@ -10,154 +10,27 @@ import { ok } from './response';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
+const DAY_MS = 24 * 60 * 60 * 1000;
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const kstMonthStart = (date: Date) => {
     const k = new Date(date.getTime() + KST_OFFSET_MS);
     return new Date(Date.UTC(k.getUTCFullYear(), k.getUTCMonth(), 1) - KST_OFFSET_MS);
 };
-const kstMonth = (date: Date) => toKst(date).toISOString().slice(0, 7);
+const kstDate = (iso: string) => toKst(iso).toISOString().slice(0, 10);
 
-// spec T01 — TicketWallet. 월 지급분은 다음 달 1일 00:00 KST에 만료하는 지갑 단위로 잔액을 나눈다 (getddo-spec ticket.md)
-interface MockWallet {
+// spec — 응모권 한 장. status·expiresAt은 마지막 처리 직후의 값이다
+interface MockTicket {
     id: string;
-    expiryMonth: string;
-    validFrom: string;
+    grade: TicketGrade;
+    status: 'AVAILABLE' | 'RETURNED' | 'SPENT' | 'EXPIRED';
+    /** 지급분은 지급 KST월 다음 달 1일, 반환분은 반환 KST월 다다음 달 1일 00:00 KST에 만료 */
     expiresAt: string;
-    balance: number;
 }
 
-// 시연용 초기 이력 — walletId·balanceAfter는 seedState()가 지갑 잔액에 맞춰 채운다
-const seedLedger: Array<Omit<TicketHistory, 'walletId' | 'balanceAfter'>> = [
-    {
-        id: 'th-1',
-        transactionType: 'GRANT',
-        quantity: 1,
-        reason: '출석 체크',
-        createdAt: '2026-09-17T01:00:00Z',
-    },
-    {
-        id: 'th-2',
-        transactionType: 'SPEND',
-        quantity: -1,
-        reason: '이벤트 응모',
-        createdAt: '2026-09-16T09:30:00Z',
-    },
-    {
-        id: 'th-15',
-        transactionType: 'REFUND',
-        quantity: 2,
-        reason: '이벤트 취소 응모권 반환',
-        createdAt: '2026-09-16T05:00:00Z',
-    },
-    {
-        id: 'th-16',
-        transactionType: 'REVOKE',
-        quantity: -1,
-        reason: '부정 획득 응모권 회수',
-        createdAt: '2026-09-15T07:00:00Z',
-    },
-    {
-        id: 'th-3',
-        transactionType: 'GRANT',
-        quantity: 1,
-        reason: '매일 출석체크 리워드',
-        createdAt: '2026-09-15T00:30:00Z',
-    },
-    {
-        id: 'th-4',
-        transactionType: 'SPEND',
-        quantity: -3,
-        reason: '닌텐도 스위치 2 래플 응모',
-        createdAt: '2026-09-14T11:20:00Z',
-    },
-    {
-        id: 'th-5',
-        transactionType: 'GRANT',
-        quantity: 1,
-        reason: '공룡 달리기 게임 보상',
-        createdAt: '2026-09-14T08:10:00Z',
-    },
-    {
-        id: 'th-6',
-        transactionType: 'GRANT',
-        quantity: 2,
-        reason: '5G 브랜드 퀴즈 정답',
-        createdAt: '2026-09-13T05:45:00Z',
-    },
-    {
-        id: 'th-7',
-        transactionType: 'GRANT',
-        quantity: 1,
-        reason: '매일 출석체크 리워드',
-        createdAt: '2026-09-13T00:05:00Z',
-    },
-    {
-        id: 'th-8',
-        transactionType: 'SPEND',
-        quantity: -2,
-        reason: '스타벅스 e카드 래플 응모',
-        createdAt: '2026-09-12T13:00:00Z',
-    },
-    {
-        id: 'th-9',
-        transactionType: 'GRANT',
-        quantity: 1,
-        reason: '알림 수신 동의 설문',
-        createdAt: '2026-09-11T02:40:00Z',
-    },
-    {
-        id: 'th-10',
-        transactionType: 'GRANT',
-        quantity: 1,
-        reason: '룰렛 돌리기 게임 보상',
-        createdAt: '2026-09-10T09:15:00Z',
-    },
-    {
-        id: 'th-11',
-        transactionType: 'GRANT',
-        quantity: 1,
-        reason: '7일 연속 출석 보너스',
-        createdAt: '2026-09-07T00:10:00Z',
-    },
-    {
-        id: 'th-12',
-        transactionType: 'SPEND',
-        quantity: -1,
-        reason: 'VVIP 데이터 쿠폰 래플 응모',
-        createdAt: '2026-09-05T10:30:00Z',
-    },
-    {
-        id: 'th-13',
-        transactionType: 'GRANT',
-        quantity: 1,
-        reason: '매일 출석체크 리워드',
-        createdAt: '2026-09-02T00:20:00Z',
-    },
-    {
-        // 9월 1일 00:00 KST — 8월분 지급 응모권의 월 경계 만료
-        id: 'th-17',
-        transactionType: 'EXPIRE',
-        quantity: -2,
-        reason: '응모권 월 만료',
-        createdAt: '2026-08-31T15:00:00Z',
-    },
-    {
-        id: 'th-14',
-        transactionType: 'GRANT',
-        quantity: 1,
-        reason: '매일 출석체크 리워드',
-        createdAt: '2026-08-31T00:15:00Z',
-    },
-];
-
-// 8월분 이력(EXPIRE)은 이미 만료된 지갑에, 나머지는 다음 달 만료 지갑에 붙인다
-const EXPIRED_WALLET_ID = 'wallet-expired-08';
-const walletIdOfSeed = (id: string) => (id === 'th-17' ? EXPIRED_WALLET_ID : 'wallet-next');
-
 // 목업 세션 동안 유지되는 응모권 상태 — X-User-ID별로 분리한다.
-// 한 사용자의 출석 보상·응모 차감이 다른 사용자의 잔액·이력에 섞이지 않게 한다
+// 한 사용자의 출석 보상·응모 차감이 다른 사용자의 보유·이력에 섞이지 않게 한다
 interface TicketState {
-    wallets: MockWallet[];
+    tickets: MockTicket[];
     history: TicketHistory[];
 }
 
@@ -165,56 +38,156 @@ const stateByUser = new Map<string, TicketState>();
 
 const userIdOf = (request: Request) => request.headers.get('X-User-ID') ?? 'anonymous';
 
-// balanceAfter는 지갑별 처리 직후 잔액이다 — 시드 이력을 시간순으로 적용해 지갑 현재 잔액에서 거슬러 계산한다
-function buildSeedHistory(wallets: MockWallet[]): TicketHistory[] {
-    const openingByWallet = new Map<string, number>();
-    for (const wallet of wallets) {
-        const sum = seedLedger
-            .filter((item) => walletIdOfSeed(item.id) === wallet.id)
-            .reduce((acc, item) => acc + item.quantity, 0);
-        openingByWallet.set(wallet.id, wallet.balance - sum);
-    }
+const isUsable = (ticket: MockTicket, now: number) =>
+    (ticket.status === 'AVAILABLE' || ticket.status === 'RETURNED') &&
+    new Date(ticket.expiresAt).getTime() > now;
 
-    return [...seedLedger]
-        .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
-        .map((item) => {
-            const walletId = walletIdOfSeed(item.id);
-            const balanceAfter = (openingByWallet.get(walletId) ?? 0) + item.quantity;
-            openingByWallet.set(walletId, balanceAfter);
-            return { ...item, walletId, balanceAfter };
-        })
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+interface HistoryExtra {
+    eventId?: string;
+    eventEntryId?: string;
+    missionId?: string;
+    gameId?: string;
+    attendanceDate?: string;
+    originalUseHistoryId?: string;
+    correctedHistoryId?: string;
 }
 
+// 이력 한 건은 응모권 한 장의 처리 한 번 — 수량·누계 필드 없이 처리 직후 상태·만료를 남긴다 (spec T02)
+function pushHistory(
+    state: TicketState,
+    ticket: MockTicket,
+    operationType: TicketOperationType,
+    reason: string,
+    createdAt: string,
+    extra: HistoryExtra = {},
+) {
+    const history: TicketHistory = {
+        id: crypto.randomUUID(),
+        ticketId: ticket.id,
+        operationType,
+        grade: ticket.grade,
+        status: ticket.status,
+        expiresAt: ticket.expiresAt,
+        reason,
+        createdAt,
+        eventId: extra.eventId ?? null,
+        eventEntryId: extra.eventEntryId ?? null,
+        missionId: extra.missionId ?? null,
+        gameId: extra.gameId ?? null,
+        attendanceDate: extra.attendanceDate ?? null,
+        originalUseHistoryId: extra.originalUseHistoryId ?? null,
+        correctedHistoryId: extra.correctedHistoryId ?? null,
+    };
+    state.history.push(history);
+    return history;
+}
+
+// 시연용 초기 상태 — 사용 가능 10장(브론즈 7·실버 2·골드 1)에 지출 3·반환 2·만료 2의 이력을 맞춘다
 const seedState = (): TicketState => {
     const now = mockNow();
-    const nextMonthStart = kstNextMonthStart(now);
-    const wallets: MockWallet[] = [
-        {
-            // 당월 지급분 — 다음 달 1일에 만료해 "이번 달 만료 예정" 안내를 띄운다
-            id: 'wallet-current',
-            expiryMonth: kstMonth(now),
-            validFrom: kstMonthStart(now).toISOString(),
-            expiresAt: nextMonthStart.toISOString(),
-            balance: 2,
-        },
-        {
-            // 익월 지급분 — 지난 이력 대부분이 모인 지갑
-            id: 'wallet-next',
-            expiryMonth: kstMonth(nextMonthStart),
-            validFrom: nextMonthStart.toISOString(),
-            expiresAt: kstNextMonthStart(nextMonthStart).toISOString(),
-            balance: 8,
-        },
-        {
-            id: EXPIRED_WALLET_ID,
-            expiryMonth: '2026-08',
-            validFrom: '2026-07-31T15:00:00Z',
-            expiresAt: '2026-08-31T15:00:00Z',
-            balance: 0,
-        },
-    ];
-    return { wallets, history: buildSeedHistory(wallets) };
+    // 이번 달 지급분의 만료(다음 달 1일 00:00 KST)와 반환분의 만료(다다음 달 1일 00:00 KST)
+    const grantExpiry = kstNextMonthStart(now).toISOString();
+    const refundExpiry = kstNextMonthStart(kstNextMonthStart(now)).toISOString();
+    // 지난달 지급분은 이번 달 1일 00:00 KST에 만료했다
+    const expiredAt = kstMonthStart(now).toISOString();
+    const daysAgo = (days: number) => new Date(now.getTime() - days * DAY_MS).toISOString();
+
+    const state: TicketState = { tickets: [], history: [] };
+
+    const seedTicket = (grade: TicketGrade, expiresAt: string): MockTicket => {
+        const ticket: MockTicket = {
+            id: crypto.randomUUID(),
+            grade,
+            status: 'AVAILABLE',
+            expiresAt,
+        };
+        state.tickets.push(ticket);
+        return ticket;
+    };
+    const grant = (
+        grade: TicketGrade,
+        reason: string,
+        createdAt: string,
+        extra: HistoryExtra = {},
+    ) => {
+        const ticket = seedTicket(grade, grantExpiry);
+        pushHistory(state, ticket, 'GRANT', reason, createdAt, extra);
+        return ticket;
+    };
+    const spend = (
+        ticket: MockTicket,
+        reason: string,
+        createdAt: string,
+        extra: HistoryExtra = {},
+    ) => {
+        ticket.status = 'SPENT';
+        return pushHistory(state, ticket, 'USE', reason, createdAt, extra);
+    };
+
+    // 사용 가능한 지급분 — 만료는 다음 달 1일. 등급별 장수는 countByGrade로 내려간다
+    for (const days of [25, 18, 11, 4]) {
+        grant('BRONZE', '매일 출석체크 리워드', daysAgo(days), {
+            attendanceDate: kstDate(daysAgo(days)),
+        });
+    }
+    grant('BRONZE', '알림 수신 동의 설문 보상', daysAgo(9), { missionId: 'mission-survey-01' });
+    grant('SILVER', '공룡 달리기 게임 보상', daysAgo(7), { gameId: 'game-dino' });
+    grant('SILVER', '5G 브랜드 퀴즈 보상', daysAgo(6), { missionId: 'mission-quiz-01' });
+    grant('GOLD', '룰렛 돌리기 게임 보상', daysAgo(2), { gameId: 'game-roulette' });
+
+    // 지출분 — 한 응모에 여러 장을 쓰면 장마다 USE 이력이 생기고 같은 eventEntryId를 가진다
+    const sharedEntryId = crypto.randomUUID();
+    const spent1 = grant('BRONZE', '매일 출석체크 리워드', daysAgo(20));
+    const spent2 = grant('BRONZE', '7일 연속 출석 보너스', daysAgo(15));
+    const spent3 = grant('SILVER', '주간 미션 보상', daysAgo(13), {
+        missionId: 'mission-weekly-01',
+    });
+    spend(spent1, '닌텐도 스위치 2 래플 응모', daysAgo(14), {
+        eventId: 'evt-001',
+        eventEntryId: sharedEntryId,
+    });
+    spend(spent2, '닌텐도 스위치 2 래플 응모', daysAgo(14), {
+        eventId: 'evt-001',
+        eventEntryId: sharedEntryId,
+    });
+    spend(spent3, '스타벅스 e카드 래플 응모', daysAgo(10), {
+        eventId: 'evt-002',
+        eventEntryId: crypto.randomUUID(),
+    });
+
+    // 반환분 — 지출된 같은 응모권이 사용 가능 상태로 돌아온다 (등급 보존, 만료는 반환 월 다다음 달 1일)
+    const returned1 = grant('BRONZE', '매일 출석체크 리워드', daysAgo(30));
+    const returned2 = grant('BRONZE', '매일 출석체크 리워드', daysAgo(28));
+    const useOfReturned1 = spend(returned1, 'VVIP 데이터 쿠폰 래플 응모', daysAgo(22), {
+        eventId: 'evt-003',
+        eventEntryId: crypto.randomUUID(),
+    });
+    const useOfReturned2 = spend(returned2, 'VVIP 데이터 쿠폰 래플 응모', daysAgo(22), {
+        eventId: 'evt-003',
+        eventEntryId: crypto.randomUUID(),
+    });
+    returned1.status = 'RETURNED';
+    returned1.expiresAt = refundExpiry;
+    pushHistory(state, returned1, 'REFUND', '이벤트 취소 응모권 반환', daysAgo(8), {
+        eventId: 'evt-003',
+        originalUseHistoryId: useOfReturned1.id,
+    });
+    returned2.status = 'RETURNED';
+    returned2.expiresAt = refundExpiry;
+    pushHistory(state, returned2, 'REFUND', '이벤트 취소 응모권 반환', daysAgo(8), {
+        eventId: 'evt-003',
+        originalUseHistoryId: useOfReturned2.id,
+    });
+
+    // 만료분 — 지난달 지급 응모권이 이 달 월 경계에 만료한 뒤 상태·이력이 일치해야 한다
+    for (const reason of ['매일 출석체크 리워드', '매일 출석체크 리워드']) {
+        const ticket = seedTicket('BRONZE', expiredAt);
+        pushHistory(state, ticket, 'GRANT', reason, daysAgo(45));
+        ticket.status = 'EXPIRED';
+        pushHistory(state, ticket, 'EXPIRE', '응모권 월 만료', expiredAt);
+    }
+
+    return state;
 };
 
 const stateFor = (userId: string): TicketState => {
@@ -226,120 +199,190 @@ const stateFor = (userId: string): TicketState => {
     return state;
 };
 
-const isActive = (wallet: MockWallet, now: number) => new Date(wallet.expiresAt).getTime() > now;
-
-const availableBalanceOf = (state: TicketState, now: number) =>
-    state.wallets.reduce((sum, w) => (isActive(w, now) ? sum + w.balance : sum), 0);
-
-/** 응모 목업이 차감 전에 잔액을 확인할 때 쓴다 — 활성 지갑 합계 */
-export function getMockTicketBalance(userId: string) {
-    return availableBalanceOf(stateFor(userId), mockNow().getTime());
+// 자동 만료 처리가 지연돼도 만료된 응모권을 사용 가능으로 두지 않는다 —
+// 조회·처리마다 기한이 지난 장을 EXPIRED로 돌리고 이력을 남겨 이력↔현재 상태를 일치시킨다
+function syncExpired(state: TicketState) {
+    const now = mockNow().getTime();
+    for (const ticket of state.tickets) {
+        if (
+            (ticket.status === 'AVAILABLE' || ticket.status === 'RETURNED') &&
+            new Date(ticket.expiresAt).getTime() <= now
+        ) {
+            ticket.status = 'EXPIRED';
+            pushHistory(state, ticket, 'EXPIRE', '응모권 월 만료', ticket.expiresAt);
+        }
+    }
 }
 
-/** 활성 지갑이 없을 때 지급·반환을 받기 위해 새로 따는 당월 지갑 — expiresAt은 다음 달 1일 KST */
-const mintCurrentMonthWallet = (): MockWallet => {
-    const now = mockNow();
-    return {
-        id: `wallet-${crypto.randomUUID()}`,
-        expiryMonth: kstMonth(now),
-        validFrom: kstMonthStart(now).toISOString(),
-        expiresAt: kstNextMonthStart(now).toISOString(),
-        balance: 0,
-    };
-};
+/** 게임·미션 보상의 등급 추첨 — 보상 건마다 확률로 등급 하나를 결정한다 (브론즈 80%·실버 18%·골드 2%) */
+export function drawMockTicketGrade(): TicketGrade {
+    const roll = Math.random();
+    if (roll < 0.8) return 'BRONZE';
+    if (roll < 0.98) return 'SILVER';
+    return 'GOLD';
+}
+
+/** 응모 목업이 차감 전에 보유량을 확인할 때 쓴다 — 사용 가능(AVAILABLE·RETURNED, 미만료) 장수 */
+export function getMockAvailableTicketCount(userId: string) {
+    const state = stateFor(userId);
+    syncExpired(state);
+    return state.tickets.filter((ticket) => isUsable(ticket, mockNow().getTime())).length;
+}
+
+interface GrantOptions extends HistoryExtra {
+    grade: TicketGrade;
+    /** 기본은 지급 KST월 다음 달 1일 00:00 KST — 보상 영수증이 정한 만료를 그대로 쓸 때 넘긴다 */
+    expiresAt?: string;
+}
+
+/** 다른 목업 핸들러(출석·게임·미션 등)에서 응모권 지급을 기록할 때 쓴다 — 장당 지급 이력이 생긴다 */
+export function recordMockTicketGrant(
+    userId: string,
+    count: number,
+    reason: string,
+    options: GrantOptions,
+) {
+    const state = stateFor(userId);
+    const expiresAt = options.expiresAt ?? kstNextMonthStart(mockNow()).toISOString();
+    const nowIso = mockNow().toISOString();
+    for (let i = 0; i < count; i += 1) {
+        const ticket: MockTicket = {
+            id: crypto.randomUUID(),
+            grade: options.grade,
+            status: 'AVAILABLE',
+            expiresAt,
+        };
+        state.tickets.push(ticket);
+        pushHistory(state, ticket, 'GRANT', reason, nowIso, options);
+    }
+}
 
 /**
- * 지갑 잔액을 반영하고 반영한 지갑을 돌려준다.
- * 지급·반환은 당월 지갑에, 차감은 만료가 빠른 지갑부터 나간다 (getddo-spec ticket.md 월 만료 정책)
+ * 응모 차감을 기록할 때 쓴다 — 만료가 이른 장부터 꺼내 SPENT로 두고 장당 USE 이력을 남긴다.
+ * 사용자가 등급별 장수를 고르는 요청 계약(GD-133)은 후속이라, 그 전까지는 전체 보유에서 만료순 차감이다
  */
-function applyWalletDelta(state: TicketState, amount: number): MockWallet {
-    const now = mockNow().getTime();
-    const active = state.wallets
-        .filter((w) => isActive(w, now))
+export function recordMockTicketUse(
+    userId: string,
+    count: number,
+    reason: string,
+    options: HistoryExtra = {},
+) {
+    const state = stateFor(userId);
+    syncExpired(state);
+    const nowIso = mockNow().toISOString();
+    const usable = state.tickets
+        .filter((ticket) => isUsable(ticket, mockNow().getTime()))
         .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt));
-    const target = active[0];
-    if (!target) {
-        // 활성 지갑이 하나도 없으면(전부 만료) 이번 달 지갑을 새로 따서 지급·반환을 받는다
-        const fresh = mintCurrentMonthWallet();
-        state.wallets.push(fresh);
-        if (amount > 0) fresh.balance = amount;
-        return fresh;
+    for (const ticket of usable.slice(0, count)) {
+        ticket.status = 'SPENT';
+        pushHistory(state, ticket, 'USE', reason, nowIso, options);
     }
-    if (amount >= 0) {
-        target.balance += amount;
-        return target;
-    }
-    let rest = -amount;
-    let last = target;
-    for (const wallet of active) {
-        const take = Math.min(wallet.balance, rest);
-        wallet.balance -= take;
-        rest -= take;
-        last = wallet;
-        if (rest === 0) break;
-    }
-    return last;
 }
 
-/** 다른 목업 핸들러(출석·게임 등)에서 응모권 지급·차감을 기록할 때 쓴다 */
-export function recordMockTicketGrant(userId: string, amount: number, reason: string) {
+/**
+ * 이벤트 취소 등으로 차감된 응모권을 되돌릴 때 쓴다 — 같은 이벤트의 지출 장을 우선 찾아
+ * 등급 그대로 RETURNED로 돌리고 원본 USE에 연결된 반환 이력을 남긴다.
+ * 실제 지출 장이 모자라면(시드 응모 등) 새 장을 반환 상태로 발행해 합계를 맞춘다
+ */
+export function recordMockTicketRefund(
+    userId: string,
+    count: number,
+    reason: string,
+    options: Pick<HistoryExtra, 'eventId'> = {},
+) {
     const state = stateFor(userId);
-    const wallet = applyWalletDelta(state, amount);
-    state.history.unshift({
-        id: `th-mock-${crypto.randomUUID()}`,
-        walletId: wallet.id,
-        transactionType: amount >= 0 ? 'GRANT' : 'SPEND',
-        quantity: amount,
-        balanceAfter: wallet.balance,
-        reason,
-        createdAt: mockNow().toISOString(),
-    });
-}
+    syncExpired(state);
+    const nowIso = mockNow().toISOString();
+    // 반환분 만료 = 반환 KST월의 다다음 달 1일 00:00 KST (getddo-spec 02-domain/ticket.md)
+    const expiresAt = kstNextMonthStart(kstNextMonthStart(mockNow())).toISOString();
 
-/** 관리자 취소·자동 취소로 차감된 응모권을 되돌려줄 때 쓴다 — 지급(GRANT)이 아닌 반환(REFUND) 이력으로 남긴다 */
-export function recordMockTicketRefund(userId: string, amount: number, reason: string) {
-    const state = stateFor(userId);
-    const wallet = applyWalletDelta(state, amount);
-    state.history.unshift({
-        id: `th-mock-${crypto.randomUUID()}`,
-        walletId: wallet.id,
-        transactionType: 'REFUND',
-        quantity: amount,
-        balanceAfter: wallet.balance,
-        reason,
-        createdAt: mockNow().toISOString(),
-    });
+    const useHistories = state.history.filter(
+        (item) =>
+            item.operationType === 'USE' && (!options.eventId || item.eventId === options.eventId),
+    );
+    let remaining = count;
+    for (const use of useHistories) {
+        if (remaining <= 0) break;
+        const ticket = state.tickets.find((t) => t.id === use.ticketId);
+        // 동일 차감 건의 반복 반환은 중복 반영하지 않는다
+        if (!ticket || ticket.status !== 'SPENT') continue;
+        ticket.status = 'RETURNED';
+        ticket.expiresAt = expiresAt;
+        pushHistory(state, ticket, 'REFUND', reason, nowIso, {
+            eventId: use.eventId ?? options.eventId,
+            originalUseHistoryId: use.id,
+        });
+        remaining -= 1;
+    }
+    for (; remaining > 0; remaining -= 1) {
+        const ticket: MockTicket = {
+            id: crypto.randomUUID(),
+            grade: 'BRONZE',
+            status: 'RETURNED',
+            expiresAt,
+        };
+        state.tickets.push(ticket);
+        pushHistory(state, ticket, 'REFUND', reason, nowIso, { eventId: options.eventId });
+    }
 }
 
 export const ticketHandlers = [
-    // T01 초안 — MyWallets{availableBalance, wallets, serverTime}
-    http.get(api('/tickets/wallets/me'), ({ request }) => {
-        const now = mockNow().getTime();
+    // T01 — MyTickets{availableCount, countByGrade, holdings, serverTime}
+    http.get(api('/tickets/me'), ({ request }) => {
         const state = stateFor(userIdOf(request));
+        syncExpired(state);
+        const now = mockNow().getTime();
+
+        const countByGrade: Record<TicketGrade, number> = { BRONZE: 0, SILVER: 0, GOLD: 0 };
+        const holdingByKey = new Map<
+            string,
+            { grade: TicketGrade; expiresAt: string; count: number }
+        >();
+        let availableCount = 0;
+        for (const ticket of state.tickets) {
+            if (!isUsable(ticket, now)) continue;
+            availableCount += 1;
+            countByGrade[ticket.grade] += 1;
+            const key = `${ticket.grade}|${ticket.expiresAt}`;
+            const holding = holdingByKey.get(key) ?? {
+                grade: ticket.grade,
+                expiresAt: ticket.expiresAt,
+                count: 0,
+            };
+            holding.count += 1;
+            holdingByKey.set(key, holding);
+        }
+        // 보유 묶음은 만료 임박순이다 (spec T01)
+        const holdings = [...holdingByKey.values()].sort((a, b) =>
+            a.expiresAt.localeCompare(b.expiresAt),
+        );
+
         return ok({
-            availableBalance: availableBalanceOf(state, now),
-            wallets: state.wallets.map((w) => ({
-                ...w,
-                status: isActive(w, now) ? 'ACTIVE' : 'EXPIRED',
-            })),
+            availableCount,
+            countByGrade,
+            holdings,
             serverTime: mockNow().toISOString(),
         });
     }),
-    // T02 초안 — Cursor<TicketTransaction>. cursor는 마지막으로 받은 항목의 id다
-    http.get(api('/tickets/ledger/me'), ({ request }) => {
+    // T02 — Cursor<TicketHistory>. createdAt DESC, id DESC 순서의 커서 페이지다
+    http.get(api('/tickets/histories/me'), ({ request }) => {
+        const state = stateFor(userIdOf(request));
+        syncExpired(state);
         const url = new URL(request.url);
         const size = Math.min(100, Math.max(1, Number(url.searchParams.get('size')) || 20));
         const cursor = url.searchParams.get('cursor');
-        const transactionType = url.searchParams.get('transactionType');
+        const operationType = url.searchParams.get('operationType');
         const from = url.searchParams.get('from');
         const to = url.searchParams.get('to');
 
-        const filtered = stateFor(userIdOf(request)).history.filter((item) => {
-            if (transactionType && item.transactionType !== transactionType) return false;
-            if (from && item.createdAt < from) return false;
-            if (to && item.createdAt >= to) return false;
-            return true;
-        });
+        const filtered = [...state.history]
+            .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
+            .filter((item) => {
+                if (operationType && item.operationType !== operationType) return false;
+                if (from && item.createdAt < from) return false;
+                if (to && item.createdAt >= to) return false;
+                return true;
+            });
         const start = cursor ? filtered.findIndex((item) => item.id === cursor) + 1 : 0;
         const items = filtered.slice(start, start + size);
         return ok({

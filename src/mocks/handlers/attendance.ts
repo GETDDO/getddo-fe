@@ -227,7 +227,11 @@ export const attendanceHandlers = [
         const total = rewards.reduce((sum, reward) => sum + reward.ticketCount, 0);
         // 출석 보상은 브론즈 고정이다 (ADR-016) — 지급 장수만큼 장 단위 이력을 남긴다
         if (total > 0) {
-            recordMockTicketGrant(userId, total, '매일 출석체크 리워드');
+            recordMockTicketGrant(userId, total, '매일 출석체크 리워드', {
+                grade: 'BRONZE',
+                expiresAt,
+                attendanceDate: today,
+            });
         }
 
         return ok(receipt, 201);

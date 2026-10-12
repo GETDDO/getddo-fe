@@ -198,24 +198,24 @@ describe('출석 목업 핸들러', () => {
         const userB = uniqueUser();
 
         const { data: beforeB } = await apiClient.get<{
-            data: { availableBalance: number };
-        }>('/tickets/wallets/me', { headers: headers(userB) });
+            data: { availableCount: number };
+        }>('/tickets/me', { headers: headers(userB) });
 
         const first = await check(userA);
         expect(first.status).toBe(201);
 
         // A의 출석 보상이 B의 보유량을 바꾸지 않는다
         const { data: afterB } = await apiClient.get<{
-            data: { availableBalance: number };
-        }>('/tickets/wallets/me', { headers: headers(userB) });
-        expect(afterB.data.availableBalance).toBe(beforeB.data.availableBalance);
+            data: { availableCount: number };
+        }>('/tickets/me', { headers: headers(userB) });
+        expect(afterB.data.availableCount).toBe(beforeB.data.availableCount);
 
         // B도 첫 출석으로 새 보상을 받는다 — A의 출석이 B를 막지 않는다
         const second = await check(userB);
         expect(second.status).toBe(201);
         const { data: afterA } = await apiClient.get<{
-            data: { availableBalance: number };
-        }>('/tickets/wallets/me', { headers: headers(userA) });
-        expect(afterA.data.availableBalance).toBe(beforeB.data.availableBalance + 1);
+            data: { availableCount: number };
+        }>('/tickets/me', { headers: headers(userA) });
+        expect(afterA.data.availableCount).toBe(beforeB.data.availableCount + 1);
     });
 });
