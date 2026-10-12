@@ -10,6 +10,7 @@ export const adminEventStatusSchema = z.enum([
     'CANCELED',
     'REDRAWING',
     'NO_ENTRANTS',
+    // 신규 응답에서 생성하지 않는 과거 값 — 기존 응답 파싱 호환용 (ADR-018)
     'NO_ELIGIBLE_ENTRANTS',
 ]);
 

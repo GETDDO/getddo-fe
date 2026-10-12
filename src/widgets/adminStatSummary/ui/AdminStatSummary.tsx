@@ -34,15 +34,13 @@ function StatCard({ label, value, description, to }: StatCardProps) {
 
 /**
  * 관리자 대시보드 지표 요약 — 운영 중 확인이 잦은 값을 모아 각 관리 화면으로 이어준다.
- * 건수는 Page.totalElements를 재사용하고(size=1로 본문을 가볍게), 어뷰징은 목업이 전체를 돌려주므로 pending만 센다
+ * 건수는 Page.totalElements를 재사용한다(size=1로 본문을 가볍게)
  */
 export function AdminStatSummary() {
     const openEvents = useAdminEvents({ page: 1, size: 1, status: 'OPEN' });
     const scheduledEvents = useAdminEvents({ page: 1, size: 1, status: 'SCHEDULED' });
-    const abuseCases = useAbuseCases();
+    const abuseCases = useAbuseCases({ page: 1, size: 1 });
     const auditLogs = useAuditLogs({ page: 1, size: 1 });
-
-    const pendingAbuseCount = abuseCases.data?.filter((c) => c.status === 'pending').length;
 
     return (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -59,10 +57,10 @@ export function AdminStatSummary() {
                 to="/admin/events"
             />
             <StatCard
-                label="검토 대기 어뷰징"
-                value={pendingAbuseCount}
-                description="관리자 판단이 필요한 탐지"
-                to="/admin/abuse-review"
+                label="어뷰징 차단 내역"
+                value={abuseCases.data?.totalElements}
+                description="지급 전 차단된 요청"
+                to="/admin/abuse-cases"
             />
             <StatCard
                 label="감사 로그"
