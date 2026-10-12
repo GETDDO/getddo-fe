@@ -235,6 +235,40 @@ describe('추첨 목업', () => {
         expect(again.data.code).toBe('STATE_CONFLICT');
     });
 
+    it('AD05는 미확정 재추첨이 있으면 다른 당첨의 새 취소를 409로 거절하고, 확정 뒤에는 허용한다', async () => {
+        const { original } = await cancelFirstWinner(EVENT, keyOf(11));
+        const other = original.results.filter((r) => r.resultType === 'SELECTED')[1]!;
+        const post = () =>
+            call('post', `/admin/wins/${other.id}/cancellations`, {
+                body: { reason: '추가 취소' },
+                key: keyOf(12),
+            });
+
+        expect((await post()).status).toBe(409);
+
+        settleRedraw();
+        expect((await post()).status).toBe(202);
+    });
+
+    it('AD05·AD09는 비관리자면 403이다', async () => {
+        const { win, res } = await cancelFirstWinner(EVENT, keyOf(13));
+        const other = (await firstRun(EVENT)).results.find(
+            (r) => r.resultType === 'SELECTED' && r.id !== win.id,
+        )!;
+        const cancel = await call('post', `/admin/wins/${other.id}/cancellations`, {
+            body: { reason: '사유' },
+            key: keyOf(14),
+            userId: 'vu-doyoon',
+        });
+        expect(cancel.status).toBe(403);
+        const redraw = await call(
+            'post',
+            `/admin/cancellations/${res.data.data.cancellationId}/redraws`,
+            { userId: 'vu-doyoon' },
+        );
+        expect(redraw.status).toBe(403);
+    });
+
     it('AD05는 취소된 이벤트의 당첨이면 409다', async () => {
         const original = await firstRun(CANCELED_EVENT);
         const win = original.results.find((r) => r.resultType === 'SELECTED')!;

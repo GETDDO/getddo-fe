@@ -561,6 +561,7 @@ function paginate<T>(items: T[], url: URL) {
 
 const notFound = () => fail(404, 'RESOURCE_NOT_FOUND', '요청한 대상을 찾을 수 없습니다.');
 const conflict = (message: string, code = 'STATE_CONFLICT') => fail(409, code, message);
+const forbidden = () => fail(403, 'ACCESS_DENIED', '이 작업을 수행할 권한이 없습니다.');
 const invalid = (message: string) => fail(400, 'COMMON-002', message);
 
 const actorOf = (request: Request) => request.headers.get('X-User-ID') || DEFAULT_ACTOR;
@@ -723,6 +724,7 @@ export const drawHandlers = [
 
     // AD05 — 당첨 취소 + 재추첨 등록. 같은 키·같은 본문은 200으로 기존 결과를 돌려준다
     http.post(api('/admin/wins/:winId/cancellations'), async ({ params, request }) => {
+        if (!isAdminContext(request)) return forbidden();
         // 확정 계약: UUID 멱등키 필수, 사유는 양끝 공백 제거 후 1~1000자 (오류 코드 문자열은 미확정이라 공통 코드를 쓴다)
         const key = request.headers.get(IDEMPOTENCY_HEADER)?.trim();
         if (!key || !z.uuid().safeParse(key).success) {
@@ -753,6 +755,10 @@ export const drawHandlers = [
         if (store.canceled) return conflict('취소된 이벤트의 당첨은 취소할 수 없습니다.');
         if (result.isCanceled) return conflict('이미 취소된 당첨입니다.');
         if (result.resultType !== 'SELECTED') return conflict('미충원 결과는 취소할 수 없습니다.');
+        // 미확정 REPLACEMENT가 있는 동안에는 다른 당첨의 새 취소를 받지 않는다 (기존 취소 재요청·AD09는 허용)
+        if (store.runs.some((r) => r.detail.runNumber > 1 && r.detail.status !== 'CONFIRMED')) {
+            return conflict('진행 중인 재추첨이 있어 새 당첨 취소를 받을 수 없습니다.');
+        }
         if (run.detail.status !== 'CONFIRMED') {
             return conflict('확정되지 않은 추첨 결과는 취소할 수 없습니다.');
         }
@@ -853,9 +859,7 @@ export const drawHandlers = [
 
     // 최초 추첨 실패 재개 (GD-87) — 활성 관리자만, 본문 없음. 확정이면 저장 결과 200, 미확정·진행 중이면 202
     http.post(api('/admin/draws/:runId/resume'), ({ params, request }) => {
-        if (!isAdminContext(request)) {
-            return fail(403, 'ACCESS_DENIED', '이 작업을 수행할 권한이 없습니다.');
-        }
+        if (!isAdminContext(request)) return forbidden();
         const found = findRun(String(params.runId));
         if (!found) return notFound();
         const { store, run } = found;
@@ -873,7 +877,8 @@ export const drawHandlers = [
     }),
 
     // AD09 — 취소에 연결된 재추첨 실행의 시작·재개. 응답은 DrawExecutionResponse이고 확정된 실행은 저장 결과를 돌려준다
-    http.post(api('/admin/cancellations/:cancellationId/redraws'), ({ params }) => {
+    http.post(api('/admin/cancellations/:cancellationId/redraws'), ({ params, request }) => {
+        if (!isAdminContext(request)) return forbidden();
         const found = findCancellation(String(params.cancellationId));
         if (!found) return notFound();
         const { store, run } = found;
