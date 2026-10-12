@@ -14,7 +14,7 @@ export const ADMIN_STATUS_META: Record<AdminEventStatus, { label: string; chipCl
     REDRAWING: { label: '재추첨 중', chipClass: 'bg-status-pending text-status-pending-text' },
     NO_ENTRANTS: { label: '응모자 없음', chipClass: 'bg-surface-sunken text-fg-secondary' },
     NO_ELIGIBLE_ENTRANTS: {
-        label: '응모자 없음',
+        label: '당첨자 없음',
         chipClass: 'bg-surface-sunken text-fg-secondary',
     },
 };
