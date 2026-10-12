@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 
 import { CalendarCheck, Check, ChevronRight, ClipboardList, Gamepad2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useAttendanceToday } from '@entities/attendance';
@@ -21,8 +21,11 @@ import { useVirtualClock } from '@shared/lib/virtualClock';
 
 import ticketCharacter from '../assets/ticket-character.png';
 import { summarizeMonthlyTickets } from '../lib/monthlyTicketSummary';
-import { summarizeTodayRewards } from '../lib/todayRewards';
+import { isMissionOpen, summarizeTodayRewards } from '../lib/todayRewards';
 import { MISSION_SECTION_IDS } from '../model/sectionIds';
+
+/** 기준 시각을 다시 읽는 간격 */
+const NOW_REFRESH_MS = 60_000;
 
 const DATE_FORMAT = new Intl.DateTimeFormat('ko-KR', {
     timeZone: 'Asia/Seoul',
@@ -96,9 +99,14 @@ export function TodayRewardsBanner() {
     const { data: missions } = useMissionList();
     const { data: tickets } = useMyTickets();
     const { data: history } = useTicketHistories();
-    // 날짜·이번 달 판정은 표시용이므로 마운트 시각을 쓴다
+    // 날짜·이번 달·진행 중 미션 판정 기준 시각 — 페이지를 열어 둔 채 기준일이 바뀌어도
+    // 출석 상태(주기적으로 다시 받는다)와 같은 날을 보도록 1분마다 다시 읽는다
     const clock = useVirtualClock();
-    const [now] = useState(() => clock.now());
+    const [now, setNow] = useState(() => clock.now());
+    useEffect(() => {
+        const timer = setInterval(() => setNow(clock.now()), NOW_REFRESH_MS);
+        return () => clearInterval(timer);
+    }, [clock]);
     const monthly = history ? summarizeMonthlyTickets(history, now) : undefined;
     const balance = useCountUp(tickets?.availableCount);
 
@@ -106,7 +114,8 @@ export function TodayRewardsBanner() {
         attended: today?.attended,
         // 준비 중인 게임은 보상을 받을 수 없어 세지 않는다
         games: games?.filter((game) => hasGamePlayer(game.id)),
-        missions,
+        // 지금 참여할 수 있는 미션만 센다 — 목록 카드는 기간이 지난 미션도 그대로 보여 준다
+        missions: missions?.filter((mission) => isMissionOpen(mission, now)),
     });
     const allDone =
         progress.attendance?.done === true &&
