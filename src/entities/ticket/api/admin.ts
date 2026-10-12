@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@shared/api/client';
 import { envelopeSchema, pageSchema } from '@shared/api/envelopeSchema';
@@ -58,10 +58,9 @@ export interface TicketInconsistenciesParams extends PageParams {
 }
 
 // 정합성은 요청 시점에 계산한 값이라 캐시하지 않고 화면에 들어올 때마다 새로 받는다.
-// 페이지·필터를 바꿀 때는 이전 결과를 유지해 목록이 깜빡이지 않게 한다
+// 페이지·필터를 바꾸면 이전 결과를 새 페이지처럼 보이지 않도록 로딩 상태로 돌아간다
 const adminListOptions = {
     ...queryPresets.noCache,
-    placeholderData: keepPreviousData,
 } as const;
 
 // AO03 — 지급 이력
