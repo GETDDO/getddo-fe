@@ -11,9 +11,6 @@ export const ticketsByGradeSchema = z.object({
     GOLD: z.number().int().nonnegative(),
 });
 
-// E04 요청 본문 — 생략된 등급은 0으로 본다 (spec EntryRequest)
-export type EntryTickets = Partial<TicketsByGrade>;
-
 // 응모 접수 결과 — 최종 접수 여부는 이 응답을 따른다 (화면에서 미리 확정하지 않는다)
 // eventTitle은 목록에서 이벤트 이름을 보여주기 위해 서버가 함께 내려주는 필드다.
 // 당첨 여부는 담기지 않는다 — 발표 전 당첨 정보는 비공개다 (docs/CONTEXT.md).
@@ -75,6 +72,8 @@ export const entryEligibilitySchema = z.object({
 });
 
 export type TicketsByGrade = z.infer<typeof ticketsByGradeSchema>;
+// E04 요청 본문 — 생략된 등급은 0으로 본다 (spec EntryRequest)
+export type EntryTickets = Partial<TicketsByGrade>;
 export type EntryStatistics = z.infer<typeof entryStatisticsSchema>;
 export type EntryIneligibilityReason = z.infer<typeof entryIneligibilityReasonSchema>;
 export type EntryEligibility = z.infer<typeof entryEligibilitySchema>;

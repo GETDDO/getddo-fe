@@ -19,6 +19,8 @@ const ERROR_MESSAGES: Record<string, string> = {
     'ENTRY-008': '이 이벤트는 브론즈 응모권이 필요합니다.',
     'ENTRY-009': '이미 처리 중인 요청과 내용이 다릅니다. 화면을 새로고침한 뒤 다시 시도해 주세요.',
     'TICKET-006': '보유한 응모권이 부족합니다.',
+    USER_MEMBERSHIP_MISMATCH:
+        '사용자 멤버십 정보가 일치하지 않습니다. 사용자를 다시 선택해 주세요.',
     INSUFFICIENT_TICKETS: '보유한 응모권이 부족합니다.',
     TICKET_LIMIT_EXCEEDED: '이 이벤트의 응모 한도를 초과했습니다.',
     ALREADY_ENTERED: '이미 응모한 이벤트입니다.',

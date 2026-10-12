@@ -396,6 +396,7 @@ export const mockEvents: MockEvent[] = [
     },
     {
         id: 'evt-014',
+        isTimeRaffle: true,
         title: 'VIP 전용 10월 래플',
         description: 'VIP 이상 멤버십 전용 추첨 이벤트. 브론즈 응모권 1장으로 참여해요.',
         // 진행 중인 멤버십 제한 시드 — 우수 등급은 ENTRY-003으로 거절돼 화면에서 안내가 보인다

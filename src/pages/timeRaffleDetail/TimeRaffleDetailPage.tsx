@@ -45,8 +45,8 @@ export function TimeRaffleDetailPage() {
         event?.status === 'closed' || event?.status === 'drawn',
     );
     const enterEvent = useEnterEvent(id);
-    // 가중치 적용 이벤트에서 사용자가 등급별로 고르는 장수 — 기본은 브론즈 1장
-    const [tickets, setTickets] = useState<TicketsByGrade>({ BRONZE: 1, SILVER: 0, GOLD: 0 });
+    // 가중치 적용 이벤트에서 사용자가 등급별로 고르는 장수 — 브론즈 0장 사용자를 위해 0장에서 시작한다
+    const [tickets, setTickets] = useState<TicketsByGrade>({ BRONZE: 0, SILVER: 0, GOLD: 0 });
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [shortfallOpen, setShortfallOpen] = useState(false);
     const [completeOpen, setCompleteOpen] = useState(false);
@@ -87,22 +87,50 @@ export function TimeRaffleDetailPage() {
         (event.maxTicketsPerUser === null
             ? null
             : Math.max(0, event.maxTicketsPerUser - alreadyUsed));
-    const canEnter = isOpen && (eligibility?.canEnter ?? (isFree || (remainingLimit ?? 0) >= 1));
+    // 서버가 '끝난 응모'로 판정한 사유만 '응모 완료'다 — 자격 부족·장수 부족과 구분한다 (E07)
+    const completed =
+        eligibility?.reasons.includes('ALREADY_ENTERED') === true ||
+        eligibility?.reasons.includes('TICKET_LIMIT_EXCEEDED') === true;
+    // 장수로 해소되지 않는 자격 부재 — 클릭해도 소용없으니 잠근다
+    const forbidden =
+        eligibility?.reasons.includes('ADMIN_ENTRY_FORBIDDEN') === true ||
+        eligibility?.reasons.includes('ENTRY_MEMBERSHIP_NOT_MET') === true ||
+        eligibility?.reasons.includes('EVENT_NOT_OPEN') === true;
+    // 자격은 되지만 장수가 모자란 사유 — 클릭은 열어 두고 부족 안내로 보낸다
+    const lacking =
+        eligibility?.reasons.includes('BRONZE_REQUIRED') === true ||
+        eligibility?.reasons.includes('INSUFFICIENT_TICKETS') === true;
+    const canEnter =
+        isOpen &&
+        !completed &&
+        !forbidden &&
+        (eligibility === undefined
+            ? isFree || (remainingLimit ?? 0) >= 1
+            : eligibility.canEnter || lacking);
 
     // 요청에 실을 장수 맵 — 미사용은 빈 맵, 미적용은 브론즈 1장 고정, 가중치는 등급별 선택
     const requestedTickets: EntryTickets = isFree ? {} : isWeighted ? tickets : { BRONZE: 1 };
     // 가중치 이벤트에서 아무 등급도 고르지 않으면 보낼 요청이 없다
     const needsSelection = isWeighted && selectedTotal < 1;
 
-    // 잔액을 아직 못 받았으면 부족하다고 단정하지 않고 확인 모달로 보낸다 (최종 판정은 서버 응답)
+    // 잔액을 아직 못 받았으면 부족하다고 단정하지 않고 확인 모달로 보낸다 (최종 판정은 서버 응답).
+    // 서버가 이미 부족을 판정했으면 로컬 잔액과 무관하게 부족 안내로 보낸다
     const hasEnoughTickets =
-        ticket == null ||
-        isFree ||
-        (isWeighted
-            ? ticketGradeSchema.options.every(
-                  (grade) => tickets[grade] <= ticket.countByGrade[grade],
-              )
-            : ticket.countByGrade.BRONZE >= 1);
+        !lacking &&
+        (ticket == null ||
+            isFree ||
+            (isWeighted
+                ? ticketGradeSchema.options.every(
+                      (grade) => tickets[grade] <= ticket.countByGrade[grade],
+                  )
+                : ticket.countByGrade.BRONZE >= 1));
+    // 미적용 이벤트는 브론즈만 쓸 수 있으니 확인 모달의 보유 표시도 브론즈로 맞춘다
+    const dialogBalance =
+        ticket == null
+            ? null
+            : isWeighted || isFree
+              ? ticket.availableCount
+              : ticket.countByGrade.BRONZE;
 
     return (
         <main className={CONTAINER}>
@@ -135,13 +163,15 @@ export function TimeRaffleDetailPage() {
                                 }
                                 className="w-full"
                             >
-                                {!canEnter
+                                {completed
                                     ? '응모 완료'
-                                    : needsSelection
-                                      ? '응모권을 골라주세요'
-                                      : alreadyUsed > 0
-                                        ? '추가 응모하기'
-                                        : '응모하기'}
+                                    : forbidden
+                                      ? '응모할 수 없어요'
+                                      : needsSelection
+                                        ? '응모권을 골라주세요'
+                                        : alreadyUsed > 0
+                                          ? '추가 응모하기'
+                                          : '응모하기'}
                             </Button>
                         ) : // 발표가 끝난 래플은 결과가 바로 아래에 있어 따로 누를 것이 없다
                         event.status === 'drawn' ? undefined : (
@@ -162,7 +192,7 @@ export function TimeRaffleDetailPage() {
                 onOpenChange={setConfirmOpen}
                 title={event.title}
                 tickets={requestedTickets}
-                balance={ticket?.availableCount ?? null}
+                balance={dialogBalance}
                 returnFocusTo={entryButtonRef}
                 pending={enterEvent.isPending}
                 onConfirm={() => {
@@ -171,12 +201,15 @@ export function TimeRaffleDetailPage() {
                             setConfirmOpen(false);
                             setLastDeductedCount(entry.deductedTicketCount);
                             setLastRemaining(
-                                remainingLimit === null
-                                    ? null
-                                    : Math.max(0, remainingLimit - entry.deductedTicketCount),
+                                // 미사용 이벤트는 장수와 무관하게 사용자당 1회라 더 낼 수 없다
+                                isFree
+                                    ? 0
+                                    : remainingLimit === null
+                                      ? null
+                                      : Math.max(0, remainingLimit - entry.deductedTicketCount),
                             );
                             // 한도가 줄어들어 지금 선택이 범위를 벗어날 수 있으므로 되돌린다
-                            setTickets({ BRONZE: 1, SILVER: 0, GOLD: 0 });
+                            setTickets({ BRONZE: 0, SILVER: 0, GOLD: 0 });
                             setCompleteOpen(true);
                         },
                         onError: () => {
@@ -197,6 +230,7 @@ export function TimeRaffleDetailPage() {
             <EntryCompleteDialog
                 open={completeOpen}
                 onOpenChange={setCompleteOpen}
+                freeEntry={isFree}
                 deductedTicketCount={lastDeductedCount}
                 remainingAllowance={lastRemaining}
                 returnFocusTo={entryButtonRef}
