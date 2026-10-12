@@ -3,6 +3,10 @@ import { toast } from 'sonner';
 
 import type { DrawResult } from '@entities/drawResult';
 
+import {
+    AWARD_CANCELLATION_REASON_MAX_LENGTH,
+    awardCancellationRequestSchema,
+} from '@entities/winner';
 import { getErrorMessage } from '@shared/api/errorMessage';
 import { createIdempotencyKey } from '@shared/lib/idempotencyKey';
 import { Button } from '@shared/ui/button';
@@ -39,8 +43,11 @@ export function CancelWinDialog({ result, open, onOpenChange, onCanceled }: Canc
         return null;
     }
 
-    const trimmed = reason.trim();
-    const canSubmit = !cancel.isPending && trimmed.length > 0;
+    // 서버와 같은 기준(trim 후 1~1000자)으로 미리 막는다 — 서버 검증을 대체하지 않는다
+    const parsed = awardCancellationRequestSchema.safeParse({ reason });
+    const trimmed = parsed.success ? parsed.data.reason : reason.trim();
+    const tooLong = trimmed.length > AWARD_CANCELLATION_REASON_MAX_LENGTH;
+    const canSubmit = !cancel.isPending && parsed.success;
 
     const reset = () => {
         setReason('');
@@ -49,7 +56,7 @@ export function CancelWinDialog({ result, open, onOpenChange, onCanceled }: Canc
     };
 
     const submit = () => {
-        if (submitting.current || !trimmed) return;
+        if (submitting.current || !parsed.success) return;
         if (intent.current?.winId !== result.id || intent.current.reason !== trimmed) {
             intent.current = { winId: result.id, reason: trimmed, key: createIdempotencyKey() };
         }
@@ -105,6 +112,15 @@ export function CancelWinDialog({ result, open, onOpenChange, onCanceled }: Canc
                         placeholder="당첨 취소 사유를 입력하세요"
                         aria-describedby={cancel.isError ? 'cancel-win-error' : undefined}
                     />
+                    <p
+                        className={
+                            tooLong
+                                ? 'text-destructive text-body-sm'
+                                : 'text-fg-secondary text-body-sm'
+                        }
+                    >
+                        {trimmed.length} / {AWARD_CANCELLATION_REASON_MAX_LENGTH}자
+                    </p>
                 </div>
 
                 {cancel.isError && (

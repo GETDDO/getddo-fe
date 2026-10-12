@@ -11,6 +11,7 @@ export {
     DRAWS_KEY,
     drawApiPath,
     drawChecksApiPath,
+    drawResumeApiPath,
     drawParticipantsApiPath,
     eventDrawsApiPath,
     useDrawCandidates,
@@ -28,6 +29,9 @@ export {
 export {
     cancellationSummarySchema,
     drawCandidateSchema,
+    drawConfirmationResultSchema,
+    drawConfirmationSchema,
+    drawExecutionResponseSchema,
     drawExecutionTypeSchema,
     drawResultSchema,
     drawRunDetailSchema,
@@ -38,6 +42,9 @@ export {
 export type {
     CancellationSummary,
     DrawCandidate,
+    DrawConfirmation,
+    DrawConfirmationResult,
+    DrawExecutionResponse,
     DrawResult,
     DrawRun,
     DrawRunDetail,
