@@ -40,15 +40,15 @@ interface AttendanceState {
     checkedDates: string[];
     /** 월(YYYY-MM) → milestoneDays → 지급 시각 — 같은 단계 보상은 그 달에 한 번만 지급한다 */
     claimedMilestones: Map<string, Map<number, string>>;
-    /** 같은 기준일 재요청에 그대로 돌려줄 영수증 — 기준일이 바뀌면 폐기한다 */
-    todayReceipt: { date: string; receipt: AttendanceReceipt } | null;
+    /** 기준일별 확정 영수증 — 같은 기준일 재요청에 그대로 돌려준다 (AT02 명시) */
+    receiptsByDate: Map<string, AttendanceReceipt>;
 }
 
 // 시연용 초기 상태 — 어제까지 3일 연속 출석(중간에 하루 빠진 이력 포함)으로 시작한다
 const seedState = (): AttendanceState => ({
     checkedDates: [daysAgo(5), daysAgo(3), daysAgo(2), daysAgo(1)],
     claimedMilestones: new Map(),
-    todayReceipt: null,
+    receiptsByDate: new Map(),
 });
 
 // X-User-ID별로 분리한다 — 한 사용자의 출석이 다른 사용자에게 보이거나 보상을 막지 않도록
@@ -141,8 +141,9 @@ export const attendanceHandlers = [
         const dates = new Set(state.checkedDates);
 
         // 같은 기준일 재요청: 새로 지급하지 않고 이미 확정한 영수증을 그대로 돌려준다 (AT02 명시)
-        if (state.todayReceipt?.date === today) {
-            return ok(state.todayReceipt.receipt, 200);
+        const existingReceipt = state.receiptsByDate.get(today);
+        if (existingReceipt) {
+            return ok(existingReceipt, 200);
         }
 
         state.checkedDates.push(today);
@@ -190,7 +191,7 @@ export const attendanceHandlers = [
             rewards,
             createdAt: nowIso,
         };
-        state.todayReceipt = { date: today, receipt };
+        state.receiptsByDate.set(today, receipt);
 
         const total = rewards.reduce((sum, reward) => sum + reward.ticketCount, 0);
         // 출석 보상은 브론즈 고정이다 (ADR-016) — 지급 장수만큼 장 단위 이력을 남긴다

@@ -98,6 +98,20 @@ describe('출석 목업 핸들러', () => {
         expect(again.data).toEqual(first.data);
     });
 
+    it('기준일을 되돌려도 이미 지급한 날짜의 영수증을 그대로 반환하고 보상을 다시 지급하지 않는다', async () => {
+        const userId = uniqueUser();
+        freezeAt('2026-10-20');
+        const first = await check(userId);
+
+        freezeAt('2026-10-21');
+        await check(userId);
+
+        freezeAt('2026-10-20');
+        const again = await check(userId);
+        expect(again.status).toBe(200);
+        expect(again.data).toEqual(first.data);
+    });
+
     it('연속 단계에 도달하면 STREAK 보상을 붙이고 그 달에는 한 번만 지급한다', async () => {
         const userId = uniqueUser();
         // 시드 3일에서 시작해 4·5·6·7일째를 채운다 — 7일째에 첫 단계 보상
