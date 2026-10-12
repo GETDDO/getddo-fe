@@ -67,6 +67,11 @@ const attempts = new Map<string, StoredAttempt>();
 // 내 응모 내역 — X-User-ID별로 분리한다 (한 사용자의 응모가 다른 사용자에게 보이지 않도록)
 const entriesByUser = new Map<string, EntryReceipt[]>();
 
+// 첫 진입에 내역이 비지 않게 심어 두는 시드 응모 — 내역·통계·관리자 표시에는 포함하지만
+// E04의 응모 제한과 E07의 참여 여부 판정에서는 실제 응모로 세지 않는다.
+// 그대로 세면 모든 사용자가 evt-001에 '이미 응모' 상태로 잠겨 신규 응모 시연이 불가하다
+const seededEntries = new WeakSet<EntryReceipt>();
+
 const seedEntry = (): EntryReceipt => ({
     id: crypto.randomUUID(),
     eventId: 'evt-001',
@@ -110,20 +115,29 @@ const myEntriesFor = (userId: string) => {
     let list = entriesByUser.get(userId);
     if (!list) {
         // 시연 첫 진입에도 목록이 비어 보이지 않게 사용자별 시드 하나를 둔다
-        list = [seedEntry()];
+        const seed = seedEntry();
+        seededEntries.add(seed);
+        list = [seed];
         entriesByUser.set(userId, list);
     }
     return list;
 };
 
-/** 이 이벤트에 접수된 내 응모 — E04의 1회 제한·누적 상한 판정과 E07의 usedTicketCount가 같은 근거를 쓴다 */
+/** 이 이벤트에 접수된 내 응모 — E06 내역·E03 통계·관리자 표시처럼 시드를 포함해 보여줄 때 쓴다 */
 const myAcceptedFor = (userId: string, eventId: string) =>
     myEntriesFor(userId).filter(
         (entry) => entry.eventId === eventId && entry.status === 'ACCEPTED',
     );
 
+/** 실제로 접수된 응모만 센다 — E04의 1회 제한·누적 상한과 E07의 참여 판정 근거 */
+const myRealAcceptedFor = (userId: string, eventId: string) =>
+    myAcceptedFor(userId, eventId).filter((entry) => !seededEntries.has(entry));
+
 const usedTicketCountOf = (userId: string, eventId: string) =>
     myAcceptedFor(userId, eventId).reduce((sum, entry) => sum + entry.deductedTicketCount, 0);
+
+const usedRealTicketCountOf = (userId: string, eventId: string) =>
+    myRealAcceptedFor(userId, eventId).reduce((sum, entry) => sum + entry.deductedTicketCount, 0);
 
 export const entryHandlers = [
     // E06 초안 — Page<EntryReceipt> 봉투, page·size 파라미터를 적용한다 (페이지는 1부터)
@@ -168,9 +182,9 @@ export const entryHandlers = [
         }
         if (mockEventEffectiveStatus(event) !== 'open') reasons.push('EVENT_NOT_OPEN');
 
-        const usedTicketCount = usedTicketCountOf(userId, event.id);
+        const usedTicketCount = usedRealTicketCountOf(userId, event.id);
         const onceOnly = rule.eventType === 'NO_TICKET' || !rule.weightingEnabled;
-        if (onceOnly && myAcceptedFor(userId, event.id).length > 0) {
+        if (onceOnly && myRealAcceptedFor(userId, event.id).length > 0) {
             reasons.push('ALREADY_ENTERED');
         }
 
@@ -281,7 +295,7 @@ export const entryHandlers = [
         const total = totalOf(tickets);
         // 사용자당 1회 제한 — 미사용·가중치 미적용 이벤트
         const onceOnly = rule.eventType === 'NO_TICKET' || !rule.weightingEnabled;
-        if (onceOnly && myAcceptedFor(userId, eventId).length > 0) {
+        if (onceOnly && myRealAcceptedFor(userId, eventId).length > 0) {
             return remember(409, failBody('ENTRY-006', '이미 응모한 이벤트입니다'));
         }
 
@@ -308,7 +322,7 @@ export const entryHandlers = [
             // 누적 상한은 시드 카운터가 아닌 접수 기록으로 센다 — 월말 소진용(null)은 상한이 없다
             if (
                 rule.maxTicketsPerUser !== null &&
-                usedTicketCountOf(userId, eventId) + total > rule.maxTicketsPerUser
+                usedRealTicketCountOf(userId, eventId) + total > rule.maxTicketsPerUser
             ) {
                 return remember(409, failBody('ENTRY-007', '이 이벤트의 응모 한도를 초과했습니다'));
             }

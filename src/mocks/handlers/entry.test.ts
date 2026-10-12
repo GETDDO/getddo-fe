@@ -8,7 +8,7 @@ import { IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
 // 한도 소진이 필요한 테스트는 관리자 목업으로 조건이 맞는 이벤트를 직접 만든다.
 /** 가중치 미적용(브론즈 1장·1회) — 시연 기준 시각에 붙은 창이라 언제 돌려도 진행 중이다 */
 const BRONZE_ONLY_EVENT_ID = 'evt-003';
-/** 두 번째 가중치 미적용 이벤트 — evt-001은 시드 응모가 미리 들어 있어 여기서는 쓰지 않는다 */
+/** 두 번째 가중치 미적용 이벤트 — evt-001은 내역 표시용 시드가 있어 여기서는 독립 시드를 쓴다 */
 const BRONZE_ONLY_EVENT_ID_2 = 'evt-204';
 /** 일반 가중치(누적 5장) 진행 중 이벤트 */
 const WEIGHTED_EVENT_ID = 'evt-002';
@@ -103,8 +103,9 @@ async function createOpenEvent(over: Record<string, unknown> = {}) {
             weightingEnabled: true,
             maxTicketsPerUser: 5,
             membershipRule: 'excellent',
-            startsAt: '2026-01-01T00:00:00Z',
-            endsAt: '2026-12-31T00:00:00Z',
+            // 고정 날짜는 지나면 이벤트가 closed가 돼 실행 시점에 따라 실패한다
+            startsAt: new Date(Date.now() - 60 * 1000).toISOString(),
+            endsAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
             prizes: [
                 { rank: 1, name: '테스트 경품', winnerCount: 1, description: null, imageKey: null },
             ],
@@ -305,6 +306,31 @@ describe('응모 목업 핸들러', () => {
         );
         expect(again.status).toBe(409);
         expect(again.data).toMatchObject({ success: false, code: 'ENTRY-006' });
+    });
+
+    it('내역 표시용 시드가 있어도 evt-001에 새로 응모되고 1회 제한은 실제 응모로만 판정한다', async () => {
+        const userId = uniqueUser('seed-demo');
+        const res = await enter(uniqueKey('seed-demo'), { BRONZE: 1 }, 'evt-001', userId);
+        expect(res.status).toBe(201);
+
+        const again = await enter(uniqueKey('seed-demo-2'), { BRONZE: 1 }, 'evt-001', userId);
+        expect(again.status).toBe(409);
+        expect(again.data).toMatchObject({ success: false, code: 'ENTRY-006' });
+    });
+
+    it('E07은 시드 응모를 참여로 세지 않고 실제 응모 후에만 ALREADY_ENTERED를 돌려준다', async () => {
+        const userId = uniqueUser('seed-elig');
+        const before = await eligibility('evt-001', userId);
+        expect(before.canEnter).toBe(true);
+        expect(before.usedTicketCount).toBe(0);
+        expect(before.reasons).not.toContain('ALREADY_ENTERED');
+
+        const entered = await enter(uniqueKey('seed-elig'), { BRONZE: 1 }, 'evt-001', userId);
+        expect(entered.status).toBe(201);
+
+        const after = await eligibility('evt-001', userId);
+        expect(after.reasons).toContain('ALREADY_ENTERED');
+        expect(after.usedTicketCount).toBe(1);
     });
 
     it('미적용 이벤트에서 브론즈가 없으면 TICKET-006이 아니라 BRONZE_REQUIRED로 거절한다', async () => {

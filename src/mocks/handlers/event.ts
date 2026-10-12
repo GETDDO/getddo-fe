@@ -207,8 +207,9 @@ export const mockEvents: MockEvent[] = [
         bannerImageUrl: null,
         // 상세 화면 본문 이미지 — 실제 URL은 백엔드 연동 후 들어온다. 로컬에서 확인하려면 임의의 이미지 URL을 넣으면 된다
         detailImageUrl: null,
-        startsAt: '2026-09-01T00:00:00Z',
-        endsAt: '2026-10-31T14:59:59Z',
+        // 대표 시연 이벤트 — 세션 기준 상대 기간으로 두어 고정 마감일이 지나도 응모할 수 있다
+        startsAt: demoTime(-7 * 24 * 60 * MINUTE),
+        endsAt: demoTime(7 * 24 * 60 * MINUTE),
         status: 'open',
         requiredTickets: 1,
         tags: ['디지털기기'],

@@ -54,6 +54,12 @@ async function createEvent(over: Record<string, unknown> = {}) {
     return (res.data as Envelope<AdminEventBody>).data;
 }
 
+// 응모가 가능한 진행 중 창 — 고정 날짜는 지나면 이벤트가 closed가 돼 실행 시점에 따라 실패한다
+const openWindow = () => ({
+    startsAt: new Date(Date.now() - 60 * 1000).toISOString(),
+    endsAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+});
+
 // 사용자 목록이 Page 봉투+페이지로 오므로 관리 목업 수(33건)를 덮는 size로 요청한다
 async function userEventIds() {
     const { data } = await apiClient.get<{ data: { items: { id: string }[] } }>('/events?size=100');
@@ -174,8 +180,7 @@ describe('관리자 이벤트 목업 핸들러', () => {
             eventType: 'TICKET',
             weightingEnabled: true,
             maxTicketsPerUser: 5,
-            startsAt: '2026-01-01T00:00:00Z',
-            endsAt: '2026-12-31T00:00:00Z',
+            ...openWindow(),
         });
 
         // 사용자가 응모권 3장으로 응모한다 (잔액 10 → 7)
@@ -226,8 +231,7 @@ describe('관리자 이벤트 목업 핸들러', () => {
         // 진행 중 창으로 만든다 — 진행 중에는 상태상 삭제가 막힌다 (ENTRY-005로 응모도 불가한 진행 예정은 응모 이력을 가질 수 없다)
         const open = await createEvent({
             title: '진행 중인 이벤트',
-            startsAt: '2026-01-01T00:00:00Z',
-            endsAt: '2026-12-31T00:00:00Z',
+            ...openWindow(),
         });
 
         // 진행 중 이벤트에 응모를 넣어 사용자 목록에도 실제 이력이 생겼는지 확인한다
