@@ -78,6 +78,28 @@ const CONTENTS: Record<string, GameContent> = {
             image: colorWordGuide,
         },
     },
+    'game-catch': {
+        tagline: '좌우로 오가는 타코야끼를 금색 구간에 딱 멈추세요.',
+        // 전용 대표·안내 이미지가 나오기 전까지 대표 이미지는 비우고, 안내 이미지는 공통 배너를 쓴다
+        heroImage: null,
+        guide: {
+            title: '게임 방법',
+            subtitle: '금색 구간에서 딱 멈추면 성공!',
+            steps: [
+                {
+                    icon: Gamepad2,
+                    keys: ['Space'],
+                    text: '또는 화면을 눌러 타코야끼를 멈춰요.',
+                },
+                {
+                    icon: Target,
+                    text: '가운데에 멈추면 퍼펙트로 점수 2배!\n목숨은 3개, 성공할수록 빨라지고 구간이 좁아져요.',
+                },
+                REWARD_STEP,
+            ],
+            image: guideBanner,
+        },
+    },
     'game-takoyaki': {
         tagline: '60초 안에 타코야끼를 구워내세요.',
         heroImage: takoyakiHero,

@@ -33,9 +33,10 @@ const mockGames: GameMeta[] = [
         dailyLimit: 1,
     },
     {
-        id: 'game-roulette',
-        title: '룰렛 돌리기',
-        description: '룰렛을 돌려 행운을 확인해요',
+        // 룰렛 돌리기 자리를 마스코트 캐치로 바꿨다 (게임 담당자 결정)
+        id: 'game-catch',
+        title: '마스코트 캐치',
+        description: '금색 구간에 타코야끼를 딱 멈춰요',
         thumbnailUrl: null,
         dailyLimit: 1,
     },
@@ -73,12 +74,7 @@ const seedPlayState: Record<string, GamePlayState> = {
         rewardedToday: false,
         remainingPlays: 1,
     },
-    'game-roulette': {
-        bestScore: 300,
-        todayPlayCount: 2,
-        rewardedToday: true,
-        remainingPlays: 0,
-    },
+    'game-catch': { bestScore: 0, todayPlayCount: 0, rewardedToday: false, remainingPlays: 1 },
     'game-color': { bestScore: 120, todayPlayCount: 0, rewardedToday: false, remainingPlays: 1 },
     'game-mole': { todayPlayCount: 0, rewardedToday: false, remainingPlays: 1 },
 };
