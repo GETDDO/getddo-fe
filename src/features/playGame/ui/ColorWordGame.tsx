@@ -35,6 +35,7 @@ import {
     GameStartHint,
     GameStartHintLine,
 } from './GameOverlays';
+import { GameSpeechBubble } from './GameSpeechBubble';
 import { GameTimer } from './GameTimer';
 import { RewardDialog } from './RewardDialog';
 import { ScoreBoard } from './ScoreBoard';
@@ -328,22 +329,6 @@ export function ColorWordGame({
                     ref={boardScope}
                     className="flex flex-1 flex-col items-center justify-center gap-[2%] px-3 pb-[12%]"
                 >
-                    {/* 결과 한마디 — 정답 / 땡(정답 색 알려 주기) / 시간 초과. 자리를 늘 잡아 둬 판이 들썩이지 않게 한다 */}
-                    <div className="flex h-7 items-center justify-center">
-                        {reveal && (
-                            <motion.span
-                                initial={{ opacity: 0, y: 4 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className={`text-body-sm-bold text-fg-on-brand rounded-full px-3 py-0.5 shadow-sm ${reveal.ok ? 'bg-semantic-success' : 'bg-semantic-error'}`}
-                            >
-                                {reveal.ok
-                                    ? '정답!'
-                                    : reveal.picked === null
-                                      ? '시간 초과!'
-                                      : `땡! 정답은 ${ink.name}`}
-                            </motion.span>
-                        )}
-                    </div>
                     <div className="relative flex aspect-[900/229] w-[min(64%,34rem)] items-center justify-center">
                         <img
                             src={wordBoard}
@@ -391,6 +376,21 @@ export function ColorWordGame({
                 transition={{ type: 'spring', stiffness: 420, damping: 16 }}
                 className="pointer-events-none absolute right-0 -bottom-[5%] w-[24%] origin-bottom [image-rendering:pixelated]"
             />
+
+            {/* 결과 말풍선 — 오른쪽 아래 타코야끼 머리 위 */}
+            {reveal && (
+                <GameSpeechBubble
+                    key={`bubble-${roundKey}`}
+                    text={
+                        reveal.ok
+                            ? '정답!'
+                            : reveal.picked === null
+                              ? '시간 초과!'
+                              : `땡! 정답은 ${ink.name}`
+                    }
+                    className="bottom-[25%] left-[85%]"
+                />
+            )}
 
             {/* 맞힘·틀림 — 게임 판 테두리를 초록·빨강으로 잠깐 바꾼다 */}
             {reveal && (

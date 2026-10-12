@@ -17,7 +17,6 @@ import gaugeZone from '../assets/takkoTiming/gauge-zone.png';
 import toothpick from '../assets/takkoTiming/toothpick.png';
 import { PAUSE_SOUNDS } from '../lib/gameSounds';
 import { isInteractive } from '../lib/isInteractive';
-import { PIXEL_FONT } from '../lib/pixelFont';
 import { TAKKO_TIMING_BGM, TAKKO_TIMING_SOUNDS } from '../lib/takkoTimingAssets';
 import { useLoopingBgm } from '../lib/useLoopingBgm';
 import {
@@ -37,6 +36,7 @@ import {
     GameStartHint,
     GameStartHintLine,
 } from './GameOverlays';
+import { GameSpeechBubble } from './GameSpeechBubble';
 import { RewardDialog } from './RewardDialog';
 import { ScoreBoard } from './ScoreBoard';
 import { VolumeControl } from './VolumeControl';
@@ -355,27 +355,14 @@ export function TakkoTimingGame({
                         className="pointer-events-none absolute top-full mt-0.5 h-[calc(var(--bar)*1.2)] w-auto -translate-x-1/2 [image-rendering:pixelated]"
                         style={{ left: percent(round.center) }}
                     />
-                    {/* 결과 말풍선 — 타꼬 머리 위(꽂힌 이쑤시개 끝보다 위)에 도트 말풍선으로 띄운다.
-                        색 대신 게임 그림체(크림 바탕·진한 갈색 테두리·도트 글꼴)로 맞추고, 꼬리는 타꼬를 가리킨다 */}
+                    {/* 결과 말풍선 — 타꼬 머리 위(꽂힌 이쑤시개 끝보다 위) */}
                     {chip && (
-                        <motion.div
+                        <GameSpeechBubble
                             key={`bubble-${roundKey}`}
-                            aria-hidden
-                            initial={{ opacity: 0, y: 6, scale: 0.8 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 460, damping: 18 }}
-                            className="pointer-events-none absolute bottom-[calc(70%+var(--taco)*2)] z-20 origin-bottom -translate-x-1/2"
+                            text={chip}
+                            className="bottom-[calc(70%+var(--taco)*2)]"
                             style={{ left: percent(round.center) }}
-                        >
-                            <span
-                                className={`border-fg-primary bg-ticket-accent text-fg-primary relative block rounded-md border-[3px] px-3 py-1.5 text-sm whitespace-nowrap shadow-[3px_3px_0_0_var(--color-fg-primary)] sm:text-base ${PIXEL_FONT}`}
-                            >
-                                {chip}
-                                {/* 꼬리 — 테두리색 삼각형 위에 바탕색 삼각형을 겹쳐 도트 테두리처럼 */}
-                                <span className="bg-fg-primary absolute top-full left-1/2 size-3 -translate-x-1/2 [clip-path:polygon(0_0,100%_0,50%_100%)]" />
-                                <span className="bg-ticket-accent absolute top-full left-1/2 -mt-[3px] size-2 -translate-x-1/2 [clip-path:polygon(0_0,100%_0,50%_100%)]" />
-                            </span>
-                        </motion.div>
+                        />
                     )}
                     {/* 타꼬 — 금색 구간 가운데에 가만히 서서 기다린다. 판마다 자리가 바뀐다 */}
                     <motion.img
