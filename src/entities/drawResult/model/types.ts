@@ -1,7 +1,14 @@
 import { z } from 'zod';
 
 // getddo-spec 05-api/drawing.md의 PublicResults — 공개 결과 조회(E08) 계약
-export const drawDisplayStatusSchema = z.enum(['WAITING', 'PUBLISHED', 'CANCELED', 'NO_ENTRANTS']);
+// NO_ELIGIBLE_ENTRANTS는 신규 응답에서 생성하지 않지만, 과거 응답 파싱이 깨지지 않도록 값만 남긴다 (ADR-018)
+export const drawDisplayStatusSchema = z.enum([
+    'WAITING',
+    'PUBLISHED',
+    'CANCELED',
+    'NO_ENTRANTS',
+    'NO_ELIGIBLE_ENTRANTS',
+]);
 
 /**
  * 공개된 당첨자.
