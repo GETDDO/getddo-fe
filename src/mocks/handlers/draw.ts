@@ -1,8 +1,10 @@
 import { http } from 'msw';
+import { z } from 'zod';
 
 import type {
     CancellationSummary,
     DrawCandidate,
+    DrawExecutionResponse,
     DrawResult,
     DrawRun,
     DrawRunDetail,
@@ -10,12 +12,14 @@ import type {
 } from '@entities/drawResult';
 import type { PublicationUpdateResult, PublicListChange } from '@entities/winner';
 
+import { awardCancellationRequestSchema } from '@entities/winner';
 import { env } from '@shared/config/env';
 import { IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
 
 import { mockNow } from '../now';
 import { mockEvents } from './event';
 import { fail, ok } from './response';
+import { findMockVirtualUser } from './virtualUsers';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
@@ -61,8 +65,12 @@ const EXTRA_EVENTS: Record<
     'adm-904': { endsAtOffsetMin: -30, prizes: [{ id: 'adm-904-p1', rank: 1, winnerCount: 1 }] },
     // 추첨은 확정됐지만 최초 발표 전인 이벤트 — 최초 공개 전 재추첨 확인(정책 미확정) 시연용
     'adm-905': { endsAtOffsetMin: -20, prizes: [{ id: 'adm-905-p1', rank: 1, winnerCount: 3 }] },
+    // 최초 추첨이 실패해 재개를 기다리는 이벤트 — POST /admin/draws/{runId}/resume 시연용 (GD-87)
+    'adm-906': { endsAtOffsetMin: -20, prizes: [{ id: 'adm-906-p1', rank: 1, winnerCount: 3 }] },
 };
-const HELD_BEFORE_PUBLICATION = new Set(['adm-905']);
+// 최초 추첨이 확정되지 않았거나 확인 대기인 이벤트는 시계가 지나도 최초 발표하지 않는다
+const HELD_BEFORE_PUBLICATION = new Set(['adm-905', 'adm-906']);
+const FAILED_INITIAL_EVENT = 'adm-906';
 
 interface MockRun {
     detail: DrawRunDetail;
@@ -198,7 +206,8 @@ const isPublishedByClock = (eventId: string, endsAt: string, now: number) =>
 
 const slotKey = (prizeId: string, slotNumber: number) => `${prizeId}:${slotNumber}`;
 
-function drawFirstRun(store: DrawStore, endsAt: string): MockRun {
+/** 최초 추첨의 결과 — 같은 이벤트는 언제 뽑아도 같은 결과다 (결정적 난수) */
+function drawInitialResults(store: DrawStore): DrawResult[] {
     const random = seededRandom(`${store.eventId}:1`);
     const pool = [...store.candidates];
     const results: DrawResult[] = [];
@@ -225,7 +234,11 @@ function drawFirstRun(store: DrawStore, endsAt: string): MockRun {
             });
         }
     }
+    return results;
+}
 
+function drawFirstRun(store: DrawStore, endsAt: string): MockRun {
+    const results = drawInitialResults(store);
     const confirmedAt = new Date(endsAt).toISOString();
     return {
         detail: {
@@ -381,6 +394,20 @@ function seedFailedRedraw(store: DrawStore) {
     run.detail.lastFailureTraceId = 'trace-0199-demo-draw-failure';
 }
 
+/** 최초 추첨이 선정 중 실패한 상태로 만든다 — 확정 결과가 없고 재개로만 이어진다 */
+function seedFailedInitialRun(store: DrawStore) {
+    const { detail } = store.runs[0]!;
+    detail.status = 'FAILED';
+    detail.confirmedAt = null;
+    detail.results = [];
+    detail.failureCount = 1;
+    detail.lastFailureCode = 'DRAW-SELECTION-TIMEOUT';
+    detail.lastFailureMessage =
+        '추첨 선정 중 일시적인 오류가 발생했습니다. 같은 실행을 재개할 수 있습니다.';
+    detail.lastFailedAt = new Date(mockNow().getTime() - 5 * MINUTE).toISOString();
+    detail.lastFailureTraceId = 'trace-0199-demo-initial-draw-failure';
+}
+
 function getStore(eventId: string): DrawStore | null {
     const now = mockNow().getTime();
     const existing = stores.get(eventId);
@@ -409,6 +436,7 @@ function getStore(eventId: string): DrawStore | null {
     store.runs.push(drawFirstRun(store, info.endsAt));
     if (isPublishedByClock(eventId, info.endsAt, now)) markFirstPublication(store);
     if (eventId === 'adm-904') seedFailedRedraw(store);
+    if (eventId === FAILED_INITIAL_EVENT) seedFailedInitialRun(store);
     stores.set(eventId, store);
     return store;
 }
@@ -438,7 +466,15 @@ function advanceRun(store: DrawStore, run: MockRun) {
 /** 빈 슬롯 하나를 후보에서 선정해 확정한다 — 후보가 없으면 미충원으로 확정한다 */
 function confirmRun(store: DrawStore, run: MockRun) {
     const { vacancy, detail } = run;
-    if (!vacancy) return;
+    if (!vacancy) {
+        // 재개된 최초 실행 — 고정된 후보로 전체 슬롯을 한 번에 확정한다
+        if (detail.runNumber !== 1) return;
+        detail.results = drawInitialResults(store);
+        detail.status = 'CONFIRMED';
+        detail.confirmedAt = mockNow().toISOString();
+        run.progressFrom = null;
+        return;
+    }
     // 취소자를 포함해 이미 한 번 당첨된 사용자는 다시 뽑지 않는다
     const everSelected = new Set<string>();
     for (const other of store.runs) {
@@ -488,6 +524,30 @@ function toRun(detail: DrawRunDetail): DrawRun {
     };
 }
 
+/** 시작·재개 응답 — 확정이면 저장된 결과를, 아니면 confirmation:null을 싣는다 (GD-87·GD-138) */
+function toExecution(detail: DrawRunDetail): DrawExecutionResponse {
+    return {
+        runId: detail.id,
+        status: detail.status,
+        confirmation:
+            detail.status === 'CONFIRMED' && detail.confirmedAt
+                ? {
+                      confirmedAt: detail.confirmedAt,
+                      results: detail.results.map((r) => ({
+                          resultId: r.id,
+                          prizeId: r.prizeId,
+                          rank: r.prizeRank,
+                          slotNumber: r.slotNumber,
+                          selectionOrder: r.selectionOrder,
+                          candidateId: r.candidateId,
+                          userId: r.userId,
+                          resultType: r.resultType,
+                      })),
+                  }
+                : null,
+    };
+}
+
 function paginate<T>(items: T[], url: URL) {
     const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
     const size = Math.min(100, Math.max(1, Number(url.searchParams.get('size')) || 20));
@@ -504,6 +564,12 @@ const conflict = (message: string, code = 'STATE_CONFLICT') => fail(409, code, m
 const invalid = (message: string) => fail(400, 'COMMON-002', message);
 
 const actorOf = (request: Request) => request.headers.get('X-User-ID') || DEFAULT_ACTOR;
+
+/** X-User-ID가 없으면 시연 기본 관리자로 본다. 있으면 가상 사용자의 역할이 ADMIN이어야 한다 */
+const isAdminContext = (request: Request) => {
+    const userId = request.headers.get('X-User-ID');
+    return !userId || findMockVirtualUser(userId)?.role === 'ADMIN';
+};
 
 const readReason = async (request: Request) => {
     const body = (await request.json().catch(() => null)) as { reason?: unknown } | null;
@@ -657,10 +723,16 @@ export const drawHandlers = [
 
     // AD05 — 당첨 취소 + 재추첨 등록. 같은 키·같은 본문은 200으로 기존 결과를 돌려준다
     http.post(api('/admin/wins/:winId/cancellations'), async ({ params, request }) => {
+        // 확정 계약: UUID 멱등키 필수, 사유는 양끝 공백 제거 후 1~1000자 (오류 코드 문자열은 미확정이라 공통 코드를 쓴다)
         const key = request.headers.get(IDEMPOTENCY_HEADER)?.trim();
-        if (!key || key.length > 100) return invalid('멱등키는 1~100자로 필요합니다.');
-        const reason = await readReason(request);
-        if (!reason) return invalid('취소 사유를 입력해야 합니다.');
+        if (!key || !z.uuid().safeParse(key).success) {
+            return invalid('멱등키는 UUID 형식으로 필요합니다.');
+        }
+        const body = (await request.json().catch(() => null)) as unknown;
+        const parsedBody = awardCancellationRequestSchema.safeParse(body);
+        if (!parsedBody.success)
+            return invalid('취소 사유는 공백 제외 1~1000자로 입력해야 합니다.');
+        const { reason } = parsedBody.data;
 
         const found = findResult(String(params.winId));
         if (!found) return notFound();
@@ -779,7 +851,28 @@ export const drawHandlers = [
         return ok(paginate(changes, new URL(request.url)));
     }),
 
-    // AD09 — 취소에 연결된 재추첨 실행의 시작·재개. 이미 확정된 실행은 저장 결과를 돌려준다
+    // 최초 추첨 실패 재개 (GD-87) — 활성 관리자만, 본문 없음. 확정이면 저장 결과 200, 미확정·진행 중이면 202
+    http.post(api('/admin/draws/:runId/resume'), ({ params, request }) => {
+        if (!isAdminContext(request)) {
+            return fail(403, 'ACCESS_DENIED', '이 작업을 수행할 권한이 없습니다.');
+        }
+        const found = findRun(String(params.runId));
+        if (!found) return notFound();
+        const { store, run } = found;
+        const { detail } = run;
+        // REPLACEMENT(재추첨) 실행은 AD09로만 재개한다
+        if (detail.runNumber !== 1) return conflict('최초 추첨 실행만 재개할 수 있습니다.');
+        if (store.canceled) return conflict('취소된 이벤트의 추첨은 재개할 수 없습니다.');
+
+        if (detail.status === 'CONFIRMED') return ok(toExecution(detail), 200);
+        if (detail.status === 'FAILED') {
+            detail.status = 'PREPARING';
+            run.progressFrom = Date.now();
+        }
+        return ok(toExecution(detail), 202);
+    }),
+
+    // AD09 — 취소에 연결된 재추첨 실행의 시작·재개. 응답은 DrawExecutionResponse이고 확정된 실행은 저장 결과를 돌려준다
     http.post(api('/admin/cancellations/:cancellationId/redraws'), ({ params }) => {
         const found = findCancellation(String(params.cancellationId));
         if (!found) return notFound();
@@ -787,11 +880,11 @@ export const drawHandlers = [
         if (store.canceled) return conflict('취소된 이벤트의 재추첨은 시작·재개할 수 없습니다.');
 
         const { detail } = run;
-        if (detail.status === 'CONFIRMED') return ok(toRun(detail), 200);
+        if (detail.status === 'CONFIRMED') return ok(toExecution(detail), 200);
         if (detail.status === 'FAILED') {
             detail.status = 'PREPARING';
             run.progressFrom = Date.now();
         }
-        return ok(toRun(detail), 202);
+        return ok(toExecution(detail), 202);
     }),
 ];

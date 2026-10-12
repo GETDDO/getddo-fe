@@ -31,6 +31,15 @@ interface RunBody {
     originalDrawId: string | null;
 }
 
+interface ExecutionBody {
+    runId: string;
+    status: string;
+    confirmation: {
+        confirmedAt: string;
+        results: { resultId: string; rank: number; slotNumber: number; resultType: string }[];
+    } | null;
+}
+
 interface ResultBody {
     id: string;
     userId: string | null;
@@ -46,16 +55,22 @@ interface DetailBody extends RunBody {
     lastFailureCode: string | null;
 }
 
+// 멱등키는 UUID여야 한다 — 테스트마다 구분되는 고정 v4 UUID를 만든다
+const keyOf = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+
 const call = <T = unknown>(
     method: 'get' | 'post',
     path: string,
-    options: { body?: unknown; key?: string } = {},
+    options: { body?: unknown; key?: string; userId?: string } = {},
 ) =>
     apiClient.request<Envelope<T>>({
         method,
         url: path,
         data: options.body,
-        headers: options.key ? { [IDEMPOTENCY_HEADER]: options.key } : undefined,
+        headers: {
+            ...(options.key ? { [IDEMPOTENCY_HEADER]: options.key } : {}),
+            ...(options.userId ? { 'X-User-ID': options.userId } : {}),
+        },
         validateStatus: () => true,
     });
 
@@ -65,6 +80,8 @@ const EVENT = 'evt-009';
 const UNPUBLISHED_EVENT = 'adm-905';
 const CANCELED_EVENT = 'adm-902';
 const FAILED_EVENT = 'adm-904';
+// 최초 추첨이 실패한 시드 (GD-87 재개 시연)
+const FAILED_INITIAL_EVENT = 'adm-906';
 
 async function firstRun(eventId: string) {
     const list = await call<Page<RunBody>>('get', `/admin/events/${eventId}/draws`);
@@ -74,7 +91,7 @@ async function firstRun(eventId: string) {
     return detail.data.data;
 }
 
-async function cancelFirstWinner(eventId: string, key = 'key-1', reason = '본인 확인 실패') {
+async function cancelFirstWinner(eventId: string, key = keyOf(0), reason = '본인 확인 실패') {
     const original = await firstRun(eventId);
     const win = original.results.find((r) => r.resultType === 'SELECTED' && !r.isCanceled)!;
     const res = await call<{
@@ -152,22 +169,36 @@ describe('추첨 목업', () => {
         expect(check.status).toBe(409);
     });
 
-    it('AD05는 멱등키와 사유가 없으면 400이다', async () => {
+    it('AD05는 UUID 멱등키가 없거나 형식이 틀리면 400이다', async () => {
         const original = await firstRun(EVENT);
         const win = original.results[0]!;
         const noKey = await call('post', `/admin/wins/${win.id}/cancellations`, {
             body: { reason: '사유' },
         });
         expect(noKey.status).toBe(400);
-        const noReason = await call('post', `/admin/wins/${win.id}/cancellations`, {
-            body: { reason: '  ' },
-            key: 'k',
+        const notUuid = await call('post', `/admin/wins/${win.id}/cancellations`, {
+            body: { reason: '사유' },
+            key: 'cancel-1',
         });
-        expect(noReason.status).toBe(400);
+        expect(notUuid.status).toBe(400);
+    });
+
+    it('AD05는 사유가 공백뿐이거나 1000자를 넘으면 400이고, 양끝 공백 제거 후 1000자는 허용한다', async () => {
+        const original = await firstRun(EVENT);
+        const win = original.results.find((r) => r.resultType === 'SELECTED')!;
+        const post = (reason: unknown, key: string) =>
+            call('post', `/admin/wins/${win.id}/cancellations`, { body: { reason }, key });
+
+        expect((await post('  ', keyOf(8))).status).toBe(400);
+        expect((await post(undefined, keyOf(8))).status).toBe(400);
+        expect((await post('가'.repeat(1001), keyOf(8))).status).toBe(400);
+        // 공백은 길이에 세지 않는다 — 앞뒤 공백을 붙인 1000자는 통과한다
+        const edge = await post(`  ${'가'.repeat(1000)}  `, keyOf(8));
+        expect(edge.status).toBe(202);
     });
 
     it('AD05는 202로 취소와 재추첨 실행을 함께 등록하고, 같은 요청 재시도는 200이다', async () => {
-        const { win, res } = await cancelFirstWinner(EVENT, 'cancel-a');
+        const { win, res } = await cancelFirstWinner(EVENT, keyOf(1));
         expect(res.status).toBe(202);
         expect(res.data.data).toMatchObject({
             canceledDrawResultId: win.id,
@@ -177,7 +208,7 @@ describe('추첨 목업', () => {
         const retry = await call<typeof res.data.data>(
             'post',
             `/admin/wins/${win.id}/cancellations`,
-            { body: { reason: '본인 확인 실패' }, key: 'cancel-a' },
+            { body: { reason: '본인 확인 실패' }, key: keyOf(1) },
         );
         expect(retry.status).toBe(200);
         expect(retry.data.data.cancellationId).toBe(res.data.data.cancellationId);
@@ -188,17 +219,17 @@ describe('추첨 목업', () => {
     });
 
     it('AD05는 같은 키에 다른 본문이면 IDEMPOTENCY_CONFLICT, 다른 키로 이미 취소된 당첨이면 STATE_CONFLICT 409다', async () => {
-        const { win } = await cancelFirstWinner(EVENT, 'cancel-b');
+        const { win } = await cancelFirstWinner(EVENT, keyOf(2));
         const reused = await call('post', `/admin/wins/${win.id}/cancellations`, {
             body: { reason: '다른 사유' },
-            key: 'cancel-b',
+            key: keyOf(2),
         });
         expect(reused.status).toBe(409);
         expect(reused.data.code).toBe('IDEMPOTENCY_CONFLICT');
 
         const again = await call('post', `/admin/wins/${win.id}/cancellations`, {
             body: { reason: '본인 확인 실패' },
-            key: 'cancel-b2',
+            key: keyOf(3),
         });
         expect(again.status).toBe(409);
         expect(again.data.code).toBe('STATE_CONFLICT');
@@ -209,13 +240,13 @@ describe('추첨 목업', () => {
         const win = original.results.find((r) => r.resultType === 'SELECTED')!;
         const res = await call('post', `/admin/wins/${win.id}/cancellations`, {
             body: { reason: '사유' },
-            key: 'k-canceled',
+            key: keyOf(7),
         });
         expect(res.status).toBe(409);
     });
 
     it('재추첨은 시간이 지나면 확정되고 취소자를 제외한 새 당첨자로 빈 자리를 채운다', async () => {
-        const { win, res, original } = await cancelFirstWinner(EVENT, 'cancel-c');
+        const { win, res, original } = await cancelFirstWinner(EVENT, keyOf(4));
         const canceled = original.results.find((r) => r.id === win.id)!;
 
         settleRedraw();
@@ -239,20 +270,41 @@ describe('추첨 목업', () => {
     });
 
     it('AD09는 진행 중이면 202, 확정 후에는 저장 결과를 200으로 돌려준다', async () => {
-        const { res } = await cancelFirstWinner(EVENT, 'cancel-d');
+        const { res } = await cancelFirstWinner(EVENT, keyOf(5));
         const cancellationId = res.data.data.cancellationId;
 
-        const running = await call<RunBody>(
+        const running = await call<ExecutionBody>(
             'post',
             `/admin/cancellations/${cancellationId}/redraws`,
         );
         expect(running.status).toBe(202);
-        expect(running.data.data.id).toBe(res.data.data.replacementDrawRunId);
+        // DrawExecutionResponse — 미확정이면 confirmation이 null이다
+        expect(running.data.data).toEqual({
+            runId: res.data.data.replacementDrawRunId,
+            status: 'PREPARING',
+            confirmation: null,
+        });
 
         settleRedraw();
-        const done = await call<RunBody>('post', `/admin/cancellations/${cancellationId}/redraws`);
+        const done = await call<ExecutionBody>(
+            'post',
+            `/admin/cancellations/${cancellationId}/redraws`,
+        );
         expect(done.status).toBe(200);
         expect(done.data.data.status).toBe('CONFIRMED');
+        expect(done.data.data.confirmation?.results).toHaveLength(1);
+        expect(done.data.data.confirmation?.results[0]).toMatchObject({
+            rank: 1,
+            resultType: 'SELECTED',
+        });
+
+        // 확정 뒤 재요청은 같은 저장 결과를 돌려주고 다시 선정하지 않는다
+        const again = await call<ExecutionBody>(
+            'post',
+            `/admin/cancellations/${cancellationId}/redraws`,
+        );
+        expect(again.status).toBe(200);
+        expect(again.data.data).toEqual(done.data.data);
 
         const list = await call<Page<RunBody>>('get', `/admin/events/${EVENT}/draws`);
         expect(list.data.data.totalElements).toBe(2);
@@ -277,8 +329,71 @@ describe('추첨 목업', () => {
         expect(after.data.data.status).toBe('CONFIRMED');
     });
 
+    describe('최초 추첨 재개 (POST /admin/draws/{runId}/resume)', () => {
+        const initialRunId = async (eventId: string) => (await firstRun(eventId)).id;
+        const resume = (runId: string, userId?: string) =>
+            call<ExecutionBody>('post', `/admin/draws/${runId}/resume`, { userId });
+
+        it('실패한 최초 실행은 202로 재개하고 확정되면 200으로 저장 결과를 돌려준다', async () => {
+            const runId = await initialRunId(FAILED_INITIAL_EVENT);
+            const before = await call<DetailBody>('get', `/admin/draws/${runId}`);
+            expect(before.data.data.status).toBe('FAILED');
+            expect(before.data.data.results).toHaveLength(0);
+
+            const started = await resume(runId);
+            expect(started.status).toBe(202);
+            expect(started.data.data).toEqual({ runId, status: 'PREPARING', confirmation: null });
+
+            // 진행 중 재요청은 새로 시작하지 않고 현재 상태를 돌려준다
+            const inProgress = await resume(runId);
+            expect(inProgress.status).toBe(202);
+
+            settleRedraw();
+            const done = await resume(runId);
+            expect(done.status).toBe(200);
+            expect(done.data.data.status).toBe('CONFIRMED');
+            expect(done.data.data.confirmation?.results).toHaveLength(3);
+
+            // 확정 결과는 재요청해도 같다 — 다시 선정하지 않는다. 새 실행도 만들어지지 않는다
+            const again = await resume(runId);
+            expect(again.status).toBe(200);
+            expect(again.data.data).toEqual(done.data.data);
+            const list = await call<Page<RunBody>>(
+                'get',
+                `/admin/events/${FAILED_INITIAL_EVENT}/draws`,
+            );
+            expect(list.data.data.totalElements).toBe(1);
+        });
+
+        it('이미 확정된 최초 실행은 저장된 결과를 200으로 돌려준다', async () => {
+            const original = await firstRun(EVENT);
+            const res = await resume(original.id);
+            expect(res.status).toBe(200);
+            expect(res.data.data.runId).toBe(original.id);
+            expect(res.data.data.confirmation?.results).toHaveLength(original.results.length);
+        });
+
+        it('비관리자는 403이다', async () => {
+            const runId = await initialRunId(FAILED_INITIAL_EVENT);
+            const res = await call('post', `/admin/draws/${runId}/resume`, { userId: 'vu-doyoon' });
+            expect(res.status).toBe(403);
+            expect((await call<DetailBody>('get', `/admin/draws/${runId}`)).data.data.status).toBe(
+                'FAILED',
+            );
+        });
+
+        it('없는 실행은 404, 재추첨(REPLACEMENT) 실행과 취소된 이벤트는 409다', async () => {
+            expect((await resume('drw-nope-r1')).status).toBe(404);
+
+            const { res } = await cancelFirstWinner(EVENT, keyOf(10));
+            expect((await resume(res.data.data.replacementDrawRunId)).status).toBe(409);
+
+            expect((await resume(await initialRunId(CANCELED_EVENT))).status).toBe(409);
+        });
+    });
+
     it('AD06은 재추첨 결과를 공개 명단에 반영하고 AD07에 변경 이력을 남기며 재반영은 중복 생성하지 않는다', async () => {
-        const { win, res } = await cancelFirstWinner(EVENT, 'cancel-e');
+        const { win, res } = await cancelFirstWinner(EVENT, keyOf(6));
         const redrawId = res.data.data.replacementDrawRunId;
 
         // 확정 전에는 반영할 수 없다
@@ -331,7 +446,7 @@ describe('추첨 목업', () => {
 
     it('AD06은 최초 발표 전이거나 재추첨이 아닌 실행이면 409다', async () => {
         // 최초 발표 전 이벤트: 재추첨이 확정돼도 이 API로 반영할 수 없다
-        const { res } = await cancelFirstWinner(UNPUBLISHED_EVENT, 'cancel-f');
+        const { res } = await cancelFirstWinner(UNPUBLISHED_EVENT, keyOf(9));
         settleRedraw();
         const beforeFirst = await call(
             'post',

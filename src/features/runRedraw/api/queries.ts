@@ -4,7 +4,7 @@ import {
     cancellationRedrawsApiPath,
     DRAW_RESULTS_KEY,
     DRAWS_KEY,
-    drawRunSchema,
+    drawExecutionResponseSchema,
 } from '@entities/drawResult';
 import {
     drawPublicationApiPath,
@@ -14,7 +14,8 @@ import {
 import { apiClient } from '@shared/api/client';
 import { envelopeSchema } from '@shared/api/envelopeSchema';
 
-// AD09 — 취소에 연결된 재추첨 실행의 시작·재개. 이미 확정된 실행은 서버가 저장 결과를 돌려준다.
+// AD09 — 취소에 연결된 재추첨 실행의 시작·재개. 응답은 DrawExecutionResponse(runId·status·confirmation)이고,
+// 이미 확정된 실행은 서버가 저장 결과를 돌려준다(200).
 // 취소·재추첨 쌍의 멱등은 취소 ID로 서버가 보장해 별도 멱등 헤더가 없다 (common.md 중복 요청 표)
 export function useStartRedraw() {
     const queryClient = useQueryClient();
@@ -24,7 +25,7 @@ export function useStartRedraw() {
             const { data } = await apiClient.post<unknown>(
                 cancellationRedrawsApiPath(cancellationId),
             );
-            return envelopeSchema(drawRunSchema).parse(data).data;
+            return envelopeSchema(drawExecutionResponseSchema).parse(data).data;
         },
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: DRAWS_KEY });
