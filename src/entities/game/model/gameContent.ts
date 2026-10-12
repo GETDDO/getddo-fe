@@ -35,7 +35,7 @@ const REWARD_STEP: GameGuideStep = {
     text: '하루 한 번, 플레이하면 응모권 1장을 받아요.',
 };
 
-// 게임 종류·규칙은 게임 담당자 확정 전 임시 콘텐츠. 타꼬런 대표 이미지(image 107)와 타코야끼 대표 이미지(image 75)는 피그마 기준
+// 게임 종류·규칙은 게임 담당자 확정 전 임시 콘텐츠. 타꼬런 대표 이미지(image 183)와 타코야끼 대표 이미지(image 75)는 피그마 기준
 const CONTENTS: Record<string, GameContent> = {
     'game-dino': {
         tagline: '소스병과 꼬치를 뛰어넘으며 멀리 달리세요.',
@@ -60,8 +60,10 @@ const CONTENTS: Record<string, GameContent> = {
     },
     'game-color': {
         tagline: '글자 뜻에 속지 말고 글자 색깔을 고르세요.',
-        // 대표 이미지 — 피그마 image 163 (16:9라 대표 영역 840:546에서 좌우가 조금 잘린다)
+        // 대표 이미지 — 피그마 image 189 (16:9라 대표 영역 840:546에서 좌우 합쳐 약 13%가 잘린다)
         heroImage: '/images/games/color-word.jpg',
+        // 왼쪽 빨강 버튼(9.8%)과 오른쪽 물음표(96%)가 모두 남도록 기준을 조금 오른쪽으로 옮긴다
+        heroImagePosition: '71% 50%',
         guide: {
             title: '게임 방법',
             subtitle: '글자 뜻이 아니라 글자 색이 정답!',
@@ -76,6 +78,29 @@ const CONTENTS: Record<string, GameContent> = {
             ],
             // 게임 방법 모달 이미지 — 피그마 image 179 (실제 게임 장면)
             image: colorWordGuide,
+        },
+    },
+    'game-timing': {
+        tagline: '왔다 갔다 하는 이쑤시개를 타꼬 위에서 딱 맞춰 콕 꽂으세요.',
+        // 대표 이미지 — 피그마 image 184 (16:9라 대표 영역 840:546에서 좌우가 조금 잘린다)
+        heroImage: '/images/games/takko-timing.jpg',
+        guide: {
+            title: '게임 방법',
+            subtitle: '타꼬 위에서 딱 맞춰 꽂기!',
+            steps: [
+                {
+                    icon: Gamepad2,
+                    keys: ['Space'],
+                    text: '또는 화면을 눌러 움직이는 이쑤시개를 콕 꽂아요.',
+                },
+                {
+                    icon: Target,
+                    text: '타꼬 한가운데에 꽂으면 퍼펙트로 점수 2배!\n한 번 빗나가면 끝, 성공할수록 빨라지고 구간이 좁아져요.',
+                },
+                REWARD_STEP,
+            ],
+            // 게임 방법 모달 이미지 — 전용 장면 이미지가 나오기 전까지 대표 이미지(image 184)를 같이 쓴다
+            image: '/images/games/takko-timing.jpg',
         },
     },
     'game-takoyaki': {

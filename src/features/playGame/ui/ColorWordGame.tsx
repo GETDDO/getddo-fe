@@ -1,13 +1,12 @@
 import { animate, motion, useAnimate, useMotionValue, useMotionValueEvent } from 'framer-motion';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
-import { formatNumber } from '@shared/lib/format';
+import type { TicketGrade } from '@entities/ticket';
 
 import type { ColorWordColorId, ColorWordRound } from '../model/colorWord';
+import type { GameOverHandler } from '../model/types';
 
 import background from '../assets/colorWord/background.jpg';
-import heartEmpty from '../assets/colorWord/heart-empty.png';
-import heartFull from '../assets/colorWord/heart-full.png';
 import mascotCorrect from '../assets/colorWord/mascot-correct.png';
 import mascotIdle from '../assets/colorWord/mascot-idle.png';
 import mascotWrong from '../assets/colorWord/mascot-wrong.png';
@@ -25,11 +24,19 @@ import {
     isColorWordCorrect,
 } from '../model/colorWord';
 import { ColorWordButton } from './ColorWordButton';
-import { ColorWordStartHint } from './ColorWordStartHint';
-import { ColorWordTimer } from './ColorWordTimer';
 import { GameCountdown } from './GameCountdown';
 import { GameImageButton } from './GameImageButton';
 import { GameKey } from './GameKey';
+import {
+    GameLives,
+    GameOverOverlay,
+    GamePauseKeysHint,
+    GamePauseOverlay,
+    GameStartHint,
+    GameStartHintLine,
+} from './GameOverlays';
+import { GameSpeechBubble } from './GameSpeechBubble';
+import { GameTimer } from './GameTimer';
 import { RewardDialog } from './RewardDialog';
 import { ScoreBoard } from './ScoreBoard';
 import { VolumeControl } from './VolumeControl';
@@ -68,7 +75,7 @@ export function ColorWordGame({
 }: {
     bestScore?: number;
     onExit: () => void;
-    onGameOver?: (score: number) => Promise<{ ticketsGranted: number } | void> | void;
+    onGameOver?: GameOverHandler;
 }) {
     const [phase, setPhase] = useState<Phase>('ready');
     const [countdown, setCountdown] = useState(COUNTDOWN_FROM);
@@ -83,6 +90,7 @@ export function ColorWordGame({
     const [newBest, setNewBest] = useState(false);
     const [rewardOpen, setRewardOpen] = useState(false);
     const [ticketsGranted, setTicketsGranted] = useState(0);
+    const [rewardGrade, setRewardGrade] = useState<TicketGrade | null>(null);
     const [boardScope, animateBoard] = useAnimate();
     const restartRef = useRef<HTMLButtonElement>(null);
     // 이번 판 — 보상 응답이 늦게 와도 그사이 다시 시작한 판에는 띄우지 않는다
@@ -131,6 +139,7 @@ export function ColorWordGame({
             .then((result) => {
                 if (!result || playRef.current !== play || result.ticketsGranted <= 0) return;
                 setTicketsGranted(result.ticketsGranted);
+                setRewardGrade(result.reward?.grade ?? null);
                 setRewardOpen(true);
             })
             .catch(() => undefined);
@@ -306,30 +315,13 @@ export function ColorWordGame({
                             />
                         )}
                     </div>
-                    <div
-                        aria-label={`남은 목숨 ${lives}개`}
-                        // 목숨은 늘 위쪽 정가운데 — 왼쪽 버튼 수(일시정지가 생기고 사라짐)와 상관없이 흔들리지 않게 한다
-                        className="absolute top-3 left-1/2 flex -translate-x-1/2 items-center gap-1 pt-1"
-                    >
-                        {Array.from({ length: COLOR_WORD_LIVES }, (_, index) => (
-                            <motion.img
-                                key={index}
-                                src={index < lives ? heartFull : heartEmpty}
-                                alt=""
-                                draggable={false}
-                                animate={{ scale: index < lives ? 1 : 0.85 }}
-                                transition={{ type: 'spring', stiffness: 420, damping: 18 }}
-                                // 그림 비율(가로 625 : 세로 492)을 그대로 두고 너비만 정한다
-                                className="h-auto w-5 [image-rendering:pixelated] sm:w-6"
-                            />
-                        ))}
-                    </div>
+                    <GameLives lives={lives} max={COLOR_WORD_LIVES} />
                     <ScoreBoard value={padScore(score)} />
                 </div>
 
                 {/* 시간 게이지 — 타코야끼가 남은 시간 끝에 붙어 함께 줄고, 1/3 이하로 남으면 빨개진다 */}
                 <div className="mx-6">
-                    <ColorWordTimer timeLeft={timeLeft} hurry={hurry && phase !== 'ready'} />
+                    <GameTimer timeLeft={timeLeft} hurry={hurry && phase !== 'ready'} />
                 </div>
 
                 {/* 가운데 — 글자판(image 170) 안에 글자, 아래에 색 버튼 2×2. 틀리면 이 부분이 흔들린다 */}
@@ -337,22 +329,6 @@ export function ColorWordGame({
                     ref={boardScope}
                     className="flex flex-1 flex-col items-center justify-center gap-[2%] px-3 pb-[12%]"
                 >
-                    {/* 결과 한마디 — 정답 / 땡(정답 색 알려 주기) / 시간 초과. 자리를 늘 잡아 둬 판이 들썩이지 않게 한다 */}
-                    <div className="flex h-7 items-center justify-center">
-                        {reveal && (
-                            <motion.span
-                                initial={{ opacity: 0, y: 4 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className={`text-body-sm-bold text-fg-on-brand rounded-full px-3 py-0.5 shadow-sm ${reveal.ok ? 'bg-semantic-success' : 'bg-semantic-error'}`}
-                            >
-                                {reveal.ok
-                                    ? '정답!'
-                                    : reveal.picked === null
-                                      ? '시간 초과!'
-                                      : `땡! 정답은 ${ink.name}`}
-                            </motion.span>
-                        )}
-                    </div>
                     <div className="relative flex aspect-[900/229] w-[min(64%,34rem)] items-center justify-center">
                         <img
                             src={wordBoard}
@@ -401,6 +377,21 @@ export function ColorWordGame({
                 className="pointer-events-none absolute right-0 -bottom-[5%] w-[24%] origin-bottom [image-rendering:pixelated]"
             />
 
+            {/* 결과 말풍선 — 오른쪽 아래 타코야끼 머리 위 */}
+            {reveal && (
+                <GameSpeechBubble
+                    key={`bubble-${roundKey}`}
+                    text={
+                        reveal.ok
+                            ? '정답!'
+                            : reveal.picked === null
+                              ? '시간 초과!'
+                              : `땡! 정답은 ${ink.name}`
+                    }
+                    className="bottom-[25%] left-[85%]"
+                />
+            )}
+
             {/* 맞힘·틀림 — 게임 판 테두리를 초록·빨강으로 잠깐 바꾼다 */}
             {reveal && (
                 <div
@@ -409,7 +400,21 @@ export function ColorWordGame({
                 />
             )}
 
-            {phase === 'ready' && <ColorWordStartHint onStart={start} />}
+            {phase === 'ready' && (
+                <GameStartHint onStart={start}>
+                    {/* 조작 — 컴퓨터는 버튼 클릭이나 숫자 키, 터치 기기는 버튼 누르기 */}
+                    <GameStartHintLine>
+                        <span className="flex items-center gap-1.5 [@media(hover:none)]:hidden">
+                            클릭 또는 <GameKey>1</GameKey>~<GameKey>4</GameKey> 색 고르기
+                        </span>
+                        <span className="hidden [@media(hover:none)]:inline">
+                            버튼을 눌러 색 고르기
+                        </span>
+                        <GamePauseKeysHint />
+                    </GameStartHintLine>
+                    <GameStartHintLine>목숨 3개 · 맞힐수록 빨라져요</GameStartHintLine>
+                </GameStartHint>
+            )}
 
             {/* 3, 2, 1 */}
             {phase === 'countdown' && (
@@ -418,43 +423,18 @@ export function ColorWordGame({
                 </div>
             )}
 
-            {/* 일시정지 — 판을 누르거나 스페이스바·Enter·Esc·P로 이어 한다 */}
-            {phase === 'paused' && (
-                <button
-                    type="button"
-                    onClick={resume}
-                    aria-label="이어 하기"
-                    className="bg-surface-inverse/60 absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-3 px-6 text-center backdrop-blur-sm"
-                >
-                    <span className="text-title-3 text-ticket-accent">일시정지</span>
-                    <span className="text-body-sm text-ticket-accent flex flex-wrap items-center justify-center gap-1">
-                        <span className="flex items-center gap-1 [@media(hover:none)]:hidden">
-                            <GameKey>Space</GameKey>
-                            <span className="ml-0.5">또는</span>
-                        </span>
-                        화면을 눌러 계속하기
-                    </span>
-                </button>
-            )}
+            {phase === 'paused' && <GamePauseOverlay onResume={resume} />}
 
             {phase === 'over' && (
-                <div className="bg-surface-inverse/60 absolute inset-0 flex items-center justify-center px-6">
-                    <div className="flex flex-col items-center gap-5 text-center">
-                        <p className="text-title-3 text-ticket-accent">목숨을 다 썼어요!</p>
-                        <div className="flex flex-col items-center gap-2">
-                            <ScoreBoard value={padScore(score)} size="large" />
-                            <p className="text-body-sm text-ticket-accent">
-                                {newBest
-                                    ? `최고 점수 ${formatNumber(best)}점을 기록했어요.`
-                                    : `최고 점수 ${formatNumber(best)}점`}
-                            </p>
-                        </div>
-                        <div className="mt-1 flex items-center gap-4">
-                            <GameImageButton kind="retry" onClick={start} ref={restartRef} />
-                            <GameImageButton kind="exit" onClick={onExit} />
-                        </div>
-                    </div>
-                </div>
+                <GameOverOverlay
+                    title="목숨을 다 썼어요!"
+                    score={padScore(score)}
+                    best={best}
+                    newBest={newBest}
+                    onRetry={start}
+                    onExit={onExit}
+                    retryRef={restartRef}
+                />
             )}
 
             <RewardDialog
@@ -462,6 +442,7 @@ export function ColorWordGame({
                 onOpenChange={setRewardOpen}
                 onClosed={() => restartRef.current?.focus()}
                 tickets={ticketsGranted}
+                grade={rewardGrade}
             />
 
             {/* 스크린리더 — 문제와 결과를 알린다 */}

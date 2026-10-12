@@ -1,7 +1,11 @@
 import { AnimatePresence, motion, useAnimate, useReducedMotion } from 'framer-motion';
 import { type CSSProperties, useEffect, useEffectEvent, useRef, useState } from 'react';
 
+import type { TicketGrade } from '@entities/ticket';
+
 import { formatNumber } from '@shared/lib/format';
+
+import type { GameOverHandler } from '../model/types';
 
 import newBadge from '../assets/ui/badge-new.png';
 import stage1Badge from '../assets/ui/stage/stage-1.png';
@@ -89,7 +93,7 @@ export function TakkoRunGame({
     /**
      * 부딪혀 끝났을 때의 점수 — 결과 제출은 쓰는 쪽에서 하고, 받은 응모권 수를 돌려주면 결과 화면에 보여준다
      */
-    onGameOver?: (score: number) => Promise<{ ticketsGranted: number } | void> | void;
+    onGameOver?: GameOverHandler;
 }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -141,6 +145,7 @@ export function TakkoRunGame({
     }, [stageBanner]);
     /** 이번 판으로 받은 응모권 수 — 제출 응답에 있으면 적립 안내 모달을 한 번 띄운다 */
     const [ticketsGranted, setTicketsGranted] = useState(0);
+    const [rewardGrade, setRewardGrade] = useState<TicketGrade | null>(null);
     const [rewardOpen, setRewardOpen] = useState(false);
     const playRef = useRef(0);
     /** 일시정지를 풀기 전 남은 카운트다운 (없으면 null) */
@@ -196,6 +201,7 @@ export function TakkoRunGame({
             .then((result) => {
                 if (!result || playRef.current !== play || result.ticketsGranted <= 0) return;
                 setTicketsGranted(result.ticketsGranted);
+                setRewardGrade(result.reward?.grade ?? null);
                 setRewardOpen(true);
             })
             .catch(() => undefined);
@@ -523,7 +529,7 @@ export function TakkoRunGame({
                 <ScoreBoard valueRef={scoreRef} value={padScore(0)} />
             </div>
 
-            {/* 시작 안내 — 조작키와 짧게·길게 점프 */}
+            {/* 시작 안내 — 조작키와 짧게·길게 점프. 위치는 다른 게임의 공용 시작 안내(GameStartHint)와 같다 */}
             {images && phase === 'ready' && (
                 <div className="pointer-events-none absolute inset-x-0 top-[42%] flex justify-center px-4 sm:top-[22%] sm:px-6">
                     <div
@@ -596,6 +602,7 @@ export function TakkoRunGame({
                 onOpenChange={setRewardOpen}
                 onClosed={() => restartRef.current?.focus()}
                 tickets={ticketsGranted}
+                grade={rewardGrade}
             />
 
             <p aria-live="polite" className="sr-only">
