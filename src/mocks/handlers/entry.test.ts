@@ -148,6 +148,25 @@ describe('응모 목업 핸들러', () => {
         expect(conflict.data).toMatchObject({ success: false, code: 'ENTRY-009' });
     });
 
+    it('저장된 멱등키의 재전송은 깨진 본문이어도 처음 결과를 돌려준다', async () => {
+        const key = uniqueKey('replay-malformed');
+        const userId = uniqueUser('replay-malformed');
+        const first = await enter(key, { BRONZE: 1 }, BRONZE_ONLY_EVENT_ID_2, userId);
+        expect(first.status).toBe(201);
+
+        // 재전송 본문이 깨져 있어도 멱등키 재생이 페이로드 규칙보다 먼저다
+        const retried = await apiClient.post(
+            `/events/${BRONZE_ONLY_EVENT_ID_2}/entries`,
+            { tickets: '깨진-맵' },
+            {
+                headers: { [IDEMPOTENCY_HEADER]: key, 'X-User-ID': userId },
+                validateStatus: () => true,
+            },
+        );
+        expect(retried.status).toBe(200);
+        expect(retried.data).toEqual(first.data);
+    });
+
     it('tickets 맵이 형식에 맞지 않으면 ENTRY-001로 거절하고 잔액을 건드리지 않는다', async () => {
         const userId = uniqueUser('invalid');
         const before = await ticketCounts(userId);

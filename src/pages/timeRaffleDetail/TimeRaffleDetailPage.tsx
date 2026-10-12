@@ -10,6 +10,7 @@ import { useEntryEligibility } from '@entities/entry';
 import { useEvent } from '@entities/event';
 import { ticketGradeSchema, useMyTickets } from '@entities/ticket';
 import { useEnterEvent } from '@features/enterEvent';
+import { getErrorMessage } from '@shared/api/errorMessage';
 import { Button } from '@shared/ui/button';
 
 import { DrawResultSection } from './ui/DrawResultSection';
@@ -212,9 +213,15 @@ export function TimeRaffleDetailPage() {
                             setTickets({ BRONZE: 0, SILVER: 0, GOLD: 0 });
                             setCompleteOpen(true);
                         },
-                        onError: () => {
+                        onError: (error) => {
                             setConfirmOpen(false);
-                            toast.error('응모에 실패했어요. 잠시 후 다시 시도해 주세요.');
+                            // 업무 오류는 코드별 문구를 보여 주고, 네트워크 오류만 일반 문구를 쓴다
+                            toast.error(
+                                getErrorMessage(
+                                    error,
+                                    '응모에 실패했어요. 잠시 후 다시 시도해 주세요.',
+                                ),
+                            );
                         },
                     });
                 }}

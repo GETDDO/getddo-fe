@@ -233,25 +233,27 @@ export const entryHandlers = [
         const eventId = String(params.eventId);
 
         const body = (await request.json().catch(() => null)) as { tickets?: unknown } | null;
-        const tickets = parseTickets(body?.tickets);
-        if (!tickets) {
-            return fail(400, 'ENTRY-001', '응모권 장수 맵이 올바르지 않습니다');
-        }
 
+        // 멱등키 재생은 페이로드 규칙보다 먼저다 — 재전송은 처음 결과를 그대로 돌려준다 (E04)
         const attempt = attempts.get(idempotencyKey);
         if (attempt) {
-            // 같은 키에 다른 내용이 오면 재시도가 아니라 다른 요청이다
-            if (
-                attempt.userId !== userId ||
-                attempt.eventId !== eventId ||
-                !sameTickets(attempt.tickets, tickets)
-            ) {
+            // 같은 키에 다른 사용자·이벤트가 오면 재시도가 아니라 다른 요청이다
+            if (attempt.userId !== userId || attempt.eventId !== eventId) {
                 return fail(409, 'ENTRY-009', '같은 멱등키로 다른 응모를 보낼 수 없습니다');
             }
-            // 같은 요청의 재전송 — 접수든 거절이든 처음 결과를 그대로 돌려준다 (E04).
+            const retried = parseTickets(body?.tickets);
+            // 본문을 읽을 수 있고 내용이 다르면 다른 요청이다 — 못 읽는 재전송은 원래 응답을 돌려준다
+            if (retried && !sameTickets(attempt.tickets, retried)) {
+                return fail(409, 'ENTRY-009', '같은 멱등키로 다른 응모를 보낼 수 없습니다');
+            }
             // 이미 접수된 건의 재전송이므로 201은 200으로 내려준다
             const status = attempt.status === 201 ? 200 : attempt.status;
             return HttpResponse.json(attempt.body as object, { status });
+        }
+
+        const tickets = parseTickets(body?.tickets);
+        if (!tickets) {
+            return fail(400, 'ENTRY-001', '응모권 장수 맵이 올바르지 않습니다');
         }
 
         // 여기서부터는 키에 처음 묶이는 새 요청 — 업무 거절도 결과를 키에 저장한다
