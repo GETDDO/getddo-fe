@@ -8,6 +8,7 @@ import {
     LayoutDashboard,
     ScrollText,
     ShieldAlert,
+    Ticket,
     Users,
 } from 'lucide-react';
 
@@ -23,6 +24,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     { to: '/admin', label: '대시보드', icon: LayoutDashboard, end: true },
     { to: '/admin/events', label: '이벤트 관리', icon: CalendarDays },
     { to: '/admin/draw', label: '추첨 관리', icon: Dices },
+    { to: '/admin/tickets', label: '응모권 관리', icon: Ticket },
     { to: '/admin/abuse-cases', label: '어뷰징 차단 내역', icon: ShieldAlert },
     { to: '/admin/audit', label: '감사 로그', icon: ScrollText },
     { to: '/admin/banners', label: '배너 관리', icon: Images },

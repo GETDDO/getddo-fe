@@ -39,3 +39,23 @@ export type {
     TicketRefund,
     TicketSourceType,
 } from './model/admin';
+export {
+    ADMIN_TICKET_GRANTS_API_PATH,
+    ADMIN_TICKET_HISTORIES_API_PATH,
+    ADMIN_TICKET_INCONSISTENCIES_API_PATH,
+    ADMIN_TICKET_REFUNDS_API_PATH,
+    ADMIN_TICKETS_KEY,
+    ticketConsistencyApiPath,
+    useAdminTicketGrants,
+    useAdminTicketHistories,
+    useAdminTicketRefunds,
+    useTicketConsistency,
+    useTicketInconsistencies,
+} from './api/admin';
+export {
+    AdminTicketHistoryTable,
+    TicketGrantTable,
+    TicketInconsistencyTable,
+    TicketRefundTable,
+} from './ui/AdminTicketTables';
+export { TicketConsistencyDrawer } from './ui/TicketConsistencyDrawer';
