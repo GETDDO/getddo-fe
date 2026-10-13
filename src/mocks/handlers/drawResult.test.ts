@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { PublicResults } from '@entities/drawResult';
 
-import { publicResultsSchema } from '@entities/drawResult';
+import { myResultSchema, publicResultsSchema } from '@entities/drawResult';
 import { apiClient } from '@shared/api/client';
 
 async function results(eventId: string): Promise<PublicResults> {
@@ -60,5 +60,26 @@ describe('공개 추첨 결과 목업 (E08)', () => {
             status: 404,
             code: 'EVENT_NOT_FOUND',
         });
+    });
+});
+
+describe('본인 결과 목업 (E09)', () => {
+    async function myResult(eventId: string, userId: string) {
+        const { data } = await apiClient.get<unknown>(`/events/${eventId}/my-result`, {
+            headers: { 'X-User-ID': userId },
+        });
+        return myResultSchema.parse((data as { data: unknown }).data);
+    }
+
+    it('응모하지 않은 이벤트는 NOT_ENTERED, 시드 응모가 있는 발표 완료 래플은 고정 결과를 준다', async () => {
+        const userId = `my-result-${crypto.randomUUID()}`;
+        // 내역을 한 번 열어야 사용자별 시드 응모가 생긴다 (E06)
+        await apiClient.get('/users/me/entries', { headers: { 'X-User-ID': userId } });
+
+        expect((await myResult(PENDING_EVENT_ID, userId)).result).toBe('NOT_ENTERED');
+        const won = await myResult('evt-110', userId);
+        expect(won.result).toBe('WON');
+        expect(won.prize).not.toBeNull();
+        expect((await myResult('evt-109', userId)).result).toBe('LOST');
     });
 });

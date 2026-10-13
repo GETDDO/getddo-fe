@@ -6,7 +6,7 @@ export {
     ticketStatusSchema,
 } from './model/history';
 export type { TicketHistory, TicketOperationType, TicketStatus } from './model/history';
-export { TICKET_GRADE_LABEL } from './model/grade';
+export { TICKET_GRADE_LABEL, TICKET_GRADE_ODDS, TICKET_GRADE_WEIGHT } from './model/grade';
 export { TICKET_GRADE_IMAGE, TICKET_GRADES } from './model/gradeImage';
 export { TICKET_OPERATION_DELTA } from './model/operation';
 export {
@@ -61,3 +61,7 @@ export {
     TicketRefundTable,
 } from './ui/AdminTicketTables';
 export { TicketConsistencyDrawer } from './ui/TicketConsistencyDrawer';
+export { TicketGradePill } from './ui/TicketGradePill';
+export { groupTicketHistories } from './lib/groupHistories';
+export type { TicketHistoryGroup } from './lib/groupHistories';
+export { TicketHistoryRow } from './ui/TicketHistoryRow';

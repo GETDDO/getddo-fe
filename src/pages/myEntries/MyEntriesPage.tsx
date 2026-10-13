@@ -1,69 +1,235 @@
-import { ClipboardList } from 'lucide-react';
+import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
-import { MyEntryItem, useMyEntries } from '@entities/entry';
+import type { MyEntryRow } from '@widgets/myEntryRows';
+
+import { formatKst, formatKstDot, isSameKstDate, KST_HOUR_MINUTE } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
+import { useVirtualClock } from '@shared/lib/virtualClock';
+import { Button } from '@shared/ui/button';
+import { PageHeader } from '@shared/ui/page-header';
+import { Segmented } from '@shared/ui/segmented';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
+import { useMyEntryRows } from '@widgets/myEntryRows';
 
+import type { StatusTile } from './ui/EntryStatusTiles';
+
+import {
+    filterEntryRows,
+    readEntryFilters,
+    scopeEntryRows,
+    type EntryKindFilter,
+    type EntryPeriod,
+    type EntrySort,
+    type EntryStatusFilter,
+} from './lib/filterEntries';
+import { EntryStatusTiles } from './ui/EntryStatusTiles';
+import { ENTRY_GRID, EntryTableRow } from './ui/EntryTableRow';
+
+/** "더 보기" 한 번에 늘리는 줄 수 */
+const PAGE_SIZE = 20;
+
+const KIND_OPTIONS = [
+    { value: 'ALL', label: '전체' },
+    { value: 'RAFFLE', label: '겟또타임' },
+    { value: 'EVENT', label: '이벤트' },
+] as const satisfies readonly { value: EntryKindFilter; label: string }[];
+
+const PERIOD_LABEL: Record<EntryPeriod, string> = {
+    '1M': '최근 1개월',
+    '3M': '최근 3개월',
+    ALL: '전체 기간',
+};
+
+const SORT_LABEL: Record<EntrySort, string> = { NEWEST: '최신순', OLDEST: '오래된순' };
+
+/** 월(KST)별로 묶는다 — 들어온 순서를 유지한다 */
+function byMonth(rows: MyEntryRow[]) {
+    const months = new Map<string, MyEntryRow[]>();
+    for (const row of rows) {
+        const label = formatKst(row.entry.requestedAt, { year: 'numeric', month: 'long' });
+        months.set(label, [...(months.get(label) ?? []), row]);
+    }
+    return [...months.entries()];
+}
+
+/**
+ * 내 응모 내역 — 마이페이지 "응모 내역 → 전체 보기"와 요약 칸(응모 중·당첨)이 여는 페이지.
+ * 결과 칸이 거르기를 겸하고, 거르기 값은 주소(status·kind·period·sort)에 실어 뒤로 가기·공유가 된다.
+ * 결과는 서버가 공개한 본인 결과(E09)만 쓴다 — 발표 전에는 발표 대기로만 보인다
+ */
 export function MyEntriesPage() {
-    const { data: entries, isPending, isError } = useMyEntries();
+    const [params, setParams] = useSearchParams();
+    const filters = readEntryFilters(params);
+    const clock = useVirtualClock();
+    const now = clock.now();
+    const { rows, isPending, isError } = useMyEntryRows();
+    const [visible, setVisible] = useState(PAGE_SIZE);
 
-    // 최신 응모가 위로. 같은 초에 소수 초가 있는 값과 없는 값이 섞일 수 있어 문자열이 아닌 시각으로 비교한다
-    const sortedEntries = [...(entries ?? [])].sort(
-        (a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime(),
-    );
-    // 거절된 응모는 접수 건수에서 뺀다
-    const appliedEntries = sortedEntries.filter((entry) => entry.status === 'ACCEPTED');
-    const usedTickets = appliedEntries.reduce((sum, entry) => sum + entry.deductedTicketCount, 0);
+    const setFilter = (key: string, value: string, fallback: string) => {
+        setParams(
+            (prev) => {
+                const next = new URLSearchParams(prev);
+                if (value === fallback) next.delete(key);
+                else next.set(key, value);
+                return next;
+            },
+            { replace: true },
+        );
+        setVisible(PAGE_SIZE);
+    };
+
+    const scoped = scopeEntryRows(rows, filters.kind, filters.period, now);
+    const shown = filterEntryRows(scoped, filters.status, filters.sort);
+    const pending = scoped.filter((row) => row.result === 'PENDING');
+    const won = scoped.filter((row) => row.result === 'WON');
+    const lost = scoped.filter((row) => row.result === 'LOST');
+    // 가장 빠른 발표 — 예정 시각이 남은 발표 대기 응모 중 가장 이른 것
+    const nextAnnounce = pending
+        .map((row) => row.event?.publicationScheduledAt)
+        .filter((at): at is string => !!at && new Date(at).getTime() > now.getTime())
+        .sort()[0];
+    const lastWonAt = won[0]?.event?.publicationScheduledAt ?? won[0]?.entry.requestedAt;
+    const lostTickets = lost.reduce((sum, row) => sum + row.entry.deductedTicketCount, 0);
+
+    const tiles: StatusTile[] = [
+        { value: 'ALL', label: '전체', count: scoped.length, note: PERIOD_LABEL[filters.period] },
+        {
+            value: 'PENDING',
+            label: '발표 대기',
+            count: pending.length,
+            note: nextAnnounce
+                ? `가장 빠른 발표 ${
+                      isSameKstDate(nextAnnounce, now)
+                          ? `오늘 ${formatKst(nextAnnounce, KST_HOUR_MINUTE)}`
+                          : formatKstDot(nextAnnounce, true)
+                  }`
+                : '발표를 기다리는 응모가 없어요',
+        },
+        {
+            value: 'WON',
+            label: '당첨',
+            count: won.length,
+            note: lastWonAt ? `최근 당첨 ${formatKstDot(lastWonAt)}` : '아직 당첨이 없어요',
+        },
+        {
+            value: 'LOST',
+            label: '미당첨',
+            count: lost.length,
+            note:
+                lostTickets > 0
+                    ? `응모권 ${formatNumber(lostTickets)}장 사용`
+                    : '응모권을 쓴 미당첨이 없어요',
+        },
+    ];
 
     return (
-        <main className="mx-auto flex w-full max-w-312 flex-col gap-10 px-6 pt-20 pb-28">
-            <h1 className="text-title-1 text-fg-primary">내 응모 내역</h1>
+        <main className="mx-auto flex w-full max-w-312 flex-col gap-6 px-6 pt-12 pb-28">
+            <PageHeader
+                backTo="/mypage"
+                backLabel="마이페이지"
+                title="내 응모 내역"
+                description="이벤트·겟또타임에 응모한 기록과 결과를 모두 볼 수 있어요."
+            />
 
-            <section className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-5">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-subhead text-fg-primary">응모한 이벤트</h2>
-                    <ClipboardList className="text-fg-primary size-6" />
-                </div>
-                {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
-                {isError && (
-                    <p className="text-destructive text-body-sm">
-                        응모 내역을 불러오지 못했습니다.
-                    </p>
-                )}
-                {!isPending && !isError && (
-                    <div className="flex flex-col gap-1">
-                        <p className="text-display text-fg-primary">
-                            {formatNumber(appliedEntries.length)}
-                            <span className="text-title-3"> 건</span>
-                        </p>
-                        {usedTickets > 0 && (
-                            <p className="text-body-sm text-fg-secondary">
-                                응모권 {formatNumber(usedTickets)}장 사용
-                            </p>
-                        )}
+            <EntryStatusTiles
+                tiles={tiles}
+                value={filters.status}
+                onChange={(value: EntryStatusFilter) => setFilter('status', value, 'ALL')}
+            />
+
+            <section
+                aria-label="응모 기록"
+                className="bg-surface-page border-border-default flex flex-col gap-2 rounded-2xl border p-6 shadow-md"
+            >
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-2">
+                    <Segmented
+                        label="종류로 거르기"
+                        value={filters.kind}
+                        options={KIND_OPTIONS}
+                        onValueChange={(value) => setFilter('kind', value, 'ALL')}
+                    />
+                    <div className="flex gap-2">
+                        <Select
+                            value={filters.period}
+                            onValueChange={(value) => setFilter('period', value, '3M')}
+                        >
+                            <SelectTrigger className="h-9" aria-label="기간">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {Object.entries(PERIOD_LABEL).map(([value, label]) => (
+                                    <SelectItem key={value} value={value}>
+                                        {label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select
+                            value={filters.sort}
+                            onValueChange={(value) => setFilter('sort', value, 'NEWEST')}
+                        >
+                            <SelectTrigger className="h-9" aria-label="정렬">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {Object.entries(SORT_LABEL).map(([value, label]) => (
+                                    <SelectItem key={value} value={value}>
+                                        {label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
-                )}
-            </section>
+                </div>
 
-            <section className="flex flex-col gap-2">
-                <h2 className="text-subhead text-fg-primary">응모 기록</h2>
-                <p className="text-body-sm text-fg-tertiary">
-                    당첨 결과는 발표 후 추첨 결과 화면에서 확인할 수 있어요
-                </p>
-                {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+                <div
+                    aria-hidden
+                    className={`bg-surface-sunken text-caption text-fg-tertiary hidden gap-x-4 rounded-lg px-3 py-2 md:grid ${ENTRY_GRID}`}
+                >
+                    <span>응모</span>
+                    <span>사용 응모권</span>
+                    <span>발표</span>
+                    <span className="text-right">결과</span>
+                    <span />
+                </div>
+
+                {isPending && <p className="text-body-sm text-fg-tertiary py-6">불러오는 중…</p>}
                 {isError && (
-                    <p className="text-destructive text-body-sm">
+                    <p className="text-destructive text-body-sm py-6">
                         응모 내역을 불러오지 못했습니다.
                     </p>
                 )}
-                {!isPending && !isError && sortedEntries.length === 0 && (
-                    <p className="text-fg-tertiary text-body-sm py-6">아직 응모한 내역이 없어요.</p>
+                {!isPending && !isError && shown.length === 0 && (
+                    <p className="text-body-sm text-fg-tertiary py-10 text-center">
+                        {rows.length === 0
+                            ? '아직 응모한 내역이 없어요.'
+                            : '조건에 맞는 응모 내역이 없어요.'}
+                    </p>
                 )}
-                {sortedEntries.length > 0 && (
-                    <ul className="divide-border-default divide-y">
-                        {sortedEntries.map((entry) => (
-                            <MyEntryItem key={entry.id} entry={entry} />
-                        ))}
-                    </ul>
+                {byMonth(shown.slice(0, visible)).map(([month, monthRows]) => (
+                    <div key={month} className="flex flex-col">
+                        <h2 className="text-body-sm-bold text-fg-primary px-3 pt-3 pb-1">
+                            {month}
+                        </h2>
+                        <ul className="divide-border-default divide-y">
+                            {monthRows.map((row) => (
+                                <EntryTableRow key={row.entry.id} row={row} now={now} />
+                            ))}
+                        </ul>
+                    </div>
+                ))}
+                {shown.length > visible && (
+                    <Button
+                        variant="secondary"
+                        className="mt-2 w-full"
+                        onClick={() => setVisible((count) => count + PAGE_SIZE)}
+                    >
+                        더 보기
+                        <span className="text-fg-tertiary text-xs font-normal">
+                            {formatNumber(visible)} / {formatNumber(shown.length)}건
+                        </span>
+                    </Button>
                 )}
             </section>
         </main>

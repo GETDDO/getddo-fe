@@ -1,10 +1,11 @@
 import { http } from 'msw';
 
-import type { PublicResults, PublishedPrize } from '@entities/drawResult';
+import type { MyResult, PublicResults, PublishedPrize } from '@entities/drawResult';
 
 import { env } from '@shared/config/env';
 
 import { mockNow } from '../now';
+import { mockHasAcceptedEntry } from './entry';
 import { ANNOUNCE_DELAY_MS, findMockEvent, type MockEvent } from './event';
 import { fail, ok } from './response';
 
@@ -120,6 +121,40 @@ function buildResults(event: MockEvent, now: number): PublicResults {
     };
 }
 
+// 내 응모 내역 시연용 — 시드 응모(entry 목업)가 있는 발표 완료 래플의 본인 결과를 고정한다.
+// 여기 없는 이벤트는 사용자·이벤트 조합으로 늘 같은 결과를 낸다 (폴링해도 바뀌지 않게)
+const DEMO_MY_RESULT: Record<string, 'WON' | 'LOST'> = {
+    'evt-110': 'WON',
+    'evt-109': 'LOST',
+    'evt-111': 'LOST',
+};
+
+function buildMyResult(event: MockEvent, userId: string, now: number): MyResult {
+    const results = buildResults(event, now);
+    const base = {
+        eventId: event.id,
+        isPublished: results.isPublished,
+        revision: results.revision,
+        serverTime: results.serverTime,
+    };
+    if (!mockHasAcceptedEntry(userId, event.id)) {
+        return { ...base, result: 'NOT_ENTERED', prize: null };
+    }
+    // 발표가 지연돼도 공개 전에는 당첨 여부를 PENDING으로 감춘다 (05-api/drawing.md MyResult)
+    if (!results.isPublished) return { ...base, result: 'PENDING', prize: null };
+
+    let hash = 0;
+    for (const char of `${userId}-${event.id}`) hash = (hash * 31 + char.charCodeAt(0)) % 100_000;
+    const won = (DEMO_MY_RESULT[event.id] ?? (hash % 4 === 0 ? 'WON' : 'LOST')) === 'WON';
+    // 당첨이면 가장 많이 뽑는 하위 등수 경품을 준다 (buildPrizes는 등수 내림차순)
+    const prize = won ? buildPrizes(event)[0] : undefined;
+    return {
+        ...base,
+        result: won ? 'WON' : 'LOST',
+        prize: prize ? { prizeId: prize.prizeId, rank: prize.rank, name: prize.name } : null,
+    };
+}
+
 export const drawResultHandlers = [
     // E08 — 공개 결과 조회
     http.get(api('/events/:eventId/results'), ({ params }) => {
@@ -128,5 +163,12 @@ export const drawResultHandlers = [
         if (!event) return fail(404, 'EVENT_NOT_FOUND', '이벤트를 찾을 수 없습니다');
 
         return ok(buildResults(event, mockNow().getTime()));
+    }),
+    // E09 — 본인 결과 조회. 응모하지 않은 이벤트는 NOT_ENTERED다
+    http.get(api('/events/:eventId/my-result'), ({ params, request }) => {
+        const event = findMockEvent(String(params.eventId));
+        if (!event) return fail(404, 'EVENT_NOT_FOUND', '이벤트를 찾을 수 없습니다');
+        const userId = request.headers.get('X-User-ID') ?? 'anonymous';
+        return ok(buildMyResult(event, userId, mockNow().getTime()));
     }),
 ];

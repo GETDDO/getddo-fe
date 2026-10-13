@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { ChevronRight, X } from 'lucide-react';
 
 import { formatRelativeFromNow } from '@shared/lib/date';
 import { Button } from '@shared/ui/button';
@@ -12,6 +12,8 @@ const FOCUS =
  * 알림 한 줄 — 피그마 '알림 팝오버 수정안' 기준.
  * 왼쪽 8px 칸에 읽지 않음 점(잉크), 제목 1줄·본문 2줄 말줄임, 호버하면 연노랑 배경과 오른쪽 위 삭제(X) 버튼.
  * 읽지 않은 알림은 제목을 SemiBold 잉크로, 읽은 알림은 Regular 보조색으로 한 단계 낮춘다.
+ * 이동할 곳(linkUrl)이 있는 알림은 시간 위에 "결과 확인하기 ›"(발표 알림)·"바로 가기 ›"를 둬 누르면 이동한다는 걸 보여 준다.
+ * 결과 발표 알림은 당첨·낙첨을 쓰지 않고 결과 화면으로 안내만 한다 (getddo-spec 02-domain/notification.md 결과 발표 알림)
  */
 export function NotificationItem({
     notification,
@@ -49,6 +51,12 @@ export function NotificationItem({
                     <span className="text-body-sm text-fg-secondary line-clamp-2 break-keep">
                         {notification.body}
                     </span>
+                    {notification.linkUrl && (
+                        <span className="text-caption text-fg-primary inline-flex items-center gap-0.5 font-semibold">
+                            {/발표|결과/.test(notification.title) ? '결과 확인하기' : '바로 가기'}
+                            <ChevronRight aria-hidden className="size-3.5" />
+                        </span>
+                    )}
                     <span className="text-caption text-fg-tertiary">
                         {formatRelativeFromNow(notification.createdAt, now)}
                     </span>

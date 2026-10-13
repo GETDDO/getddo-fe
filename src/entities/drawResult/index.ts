@@ -5,7 +5,16 @@ export {
     publishedPrizeSchema,
 } from './model/types';
 export type { DrawDisplayStatus, MaskedWinner, PublicResults, PublishedPrize } from './model/types';
-export { DRAW_RESULTS_KEY, eventResultsApiPath, useEventResults } from './api/queries';
+export { myResultSchema, myResultStatusSchema } from './model/types';
+export type { MyResult, MyResultStatus } from './model/types';
+export {
+    DRAW_RESULTS_KEY,
+    eventResultsApiPath,
+    myResultApiPath,
+    useEventResults,
+    useMyResults,
+} from './api/queries';
+export { MyResultBadge } from './ui/MyResultBadge';
 export {
     cancellationRedrawsApiPath,
     DRAWS_KEY,

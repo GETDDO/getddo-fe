@@ -1,6 +1,7 @@
 import { Gamepad2, Ticket } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
 import { TicketCard } from '@shared/ui/ticket-card';
 
@@ -11,6 +12,7 @@ const DAILY_GAME_REWARD = 1;
 
 /**
  * 게임 티켓 카드 — 썸네일, 설명, 오늘 받을 응모권, 플레이 버튼 (공용 TicketCard, 피그마 Group 633903).
+ * 카드 어디를 눌러도 게임 화면으로 들어가고, 마우스를 올리면 살짝 떠오른다.
  * 게임은 횟수 제한 없이 플레이할 수 있어서, 오늘 보상을 받은 뒤에도 버튼은 계속 누를 수 있다
  */
 export function GameTicketCard({
@@ -29,8 +31,12 @@ export function GameTicketCard({
 
     return (
         <TicketCard
-            className={className}
-            cardClassName="h-90 w-66.25"
+            className={cn(
+                ready &&
+                    'motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-1',
+                className,
+            )}
+            cardClassName="relative h-90 w-66.25"
             stub={
                 <>
                     <div className="mt-3.75 flex h-4.5 items-center justify-between gap-2">
@@ -46,7 +52,13 @@ export function GameTicketCard({
                     {/* 공용 버튼 Large(48) — 보조 버튼(secondary) — 응모권 카드는 출석만 primary, 게임·미션은 한 단계 낮춘다.
                         준비 중인 게임은 누를 수 없게 막는다 */}
                     {ready ? (
-                        <Button asChild variant="secondary" size="lg" className="mt-2 w-full">
+                        // 버튼 링크가 카드 전체를 덮어(after) 카드 어디를 눌러도 들어간다 — 링크는 하나라 낭독기에는 버튼 하나로 읽힌다
+                        <Button
+                            asChild
+                            variant="secondary"
+                            size="lg"
+                            className="mt-2 w-full after:absolute after:inset-0 after:rounded-2xl"
+                        >
                             <Link to={href}>{rewarded ? '한 번 더 하기' : '게임하러 가기'}</Link>
                         </Button>
                     ) : (

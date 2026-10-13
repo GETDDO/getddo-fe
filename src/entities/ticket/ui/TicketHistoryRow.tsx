@@ -2,15 +2,16 @@ import { ArrowUpRight, ChevronDown } from 'lucide-react';
 import { useId } from 'react';
 import { Link } from 'react-router-dom';
 
-import type { TicketHistory } from '@entities/ticket';
-
-import { TICKET_GRADE_LABEL, TICKET_OPERATION_DELTA } from '@entities/ticket';
 import { formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { cn } from '@shared/lib/utils';
 
-import { getTicketHistoryLink } from '../lib/ticketHistoryLink';
-import { TICKET_HISTORY_META } from '../model/ticketHistoryMeta';
+import type { TicketHistory } from '../model/history';
+
+import { getTicketHistoryLink } from '../lib/historyLink';
+import { TICKET_GRADE_LABEL } from '../model/grade';
+import { TICKET_HISTORY_META } from '../model/historyMeta';
+import { TICKET_OPERATION_DELTA } from '../model/operation';
 
 const FOCUS =
     'focus-visible:ring-border-focus focus-visible:ring-2 focus-visible:ring-inset focus-visible:outline-none';

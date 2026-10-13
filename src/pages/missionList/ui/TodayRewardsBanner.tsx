@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-import { Check, ChevronRight } from 'lucide-react';
+import { ArrowDown, Check, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -35,6 +35,7 @@ import { summarizeMonthlyTickets } from '../lib/monthlyTicketSummary';
 import { isMissionOpen, summarizeTodayRewards } from '../lib/todayRewards';
 import { useSlotNumber } from '../lib/useSlotNumber';
 import { MISSION_SECTION_IDS } from '../model/sectionIds';
+import { TicketGradeInfo } from './TicketGradeInfo';
 
 /** 응모권 모양 — 양옆 절취선 높이를 반원으로 파낸다 (왼쪽 반·오른쪽 반에 각각 구멍 하나) */
 // 홈은 절취선 높이에 판다 — 카드 아래 여백(p-5 1.25rem) + 내역 줄(body-sm 1.375rem) + 절취선 위 여백(pt-3 0.75rem)
@@ -60,7 +61,8 @@ const scrollToSection = (id: string) =>
 const MAX_PROGRESS_DOTS = 8;
 
 /** 오늘 할 일 한 칸 — 픽셀 아이콘(피그마 image 199·206·207)을 바탕 없이 둔다. 완료면 노란 테두리와 아이콘 귀퉁이에 노란 체크.
- * 숫자 옆 점(●●○)으로 진행을 보여 준다. 마우스를 올려도 움직이지 않는다 */
+ * 숫자 옆 점(●●○)으로 진행을 보여 준다. 누르면 아래 해당 섹션으로 내려간다 — 누를 수 있다는 걸 알리도록
+ * 오른쪽 위에 아래 화살표를 늘 두고(터치에서도 보이게), 마우스를 올리면 화살표가 진해지고 그림자가 깊어진다. 칸은 움직이지 않는다 */
 function TodayStep({
     icon,
     iconScale,
@@ -85,8 +87,12 @@ function TodayStep({
         <button
             type="button"
             onClick={() => scrollToSection(sectionId)}
-            className={`bg-surface-page focus-visible:ring-border-focus relative flex min-w-0 cursor-pointer flex-col gap-2 rounded-2xl p-3 text-left shadow-sm focus-visible:ring-2 focus-visible:outline-none sm:gap-3 sm:p-4 ${done ? 'ring-ticket-primary ring-2' : ''}`}
+            className={`group/step bg-surface-page focus-visible:ring-border-focus relative flex min-w-0 cursor-pointer flex-col gap-2 rounded-2xl p-3 text-left shadow-sm transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:outline-none sm:gap-3 sm:p-4 ${done ? 'ring-ticket-primary ring-2' : ''}`}
         >
+            <ArrowDown
+                aria-hidden
+                className="text-fg-disabled group-hover/step:text-fg-primary absolute top-3 right-3 size-4 transition-colors sm:top-4 sm:right-4"
+            />
             <span className="relative size-8 sm:size-9">
                 <img src={icon} alt="" className={`size-full object-contain ${iconScale ?? ''}`} />
                 {done && (
@@ -285,8 +291,11 @@ export function TodayRewardsBanner() {
                         className="bg-surface-page border-border-default rounded-2xl border p-5 pt-6"
                         style={TICKET_NOTCH_MASK}
                     >
-                        <p className="text-body-sm text-fg-secondary">사용 가능 응모권</p>
-                        <p className="text-title-1 text-fg-primary tabular-nums">
+                        <p className="text-body-sm text-fg-secondary flex items-center gap-1">
+                            사용 가능 응모권
+                            <TicketGradeInfo />
+                        </p>
+                        <p className="text-title-2 text-fg-primary tabular-nums">
                             {format(balance)}장
                         </p>
 

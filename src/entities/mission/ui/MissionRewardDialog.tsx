@@ -14,7 +14,8 @@ import {
 
 /**
  * 미션 완료 보상 안내 — 게임 보상(RewardDialog)과 같은 연출로 받은 응모권 수를 알린다.
- * 등급 응모권 공개 카드는 응모권 쪽 부품이라 이 슬라이스에서 직접 쓰지 않고, 쓰는 쪽(페이지)이 reveal로 넣는다
+ * 등급 응모권 공개 카드는 응모권 쪽 부품이라 이 슬라이스에서 직접 쓰지 않고, 쓰는 쪽(페이지)이 reveal로 넣는다.
+ * 다음 행동(겟또타임으로 가기 등)도 쓰는 쪽이 action으로 넣는다 — 있으면 주 버튼이 되고 닫기는 테두리 버튼으로 내려간다
  */
 export function MissionRewardDialog({
     open,
@@ -22,6 +23,7 @@ export function MissionRewardDialog({
     tickets,
     gradeLabel,
     reveal,
+    action,
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -30,6 +32,8 @@ export function MissionRewardDialog({
     gradeLabel?: string;
     /** 등급 응모권 공개 연출 — 있으면 타코야끼 그림 대신 보여 준다 */
     reveal?: ReactNode;
+    /** 다음 행동 버튼 — 공용 Button(asChild) 등 */
+    action?: ReactNode;
 }) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -51,9 +55,20 @@ export function MissionRewardDialog({
                     </DialogTitle>
                     <DialogDescription>미션 완료 보상이에요.</DialogDescription>
                 </div>
-                <DialogClose asChild>
-                    <Button className="w-full">확인</Button>
-                </DialogClose>
+                {action ? (
+                    <div className="flex w-full flex-col gap-2">
+                        {action}
+                        <DialogClose asChild>
+                            <Button variant="secondary" className="w-full">
+                                닫기
+                            </Button>
+                        </DialogClose>
+                    </div>
+                ) : (
+                    <DialogClose asChild>
+                        <Button className="w-full">확인</Button>
+                    </DialogClose>
+                )}
             </DialogContent>
         </Dialog>
     );

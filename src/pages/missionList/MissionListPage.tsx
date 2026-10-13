@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { MissionRewardDialog } from '@entities/mission';
 import { TICKET_GRADE_LABEL, type TicketGrade, TicketGradeReveal } from '@entities/ticket';
 import { AttendanceCheckCard } from '@features/checkAttendance';
 import { cn } from '@shared/lib/utils';
+import { Button } from '@shared/ui/button';
 import { GameRail } from '@widgets/gameRail';
 
 import { MISSION_SECTION_IDS } from './model/sectionIds';
@@ -92,6 +94,12 @@ export function MissionListPage() {
                 // 받은 등급을 응모권 카드가 뒤집히며 보여 준다 (게임 보상 모달과 같은 연출)
                 gradeLabel={reward.grade ? TICKET_GRADE_LABEL[reward.grade] : undefined}
                 reveal={reward.grade ? <TicketGradeReveal grade={reward.grade} /> : undefined}
+                // 받은 응모권을 바로 쓰러 가는 길 — 보상 모달의 끝을 겟또타임으로 이어 준다
+                action={
+                    <Button asChild className="w-full">
+                        <Link to="/time-raffle">응모하러 가기</Link>
+                    </Button>
+                }
             />
         </main>
     );

@@ -1,93 +1,97 @@
-import { Ticket } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-import {
-    TICKET_GRADE_LABEL,
-    TicketHistoryItem,
-    useMyTickets,
-    useTicketHistories,
-} from '@entities/ticket';
-import { formatKst, kstNextMonthStart } from '@shared/lib/date';
-import { formatNumber } from '@shared/lib/format';
+import { groupTicketHistories, useMyTickets, useTicketHistories } from '@entities/ticket';
+import { formatKst, KST_HOUR_MINUTE, kstDayDiff, toKst } from '@shared/lib/date';
 import { useVirtualClock } from '@shared/lib/virtualClock';
+import { Button } from '@shared/ui/button';
+import { PageHeader } from '@shared/ui/page-header';
 
+import type { ExpiringSoon } from './ui/TicketWalletHero';
+
+import { ExpiringCard } from './ui/ExpiringCard';
+import { GradeGuideCard } from './ui/GradeGuideCard';
+import { TicketHistoryCard } from './ui/TicketHistoryCard';
+import { TicketWalletHero } from './ui/TicketWalletHero';
+
+/** 두 시각이 KST 기준 같은 달인가 */
+const isSameKstMonth = (a: Date | string, b: Date) => {
+    const ka = toKst(a);
+    const kb = toKst(b);
+    return ka.getUTCFullYear() === kb.getUTCFullYear() && ka.getUTCMonth() === kb.getUTCMonth();
+};
+
+/**
+ * 내 응모권 — 마이페이지 "응모권" 칸·"응모권 내역 → 전체 보기"가 여는 페이지.
+ * 큰 응모권(사용 가능·등급 구성·곧 만료·이번 달 받은/쓴) 아래에 응모권 기록, 옆에 만료 예정·등급 안내.
+ */
 export function MyTicketsPage() {
-    const { data: balance, isPending: balancePending, isError: balanceError } = useMyTickets();
-    const {
-        data: history,
-        isPending: historyPending,
-        isError: historyError,
-    } = useTicketHistories();
-
-    // 지급분의 만료 시각은 다음 달 1일 00:00 KST (getddo-spec ticket.md)
+    const { data: tickets, isPending: ticketsPending, isError: ticketsError } = useMyTickets();
+    const historiesQuery = useTicketHistories();
     const clock = useVirtualClock();
-    const expiryAt = kstNextMonthStart(clock.now());
-    const expiryLabel = `${formatKst(expiryAt, { month: 'long', day: 'numeric' })} 00:00(KST)`;
-    // 보유 묶음 중 만료 시각이 다음 달 경계에 닿는 장수의 합 — "expiryLabel에 N장 만료 예정" 문구의 수치.
-    // holdings는 사용 가능분만 오르므로 상태 검사 없이 만료 시각만 비교한다
-    const expiringThisMonth =
-        balance?.holdings
-            .filter((h) => new Date(h.expiresAt).getTime() <= expiryAt.getTime())
-            .reduce((sum, h) => sum + h.count, 0) ?? 0;
-    const sortedHistory = [...(history ?? [])].sort((a, b) =>
-        b.createdAt.localeCompare(a.createdAt),
-    );
+    const now = clock.now();
+
+    const groups = groupTicketHistories(historiesQuery.data ?? []);
+    const thisMonth = groups.filter((group) => isSameKstMonth(group.createdAt, now));
+    const monthReceived = thisMonth
+        .filter((group) => group.operationType === 'GRANT' || group.operationType === 'REFUND')
+        .reduce((sum, group) => sum + group.count, 0);
+    const monthUsed = thisMonth
+        .filter((group) => group.operationType === 'USE')
+        .reduce((sum, group) => sum + group.count, 0);
+
+    // 가장 이른 만료 시각에 걸린 장수 — 같은 시각의 묶음(등급만 다른)을 합친다
+    const soonest = [...(tickets?.holdings ?? [])]
+        .filter((holding) => holding.count > 0)
+        .sort((a, b) => new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime())[0];
+    const expiring: ExpiringSoon | null = soonest
+        ? {
+              count: (tickets?.holdings ?? [])
+                  .filter((holding) => holding.expiresAt === soonest.expiresAt)
+                  .reduce((sum, holding) => sum + holding.count, 0),
+              expiryLabel: `${formatKst(soonest.expiresAt, { month: 'long', day: 'numeric' })} ${formatKst(soonest.expiresAt, KST_HOUR_MINUTE)}`,
+              dDay: kstDayDiff(soonest.expiresAt, now),
+          }
+        : null;
 
     return (
-        <main className="mx-auto flex w-full max-w-312 flex-col gap-10 px-6 pt-20 pb-28">
-            <h1 className="text-title-1 text-fg-primary">내 응모권</h1>
+        <main className="mx-auto flex w-full max-w-312 flex-col gap-6 px-6 pt-12 pb-28">
+            <PageHeader
+                backTo="/mypage"
+                backLabel="마이페이지"
+                title="내 응모권"
+                description="가진 응모권과 만료일, 받고 쓴 기록을 한곳에서 봐요."
+                action={
+                    <Button asChild variant="secondary">
+                        <Link to="/missions">응모권 모으러 가기</Link>
+                    </Button>
+                }
+            />
 
-            <section className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-5">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-subhead text-fg-primary">보유 응모권</h2>
-                    <Ticket className="text-fg-primary size-6" />
+            {ticketsPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {ticketsError && (
+                <p className="text-destructive text-body-sm">응모권 잔액을 불러오지 못했습니다.</p>
+            )}
+            {tickets && (
+                <TicketWalletHero
+                    tickets={tickets}
+                    expiring={expiring}
+                    monthReceived={monthReceived}
+                    monthUsed={monthUsed}
+                />
+            )}
+
+            <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22.5rem]">
+                <TicketHistoryCard
+                    groups={groups}
+                    isPending={historiesQuery.isPending}
+                    isError={historiesQuery.isError}
+                    now={now}
+                />
+                <div className="flex flex-col gap-4">
+                    {tickets && <ExpiringCard holdings={tickets.holdings} />}
+                    <GradeGuideCard />
                 </div>
-                {balancePending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
-                {balanceError && (
-                    <p className="text-destructive text-body-sm">
-                        응모권 잔액을 불러오지 못했습니다.
-                    </p>
-                )}
-                {balance && (
-                    <div className="flex flex-col gap-1">
-                        <p className="text-display text-fg-primary">
-                            {formatNumber(balance.availableCount)}
-                            <span className="text-title-3"> 장</span>
-                        </p>
-                        <p className="text-body-sm text-fg-secondary">
-                            {TICKET_GRADE_LABEL.BRONZE} {formatNumber(balance.countByGrade.BRONZE)}
-                            장 · {TICKET_GRADE_LABEL.SILVER}{' '}
-                            {formatNumber(balance.countByGrade.SILVER)}장 ·{' '}
-                            {TICKET_GRADE_LABEL.GOLD} {formatNumber(balance.countByGrade.GOLD)}장
-                        </p>
-                        {expiringThisMonth > 0 && (
-                            <p className="text-body-sm text-fg-secondary">
-                                {expiryLabel}에 {formatNumber(expiringThisMonth)}장 만료 예정
-                            </p>
-                        )}
-                    </div>
-                )}
-            </section>
-
-            <section className="flex flex-col gap-2">
-                <h2 className="text-subhead text-fg-primary">응모권 내역</h2>
-                <p className="text-body-sm text-fg-tertiary">지급·사용·반환·만료가 모두 기록돼요</p>
-                {historyPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
-                {historyError && (
-                    <p className="text-destructive text-body-sm">
-                        응모권 내역을 불러오지 못했습니다.
-                    </p>
-                )}
-                {!historyPending && !historyError && sortedHistory.length === 0 && (
-                    <p className="text-fg-tertiary text-body-sm py-6">응모권 내역이 없습니다.</p>
-                )}
-                {sortedHistory.length > 0 && (
-                    <ul className="divide-border-default divide-y">
-                        {sortedHistory.map((item) => (
-                            <TicketHistoryItem key={item.id} history={item} />
-                        ))}
-                    </ul>
-                )}
-            </section>
+            </div>
         </main>
     );
 }

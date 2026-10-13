@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { XIcon } from 'lucide-react';
 import { Dialog as DialogPrimitive } from 'radix-ui';
+import { Link } from 'react-router-dom';
 
 import type { TicketGrade } from '@entities/ticket';
 
@@ -20,7 +21,8 @@ import {
  * 공용 모달 부품(Dialog·DialogOverlay·DialogTitle·DialogDescription·DialogClose)을 그대로 쓰고,
  * 게임 화면 안에만 뜨도록 막을 fixed 대신 absolute로 바꾸고 포털 없이 그 자리에 그린다.
  * 공용 DialogContent는 포털·화면 전체 막이 묶여 있어 본문 상자만 같은 radix 부품으로 둔다.
- * 쓰는 쪽(게임 화면)이 position: relative여야 한다
+ * 쓰는 쪽(게임 화면)이 position: relative여야 한다.
+ * 받은 응모권을 바로 쓸 수 있게 겟또타임으로 이어 준다 (등급 가중치는 응모할 때·응모권 내역에서 알린다)
  */
 export function RewardDialog({
     open,
@@ -91,10 +93,17 @@ export function RewardDialog({
                         <span className="text-fg-secondary">오늘의 게임 보상이에요.</span>
                     </DialogDescription>
                 </div>
-                {/* 공용 버튼 primary Medium(40) */}
-                <DialogClose asChild>
-                    <Button className="w-full">확인</Button>
-                </DialogClose>
+                {/* 받은 응모권을 쓰러 가는 길 — 주 버튼은 검정 primary, 닫기는 테두리 secondary. 좁은 게임 화면이라 위아래로 쌓는다 */}
+                <div className="flex w-full flex-col gap-2">
+                    <Button asChild className="w-full">
+                        <Link to="/time-raffle">응모하러 가기</Link>
+                    </Button>
+                    <DialogClose asChild>
+                        <Button variant="secondary" className="w-full">
+                            닫기
+                        </Button>
+                    </DialogClose>
+                </div>
             </DialogPrimitive.Content>
         </Dialog>
     );

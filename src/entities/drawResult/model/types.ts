@@ -166,3 +166,33 @@ export type DrawVerification = z.infer<typeof drawVerificationSchema>;
 export type DrawConfirmationResult = z.infer<typeof drawConfirmationResultSchema>;
 export type DrawConfirmation = z.infer<typeof drawConfirmationSchema>;
 export type DrawExecutionResponse = z.infer<typeof drawExecutionResponseSchema>;
+
+// getddo-spec 05-api/drawing.md E09 MyResult — 본인 결과. 공개 전에는 당첨 여부를 PENDING으로 감춘다.
+// EXCLUDED는 ADR-018로 계약에서 빠졌지만 과거 응답 파싱이 깨지지 않도록 값만 남긴다
+export const myResultStatusSchema = z.enum([
+    'NOT_ENTERED',
+    'PENDING',
+    'WON',
+    'LOST',
+    'CANCELED',
+    'EXCLUDED',
+]);
+
+// spec의 Prize — 본인 결과 화면에 필요한 식별·등수·이름만 검증한다
+export const myResultPrizeSchema = z.object({
+    prizeId: z.string(),
+    rank: z.number().int().positive(),
+    name: z.string(),
+});
+
+export const myResultSchema = z.object({
+    eventId: z.string(),
+    result: myResultStatusSchema,
+    prize: myResultPrizeSchema.nullable(),
+    isPublished: z.boolean(),
+    revision: z.number().int().nullable(),
+    serverTime: z.iso.datetime(),
+});
+
+export type MyResultStatus = z.infer<typeof myResultStatusSchema>;
+export type MyResult = z.infer<typeof myResultSchema>;

@@ -119,3 +119,11 @@ export function formatRelativeFromNow(date: Date | string, now: Date): string {
     if (diffHours < 24) return `${diffHours}시간 전`;
     return `${Math.floor(diffHours / 24)}일 전`;
 }
+
+/** "09.17" 또는 시각까지 "09.17 20:05" 형태로 포맷한다 (KST) — 목록의 짧은 날짜 표기 */
+export function formatKstDot(date: Date | string, withTime = false): string {
+    const k = toKst(date);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const day = `${pad(k.getUTCMonth() + 1)}.${pad(k.getUTCDate())}`;
+    return withTime ? `${day} ${pad(k.getUTCHours())}:${pad(k.getUTCMinutes())}` : day;
+}

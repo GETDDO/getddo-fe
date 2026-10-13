@@ -1,10 +1,12 @@
+import type { Query } from '@tanstack/react-query';
+
 import { useQueries, useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@shared/api/client';
 import { envelopeSchema, pageSchema } from '@shared/api/envelopeSchema';
 import { queryPresets } from '@shared/api/queryPresets';
 
-import type { DrawRunStatus } from '../model/types';
+import type { DrawRunStatus, MyResult } from '../model/types';
 
 import { isDrawRunInProgress } from '../model/runStatus';
 import {
@@ -12,6 +14,7 @@ import {
     drawRunDetailSchema,
     drawRunSchema,
     drawVerificationSchema,
+    myResultSchema,
     publicResultsSchema,
 } from '../model/types';
 
@@ -37,6 +40,30 @@ export function useEventResults(eventId: string, enabled = true) {
         },
         refetchInterval: (query) =>
             query.state.data?.isPublished ? false : queryPresets.realtime.refetchInterval,
+    });
+}
+
+// getddo-spec 05-api/drawing.md E09 — 본인 결과 조회
+export const myResultApiPath = (eventId: string) => `/events/${eventId}/my-result`;
+
+/**
+ * 내가 응모한 이벤트들의 본인 결과를 한꺼번에 받는다 (E09는 이벤트 단위라 이벤트마다 한 번씩).
+ * 발표 전(PENDING)인 결과만 계속 따라가고, 결과가 나온 이벤트는 폴링을 멈춘다
+ */
+export function useMyResults(eventIds: readonly string[]) {
+    return useQueries({
+        queries: eventIds.map((eventId) => ({
+            ...queryPresets.realtime,
+            queryKey: [...DRAW_RESULTS_KEY, 'me', eventId],
+            queryFn: async () => {
+                const { data } = await apiClient.get<unknown>(myResultApiPath(eventId));
+                return envelopeSchema(myResultSchema).parse(data).data;
+            },
+            refetchInterval: (query: Query<MyResult>) =>
+                query.state.data?.result === 'PENDING'
+                    ? queryPresets.realtime.refetchInterval
+                    : false,
+        })),
     });
 }
 

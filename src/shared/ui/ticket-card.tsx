@@ -93,4 +93,4 @@ function TicketCard({
     );
 }
 
-export { TicketCard };
+export { CARD_OUTLINE as TICKET_OUTLINE_FILTER, CARD_SHADOW as TICKET_SHADOW_FILTER, TicketCard };

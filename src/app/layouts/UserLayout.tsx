@@ -5,13 +5,13 @@ import { NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router-do
 import { useSessionStore } from '@entities/user';
 import { VirtualClockTicker } from '@features/controlVirtualClock';
 import { VirtualUserSwitcher } from '@features/switchVirtualUser';
+import profileAvatar from '@shared/assets/ui/profile-avatar-head.png';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
 import { RouteErrorBoundary, RouteErrorFallback } from '@shared/ui/route-error-boundary';
 import { NotificationBell } from '@widgets/notificationBell';
 
-import profileAvatar from './assets/profile-avatar.png';
 import { FOOTER_AWARDS, FOOTER_LINKS } from './footerData';
 import { USER_NAV_ITEMS } from './userNavItems';
 
