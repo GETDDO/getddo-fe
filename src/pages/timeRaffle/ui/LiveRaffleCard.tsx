@@ -9,7 +9,8 @@ import { formatNumber } from '@shared/lib/format';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
 
-import { formatCloseCountdown, formatRunningRange } from '../lib/raffleFormat';
+import { formatRunningRange } from '../lib/raffleFormat';
+import { CloseCountdownChip } from './CloseCountdownChip';
 import { RaffleThumbnail } from './RaffleThumbnail';
 
 const CHIP = 'text-caption flex items-center rounded-full px-2.5 py-1';
@@ -35,7 +36,6 @@ export function LiveRaffleCard({ event }: LiveRaffleCardProps) {
         return () => clearInterval(id);
     }, [now]);
 
-    const remainingMs = new Date(event.endsAt).getTime() - ticks.virtual;
     // 참여 현황은 폴링으로 따라가는 값이라 지금 이 순간의 수가 아니다 — 언제 기준인지 같이 적는다
     const staleSeconds = Math.max(0, Math.floor((ticks.real - dataUpdatedAt) / 1000));
 
@@ -60,21 +60,16 @@ export function LiveRaffleCard({ event }: LiveRaffleCardProps) {
             />
 
             <div className="flex min-w-0 flex-1 flex-col gap-3.5">
-                <div className="flex flex-wrap items-center gap-2">
-                    <span className={`${CHIP} bg-brand-primary text-fg-on-brand`}>진행중</span>
-                    <span className={`${CHIP} bg-surface-sunken text-fg-primary gap-1`}>
+                <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-body-sm text-fg-primary flex items-center gap-1.5">
+                        <span className="bg-brand-primary size-1.5 rounded-full" />
+                        진행중
+                    </span>
+                    <span className={`${CHIP} bg-surface-sunken text-fg-secondary gap-1`}>
                         <Clock className="size-3.5" />
                         {formatRunningRange(event)}
                     </span>
-                    {remainingMs > 0 && (
-                        <span
-                            // 1초마다 바뀌는 값이라 읽어 주면 화면 낭독을 끊는다 — 남은 시간은 상세에서 다시 안내한다
-                            aria-hidden
-                            className={`${CHIP} bg-action-neutral text-fg-on-brand tabular-nums`}
-                        >
-                            마감까지 {formatCloseCountdown(remainingMs)}
-                        </span>
-                    )}
+                    <CloseCountdownChip endsAt={event.endsAt} />
                 </div>
 
                 <div className="flex flex-col gap-1.5">

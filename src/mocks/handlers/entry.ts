@@ -163,6 +163,39 @@ const usedTicketCountOf = (userId: string, eventId: string) =>
 const usedRealTicketCountOf = (userId: string, eventId: string) =>
     myRealAcceptedFor(userId, eventId).reduce((sum, entry) => sum + entry.deductedTicketCount, 0);
 
+/**
+ * E09 목업이 본인 응모 여부·차감 합계를 판정할 때 쓴다.
+ *
+ * 응모하지 않은 사람에게 낙첨이라고 적으면 안 되므로 NOT_ENTERED와 LOST를 가르는 근거다.
+ * 시드 응모도 '내 응모'로 센다 — 내역 화면이 보여 주는 것과 같은 기준이어야 한다.
+ */
+export function mockMyEntrySummary(userId: string, eventId: string) {
+    const accepted = myAcceptedFor(userId, eventId);
+    return {
+        entryCount: accepted.length,
+        ticketCount: accepted.reduce((sum, entry) => sum + entry.deductedTicketCount, 0),
+    };
+}
+
+/**
+ * 이 이벤트에 응모한 사용자 ID를 먼저 응모한 순서로 돌려준다.
+ *
+ * E09 목업이 당첨 자리를 사용자에게 겹치지 않게 배정할 때 쓴다 — 자리 수는 공개 명단(E08)의
+ * 당첨 인원과 같아야 하므로, 사용자마다 따로 뽑으면 1등이 여럿 나올 수 있다.
+ */
+export function mockEventEntrantIds(eventId: string): string[] {
+    const firstAcceptedAt = new Map<string, number>();
+    for (const [userId, list] of entriesByUser) {
+        for (const entry of list) {
+            if (entry.eventId !== eventId || entry.status !== 'ACCEPTED') continue;
+            const at = new Date(entry.acceptedAt ?? entry.requestedAt).getTime();
+            const seen = firstAcceptedAt.get(userId);
+            if (seen == null || at < seen) firstAcceptedAt.set(userId, at);
+        }
+    }
+    return [...firstAcceptedAt.entries()].sort((a, b) => a[1] - b[1]).map(([userId]) => userId);
+}
+
 export const entryHandlers = [
     // E06 초안 — Page<EntryReceipt> 봉투, page·size 파라미터를 적용한다 (페이지는 1부터)
     http.get(api('/users/me/entries'), ({ request }) => {

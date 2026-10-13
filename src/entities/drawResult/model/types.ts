@@ -50,10 +50,46 @@ export const publicResultsSchema = z.object({
     prizes: z.array(publishedPrizeSchema),
 });
 
+// getddo-spec 05-api/event.md의 Prize — E09가 당첨 경품으로 돌려주는 모양이다
+export const prizeSchema = z.object({
+    id: z.string(),
+    rank: z.number().int().positive(),
+    name: z.string(),
+    description: z.string().nullable().optional(),
+    imageUrl: z.string().nullable().optional(),
+    winnerCount: z.number().int().nonnegative(),
+});
+
+/**
+ * 본인 결과 상태 (E09).
+ *
+ * PENDING은 '응모했고 아직 공개 전'이다. 추첨이 끝났더라도 공개 전이면 서버가 PENDING을
+ * 유지하므로(05-api/drawing.md), 화면이 이 값만 보고 그려도 발표 전에 당첨 여부가 새지 않는다.
+ */
+export const myResultStatusSchema = z.enum(['NOT_ENTERED', 'PENDING', 'WON', 'LOST', 'CANCELED']);
+
+/**
+ * 로그인한 본인의 이벤트 결과 (E09 `GET /events/{eventId}/my-result`).
+ *
+ * 공개 명단(E08)과 달리 본인 것만 담기므로 마스킹이 없다. 당첨이 아니면 prize는 null이다.
+ */
+export const myResultSchema = z.object({
+    eventId: z.string(),
+    result: myResultStatusSchema,
+    prize: prizeSchema.nullable(),
+    isPublished: z.boolean(),
+    // 공개 명단이 수정된 횟수 — 공개 전에는 null이다
+    revision: z.number().int().nullable(),
+    serverTime: z.iso.datetime(),
+});
+
 export type DrawDisplayStatus = z.infer<typeof drawDisplayStatusSchema>;
 export type MaskedWinner = z.infer<typeof maskedWinnerSchema>;
 export type PublishedPrize = z.infer<typeof publishedPrizeSchema>;
 export type PublicResults = z.infer<typeof publicResultsSchema>;
+export type Prize = z.infer<typeof prizeSchema>;
+export type MyResultStatus = z.infer<typeof myResultStatusSchema>;
+export type MyResult = z.infer<typeof myResultSchema>;
 
 // ── 관리자 추첨 관리(GD-125) — getddo-spec 05-api/drawing.md AD01~AD09 ──
 // 추첨 실행 상태 — getddo-spec 05-api/drawing.md DrawRun (검토 대기 초안)
