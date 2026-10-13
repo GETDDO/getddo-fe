@@ -1,7 +1,7 @@
 import { Input } from '@shared/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
 
-export function TextFilter({
+function TextFilter({
     value,
     onChange,
     placeholder,
@@ -23,7 +23,7 @@ export function TextFilter({
     );
 }
 
-export function DateRangeFilter({
+function DateRangeFilter({
     from,
     to,
     onFromChange,
@@ -55,7 +55,7 @@ export function DateRangeFilter({
     );
 }
 
-export function OptionFilter({
+function OptionFilter({
     value,
     onChange,
     options,
@@ -83,3 +83,5 @@ export function OptionFilter({
         </Select>
     );
 }
+
+export { DateRangeFilter, OptionFilter, TextFilter };

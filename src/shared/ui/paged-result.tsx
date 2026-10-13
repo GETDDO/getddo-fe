@@ -9,7 +9,7 @@ interface PageData<T> {
 }
 
 // 탭마다 같은 로딩·오류·빈 목록·페이저 상태를 한 곳에서 그린다
-export function PagedResult<T>({
+function PagedResult<T>({
     data,
     isPending,
     isError,
@@ -54,3 +54,5 @@ export function PagedResult<T>({
         </div>
     );
 }
+
+export { PagedResult };
