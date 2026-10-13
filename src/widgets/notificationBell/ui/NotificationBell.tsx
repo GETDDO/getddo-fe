@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { NotificationItem, useNotificationList } from '@entities/notification';
+import { useNotificationList } from '@entities/notification';
 import {
     useMarkAllNotificationsRead,
     useMarkNotificationRead,
@@ -11,8 +11,10 @@ import {
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
 
-import emptyCharacter from '../assets/empty-character.png';
 import { groupNotifications } from '../lib/groupNotifications';
+import { toInternalPath } from '../lib/toInternalPath';
+import { NotificationDrawer } from './NotificationDrawer';
+import { NotificationEmpty, NotificationGroupList } from './NotificationGroupList';
 
 const FOCUS =
     'focus-visible:ring-border-focus focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-page focus-visible:outline-none';
@@ -57,141 +59,121 @@ export function NotificationBell() {
     };
 
     const openLink = (linkUrl: string | null) => {
-        // linkUrl은 서버가 주는 내부 경로만 다룬다 — '//'로 시작하는
-        // 프로토콜 상대 URL은 브라우저가 외부 출처로 해석하므로 제외한다
-        if (linkUrl?.startsWith('/') && !linkUrl.startsWith('//')) {
-            void navigate(linkUrl);
-        }
+        const path = toInternalPath(linkUrl);
+        if (path) void navigate(path);
     };
 
     return (
-        <Popover>
-            <PopoverTrigger
-                aria-label={unreadCount > 0 ? `알림, 읽지 않음 ${unreadCount}개` : '알림'}
-                className={`text-fg-primary relative flex size-6 cursor-pointer items-center justify-center rounded-full ${FOCUS}`}
-            >
-                <Bell className="size-6" />
-                {unreadCount > 0 && (
-                    <span className="bg-brand-primary border-surface-page absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2" />
-                )}
-            </PopoverTrigger>
-            {/* 모바일에서는 화면 폭에서 좌우 16px을 뺀 만큼으로 줄이고, 화면 가장자리와도 16px 띄운다 */}
-            <PopoverContent
-                align="end"
-                collisionPadding={16}
-                className="bg-surface-elevated border-border-default flex max-h-120 w-95 max-w-[calc(100vw-2rem)] flex-col gap-0 overflow-hidden rounded-2xl border p-0 shadow-lg ring-0"
-            >
-                <div className="flex items-center justify-between pt-4 pr-3 pb-3.5 pl-5">
-                    <div className="flex items-center gap-2">
-                        <p className="text-subhead text-fg-primary">알림</p>
-                        {unreadCount > 0 && (
-                            <span className="bg-surface-sunken text-fg-secondary rounded-full px-2 py-0.5 text-sm leading-4 font-semibold tabular-nums">
-                                {unreadCount}
-                            </span>
+        <div className="flex items-center gap-3">
+            <Popover>
+                <PopoverTrigger
+                    aria-label={unreadCount > 0 ? `알림, 읽지 않음 ${unreadCount}개` : '알림'}
+                    className={`text-fg-primary relative flex size-6 cursor-pointer items-center justify-center rounded-full ${FOCUS}`}
+                >
+                    <Bell className="size-6" />
+                    {unreadCount > 0 && (
+                        <span className="bg-brand-primary border-surface-page absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2" />
+                    )}
+                </PopoverTrigger>
+                {/* 모바일에서는 화면 폭에서 좌우 16px을 뺀 만큼으로 줄이고, 화면 가장자리와도 16px 띄운다 */}
+                <PopoverContent
+                    align="end"
+                    collisionPadding={16}
+                    className="bg-surface-elevated border-border-default flex max-h-120 w-95 max-w-[calc(100vw-2rem)] flex-col gap-0 overflow-hidden rounded-2xl border p-0 shadow-lg ring-0"
+                >
+                    <div className="flex items-center justify-between pt-4 pr-3 pb-3.5 pl-5">
+                        <div className="flex items-center gap-2">
+                            <p className="text-subhead text-fg-primary">알림</p>
+                            {unreadCount > 0 && (
+                                <span className="bg-surface-sunken text-fg-secondary rounded-full px-2 py-0.5 text-sm leading-4 font-semibold tabular-nums">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <button
+                                type="button"
+                                disabled={unreadCount === 0}
+                                onClick={() => markAllRead()}
+                                className={`text-fg-primary disabled:text-fg-disabled cursor-pointer rounded-sm text-sm leading-[1.375rem] font-normal hover:underline disabled:cursor-not-allowed disabled:no-underline ${FOCUS}`}
+                            >
+                                모두 읽음
+                            </button>
+                            <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+                                <PopoverTrigger
+                                    aria-label="알림 관리"
+                                    disabled={notifications.length === 0}
+                                    className={`text-fg-secondary hover:bg-surface-sunken disabled:text-fg-disabled flex size-8 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:bg-transparent ${FOCUS}`}
+                                >
+                                    <Ellipsis className="size-4" />
+                                </PopoverTrigger>
+                                <PopoverContent
+                                    align="end"
+                                    className="bg-surface-elevated border-border-default w-42 gap-0 rounded-xl border px-0 py-1.5 shadow-lg ring-0"
+                                >
+                                    {[
+                                        {
+                                            label: '읽은 알림 삭제',
+                                            ids: notifications
+                                                .filter((n) => n.isRead)
+                                                .map((n) => n.id),
+                                            message: '읽은 알림을 삭제했어요',
+                                        },
+                                        {
+                                            label: '전체 삭제',
+                                            ids: notifications.map((n) => n.id),
+                                            message: '알림을 모두 삭제했어요',
+                                        },
+                                    ].map(({ label, ids, message }) => (
+                                        <button
+                                            key={label}
+                                            type="button"
+                                            disabled={ids.length === 0}
+                                            onClick={() => {
+                                                setMenuOpen(false);
+                                                hide(ids, message);
+                                            }}
+                                            className={`text-body-sm text-fg-primary hover:bg-surface-sunken disabled:text-fg-disabled w-full cursor-pointer px-4 py-2.5 text-left disabled:cursor-not-allowed disabled:bg-transparent ${FOCUS}`}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                    </div>
+                    <div className="min-h-0 flex-1 overflow-y-auto">
+                        {groups.length === 0 ? (
+                            <NotificationEmpty />
+                        ) : (
+                            <NotificationGroupList
+                                groups={groups}
+                                now={now}
+                                onRead={({ id, linkUrl }) => {
+                                    markRead(id);
+                                    openLink(linkUrl);
+                                }}
+                                onDelete={(id) => hide([id], '알림을 삭제했어요')}
+                            />
                         )}
                     </div>
-                    <div className="flex items-center gap-1">
-                        <button
-                            type="button"
-                            disabled={unreadCount === 0}
-                            onClick={() => markAllRead()}
-                            className={`text-fg-primary disabled:text-fg-disabled cursor-pointer rounded-sm text-sm leading-[1.375rem] font-normal hover:underline disabled:cursor-not-allowed disabled:no-underline ${FOCUS}`}
-                        >
-                            모두 읽음
-                        </button>
-                        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
-                            <PopoverTrigger
-                                aria-label="알림 관리"
-                                disabled={notifications.length === 0}
-                                className={`text-fg-secondary hover:bg-surface-sunken disabled:text-fg-disabled flex size-8 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:bg-transparent ${FOCUS}`}
+                    {hasNextPage && (
+                        <>
+                            <div className="bg-border-default h-px shrink-0" />
+                            <button
+                                type="button"
+                                onClick={() => void fetchNextPage()}
+                                disabled={isFetchingNextPage}
+                                className={`text-body-sm-bold text-fg-primary flex shrink-0 cursor-pointer items-center justify-center gap-0.5 py-3.5 hover:underline disabled:cursor-not-allowed ${FOCUS}`}
                             >
-                                <Ellipsis className="size-4" />
-                            </PopoverTrigger>
-                            <PopoverContent
-                                align="end"
-                                className="bg-surface-elevated border-border-default w-42 gap-0 rounded-xl border px-0 py-1.5 shadow-lg ring-0"
-                            >
-                                {[
-                                    {
-                                        label: '읽은 알림 삭제',
-                                        ids: notifications.filter((n) => n.isRead).map((n) => n.id),
-                                        message: '읽은 알림을 삭제했어요',
-                                    },
-                                    {
-                                        label: '전체 삭제',
-                                        ids: notifications.map((n) => n.id),
-                                        message: '알림을 모두 삭제했어요',
-                                    },
-                                ].map(({ label, ids, message }) => (
-                                    <button
-                                        key={label}
-                                        type="button"
-                                        disabled={ids.length === 0}
-                                        onClick={() => {
-                                            setMenuOpen(false);
-                                            hide(ids, message);
-                                        }}
-                                        className={`text-body-sm text-fg-primary hover:bg-surface-sunken disabled:text-fg-disabled w-full cursor-pointer px-4 py-2.5 text-left disabled:cursor-not-allowed disabled:bg-transparent ${FOCUS}`}
-                                    >
-                                        {label}
-                                    </button>
-                                ))}
-                            </PopoverContent>
-                        </Popover>
-                    </div>
-                </div>
-                <div className="min-h-0 flex-1 overflow-y-auto">
-                    {groups.length === 0 ? (
-                        // 빈 상태 — 무너 캐릭터와 안내 문구
-                        <div className="flex flex-col items-center gap-2 px-6 pt-9 pb-11 text-center">
-                            <img src={emptyCharacter} alt="" className="size-32 object-contain" />
-                            <p className="text-body-bold text-fg-primary">새 알림이 없어요</p>
-                            <p className="text-body-sm text-fg-tertiary">
-                                래플이 열리거나 결과가 발표되면 알려드릴게요.
-                            </p>
-                        </div>
-                    ) : (
-                        groups.map((group) => (
-                            <section
-                                key={group.label}
-                                aria-label={group.label}
-                                // 날짜 묶음이 바뀌면 좌우 20px 들인 구분선으로 나눈다 (알림 글자 시작선과 맞춤)
-                                className="[&+&]:before:bg-border-default relative [&+&]:mt-2 [&+&]:before:absolute [&+&]:before:inset-x-5 [&+&]:before:top-0 [&+&]:before:h-px"
-                            >
-                                <p className="text-caption text-fg-tertiary px-5 pt-3 pb-0.5">
-                                    {group.label}
-                                </p>
-                                {group.items.map((notification) => (
-                                    <NotificationItem
-                                        key={notification.id}
-                                        notification={notification}
-                                        now={now}
-                                        onRead={(id, linkUrl) => {
-                                            markRead(id);
-                                            openLink(linkUrl);
-                                        }}
-                                        onDelete={(id) => hide([id], '알림을 삭제했어요')}
-                                    />
-                                ))}
-                            </section>
-                        ))
+                                {isFetchingNextPage ? '불러오는 중…' : '알림 더 보기'}
+                                <ChevronDown className="size-4" />
+                            </button>
+                        </>
                     )}
-                </div>
-                {hasNextPage && (
-                    <>
-                        <div className="bg-border-default h-px shrink-0" />
-                        <button
-                            type="button"
-                            onClick={() => void fetchNextPage()}
-                            disabled={isFetchingNextPage}
-                            className={`text-body-sm-bold text-fg-primary flex shrink-0 cursor-pointer items-center justify-center gap-0.5 py-3.5 hover:underline disabled:cursor-not-allowed ${FOCUS}`}
-                        >
-                            {isFetchingNextPage ? '불러오는 중…' : '알림 더 보기'}
-                            <ChevronDown className="size-4" />
-                        </button>
-                    </>
-                )}
-            </PopoverContent>
-        </Popover>
+                </PopoverContent>
+            </Popover>
+            <NotificationDrawer />
+        </div>
     );
 }

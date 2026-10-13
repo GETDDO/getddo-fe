@@ -6,6 +6,7 @@ import { z } from 'zod';
 import type { AdminBanner } from '@entities/banner';
 
 import { BANNER_IMAGE_KEY_MAX_LENGTH, BANNER_IMAGE_TEMP_POLICY } from '@entities/banner';
+import { getErrorMessage } from '@shared/api/errorMessage';
 import { Button } from '@shared/ui/button';
 import {
     Dialog,
@@ -19,7 +20,6 @@ import { Input } from '@shared/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
 
 import { useCreateBanner, useUpdateBanner } from '../api/queries';
-import { bannerErrorMessage } from '../lib/errorMessage';
 
 const bannerFormSchema = z.object({
     eventId: z.string().min(1, '연결할 이벤트를 선택하세요'),
@@ -144,7 +144,7 @@ function BannerForm({
 
             {mutation.isError && (
                 <p role="alert" className="text-destructive text-body-sm">
-                    {bannerErrorMessage(
+                    {getErrorMessage(
                         mutation.error,
                         `배너를 ${isEdit ? '수정' : '등록'}하지 못했습니다. 다시 시도해주세요.`,
                     )}

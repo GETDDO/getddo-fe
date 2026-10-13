@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 
 import {
+    Bell,
     CalendarDays,
     Clock,
     Dices,
@@ -27,6 +28,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     { to: '/admin/tickets', label: '응모권 관리', icon: Ticket },
     { to: '/admin/abuse-cases', label: '어뷰징 차단 내역', icon: ShieldAlert },
     { to: '/admin/audit', label: '감사 로그', icon: ScrollText },
+    { to: '/admin/notifications', label: '알림 운영', icon: Bell },
     { to: '/admin/banners', label: '배너 관리', icon: Images },
     { to: '/admin/virtual-clock', label: '가상 시계', icon: Clock },
     { to: '/admin/virtual-users', label: '가상 사용자', icon: Users },

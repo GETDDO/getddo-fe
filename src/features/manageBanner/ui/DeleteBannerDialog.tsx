@@ -2,6 +2,7 @@ import { toast } from 'sonner';
 
 import type { AdminBanner } from '@entities/banner';
 
+import { getErrorMessage } from '@shared/api/errorMessage';
 import { Button } from '@shared/ui/button';
 import {
     Dialog,
@@ -13,7 +14,6 @@ import {
 } from '@shared/ui/dialog';
 
 import { useDeleteBanner } from '../api/queries';
-import { bannerErrorMessage } from '../lib/errorMessage';
 
 interface DeleteBannerDialogProps {
     banner: AdminBanner | null;
@@ -57,7 +57,7 @@ export function DeleteBannerDialog({ banner, eventTitle, onOpenChange }: DeleteB
 
                 {deleteBanner.isError && (
                     <p role="alert" className="text-destructive text-body-sm">
-                        {bannerErrorMessage(
+                        {getErrorMessage(
                             deleteBanner.error,
                             '배너를 삭제하지 못했습니다. 다시 시도해주세요.',
                         )}

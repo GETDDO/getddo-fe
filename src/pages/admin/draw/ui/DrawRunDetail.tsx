@@ -12,7 +12,7 @@ import {
     useDrawRun,
     useDrawRuns,
 } from '@entities/drawResult';
-import { CancelWinDialog } from '@features/runDraw';
+import { CancelWinDialog, useResumeDraw } from '@features/runDraw';
 import { PublishRedrawDialog, useStartRedraw } from '@features/runRedraw';
 import { getErrorMessage } from '@shared/api/errorMessage';
 import { formatKst } from '@shared/lib/date';
@@ -112,6 +112,7 @@ function RunDetailBody({
     const [cancelTarget, setCancelTarget] = useState<DrawResult | null>(null);
     const [publishOpen, setPublishOpen] = useState(false);
     const start = useStartRedraw();
+    const resumeInitial = useResumeDraw();
     const queryClient = useQueryClient();
     // 상세가 폴링으로 상태를 바꾸면 목록의 상태 칩도 같이 맞춘다 — 둘은 별도 쿼리다
     useEffect(() => {
@@ -154,6 +155,8 @@ function RunDetailBody({
         !hasUnpublishedCanceledResult &&
         !alreadyPublished;
     const canResume = isRedraw && !confirmed && run.cancellations.length > 0 && !eventCanceled;
+    // 실패한 최초 실행은 새로 만들지 않고 같은 실행을 재개한다 (GD-87) — 재추첨은 AD09로 재개한다
+    const canResumeInitial = !isRedraw && run.status === 'FAILED' && !eventCanceled;
     const cancelable = confirmed && !eventCanceled;
 
     const resume = () => {
@@ -161,6 +164,12 @@ function RunDetailBody({
         if (!cancellation) return;
         start.mutate(cancellation.id, {
             onSuccess: () => toast.success('재추첨 실행을 시작·재개했습니다'),
+        });
+    };
+
+    const resumeFirstRun = () => {
+        resumeInitial.mutate(run.id, {
+            onSuccess: () => toast.success('최초 추첨 실행을 재개했습니다'),
         });
     };
 
@@ -184,6 +193,15 @@ function RunDetailBody({
                                 onClick={onRefresh}
                             >
                                 상태 새로고침
+                            </Button>
+                        )}
+                        {canResumeInitial && (
+                            <Button
+                                size="sm"
+                                disabled={resumeInitial.isPending}
+                                onClick={resumeFirstRun}
+                            >
+                                {resumeInitial.isPending ? '요청 중…' : '최초 추첨 재개'}
                             </Button>
                         )}
                         {canResume && (
@@ -221,6 +239,11 @@ function RunDetailBody({
                 {start.isError && (
                     <p role="alert" className="text-destructive text-body-sm">
                         {getErrorMessage(start.error, '재추첨을 시작·재개하지 못했습니다.')}
+                    </p>
+                )}
+                {resumeInitial.isError && (
+                    <p role="alert" className="text-destructive text-body-sm">
+                        {getErrorMessage(resumeInitial.error, '최초 추첨을 재개하지 못했습니다.')}
                     </p>
                 )}
                 {eventCanceled && (

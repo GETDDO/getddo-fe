@@ -1,3 +1,4 @@
+import { getErrorCodeMessage } from '@shared/api/errorMessage';
 import { formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { cn } from '@shared/lib/utils';
@@ -12,6 +13,11 @@ const STATUS_META: Record<EntryStatus, { label: string; chipClass: string }> = {
 
 export function MyEntryItem({ entry }: { entry: Entry }) {
     const meta = STATUS_META[entry.status];
+    // 거절 사유는 오류 문구 매핑을 우선 쓰고, 매핑이 없는 코드는 서버가 준 사유를 보인다 (GD-145)
+    const rejectionReason =
+        entry.status === 'REJECTED'
+            ? (getErrorCodeMessage(entry.rejectionCode) ?? entry.rejectionReason)
+            : null;
 
     return (
         <li className="flex items-center justify-between gap-4 py-4">
@@ -27,6 +33,9 @@ export function MyEntryItem({ entry }: { entry: Entry }) {
                 <div className="flex min-w-0 flex-col gap-0.5">
                     <p className="text-body-sm text-fg-primary truncate">{entry.eventTitle}</p>
                     <p className="text-caption text-fg-tertiary">{formatKst(entry.requestedAt)}</p>
+                    {rejectionReason && (
+                        <p className="text-caption text-destructive">{rejectionReason}</p>
+                    )}
                 </div>
             </div>
             <span className="text-body-sm-bold text-fg-primary shrink-0">

@@ -47,12 +47,14 @@ const drawVerificationPageSchema = pageSchema(drawVerificationSchema);
 
 export const DRAWS_KEY = ['admin', 'draws'] as const;
 
-// 추첨 엔드포인트 — AD01~AD04·AD08·AD09 (getddo-spec 05-api/drawing.md 초안, 검토 대기)
+// 추첨 엔드포인트 — AD01~AD04·AD08·AD09, 최초 재개 (getddo-spec 05-api/drawing.md 초안, 검토 대기)
 export const eventDrawsApiPath = (eventId: string) => `/admin/events/${eventId}/draws`;
 export const drawApiPath = (drawId: string) => `/admin/draws/${drawId}`;
 export const drawParticipantsApiPath = (drawId: string) => `${drawApiPath(drawId)}/participants`;
 // AD04(검증 실행)와 AD08(검증 이력)은 같은 경로를 메서드로 나눈다
 export const drawChecksApiPath = (drawId: string) => `${drawApiPath(drawId)}/checks`;
+// GD-87 최초 추첨 실패 재개 — 실패한 기존 INITIAL 실행을 이어서 진행한다 (새 실행을 만들지 않는다)
+export const drawResumeApiPath = (runId: string) => `${drawApiPath(runId)}/resume`;
 export const cancellationRedrawsApiPath = (cancellationId: string) =>
     `/admin/cancellations/${cancellationId}/redraws`;
 

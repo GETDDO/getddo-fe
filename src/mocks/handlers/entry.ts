@@ -64,6 +64,30 @@ interface StoredAttempt {
 }
 const attempts = new Map<string, StoredAttempt>();
 
+// GD-146 응모 빈도 제한 — 창·횟수는 담당자 운영값이라 명세에 확정값이 없다.
+// 목업 재현이 되는 최소 상수로 두고 조정이 필요하면 여기만 바꾼다 (05-api/common.md)
+const ENTRY_RATE_LIMIT_WINDOW_MS = 10_000;
+const ENTRY_RATE_LIMIT_MAX_REQUESTS = 5;
+const ENTRY_RATE_LIMIT_RETRY_AFTER_SECONDS = 10;
+
+// 사용자별 신규 응모 요청 시각 — 같은 멱등키의 정상 재전송은 기록하지 않는다.
+// 가상 시계를 멈춰도 실제 요청 간격으로 제한되어야 하므로 mockNow가 아닌 실제 경과 시간을 쓴다
+const entryRequestTimestamps = new Map<string, number[]>();
+
+const isRateLimited = (userId: string, nowMs: number) => {
+    const stamps = (entryRequestTimestamps.get(userId) ?? []).filter(
+        (at) => nowMs - at < ENTRY_RATE_LIMIT_WINDOW_MS,
+    );
+    // 제한에 걸린 요청은 쿼터를 소비하지 않는다 — 창이 지나면 다시 낼 수 있다
+    if (stamps.length >= ENTRY_RATE_LIMIT_MAX_REQUESTS) {
+        entryRequestTimestamps.set(userId, stamps);
+        return true;
+    }
+    stamps.push(nowMs);
+    entryRequestTimestamps.set(userId, stamps);
+    return false;
+};
+
 // 내 응모 내역 — X-User-ID별로 분리한다 (한 사용자의 응모가 다른 사용자에게 보이지 않도록)
 const entriesByUser = new Map<string, EntryReceipt[]>();
 
@@ -153,6 +177,21 @@ export const entryHandlers = [
             totalElements: all.length,
         });
     }),
+    // E05 초안 — 이벤트별 내 응모 내역. 거절 이력도 같은 영수증 목록으로 돌려준다 (GD-145)
+    http.get(api('/events/:eventId/entries/me'), ({ params, request }) => {
+        const url = new URL(request.url);
+        const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
+        const size = Math.max(1, Number(url.searchParams.get('size')) || 20);
+        const all = myEntriesFor(userIdOf(request)).filter(
+            (entry) => entry.eventId === String(params.eventId),
+        );
+        return ok({
+            items: all.slice((page - 1) * size, page * size),
+            page,
+            size,
+            totalElements: all.length,
+        });
+    }),
     // E03 — 이벤트별 응모 현황. 당첨 확률은 반환하지 않는다
     http.get(api('/events/:eventId/statistics'), ({ params, request }) => {
         const event = findMockEvent(String(params.eventId));
@@ -234,21 +273,45 @@ export const entryHandlers = [
 
         const body = (await request.json().catch(() => null)) as { tickets?: unknown } | null;
 
+        // GD-146 — 429 응답. 정상 재전송을 제외한 모든 요청이 창을 세며, 실제 경과 시간을 쓴다
+        const rateLimited = () => {
+            if (!isRateLimited(userId, Date.now())) return null;
+            return HttpResponse.json(
+                failBody(
+                    'RATE_LIMIT_EXCEEDED',
+                    '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.',
+                ),
+                {
+                    status: 429,
+                    headers: { 'Retry-After': String(ENTRY_RATE_LIMIT_RETRY_AFTER_SECONDS) },
+                },
+            );
+        };
+
         // 멱등키 재생은 페이로드 규칙보다 먼저다 — 재전송은 처음 결과를 그대로 돌려준다 (E04)
         const attempt = attempts.get(idempotencyKey);
         if (attempt) {
-            // 같은 키에 다른 사용자·이벤트가 오면 재시도가 아니라 다른 요청이다
-            if (attempt.userId !== userId || attempt.eventId !== eventId) {
-                return fail(409, 'ENTRY-009', '같은 멱등키로 다른 응모를 보낼 수 없습니다');
-            }
+            const sameActor = attempt.userId === userId && attempt.eventId === eventId;
             const retried = parseTickets(body?.tickets);
-            // 본문을 읽을 수 있고 내용이 다르면 다른 요청이다 — 못 읽는 재전송은 원래 응답을 돌려준다
-            if (retried && !sameTickets(attempt.tickets, retried)) {
-                return fail(409, 'ENTRY-009', '같은 멱등키로 다른 응모를 보낼 수 없습니다');
+            // 본문을 못 읽거나 읽은 내용이 같으면 재전송, 그 외는 같은 키의 다른 요청이다
+            const isReplay = sameActor && (!retried || sameTickets(attempt.tickets, retried));
+            if (isReplay) {
+                // 이미 접수된 건의 재전송이므로 201은 200으로 내려준다
+                const status = attempt.status === 201 ? 200 : attempt.status;
+                return HttpResponse.json(attempt.body as object, { status });
             }
-            // 이미 접수된 건의 재전송이므로 201은 200으로 내려준다
-            const status = attempt.status === 201 ? 200 : attempt.status;
-            return HttpResponse.json(attempt.body as object, { status });
+            // 다른 요청은 재전송이 아니므로 빈도 제한에 포함한다
+            const limited = rateLimited();
+            if (limited) {
+                return limited;
+            }
+            return fail(409, 'ENTRY-009', '같은 멱등키로 다른 응모를 보낼 수 없습니다');
+        }
+
+        // 사용자별 응모 빈도 제한 — 멱등키 재생은 위에서 먼저 반환돼 여기는 새 요청만 온다
+        const limited = rateLimited();
+        if (limited) {
+            return limited;
         }
 
         const tickets = parseTickets(body?.tickets);
@@ -273,6 +336,27 @@ export const entryHandlers = [
             return remember(404, failBody('ENTRY-004', '이벤트를 찾을 수 없습니다'));
         }
         const rule = entryRuleOf(event);
+        const total = totalOf(tickets);
+
+        // 업무 거절은 REJECTED 영수증으로도 남겨 E05/E06에서 조회되게 한다 (GD-145).
+        // 거절은 응모권을 차감하지 않으므로 차감 장수는 모두 0이다 (spec EntryReceipt)
+        const reject = (status: number, code: string, reason: string) => {
+            myEntriesFor(userId).unshift({
+                id: idempotencyKey,
+                eventId,
+                eventTitle: event.title,
+                requestedTicketCount: total,
+                requestedTicketsByGrade: { ...tickets },
+                deductedTicketCount: 0,
+                deductedTicketsByGrade: { ...ZERO_TICKETS },
+                status: 'REJECTED',
+                requestedAt: mockNow().toISOString(),
+                acceptedAt: null,
+                rejectionCode: code,
+                rejectionReason: reason,
+            });
+            return remember(status, failBody(code, reason));
+        };
 
         // 시연용 사용자 문맥 — 헤더 멤버십이 오면 등록된 멤버십과 같아야 한다 (05-api/common.md)
         const user = findMockVirtualUser(userId);
@@ -283,26 +367,26 @@ export const entryHandlers = [
             return fail(409, 'USER_MEMBERSHIP_MISMATCH', '사용자 멤버십 정보가 일치하지 않습니다');
         }
         if (user?.role === 'ADMIN') {
-            return remember(403, failBody('ENTRY-002', '관리자는 이벤트에 응모할 수 없습니다'));
+            return reject(403, 'ENTRY-002', '관리자는 이벤트에 응모할 수 없습니다');
         }
         if (
             MEMBERSHIP_RANK[user?.membership ?? 'excellent'] < MEMBERSHIP_RANK[rule.membershipRule]
         ) {
-            return remember(403, failBody('ENTRY-003', '응모 가능한 멤버십 등급이 아닙니다'));
+            return reject(403, 'ENTRY-003', '응모 가능한 멤버십 등급이 아닙니다');
         }
         if (mockEventEffectiveStatus(event) !== 'open') {
-            return remember(409, failBody('ENTRY-005', '지금은 응모할 수 있는 시간이 아닙니다'));
+            return reject(409, 'ENTRY-005', '지금은 응모할 수 있는 시간이 아닙니다');
         }
 
-        const total = totalOf(tickets);
         // 사용자당 1회 제한 — 미사용·가중치 미적용 이벤트
         const onceOnly = rule.eventType === 'NO_TICKET' || !rule.weightingEnabled;
         if (onceOnly && myRealAcceptedFor(userId, eventId).length > 0) {
-            return remember(409, failBody('ENTRY-006', '이미 응모한 이벤트입니다'));
+            return reject(409, 'ENTRY-006', '이미 응모한 이벤트입니다');
         }
 
         if (rule.eventType === 'NO_TICKET') {
             if (total !== 0) {
+                // ENTRY-001은 형식 오류라 업무 거절 이력에 남기지 않는다 — 멱등 재생만 저장한다
                 return remember(
                     400,
                     failBody('ENTRY-001', '응모권 미사용 이벤트는 응모권을 쓸 수 없습니다'),
@@ -312,9 +396,10 @@ export const entryHandlers = [
             // 브론즈 1장 고정 — 다른 등급·장수나 브론즈 부족은 모두 BRONZE_REQUIRED로 구분 안내한다
             const bronzeOnly = tickets.BRONZE === 1 && tickets.SILVER === 0 && tickets.GOLD === 0;
             if (!bronzeOnly || getMockAvailableTicketCountByGrade(userId).BRONZE < 1) {
-                return remember(
+                return reject(
                     409,
-                    failBody('ENTRY-008', '이 이벤트는 브론즈 응모권 1장으로만 응모할 수 있습니다'),
+                    'ENTRY-008',
+                    '이 이벤트는 브론즈 응모권 1장으로만 응모할 수 있습니다',
                 );
             }
         } else {
@@ -326,14 +411,14 @@ export const entryHandlers = [
                 rule.maxTicketsPerUser !== null &&
                 usedRealTicketCountOf(userId, eventId) + total > rule.maxTicketsPerUser
             ) {
-                return remember(409, failBody('ENTRY-007', '이 이벤트의 응모 한도를 초과했습니다'));
+                return reject(409, 'ENTRY-007', '이 이벤트의 응모 한도를 초과했습니다');
             }
             const available = getMockAvailableTicketCountByGrade(userId);
             const lacksGrade = ticketGradeSchema.options.some(
                 (grade) => tickets[grade] > available[grade],
             );
             if (lacksGrade) {
-                return remember(409, failBody('TICKET-006', '등급별 보유 응모권이 부족합니다'));
+                return reject(409, 'TICKET-006', '등급별 보유 응모권이 부족합니다');
             }
         }
 
