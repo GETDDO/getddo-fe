@@ -2,11 +2,10 @@ import { useState } from 'react';
 
 import { TicketRefundTable, useAdminTicketRefunds } from '@entities/ticket';
 import { kstDateStartUtcIso, kstNextDateStartUtcIso } from '@shared/lib/date';
+import { PAGE_SIZE } from '@shared/lib/filterConstants';
 import { Button } from '@shared/ui/button';
-
-import { PAGE_SIZE } from './filterConstants';
-import { DateRangeFilter, TextFilter } from './FilterFields';
-import { PagedResult } from './PagedResult';
+import { DateRangeFilter, TextFilter } from '@shared/ui/filter-fields';
+import { PagedResult } from '@shared/ui/paged-result';
 
 const EMPTY = { eventId: '', userId: '', from: '', to: '' };
 

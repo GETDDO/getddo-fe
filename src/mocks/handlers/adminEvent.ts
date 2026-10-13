@@ -500,31 +500,7 @@ export const adminEventHandlers = [
         return ok(toAdminResponse(item, mockNow().getTime()), 201);
     }),
 
-    // AE04 — 수정: 진행 예정 상태만, 시작 시각은 앞당길 수 없다
-    http.put(api('/admin/events/:eventId'), async ({ params, request }) => {
-        const item = findItem(params.eventId);
-        if (!item) return fail(404, 'RESOURCE_NOT_FOUND', '이벤트를 찾을 수 없습니다');
-        const now = mockNow().getTime();
-        if (effectiveStatus(item, now) !== 'SCHEDULED') {
-            return fail(409, 'STATE_CONFLICT', '진행 예정 상태의 이벤트만 수정할 수 있습니다');
-        }
-        const body = (await request.json().catch(() => null)) as EventWriteBody | null;
-        if (!body) return fail(400, 'COMMON-002', '요청 본문이 올바르지 않습니다');
-        const error = validateWriteBody(body);
-        if (error) return fail(400, 'COMMON-002', error);
-        if (new Date(body.startsAt as string).getTime() < new Date(item.startsAt).getTime()) {
-            return fail(409, 'STATE_CONFLICT', '응모 시작 시각은 앞당길 수 없습니다');
-        }
-
-        const updated = writeBodyToItem(body, item.id, mockNow().toISOString());
-        Object.assign(item, updated, {
-            createdAt: item.createdAt,
-            entryCount: item.entryCount,
-            usedTicketTotal: item.usedTicketTotal,
-        });
-        upsertUserProjection(item);
-        return ok(toAdminResponse(item, now));
-    }),
+    // AE04 — 수정은 실서버로 전환됐다 (GD-188). 핸들러를 두지 않아 bypass로 실제 API에 닿는다
 
     // AE05 — 삭제: 시작 전이며 응모 이력이 없을 때만 가능하다
     http.delete(api('/admin/events/:eventId'), ({ params }) => {

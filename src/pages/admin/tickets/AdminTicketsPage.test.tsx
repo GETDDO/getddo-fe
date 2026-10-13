@@ -68,6 +68,18 @@ describe('AdminTicketsPage', () => {
         expect((await screen.findAllByText('이벤트 취소')).length).toBeGreaterThan(0);
     });
 
+    it('방향키로 탭을 순환 이동한다', async () => {
+        const user = userEvent.setup();
+        renderPage();
+        screen.getByRole('tab', { name: '정합성' }).focus();
+        await user.keyboard('{ArrowRight}');
+        expect(screen.getByRole('tab', { name: '지급 이력', selected: true })).toHaveFocus();
+        await user.keyboard('{ArrowLeft}');
+        expect(screen.getByRole('tab', { name: '정합성', selected: true })).toHaveFocus();
+        await user.keyboard('{ArrowLeft}');
+        expect(screen.getByRole('tab', { name: '반환 이력', selected: true })).toHaveFocus();
+    });
+
     it('검색 조건에 맞는 결과가 없으면 빈 목록을 안내한다', async () => {
         const user = userEvent.setup();
         renderPage('/admin/tickets?tab=grants');
