@@ -21,9 +21,10 @@ const buttonVariants = cva(
                 // 주된 행동 — action/neutral (피그마 Button/*/active)
                 primary:
                     'bg-action-neutral text-fg-on-brand hover:bg-action-neutral-hover active:bg-action-neutral-pressed',
-                // 보조 행동 — outline (피그마 Button/*/outline)
+                // 보조 행동 — outline (피그마 Button/*/outline). 마우스를 올리면 진한 노랑으로 채우고 테두리는 연노랑으로 받친다, 누르면 한 단계 어둡게.
+                // 회색 마우스 올림은 비활성과 비슷해 보여 쓰지 않고, 연노랑 바탕+진한 테두리는 무게가 맞지 않아 쓰지 않는다
                 secondary:
-                    'bg-surface-elevated border-border-strong text-fg-primary hover:bg-ticket-accent hover:border-ticket-primary active:bg-ticket-accent-pressed active:border-ticket-primary',
+                    'bg-surface-elevated border-border-strong text-fg-primary hover:bg-ticket-primary hover:border-ticket-accent-pressed hover:text-ticket-on active:bg-ticket-primary active:border-ticket-accent-pressed active:text-ticket-on active:brightness-95',
                 // 강조 — brand (피그마 Button/*/brand), 자주 쓰지 않는다
                 emphasis:
                     'bg-brand-primary text-fg-on-brand hover:bg-brand-primary-hover active:bg-brand-primary-pressed',

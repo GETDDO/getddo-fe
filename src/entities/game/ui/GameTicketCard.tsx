@@ -16,10 +16,13 @@ const DAILY_GAME_REWARD = 1;
 export function GameTicketCard({
     game,
     href,
+    ready = true,
     className,
 }: {
     game: Game;
     href: string;
+    /** 플레이 화면이 준비됐는지 — false면 버튼을 '준비 중'으로 막는다 */
+    ready?: boolean;
     className?: string;
 }) {
     const rewarded = game.rewardedToday ?? false;
@@ -40,10 +43,17 @@ export function GameTicketCard({
                             </span>
                         )}
                     </div>
-                    {/* 공용 버튼 secondary Large(48) — 응모권 카드는 출석만 primary, 게임·미션은 한 단계 낮춘다 */}
-                    <Button asChild variant="secondary" size="lg" className="mt-2 w-full">
-                        <Link to={href}>{rewarded ? '한 번 더 하기' : '게임하러 가기'}</Link>
-                    </Button>
+                    {/* 공용 버튼 Large(48) — 보조 버튼(secondary) — 응모권 카드는 출석만 primary, 게임·미션은 한 단계 낮춘다.
+                        준비 중인 게임은 누를 수 없게 막는다 */}
+                    {ready ? (
+                        <Button asChild variant="secondary" size="lg" className="mt-2 w-full">
+                            <Link to={href}>{rewarded ? '한 번 더 하기' : '게임하러 가기'}</Link>
+                        </Button>
+                    ) : (
+                        <Button disabled size="lg" className="mt-2 w-full">
+                            준비 중이에요
+                        </Button>
+                    )}
                 </>
             }
         >
