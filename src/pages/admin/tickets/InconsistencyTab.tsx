@@ -5,11 +5,10 @@ import {
     TicketInconsistencyTable,
     useTicketInconsistencies,
 } from '@entities/ticket';
+import { PAGE_SIZE } from '@shared/lib/filterConstants';
 import { Button } from '@shared/ui/button';
-
-import { PAGE_SIZE } from './filterConstants';
-import { TextFilter } from './FilterFields';
-import { PagedResult } from './PagedResult';
+import { TextFilter } from '@shared/ui/filter-fields';
+import { PagedResult } from '@shared/ui/paged-result';
 
 export function InconsistencyTab() {
     const [page, setPage] = useState(1);

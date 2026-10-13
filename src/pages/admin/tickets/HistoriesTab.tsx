@@ -6,11 +6,10 @@ import {
     useAdminTicketHistories,
 } from '@entities/ticket';
 import { kstDateStartUtcIso, kstNextDateStartUtcIso } from '@shared/lib/date';
+import { ALL, orUndefined, PAGE_SIZE } from '@shared/lib/filterConstants';
 import { Button } from '@shared/ui/button';
-
-import { ALL, orUndefined, PAGE_SIZE } from './filterConstants';
-import { DateRangeFilter, OptionFilter, TextFilter } from './FilterFields';
-import { PagedResult } from './PagedResult';
+import { DateRangeFilter, OptionFilter, TextFilter } from '@shared/ui/filter-fields';
+import { PagedResult } from '@shared/ui/paged-result';
 
 const OPERATION_OPTIONS = [
     { value: ALL, label: '전체 처리' },
