@@ -12,6 +12,7 @@ import {
     drawRunDetailSchema,
     drawRunSchema,
     drawVerificationSchema,
+    myResultSchema,
     publicResultsSchema,
 } from '../model/types';
 
@@ -34,6 +35,30 @@ export function useEventResults(eventId: string, enabled = true) {
         queryFn: async () => {
             const { data } = await apiClient.get<unknown>(eventResultsApiPath(eventId));
             return envelopeSchema(publicResultsSchema).parse(data).data;
+        },
+        refetchInterval: (query) =>
+            query.state.data?.isPublished ? false : queryPresets.realtime.refetchInterval,
+    });
+}
+
+// getddo-spec 05-api/drawing.md E09 — 본인 결과 조회
+export const eventMyResultApiPath = (eventId: string) => `/events/${eventId}/my-result`;
+
+/**
+ * 로그인한 본인의 이벤트 결과.
+ *
+ * 공개 명단(E08)에서 뒷자리로 찾아보는 것과 달리 서버가 본인 것만 바로 답한다.
+ * 공개 전에는 PENDING으로 고정되므로, 공개 여부를 화면이 따로 판정하지 않는다.
+ * 폴링 기준은 E08과 같다 — 공개된 뒤에는 멈춘다.
+ */
+export function useMyResult(eventId: string, enabled = true) {
+    return useQuery({
+        ...queryPresets.realtime,
+        queryKey: [...DRAW_RESULTS_KEY, eventId, 'me'],
+        enabled,
+        queryFn: async () => {
+            const { data } = await apiClient.get<unknown>(eventMyResultApiPath(eventId));
+            return envelopeSchema(myResultSchema).parse(data).data;
         },
         refetchInterval: (query) =>
             query.state.data?.isPublished ? false : queryPresets.realtime.refetchInterval,

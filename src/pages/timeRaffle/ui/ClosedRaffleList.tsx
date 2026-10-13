@@ -2,8 +2,10 @@ import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import type { MyResult } from '@entities/drawResult';
 import type { Event } from '@entities/event';
 
+import { useMyResult } from '@entities/drawResult';
 import { useEntryStatistics } from '@entities/entry';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
@@ -15,6 +17,8 @@ import { RaffleThumbnail } from './RaffleThumbnail';
 
 /** 접었을 때 보여 주는 줄 수 — 더 있으면 '지난 래플 전체보기'로 펼친다 */
 const COLLAPSED_COUNT = 5;
+
+const ROW_CHIP = 'text-caption rounded-full px-2.5 py-1';
 
 interface ClosedRaffleListProps {
     events: Event[];
@@ -81,6 +85,8 @@ function ClosedRaffleRow({ event, now }: { event: Event; now: Date }) {
     // TODO: 행마다 E03을 부르는 구조는 최적화 대상이다 (Obsidian 20261008-progress-roadmap 참조)
     const { data: statistics } = useEntryStatistics(event.id);
     const isDrawn = event.status === 'drawn';
+    // 내 결과는 발표가 끝난 줄에만 묻는다 — 발표 전에는 서버가 PENDING만 주므로 부를 값이 없다
+    const { data: myResult } = useMyResult(event.id, isDrawn);
     // 예정 시각은 '원래 예정'이고 실제 공개는 늦어질 수 있다 (getddo-spec 05-api/drawing.md).
     // 그 시각이 지났는데 아직 발표 전이면 '19:10 발표 예정'은 이미 틀린 말이다 —
     // 상세 화면이 같은 상태를 '아직 발표되지 않았습니다'로 적는 것과도 어긋난다
@@ -105,14 +111,47 @@ function ClosedRaffleRow({ event, now }: { event: Event; now: Date }) {
                 className="h-20 w-40 rounded-lg"
                 fallbackIconClassName="size-6"
             />
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <p className="text-caption text-fg-disabled">{statusLabel}</p>
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
+                    <span className={`${ROW_CHIP} bg-surface-sunken text-fg-secondary`}>
+                        {statusLabel}
+                    </span>
+                    <MyResultChip result={myResult} />
+                </div>
                 <p className="text-body-bold text-fg-primary truncate">{event.title}</p>
                 <p className="text-caption text-fg-tertiary">{meta.join(' · ')}</p>
             </div>
-            <Button asChild size="sm" className="shrink-0">
-                <Link to={`/time-raffle/${event.id}`}>{isDrawn ? '결과 보기' : '상세 보기'}</Link>
+            <Button
+                asChild={isDrawn}
+                variant="secondary"
+                size="sm"
+                disabled={!isDrawn}
+                className="shrink-0"
+            >
+                {isDrawn ? <Link to={`/time-raffle/${event.id}`}>결과 보기</Link> : <>발표 전</>}
             </Button>
         </li>
     );
+}
+
+/**
+ * 내 응모·당첨 칩 (E09).
+ *
+ * 응모하지 않은 래플에는 아무것도 적지 않는다 — '미당첨'이라고 쓰면 참여했는데 떨어진 것처럼 읽힌다.
+ * 공개 전에는 서버가 PENDING만 주므로 당첨 여부가 새지 않는다.
+ */
+function MyResultChip({ result }: { result?: MyResult }) {
+    if (!result || result.result === 'NOT_ENTERED') return null;
+
+    if (result.result === 'WON') {
+        return (
+            <span className={`${ROW_CHIP} bg-ticket-accent text-ticket-on`}>
+                당첨{result.prize ? ` · ${result.prize.rank}등` : ''}
+            </span>
+        );
+    }
+
+    const label =
+        result.result === 'LOST' ? '미당첨' : result.result === 'CANCELED' ? '취소됨' : '내 응모';
+    return <span className={`${ROW_CHIP} bg-surface-sunken text-fg-tertiary`}>{label}</span>;
 }

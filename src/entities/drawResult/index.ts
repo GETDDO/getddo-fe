@@ -1,11 +1,28 @@
 export {
     drawDisplayStatusSchema,
     maskedWinnerSchema,
+    myResultSchema,
+    myResultStatusSchema,
+    prizeSchema,
     publicResultsSchema,
     publishedPrizeSchema,
 } from './model/types';
-export type { DrawDisplayStatus, MaskedWinner, PublicResults, PublishedPrize } from './model/types';
-export { DRAW_RESULTS_KEY, eventResultsApiPath, useEventResults } from './api/queries';
+export type {
+    DrawDisplayStatus,
+    MaskedWinner,
+    MyResult,
+    MyResultStatus,
+    Prize,
+    PublicResults,
+    PublishedPrize,
+} from './model/types';
+export {
+    DRAW_RESULTS_KEY,
+    eventMyResultApiPath,
+    eventResultsApiPath,
+    useEventResults,
+    useMyResult,
+} from './api/queries';
 export {
     cancellationRedrawsApiPath,
     DRAWS_KEY,

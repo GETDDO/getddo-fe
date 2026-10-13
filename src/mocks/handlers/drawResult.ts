@@ -1,10 +1,11 @@
 import { http } from 'msw';
 
-import type { PublicResults, PublishedPrize } from '@entities/drawResult';
+import type { MyResult, Prize, PublicResults, PublishedPrize } from '@entities/drawResult';
 
 import { env } from '@shared/config/env';
 
 import { mockNow } from '../now';
+import { mockMyEntrySummary } from './entry';
 import { ANNOUNCE_DELAY_MS, findMockEvent, type MockEvent } from './event';
 import { fail, ok } from './response';
 
@@ -120,6 +121,95 @@ function buildResults(event: MockEvent, now: number): PublicResults {
     };
 }
 
+const userIdOf = (request: Request) => request.headers.get('X-User-ID') ?? 'anonymous';
+
+/**
+ * 시연에서 당첨 화면을 반드시 한 번은 볼 수 있도록 당첨으로 고정하는 래플.
+ *
+ * 실제 확률(당첨 인원 ÷ 참여자)대로만 뽑으면 수천 명짜리 래플에서 거의 낙첨이라
+ * 당첨 화면을 보여 줄 수가 없다. 값은 당첨 등수다.
+ */
+const DEMO_WIN_RANKS: Record<string, number> = {
+    'evt-101': 1,
+    'evt-113': 2,
+};
+
+/**
+ * 본인 당첨 여부 — 같은 사용자·이벤트면 늘 같은 결과다.
+ *
+ * 난수를 쓰면 폴링할 때마다 당첨과 낙첨이 뒤집혀 발표된 결과로 보이지 않는다.
+ */
+function seededWin(userId: string, event: MockEvent, prizes: PublishedPrize[]): Prize | null {
+    const fixedRank = DEMO_WIN_RANKS[event.id];
+    const won = prizes.find((prize) => prize.rank === fixedRank);
+    if (won) return toPrize(won);
+
+    const participants = event.participantCount ?? 0;
+    if (participants === 0) return null;
+
+    let hash = 0;
+    for (const char of `${userId}-${event.id}`) {
+        hash = (hash * 31 + char.charCodeAt(0)) % 1_000_000;
+    }
+    // 등수마다 당첨 인원만큼의 몫을 두고, 해시가 그 구간에 들어가면 그 등수에 당첨된다
+    let cursor = hash % participants;
+    for (const prize of [...prizes].sort((a, b) => a.rank - b.rank)) {
+        if (cursor < prize.winnerCount) return toPrize(prize);
+        cursor -= prize.winnerCount;
+    }
+    return null;
+}
+
+function toPrize(prize: PublishedPrize): Prize {
+    return {
+        id: prize.prizeId,
+        rank: prize.rank,
+        name: prize.name,
+        description: null,
+        imageUrl: null,
+        winnerCount: prize.winnerCount,
+    };
+}
+
+function buildMyResult(event: MockEvent, userId: string, now: number): MyResult {
+    const published = buildResults(event, now);
+    const { entryCount } = mockMyEntrySummary(userId, event.id);
+
+    // 응모하지 않았으면 발표와 무관하게 알려 줄 결과가 없다
+    if (entryCount === 0) {
+        return {
+            eventId: event.id,
+            result: 'NOT_ENTERED',
+            prize: null,
+            isPublished: published.isPublished,
+            revision: published.revision,
+            serverTime: new Date(now).toISOString(),
+        };
+    }
+
+    // 공개 전에는 추첨이 끝났더라도 당첨 여부를 내려 주지 않는다 (05-api/drawing.md)
+    if (!published.isPublished) {
+        return {
+            eventId: event.id,
+            result: 'PENDING',
+            prize: null,
+            isPublished: false,
+            revision: null,
+            serverTime: new Date(now).toISOString(),
+        };
+    }
+
+    const prize = seededWin(userId, event, published.prizes);
+    return {
+        eventId: event.id,
+        result: prize ? 'WON' : 'LOST',
+        prize,
+        isPublished: true,
+        revision: published.revision,
+        serverTime: new Date(now).toISOString(),
+    };
+}
+
 export const drawResultHandlers = [
     // E08 — 공개 결과 조회
     http.get(api('/events/:eventId/results'), ({ params }) => {
@@ -128,5 +218,13 @@ export const drawResultHandlers = [
         if (!event) return fail(404, 'EVENT_NOT_FOUND', '이벤트를 찾을 수 없습니다');
 
         return ok(buildResults(event, mockNow().getTime()));
+    }),
+    // E09 — 본인 결과 조회
+    http.get(api('/events/:eventId/my-result'), ({ params, request }) => {
+        const eventId = String(params.eventId);
+        const event = findMockEvent(eventId);
+        if (!event) return fail(404, 'EVENT_NOT_FOUND', '이벤트를 찾을 수 없습니다');
+
+        return ok(buildMyResult(event, userIdOf(request), mockNow().getTime()));
     }),
 ];

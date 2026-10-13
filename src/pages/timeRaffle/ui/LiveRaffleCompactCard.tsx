@@ -1,0 +1,51 @@
+import { Link } from 'react-router-dom';
+
+import type { Event } from '@entities/event';
+
+import { useEntryStatistics } from '@entities/entry';
+import { formatNumber } from '@shared/lib/format';
+import { Button } from '@shared/ui/button';
+
+import { CloseCountdownChip } from './CloseCountdownChip';
+import { RaffleThumbnail } from './RaffleThumbnail';
+
+/**
+ * 진행 중 래플 중 대표 카드 아래에 함께 보여 주는 작은 카드.
+ *
+ * 예전에는 좌우 화살표로 한 번에 하나만 보여 줬는데, 래플은 동시에 여러 개가 열리고
+ * 마감이 제각각이라 넘겨 보는 동안 다른 래플이 끝날 수 있다. 전부 한눈에 둔다.
+ */
+export function LiveRaffleCompactCard({ event }: { event: Event }) {
+    const { data: statistics } = useEntryStatistics(event.id, { isOpen: true });
+
+    return (
+        <article className="bg-surface-page border-border-default flex items-center gap-5 rounded-2xl border p-5">
+            <RaffleThumbnail
+                src={event.bannerImageUrl}
+                className="h-32 w-42 shrink-0 rounded-xl"
+                fallbackIconClassName="size-8"
+            />
+
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-body-sm text-fg-primary flex items-center gap-1.5">
+                        <span className="bg-brand-primary size-1.5 rounded-full" />
+                        진행중
+                    </span>
+                    <CloseCountdownChip endsAt={event.endsAt} size="sm" />
+                </div>
+
+                <h3 className="text-subhead text-fg-primary truncate">{event.title}</h3>
+
+                <p className="text-caption text-fg-tertiary">
+                    당첨 {formatNumber(event.winnerCount)}명
+                    {statistics && ` · ${formatNumber(statistics.participantCount)}명 참여 중`}
+                </p>
+
+                <Button asChild variant="secondary" className="mt-1 w-full">
+                    <Link to={`/time-raffle/${event.id}`}>응모하러 가기</Link>
+                </Button>
+            </div>
+        </article>
+    );
+}

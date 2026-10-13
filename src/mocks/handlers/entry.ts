@@ -163,6 +163,20 @@ const usedTicketCountOf = (userId: string, eventId: string) =>
 const usedRealTicketCountOf = (userId: string, eventId: string) =>
     myRealAcceptedFor(userId, eventId).reduce((sum, entry) => sum + entry.deductedTicketCount, 0);
 
+/**
+ * E09 목업이 본인 응모 여부·차감 합계를 판정할 때 쓴다.
+ *
+ * 응모하지 않은 사람에게 낙첨이라고 적으면 안 되므로 NOT_ENTERED와 LOST를 가르는 근거다.
+ * 시드 응모도 '내 응모'로 센다 — 내역 화면이 보여 주는 것과 같은 기준이어야 한다.
+ */
+export function mockMyEntrySummary(userId: string, eventId: string) {
+    const accepted = myAcceptedFor(userId, eventId);
+    return {
+        entryCount: accepted.length,
+        ticketCount: accepted.reduce((sum, entry) => sum + entry.deductedTicketCount, 0),
+    };
+}
+
 export const entryHandlers = [
     // E06 초안 — Page<EntryReceipt> 봉투, page·size 파라미터를 적용한다 (페이지는 1부터)
     http.get(api('/users/me/entries'), ({ request }) => {

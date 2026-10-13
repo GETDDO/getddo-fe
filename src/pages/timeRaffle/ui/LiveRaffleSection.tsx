@@ -1,67 +1,44 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
-
 import type { Event } from '@entities/event';
 
-import { Button } from '@shared/ui/button';
-
 import { LiveRaffleCard } from './LiveRaffleCard';
+import { LiveRaffleCompactCard } from './LiveRaffleCompactCard';
 
 interface LiveRaffleSectionProps {
+    /** 마감이 임박한 순서로 정렬된 진행 중 래플 */
     events: Event[];
 }
 
+/**
+ * 지금 진행 중인 래플.
+ *
+ * 마감이 가장 가까운 하나를 크게 두고 나머지는 작은 카드로 함께 보여 준다.
+ * 넘겨 보는 방식에서는 보지 못한 래플이 그동안 마감될 수 있었다.
+ */
 export function LiveRaffleSection({ events }: LiveRaffleSectionProps) {
-    const [index, setIndex] = useState(0);
-
-    // 폴링으로 목록이 줄면 보던 자리가 범위를 벗어난다.
-    // effect로 되돌리면 범위 밖 인덱스로 한 번 그린 뒤 다시 그리므로 렌더 중에 잘라 쓴다
-    const safeIndex = Math.min(index, Math.max(0, events.length - 1));
-    const current = events[safeIndex];
+    const [first, ...rest] = events;
 
     return (
         <section className="flex flex-col gap-5">
-            <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                    <h2 className="text-title-3 text-fg-primary">지금 진행 중</h2>
-                    {events.length > 0 && (
-                        <span className="bg-surface-sunken text-label-sm text-fg-secondary rounded-full px-2.5 py-1">
-                            {events.length}
-                        </span>
-                    )}
-                </div>
-
-                {events.length > 1 && (
-                    <div className="flex items-center gap-2">
-                        <p className="text-body-sm-bold text-fg-secondary tabular-nums">
-                            {safeIndex + 1} / {events.length}
-                        </p>
-                        <Button
-                            variant="secondary"
-                            size="icon"
-                            aria-label="이전 래플"
-                            disabled={safeIndex === 0}
-                            onClick={() => setIndex(safeIndex - 1)}
-                            className="size-8 rounded-full"
-                        >
-                            <ChevronLeft className="size-4" />
-                        </Button>
-                        <Button
-                            variant="secondary"
-                            size="icon"
-                            aria-label="다음 래플"
-                            disabled={safeIndex >= events.length - 1}
-                            onClick={() => setIndex(safeIndex + 1)}
-                            className="size-8 rounded-full"
-                        >
-                            <ChevronRight className="size-4" />
-                        </Button>
-                    </div>
+            <div className="flex items-center gap-2">
+                <h2 className="text-title-3 text-fg-primary">지금 진행 중</h2>
+                {events.length > 0 && (
+                    <span className="bg-surface-sunken text-label-sm text-fg-secondary rounded-full px-2.5 py-1">
+                        {events.length}
+                    </span>
                 )}
             </div>
 
-            {current ? (
-                <LiveRaffleCard event={current} />
+            {first ? (
+                <div className="flex flex-col gap-4">
+                    <LiveRaffleCard event={first} />
+                    {rest.length > 0 && (
+                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                            {rest.map((event) => (
+                                <LiveRaffleCompactCard key={event.id} event={event} />
+                            ))}
+                        </div>
+                    )}
+                </div>
             ) : (
                 <p className="text-body-sm text-fg-tertiary">지금 진행 중인 래플이 없어요.</p>
             )}
