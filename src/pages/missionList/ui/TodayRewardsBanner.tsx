@@ -1,7 +1,6 @@
-import type { LucideIcon } from 'lucide-react';
 import type { CSSProperties } from 'react';
 
-import { CalendarCheck, Check, ChevronRight, ClipboardList, Gamepad2 } from 'lucide-react';
+import { Check, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -28,6 +27,9 @@ import itemSauce from '../assets/item-sauce.png';
 import itemSkewer from '../assets/item-skewer.png';
 import shopCounter from '../assets/shop-counter.jpg';
 import shopWall from '../assets/shop-wall.jpg';
+import stepAttendance from '../assets/step-attendance.png';
+import stepGame from '../assets/step-game.png';
+import stepMission from '../assets/step-mission.png';
 import ticketCharacter from '../assets/ticket-character.png';
 import { summarizeMonthlyTickets } from '../lib/monthlyTicketSummary';
 import { isMissionOpen, summarizeTodayRewards } from '../lib/todayRewards';
@@ -57,16 +59,21 @@ const scrollToSection = (id: string) =>
 /** 진행 점은 이 개수까지만 그린다 — 넘으면 숫자만 둔다 */
 const MAX_PROGRESS_DOTS = 8;
 
-/** 오늘 할 일 한 칸 — 완료면 노란 테두리와 체크. 숫자 옆 점(●●○)으로 진행을 보여 준다. 마우스를 올려도 움직이지 않는다 */
+/** 오늘 할 일 한 칸 — 픽셀 아이콘(피그마 image 199·206·207)을 바탕 없이 둔다. 완료면 노란 테두리와 아이콘 귀퉁이에 노란 체크.
+ * 숫자 옆 점(●●○)으로 진행을 보여 준다. 마우스를 올려도 움직이지 않는다 */
 function TodayStep({
-    icon: Icon,
+    icon,
+    iconScale,
     label,
     value,
     count,
     done,
     sectionId,
 }: {
-    icon: LucideIcon;
+    /** 픽셀 아이콘 그림 */
+    icon: string;
+    /** 그림마다 여백이 달라 크기가 달라 보일 때 맞추는 배율 클래스 */
+    iconScale?: string;
     label: string;
     value: string;
     /** 진행 (모르면 undefined) */
@@ -80,16 +87,13 @@ function TodayStep({
             onClick={() => scrollToSection(sectionId)}
             className={`bg-surface-page focus-visible:ring-border-focus relative flex min-w-0 cursor-pointer flex-col gap-2 rounded-2xl p-3 text-left shadow-sm focus-visible:ring-2 focus-visible:outline-none sm:gap-3 sm:p-4 ${done ? 'ring-ticket-primary ring-2' : ''}`}
         >
-            <span className="flex items-center">
-                <span
-                    className={`flex size-8 items-center justify-center rounded-full sm:size-9 ${done ? 'bg-ticket-primary text-ticket-on' : 'bg-surface-canvas text-fg-primary'}`}
-                >
-                    {done ? (
-                        <Check className="size-5" strokeWidth={3} />
-                    ) : (
-                        <Icon className="size-5" />
-                    )}
-                </span>
+            <span className="relative size-8 sm:size-9">
+                <img src={icon} alt="" className={`size-full object-contain ${iconScale ?? ''}`} />
+                {done && (
+                    <span className="bg-ticket-primary text-ticket-on ring-surface-page absolute -right-1 -bottom-1 flex size-4.5 items-center justify-center rounded-full ring-2">
+                        <Check className="size-3" strokeWidth={3} />
+                    </span>
+                )}
             </span>
             <span className="flex flex-col gap-0.5">
                 <span className="text-caption sm:text-body-sm text-fg-secondary">{label}</span>
@@ -219,7 +223,9 @@ export function TodayRewardsBanner() {
                     {/* 좁은 화면에서도 세 칸을 가로로 둔다 — 세로로 쌓으면 머리가 화면을 다 차지한다 */}
                     <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
                         <TodayStep
-                            icon={CalendarCheck}
+                            icon={stepAttendance}
+                            // 타코야끼는 그림 안 여백이 적어 다른 두 아이콘보다 커 보여 조금 줄인다
+                            iconScale="scale-[0.82]"
                             label="출석체크"
                             value={
                                 progress.attendance
@@ -233,7 +239,7 @@ export function TodayRewardsBanner() {
                             sectionId={MISSION_SECTION_IDS.attendance}
                         />
                         <TodayStep
-                            icon={Gamepad2}
+                            icon={stepGame}
                             label="게임 보상"
                             value={
                                 progress.games
@@ -249,7 +255,7 @@ export function TodayRewardsBanner() {
                             sectionId={MISSION_SECTION_IDS.games}
                         />
                         <TodayStep
-                            icon={ClipboardList}
+                            icon={stepMission}
                             label="설문 · 퀴즈"
                             value={
                                 progress.missions
