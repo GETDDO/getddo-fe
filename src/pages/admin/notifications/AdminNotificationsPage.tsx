@@ -1,3 +1,5 @@
+import type { KeyboardEvent } from 'react';
+
 import { useSearchParams } from 'react-router-dom';
 
 import { cn } from '@shared/lib/utils';
@@ -16,9 +18,29 @@ export function AdminNotificationsPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const active = TABS.find((tab) => tab.id === searchParams.get('tab')) ?? TABS[0];
 
+    // 비선택 탭은 tabIndex=-1이라 방향키로 이동한다 — APG 탭 패턴의 roving tabindex
+    const handleTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+        event.preventDefault();
+        const index = TABS.findIndex((tab) => tab.id === active.id);
+        const nextIndex =
+            event.key === 'ArrowRight'
+                ? (index + 1) % TABS.length
+                : (index - 1 + TABS.length) % TABS.length;
+        const nextTab = TABS[nextIndex];
+        if (!nextTab) return;
+        setSearchParams({ tab: nextTab.id });
+        document.getElementById(`notifications-tab-${nextTab.id}`)?.focus();
+    };
+
     return (
         <div className="flex max-w-280 flex-col gap-6 pr-10 pb-10">
-            <div role="tablist" aria-label="알림 운영" className="flex gap-1">
+            <div
+                role="tablist"
+                aria-label="알림 운영"
+                className="flex gap-1"
+                onKeyDown={handleTabKeyDown}
+            >
                 {TABS.map((tab) => {
                     const selected = tab.id === active.id;
                     return (
