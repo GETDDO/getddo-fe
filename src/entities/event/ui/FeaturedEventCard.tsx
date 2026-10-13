@@ -120,7 +120,8 @@ export function FeaturedEventCard({
                         <Gift className="text-fg-disabled size-8" />
                     </div>
                 )}
-                <Button asChild variant="emphasis" size="lg" className="w-full">
+                {/* 상세로 이동하는 버튼은 주 행동(검정) — 마젠타는 실제로 응모권을 쓰는 버튼에만 쓴다 */}
+                <Button asChild size="lg" className="w-full">
                     <Link to={`/events/${event.id}`}>응모하러 가기</Link>
                 </Button>
             </div>

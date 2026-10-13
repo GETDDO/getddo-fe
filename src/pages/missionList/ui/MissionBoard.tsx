@@ -67,7 +67,7 @@ export function MissionBoard({
             </div>
 
             {missions && missions.length > 0 && (
-                // 이벤트 목록의 거르기 칩과 같은 모양
+                // 이벤트 목록의 거르기 칩과 같은 모양 — 고른 칩은 검정 테두리 (마젠타는 "지금" 신호에만, DESIGN-SYSTEM 색 역할 규칙)
                 <div className="flex flex-wrap items-center gap-2">
                     {MISSION_FILTERS.map((item) => (
                         <button
@@ -75,7 +75,7 @@ export function MissionBoard({
                             type="button"
                             aria-pressed={item.value === filter}
                             onClick={() => setFilter(item.value)}
-                            className={`bg-surface-page text-caption focus-visible:ring-border-focus focus-visible:ring-offset-surface-page cursor-pointer rounded-full border px-3 py-1 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none ${item.value === filter ? 'border-brand-primary text-brand-primary' : 'border-border-strong text-fg-tertiary'}`}
+                            className={`bg-surface-page text-caption focus-visible:ring-border-focus focus-visible:ring-offset-surface-page cursor-pointer rounded-full border px-3 py-1 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none ${item.value === filter ? 'border-fg-primary text-fg-primary' : 'border-border-strong text-fg-tertiary'}`}
                         >
                             {item.label}
                         </button>

@@ -156,9 +156,10 @@ export function BannerSlider({
                                             {renderStatus?.(event, slideIndex === safeIndex)}
                                         </div>
                                     </div>
-                                    {/* 버튼은 배너 아래에서 35px 위에 고정 — 설명이 한 줄이어도 피그마와 같은 자리 */}
+                                    {/* 버튼은 배너 아래에서 35px 위에 고정 — 설명이 한 줄이어도 피그마와 같은 자리.
+                                        상세로 이동하는 버튼이라 '응모하러 가기' — 실제로 응모권을 쓰는 '응모하기'와 구분한다 */}
                                     <Button asChild size="lg" className="mt-auto px-7">
-                                        <Link to={`/events/${event.id}`}>응모하기</Link>
+                                        <Link to={`/events/${event.id}`}>응모하러 가기</Link>
                                     </Button>
                                 </div>
                             </div>
