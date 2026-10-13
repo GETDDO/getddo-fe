@@ -46,16 +46,23 @@ function formatWait(seconds: number): string {
 }
 
 /**
+ * 코드 문자열만으로 FE 매핑 문구를 찾는다 — 응모 거절 이력의 rejectionCode처럼
+ * ApiError가 아닌 저장 데이터에도 같은 매핑을 적용할 때 쓴다. 매핑이 없으면 undefined다
+ */
+export function getErrorCodeMessage(code: string | null | undefined): string | undefined {
+    if (code == null || code === '') return undefined;
+    // __proto__ 같은 상속 키가 매핑으로 잡히지 않도록 자체 속성만 본다
+    return Object.hasOwn(ERROR_MESSAGES, code) ? ERROR_MESSAGES[code] : undefined;
+}
+
+/**
  * 화면에 보일 오류 문구를 ADR-0008 순서로 정한다.
  * 1) FE 매핑(5xx여도 우선) → 2) 서버 message(공개 계약이 적용되는 응답만) → 3) fallback/공통 기본 문구
  */
 export function getErrorMessage(error: unknown, fallback: string = DEFAULT_ERROR_MESSAGE): string {
     if (!(error instanceof ApiError)) return fallback;
 
-    // __proto__ 같은 상속 키가 매핑으로 잡히지 않도록 자체 속성만 본다
-    const mapped = Object.hasOwn(ERROR_MESSAGES, error.code)
-        ? ERROR_MESSAGES[error.code]
-        : undefined;
+    const mapped = getErrorCodeMessage(error.code);
     if (mapped) {
         if (error.code === 'RATE_LIMIT_EXCEEDED' && error.retryAfterSeconds != null) {
             return `요청이 너무 많습니다. ${formatWait(error.retryAfterSeconds)} 후에 다시 시도해 주세요.`;

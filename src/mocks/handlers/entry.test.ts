@@ -36,6 +36,9 @@ interface EntryReceipt {
     deductedTicketCount: number;
     deductedTicketsByGrade: GradeMap;
     status: string;
+    acceptedAt: string | null;
+    rejectionCode: string | null;
+    rejectionReason: string | null;
 }
 
 interface Envelope<T> {
@@ -88,6 +91,15 @@ async function myEntries(userId?: string) {
     const { data } = await apiClient.get<Envelope<{ items: EntryReceipt[] }>>('/users/me/entries', {
         headers: userId ? { 'X-User-ID': userId } : {},
     });
+    return data.data.items;
+}
+
+// E05 — 이벤트별 내 응모 내역
+async function myEventEntries(eventId: string, userId?: string) {
+    const { data } = await apiClient.get<Envelope<{ items: EntryReceipt[] }>>(
+        `/events/${eventId}/entries/me`,
+        { headers: userId ? { 'X-User-ID': userId } : {} },
+    );
     return data.data.items;
 }
 
@@ -474,6 +486,141 @@ describe('응모 목업 핸들러', () => {
 
         const aEntries = await myEntries(userA);
         expect(aEntries.some((entry) => entry.eventId === FREE_EVENT_ID_2)).toBe(true);
+    });
+
+    describe('거절 이력 (GD-145)', () => {
+        it('업무 거절은 거절 영수증으로 E06 내역에 남는다', async () => {
+            const userId = uniqueUser('rej-history');
+            const key = uniqueKey('rej-history');
+
+            // 골드는 1장뿐 — 보유를 넘는 등급별 요청은 확정된 업무 거절이다
+            const rejected = await enter(key, { GOLD: 2 }, WEIGHTED_EVENT_ID, userId);
+            expect(rejected.status).toBe(409);
+            expect(rejected.data).toMatchObject({ success: false, code: 'TICKET-006' });
+
+            const receipt = (await myEntries(userId)).find((entry) => entry.id === key);
+            expect(receipt).toBeDefined();
+            expect(receipt).toMatchObject({
+                eventId: WEIGHTED_EVENT_ID,
+                status: 'REJECTED',
+                requestedTicketCount: 2,
+                requestedTicketsByGrade: { BRONZE: 0, SILVER: 0, GOLD: 2 },
+                // 거절은 응모권을 차감하지 않는다 (spec EntryReceipt)
+                deductedTicketCount: 0,
+                deductedTicketsByGrade: { BRONZE: 0, SILVER: 0, GOLD: 0 },
+                acceptedAt: null,
+                rejectionCode: 'TICKET-006',
+            });
+            expect(receipt?.rejectionReason).not.toBeNull();
+        });
+
+        it('E05 이벤트별 내역에도 같은 거절 건이 포함된다', async () => {
+            const userId = uniqueUser('rej-e05');
+            const key = uniqueKey('rej-e05');
+
+            const rejected = await enter(key, { BRONZE: 2 }, BRONZE_ONLY_EVENT_ID, userId);
+            expect(rejected.status).toBe(409);
+            expect(rejected.data).toMatchObject({ success: false, code: 'ENTRY-008' });
+
+            const receipt = (await myEventEntries(BRONZE_ONLY_EVENT_ID, userId)).find(
+                (entry) => entry.id === key,
+            );
+            expect(receipt).toMatchObject({
+                status: 'REJECTED',
+                rejectionCode: 'ENTRY-008',
+                deductedTicketCount: 0,
+            });
+        });
+
+        it('형식 오류·없는 이벤트 거절은 응모 내역에 남지 않는다', async () => {
+            const userId = uniqueUser('rej-format');
+            const malformedKey = uniqueKey('rej-malformed');
+            const notFoundKey = uniqueKey('rej-notfound');
+
+            const malformed = await enter(malformedKey, 'abc', WEIGHTED_EVENT_ID, userId);
+            expect(malformed.status).toBe(400);
+            const notFound = await enter(notFoundKey, { BRONZE: 1 }, 'evt-none', userId);
+            expect(notFound.status).toBe(404);
+
+            const ids = (await myEntries(userId)).map((entry) => entry.id);
+            expect(ids).not.toContain(malformedKey);
+            expect(ids).not.toContain(notFoundKey);
+        });
+
+        it('거절 이력이 있어도 접수된 응모로 세지 않아 1회 제한·차감 합계에 섞이지 않는다', async () => {
+            const userId = uniqueUser('rej-count');
+            const before = await ticketCounts(userId);
+
+            // 거절된 뒤 같은 이벤트에 새 키로 정상 응모하면 접수된다
+            const rejected = await enter(
+                uniqueKey('rej-count'),
+                { GOLD: 2 },
+                WEIGHTED_EVENT_ID,
+                userId,
+            );
+            expect(rejected.status).toBe(409);
+
+            const accepted = await enter(
+                uniqueKey('rej-count-ok'),
+                { BRONZE: 1 },
+                WEIGHTED_EVENT_ID,
+                userId,
+            );
+            expect(accepted.status).toBe(201);
+            // 거절 건은 응모권을 차감하지 않았으므로 접수 건의 1장만 줄어든다
+            expect((await ticketCounts(userId)).countByGrade.BRONZE).toBe(
+                before.countByGrade.BRONZE - 1,
+            );
+        });
+    });
+
+    describe('응모 빈도 제한 (GD-146)', () => {
+        it('짧은 창에 새 응모 요청이 몰리면 429와 Retry-After를 돌려준다', async () => {
+            const userId = uniqueUser('rate');
+            let last!: Awaited<ReturnType<typeof enter>>;
+            for (let i = 0; i < 6; i += 1) {
+                last = await enter(
+                    uniqueKey(`rate-${i}`),
+                    { BRONZE: 1 },
+                    WEIGHTED_EVENT_ID,
+                    userId,
+                );
+            }
+            expect(last.status).toBe(429);
+            expect(last.data).toMatchObject({
+                success: false,
+                code: 'RATE_LIMIT_EXCEEDED',
+            });
+            expect(Number(last.headers['retry-after'])).toBeGreaterThan(0);
+        });
+
+        it('같은 멱등키의 재전송은 새 요청으로 세지 않아 429가 나지 않는다', async () => {
+            const userId = uniqueUser('idem-retry');
+            const key = uniqueKey('idem-retry');
+
+            const first = await enter(key, { BRONZE: 1 }, BRONZE_ONLY_EVENT_ID, userId);
+            expect(first.status).toBe(201);
+
+            // 저장된 키의 재전송은 재생이라 창 안에 몇 번을 보내도 제한에 걸리지 않는다
+            for (let i = 0; i < 6; i += 1) {
+                const retry = await enter(key, { BRONZE: 1 }, BRONZE_ONLY_EVENT_ID, userId);
+                expect(retry.status).toBe(200);
+            }
+        });
+
+        it('거절된 요청의 멱등키 재전송도 새 요청으로 세지 않고 처음 거절을 돌려준다', async () => {
+            const userId = uniqueUser('idem-rej');
+            const key = uniqueKey('idem-rej');
+
+            const rejected = await enter(key, { GOLD: 2 }, WEIGHTED_EVENT_ID, userId);
+            expect(rejected.status).toBe(409);
+
+            for (let i = 0; i < 6; i += 1) {
+                const retry = await enter(key, { GOLD: 2 }, WEIGHTED_EVENT_ID, userId);
+                expect(retry.status).toBe(409);
+                expect(retry.data).toEqual(rejected.data);
+            }
+        });
     });
 
     describe('E03 응모 통계', () => {
