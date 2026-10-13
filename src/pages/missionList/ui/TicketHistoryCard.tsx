@@ -30,7 +30,7 @@ export function TicketHistoryCard({ className }: { className?: string }) {
                   크롬·사파리는 ::-webkit-scrollbar로 그리면 macOS에서도 숨겨지지 않는다 — 표준 scrollbar-* 속성을 함께 주면 이 설정이 무시되므로 파이어폭스에만 준다.
                   마지막 항목이 페이드에 가리지 않게 아래 여백을 둔다
                 */}
-                <div className="[&::-webkit-scrollbar-thumb]:bg-border-strong min-h-0 flex-1 overflow-y-auto pr-1 pb-12 supports-[-moz-appearance:none]:[scrollbar-width:thin] supports-[-moz-appearance:none]:[scrollbar-color:var(--color-border-strong)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:min-h-16 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+                <div className="[&::-webkit-scrollbar-thumb]:bg-border-strong min-h-0 flex-1 overflow-y-auto pr-1 pb-6 supports-[-moz-appearance:none]:[scrollbar-width:thin] supports-[-moz-appearance:none]:[scrollbar-color:var(--color-border-strong)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:min-h-16 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
                     {isPending && <p className="text-body-sm text-fg-tertiary p-4">불러오는 중…</p>}
                     {isError && (
                         <p className="text-body-sm text-destructive p-4">
@@ -67,7 +67,7 @@ export function TicketHistoryCard({ className }: { className?: string }) {
             {/* 아래로 내역이 더 있음을 암시하는 페이드 */}
             <div
                 aria-hidden
-                className="to-surface-page pointer-events-none absolute inset-x-0 bottom-0 h-19.25 rounded-b-2xl bg-linear-to-b from-transparent to-62%"
+                className="to-surface-page pointer-events-none absolute inset-x-0 bottom-0 h-10 rounded-b-2xl bg-linear-to-b from-transparent to-80%"
             />
         </div>
     );

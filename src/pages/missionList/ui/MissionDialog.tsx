@@ -1,3 +1,4 @@
+import { CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { MissionSubmissionResult } from '@entities/mission';
@@ -7,6 +8,7 @@ import { useMissionDetail } from '@entities/mission';
 import { QuizForm, SurveyForm } from '@features/submitMission';
 import { formatKst } from '@shared/lib/date';
 import { useVirtualClock } from '@shared/lib/virtualClock';
+import { Badge } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 import {
     Dialog,
@@ -16,6 +18,7 @@ import {
     DialogTitle,
 } from '@shared/ui/dialog';
 
+import { missionDeadlineLabel } from '../lib/missionBoard';
 import { MissionKindReward } from './MissionKindReward';
 
 const PERIOD_FORMAT: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric' };
@@ -98,12 +101,27 @@ function MissionDialogBody({
 
     return (
         <>
-            <header className="flex shrink-0 flex-col gap-2 border-b-0 px-6 pt-6 pr-12 pb-4">
-                <MissionKindReward
-                    missionType={mission.missionType}
-                    rewardTicketCount={mission.rewardTicketCount}
-                    muted={mission.completed}
-                />
+            {/* 머리 — 종류·보상·마감, 제목, 설명. 문항이 길어도 머리는 고정된다 */}
+            <header className="border-border-default flex shrink-0 flex-col gap-2 border-b px-6 pt-6 pr-12 pb-5">
+                <div className="flex flex-wrap items-center gap-2">
+                    <MissionKindReward
+                        missionType={mission.missionType}
+                        rewardTicketCount={mission.rewardTicketCount}
+                        muted={mission.completed}
+                    />
+                    {!mission.completed && !notYetOpen && !ended && (
+                        // 오늘 마감은 겟또타임 D-day처럼 검정 알약
+                        <Badge
+                            variant={
+                                missionDeadlineLabel(mission.endsAt, now) === '오늘 마감'
+                                    ? 'inverse'
+                                    : 'surface'
+                            }
+                        >
+                            {missionDeadlineLabel(mission.endsAt, now)}
+                        </Badge>
+                    )}
+                </div>
                 {/* 글자 크기는 text-xl로 — 커스텀 타이포 토큰은 공용 cn이 글자색과 같은 묶음으로 보고 지운다 */}
                 <DialogTitle className="text-xl leading-7 font-semibold">
                     {mission.title}
@@ -111,13 +129,15 @@ function MissionDialogBody({
                 <DialogDescription className="text-sm leading-[1.375rem]">
                     {mission.description}
                 </DialogDescription>
-                <p className="text-caption text-fg-tertiary">
+                <p className="text-caption text-fg-tertiary flex items-center gap-1">
+                    <CalendarDays aria-hidden className="size-3.5" />
                     {formatKst(mission.startsAt, PERIOD_FORMAT)} ~{' '}
                     {formatKst(mission.endsAt, PERIOD_FORMAT)}
+                    {mission.questions.length > 0 && ` · ${mission.questions.length}문항`}
                 </p>
             </header>
             {/* 문항이 많아도 모달 높이(화면의 85%) 안에서 문항 영역만 스크롤한다 */}
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-5">
                 {mission.completed || notYetOpen || ended ? (
                     <div className="flex flex-col items-center gap-4 py-6 text-center">
                         <p className="text-body-bold text-fg-primary">

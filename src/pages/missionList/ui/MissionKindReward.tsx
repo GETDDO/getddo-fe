@@ -18,7 +18,8 @@ export function MissionKindReward({
 }) {
     return (
         <div className="flex items-center gap-2">
-            <Badge variant="neutral">{KIND_LABEL[missionType]}</Badge>
+            {/* 완료한 미션 카드는 회색 바탕이라 칩을 흰 바탕+테두리로 바꿔 묻히지 않게 한다 */}
+            <Badge variant={muted ? 'outline' : 'neutral'}>{KIND_LABEL[missionType]}</Badge>
             <span
                 aria-label={`보상 응모권 ${rewardTicketCount}장`}
                 className={`text-body-sm-bold flex items-center gap-0.5 ${muted ? 'text-fg-disabled' : 'text-ticket-on'}`}

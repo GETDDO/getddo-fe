@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
+import type { CSSProperties } from 'react';
 
 import { CalendarCheck, Check, ChevronRight, ClipboardList, Gamepad2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -19,10 +20,24 @@ import { formatNumber } from '@shared/lib/format';
 import { useCountUp } from '@shared/lib/useCountUp';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 
+import itemCup from '../assets/item-cup.png';
+import itemFlag from '../assets/item-flag.png';
+import itemJar from '../assets/item-jar.png';
+import itemMayo from '../assets/item-mayo.png';
+import itemSauce from '../assets/item-sauce.png';
+import itemSkewer from '../assets/item-skewer.png';
+import shopCounter from '../assets/shop-counter.jpg';
+import shopWall from '../assets/shop-wall.jpg';
 import ticketCharacter from '../assets/ticket-character.png';
 import { summarizeMonthlyTickets } from '../lib/monthlyTicketSummary';
 import { isMissionOpen, summarizeTodayRewards } from '../lib/todayRewards';
+import { useSlotNumber } from '../lib/useSlotNumber';
 import { MISSION_SECTION_IDS } from '../model/sectionIds';
+
+/** 응모권 모양 — 양옆 가운데를 반원으로 파낸다 (왼쪽 반·오른쪽 반에 각각 구멍 하나) */
+const TICKET_NOTCH_MASK: CSSProperties = {
+    mask: 'radial-gradient(circle at 0 50%, transparent 14px, #000 14.5px) left / 51% 100% no-repeat, radial-gradient(circle at 100% 50%, transparent 14px, #000 14.5px) right / 51% 100% no-repeat',
+};
 
 /** 기준 시각을 다시 읽는 간격 */
 const NOW_REFRESH_MS = 60_000;
@@ -37,20 +52,23 @@ const DATE_FORMAT = new Intl.DateTimeFormat('ko-KR', {
 const scrollToSection = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-/** 오늘 할 일 한 칸 — 완료면 노란 테두리와 체크, 아니면 진행 막대 */
+/** 진행 점은 이 개수까지만 그린다 — 넘으면 숫자만 둔다 */
+const MAX_PROGRESS_DOTS = 8;
+
+/** 오늘 할 일 한 칸 — 완료면 노란 테두리와 체크. 숫자 옆 점(●●○)으로 진행을 보여 준다 */
 function TodayStep({
     icon: Icon,
     label,
     value,
-    ratio,
+    count,
     done,
     sectionId,
 }: {
     icon: LucideIcon;
     label: string;
     value: string;
-    /** 진행 비율 0~1 (모르면 undefined) */
-    ratio: number | undefined;
+    /** 진행 (모르면 undefined) */
+    count: { done: number; total: number } | undefined;
     done: boolean;
     sectionId: string;
 }) {
@@ -60,7 +78,7 @@ function TodayStep({
             onClick={() => scrollToSection(sectionId)}
             className={`bg-surface-page focus-visible:ring-border-focus relative flex min-w-0 cursor-pointer flex-col gap-2 rounded-2xl p-3 text-left shadow-sm transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:outline-none sm:gap-3 sm:p-4 ${done ? 'ring-ticket-primary ring-2' : ''}`}
         >
-            <span className="flex items-center justify-between">
+            <span className="flex items-center">
                 <span
                     className={`flex size-8 items-center justify-center rounded-full sm:size-9 ${done ? 'bg-ticket-primary text-ticket-on' : 'bg-surface-canvas text-fg-primary'}`}
                 >
@@ -70,19 +88,24 @@ function TodayStep({
                         <Icon className="size-5" />
                     )}
                 </span>
-                <ChevronRight aria-hidden className="text-fg-tertiary hidden size-4 sm:block" />
             </span>
             <span className="flex flex-col gap-0.5">
                 <span className="text-caption sm:text-body-sm text-fg-secondary">{label}</span>
-                <span className="text-body-sm-bold sm:text-body-bold text-fg-primary truncate tabular-nums">
-                    {value}
+                <span className="flex min-w-0 items-center gap-2">
+                    <span className="text-body-sm-bold sm:text-body-bold text-fg-primary truncate tabular-nums">
+                        {value}
+                    </span>
+                    {count && count.total > 0 && count.total <= MAX_PROGRESS_DOTS && (
+                        <span aria-hidden className="flex shrink-0 gap-1">
+                            {Array.from({ length: count.total }, (_, index) => (
+                                <span
+                                    key={index}
+                                    className={`size-1.5 rounded-full ${index >= count.done ? 'bg-border-strong' : done ? 'bg-ticket-primary' : 'bg-fg-primary'}`}
+                                />
+                            ))}
+                        </span>
+                    )}
                 </span>
-            </span>
-            <span aria-hidden className="bg-surface-canvas h-1.5 overflow-hidden rounded-full">
-                <span
-                    className="bg-ticket-primary block h-full rounded-full transition-[width] duration-500"
-                    style={{ width: `${Math.round((ratio ?? 0) * 100)}%` }}
-                />
             </span>
         </button>
     );
@@ -122,24 +145,52 @@ export function TodayRewardsBanner() {
         progress.games !== undefined &&
         progress.missions !== undefined &&
         progress.remaining === 0;
+    // 오늘 더 받을 장수는 슬롯처럼 무작위 숫자가 잠깐 돌다가 멈춘다 — 작은 수를 세어 올리면 너무 빨리 끝나 어색하다
+    const remaining = useSlotNumber(progress.remaining);
     const format = (n: number | undefined) => (n == null ? '-' : formatNumber(n));
 
     return (
         <section
             aria-labelledby="today-rewards-title"
-            className="bg-play-yellow-soft relative overflow-hidden rounded-3xl"
+            // 타코야끼 가게 — 벽(피그마 image 197 벽 부분)을 배경으로 깔고 아래에 카운터 띠(image 198)를 둔다. --counter는 카운터 띠 높이
+            className="bg-play-yellow-soft relative overflow-hidden rounded-3xl bg-cover bg-top [--counter:clamp(4.5rem,8vw,6rem)]"
+            style={{ backgroundImage: `url(${shopWall})` }}
         >
-            {/* 배경 장식 — 응모권 노랑·분홍 동그라미 */}
-            <span
+            {/* 벽 그림이 어두운 웜톤이라 흰 막을 얇게 덮어 페이지 바탕과 어울리게 밝힌다 */}
+            <div aria-hidden className="bg-surface-page/45 absolute inset-0" />
+            {/* 카운터 띠 — 이음매 없이 이어지도록 자른 타일·나무를 가로로 반복한다 */}
+            <div
                 aria-hidden
-                className="bg-ticket-primary/25 absolute -top-24 -right-20 size-80 rounded-full"
+                className="absolute inset-x-0 bottom-0 h-(--counter) bg-size-[auto_100%] bg-left bg-repeat-x"
+                style={{ backgroundImage: `url(${shopCounter})` }}
             />
-            <span
+            {/* 카운터 위 소품(image 105 소스병, image 106 꼬치) — 왼쪽 끝 소스·마요·잼병, 오른쪽 끝 꼬치·이쑤시개 통·깃발.
+                가장 큰 깃발도 카운터 띠 높이의 1.5배 안에 들어와, 내용 아래 여백(--counter의 1.5배)에 가려지지 않는다 */}
+            <div
                 aria-hidden
-                className="bg-play-pink-soft absolute -bottom-28 left-1/3 size-64 rounded-full"
-            />
+                className="pointer-events-none absolute inset-x-3 bottom-[calc(var(--counter)*0.5)] flex items-end justify-between md:inset-x-5"
+            >
+                <div className="flex items-end gap-1">
+                    <img src={itemSauce} alt="" className="h-[calc(var(--counter)*0.7)] w-auto" />
+                    <img src={itemMayo} alt="" className="h-[calc(var(--counter)*0.7)] w-auto" />
+                    <img
+                        src={itemJar}
+                        alt=""
+                        className="hidden h-[calc(var(--counter)*0.5)] w-auto sm:block"
+                    />
+                </div>
+                <div className="flex items-end gap-1">
+                    <img
+                        src={itemSkewer}
+                        alt=""
+                        className="hidden h-[calc(var(--counter)*0.75)] w-auto sm:block"
+                    />
+                    <img src={itemCup} alt="" className="h-[calc(var(--counter)*0.5)] w-auto" />
+                    <img src={itemFlag} alt="" className="h-[calc(var(--counter)*0.95)] w-auto" />
+                </div>
+            </div>
 
-            <div className="relative grid items-center gap-8 p-6 md:p-10 lg:grid-cols-[1fr_22rem]">
+            <div className="relative grid items-center gap-8 p-6 pb-[calc(var(--counter)*1.5+0.5rem)] md:p-10 md:pb-[calc(var(--counter)*1.5+0.5rem)] lg:grid-cols-[1fr_22rem]">
                 <div className="flex min-w-0 flex-col">
                     <p className="text-body-sm-bold text-fg-secondary">
                         {DATE_FORMAT.format(now)} · 오늘의 적립
@@ -150,8 +201,8 @@ export function TodayRewardsBanner() {
                         ) : (
                             <>
                                 오늘 응모권{' '}
-                                <span className="decoration-ticket-primary underline decoration-8 underline-offset-[-2px] [text-decoration-skip-ink:none]">
-                                    {progress.remaining}장
+                                <span className="text-display text-fg-primary tabular-nums">
+                                    {remaining}장
                                 </span>{' '}
                                 더 받을 수 있어요
                             </>
@@ -175,7 +226,7 @@ export function TodayRewardsBanner() {
                                         : '출석하기'
                                     : '-'
                             }
-                            ratio={progress.attendance?.done ? 1 : 0}
+                            count={undefined}
                             done={progress.attendance?.done === true}
                             sectionId={MISSION_SECTION_IDS.attendance}
                         />
@@ -187,11 +238,7 @@ export function TodayRewardsBanner() {
                                     ? `${progress.games.done} / ${progress.games.total}`
                                     : '-'
                             }
-                            ratio={
-                                progress.games && progress.games.total > 0
-                                    ? progress.games.done / progress.games.total
-                                    : undefined
-                            }
+                            count={progress.games}
                             done={
                                 !!progress.games &&
                                 progress.games.total > 0 &&
@@ -207,11 +254,7 @@ export function TodayRewardsBanner() {
                                     ? `${progress.missions.done} / ${progress.missions.total}`
                                     : '-'
                             }
-                            ratio={
-                                progress.missions && progress.missions.total > 0
-                                    ? progress.missions.done / progress.missions.total
-                                    : undefined
-                            }
+                            count={progress.missions}
                             done={
                                 !!progress.missions &&
                                 progress.missions.total > 0 &&
@@ -222,48 +265,57 @@ export function TodayRewardsBanner() {
                     </div>
                 </div>
 
-                {/* 내 응모권 지갑 — 응모권을 든 캐릭터가 오른쪽 위에 걸터앉는다 (사용 가능 장수 오른쪽 빈자리) */}
-                <div className="bg-surface-page relative mt-8 rounded-2xl p-5 pt-6 shadow-md lg:mt-0">
+                {/* 내 응모권 지갑 — 응모권 모양(양옆 반원 홈·절취선). 응모권을 든 캐릭터가 오른쪽 위에 걸터앉는다 */}
+                <div className="relative mt-8 lg:mt-0">
                     <img
                         src={ticketCharacter}
                         alt=""
-                        className="pointer-events-none absolute -top-9 right-2 size-28 object-contain drop-shadow-sm"
+                        className="pointer-events-none absolute -top-9 right-2 z-10 size-28 object-contain"
                     />
-                    <p className="text-body-sm text-fg-secondary">사용 가능 응모권</p>
-                    <p className="text-title-1 text-fg-primary tabular-nums">{format(balance)}장</p>
+                    <div
+                        className="bg-surface-page border-border-default rounded-2xl border p-5 pt-6"
+                        style={TICKET_NOTCH_MASK}
+                    >
+                        <p className="text-body-sm text-fg-secondary">사용 가능 응모권</p>
+                        <p className="text-title-1 text-fg-primary tabular-nums">
+                            {format(balance)}장
+                        </p>
 
-                    <ul className="mt-4 grid grid-cols-3 gap-2" aria-label="등급별 보유 응모권">
-                        {TICKET_GRADES.map((grade) => (
-                            <li
-                                key={grade}
-                                className="bg-surface-canvas flex flex-col items-center gap-1 rounded-xl px-1.5 pt-2 pb-1.5"
+                        <ul className="mt-4 grid grid-cols-3 gap-2" aria-label="등급별 보유 응모권">
+                            {TICKET_GRADES.map((grade) => (
+                                <li
+                                    key={grade}
+                                    className="bg-surface-canvas flex flex-col items-center gap-1 rounded-xl px-1.5 pt-2 pb-1.5"
+                                >
+                                    <img
+                                        src={TICKET_GRADE_IMAGE[grade]}
+                                        alt=""
+                                        className="h-auto w-full max-w-11"
+                                    />
+                                    <span className="text-caption text-fg-secondary">
+                                        {TICKET_GRADE_LABEL[grade]}
+                                    </span>
+                                    <span className="text-body-sm-bold text-fg-primary tabular-nums">
+                                        {format(tickets?.countByGrade[grade])}장
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+
+                        {/* 절취선 */}
+                        <div className="border-border-default mt-4 flex items-center justify-between gap-3 border-t border-dashed pt-3">
+                            <span className="text-caption text-fg-tertiary whitespace-nowrap">
+                                이번 달 적립 {format(monthly?.earned)} · 사용{' '}
+                                {format(monthly?.used)}
+                            </span>
+                            <Link
+                                to="/my-tickets"
+                                className="text-body-sm-bold text-fg-primary focus-visible:ring-border-focus flex shrink-0 items-center gap-0.5 rounded-sm whitespace-nowrap hover:underline focus-visible:ring-2 focus-visible:outline-none"
                             >
-                                <img
-                                    src={TICKET_GRADE_IMAGE[grade]}
-                                    alt=""
-                                    className="h-auto w-full max-w-11"
-                                />
-                                <span className="text-caption text-fg-secondary">
-                                    {TICKET_GRADE_LABEL[grade]}
-                                </span>
-                                <span className="text-body-sm-bold text-fg-primary tabular-nums">
-                                    {format(tickets?.countByGrade[grade])}장
-                                </span>
-                            </li>
-                        ))}
-                    </ul>
-
-                    <div className="border-border-default mt-4 flex items-center justify-between gap-3 border-t pt-3">
-                        <span className="text-caption text-fg-tertiary whitespace-nowrap">
-                            이번 달 적립 {format(monthly?.earned)} · 사용 {format(monthly?.used)}
-                        </span>
-                        <Link
-                            to="/my-tickets"
-                            className="text-body-sm-bold text-fg-primary focus-visible:ring-border-focus flex shrink-0 items-center gap-0.5 rounded-sm whitespace-nowrap hover:underline focus-visible:ring-2 focus-visible:outline-none"
-                        >
-                            내역
-                            <ChevronRight className="size-4" />
-                        </Link>
+                                내역
+                                <ChevronRight className="size-4" />
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>

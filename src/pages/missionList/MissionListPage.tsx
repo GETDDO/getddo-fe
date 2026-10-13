@@ -1,17 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import { MissionRewardDialog, useMissionList } from '@entities/mission';
+import { MissionRewardDialog } from '@entities/mission';
 import { TICKET_GRADE_LABEL, type TicketGrade, TicketGradeReveal } from '@entities/ticket';
-import {
-    ATTENDANCE_WIDEN_MS,
-    AttendanceCheckCard,
-    type AttendanceExpandOptions,
-} from '@features/checkAttendance';
+import { AttendanceCheckCard } from '@features/checkAttendance';
 import { cn } from '@shared/lib/utils';
 import { GameRail } from '@widgets/gameRail';
 
 import { MISSION_SECTION_IDS } from './model/sectionIds';
-import { MissionCard } from './ui/MissionCard';
+import { MissionBoard } from './ui/MissionBoard';
 import { MissionDialog } from './ui/MissionDialog';
 import { SectionHeader } from './ui/SectionHeader';
 import { TicketHistoryCard } from './ui/TicketHistoryCard';
@@ -20,7 +16,6 @@ import { TodayRewardsBanner } from './ui/TodayRewardsBanner';
 const CONTAINER = 'mx-auto w-full max-w-312 px-6';
 
 export function MissionListPage() {
-    const { data: missions, isPending, isError } = useMissionList();
     // 출석 카드를 펼치면(펼쳐보기·출석 완료) 출석 카드가 넓어지고 응모권 내역 카드가 좁아진다.
     // 펼침 상태는 저장하지 않는다 — 페이지에 들어올 때마다 접힌 상태로 새로 시작한다
     const [attendanceExpanded, setAttendanceExpanded] = useState(false);
@@ -33,21 +28,6 @@ export function MissionListPage() {
         tickets: number;
         grade: TicketGrade | null;
     }>({ open: false, tickets: 0, grade: null });
-
-    // 출석 카드를 펼치고 접을 때 두 카드의 열 너비가 부드럽게 바뀐다
-    const [widening, setWidening] = useState(false);
-    const handleAttendanceExpandedChange = (
-        expanded: boolean,
-        options?: AttendanceExpandOptions,
-    ) => {
-        setAttendanceExpanded(expanded);
-        setWidening(!!options?.animate);
-    };
-    useEffect(() => {
-        if (!widening) return;
-        const timer = setTimeout(() => setWidening(false), ATTENDANCE_WIDEN_MS + 50);
-        return () => clearTimeout(timer);
-    }, [widening]);
 
     return (
         <main className="flex flex-col pt-12 pb-28">
@@ -62,13 +42,6 @@ export function MissionListPage() {
                             ? 'lg:grid-cols-[885fr_300fr]'
                             : 'lg:grid-cols-[393fr_791fr]',
                     )}
-                    style={
-                        widening
-                            ? {
-                                  transition: `grid-template-columns ${ATTENDANCE_WIDEN_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
-                              }
-                            : undefined
-                    }
                 >
                     <section
                         id={MISSION_SECTION_IDS.attendance}
@@ -78,7 +51,7 @@ export function MissionListPage() {
                         <SectionHeader title="출석체크" caption="하루 1회 · 오전 9시 초기화" />
                         <AttendanceCheckCard
                             expanded={attendanceExpanded}
-                            onExpandedChange={handleAttendanceExpandedChange}
+                            onExpandedChange={setAttendanceExpanded}
                         />
                     </section>
                     <section className="flex min-w-0 flex-col gap-6">
@@ -97,38 +70,11 @@ export function MissionListPage() {
             </div>
 
             {/* 설문·퀴즈 */}
-            <section
+            <MissionBoard
                 id={MISSION_SECTION_IDS.missions}
-                className={`${CONTAINER} mt-20 flex scroll-mt-24 flex-col gap-6`}
-            >
-                <SectionHeader
-                    title="설문 · 퀴즈"
-                    caption="미션마다 한 번만 응모권을 받을 수 있어요."
-                />
-                {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
-                {isError && (
-                    <p className="text-body-sm text-destructive">
-                        미션 목록을 불러오지 못했습니다.
-                    </p>
-                )}
-                {missions?.length === 0 && (
-                    <p className="text-body-sm text-fg-tertiary">
-                        지금 참여할 수 있는 미션이 없어요.
-                    </p>
-                )}
-                {missions && missions.length > 0 && (
-                    // 설문·퀴즈 카드는 넓은 화면에서 2열로 둔다
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {missions.map((mission) => (
-                            <MissionCard
-                                key={mission.id}
-                                mission={mission}
-                                onOpen={setOpenMissionId}
-                            />
-                        ))}
-                    </div>
-                )}
-            </section>
+                className={`${CONTAINER} mt-20`}
+                onOpen={setOpenMissionId}
+            />
 
             <MissionDialog
                 missionId={openMissionId}
