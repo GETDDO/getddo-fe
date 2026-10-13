@@ -6,21 +6,25 @@ import { AppearanceSettings } from '@features/appearanceSettings';
 import { VirtualUserSwitcher } from '@features/switchVirtualUser';
 import { Button } from '@shared/ui/button';
 
+/**
+ * 마이페이지 — 현재 가상 사용자, 내 활동 바로가기, 화면 설정.
+ * 글자 크기는 홈·미션과 같은 단계로 맞춘다: 페이지 제목 title-2(24), 카드 제목 subhead(18), 이름 body-bold(16)
+ */
 export function MyPage() {
     const user = useSessionStore((state) => state.user);
 
     return (
-        <main className="mx-auto flex w-full max-w-312 flex-col gap-10 px-6 pt-20 pb-28">
-            <h1 className="text-title-1 text-fg-primary">마이페이지</h1>
+        <main className="mx-auto flex w-full max-w-312 flex-col gap-6 px-6 pt-12 pb-28">
+            <h1 className="text-title-2 text-fg-primary">마이페이지</h1>
 
             <section className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-5">
                 <h2 className="text-subhead text-fg-primary">현재 가상 사용자</h2>
                 {user && (
                     <div className="flex items-center gap-4">
-                        <CircleUserRound className="text-fg-primary size-10 shrink-0" />
-                        <div className="flex flex-col gap-1">
+                        <CircleUserRound className="text-fg-primary size-9 shrink-0" />
+                        <div className="flex flex-col gap-0.5">
                             <div className="flex items-center gap-2">
-                                <span className="text-title-3 text-fg-primary">{user.name}</span>
+                                <span className="text-body-bold text-fg-primary">{user.name}</span>
                                 {user.role === 'ADMIN' && (
                                     <span className="bg-brand-primary text-fg-on-brand rounded-md px-2 py-0.5 text-xs font-medium">
                                         관리자
