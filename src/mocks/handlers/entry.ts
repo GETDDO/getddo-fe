@@ -70,7 +70,8 @@ const ENTRY_RATE_LIMIT_WINDOW_MS = 10_000;
 const ENTRY_RATE_LIMIT_MAX_REQUESTS = 5;
 const ENTRY_RATE_LIMIT_RETRY_AFTER_SECONDS = 10;
 
-// 사용자별 새 응모 요청 시각 — 같은 멱등키의 재전송은 도달하지 않아 기록되지 않는다
+// 사용자별 신규 응모 요청 시각 — 같은 멱등키의 정상 재전송은 기록하지 않는다.
+// 가상 시계를 멈춰도 실제 요청 간격으로 제한되어야 하므로 mockNow가 아닌 실제 경과 시간을 쓴다
 const entryRequestTimestamps = new Map<string, number[]>();
 
 const isRateLimited = (userId: string, nowMs: number) => {
@@ -272,25 +273,9 @@ export const entryHandlers = [
 
         const body = (await request.json().catch(() => null)) as { tickets?: unknown } | null;
 
-        // 멱등키 재생은 페이로드 규칙보다 먼저다 — 재전송은 처음 결과를 그대로 돌려준다 (E04)
-        const attempt = attempts.get(idempotencyKey);
-        if (attempt) {
-            // 같은 키에 다른 사용자·이벤트가 오면 재시도가 아니라 다른 요청이다
-            if (attempt.userId !== userId || attempt.eventId !== eventId) {
-                return fail(409, 'ENTRY-009', '같은 멱등키로 다른 응모를 보낼 수 없습니다');
-            }
-            const retried = parseTickets(body?.tickets);
-            // 본문을 읽을 수 있고 내용이 다르면 다른 요청이다 — 못 읽는 재전송은 원래 응답을 돌려준다
-            if (retried && !sameTickets(attempt.tickets, retried)) {
-                return fail(409, 'ENTRY-009', '같은 멱등키로 다른 응모를 보낼 수 없습니다');
-            }
-            // 이미 접수된 건의 재전송이므로 201은 200으로 내려준다
-            const status = attempt.status === 201 ? 200 : attempt.status;
-            return HttpResponse.json(attempt.body as object, { status });
-        }
-
-        // GD-146 — 사용자별 응모 빈도 제한. 멱등키 재생은 위에서 먼저 반환돼 여기는 새 요청만 온다
-        if (isRateLimited(userId, mockNow().getTime())) {
+        // GD-146 — 429 응답. 정상 재전송을 제외한 모든 요청이 창을 세며, 실제 경과 시간을 쓴다
+        const rateLimited = () => {
+            if (!isRateLimited(userId, Date.now())) return null;
             return HttpResponse.json(
                 failBody(
                     'RATE_LIMIT_EXCEEDED',
@@ -301,6 +286,32 @@ export const entryHandlers = [
                     headers: { 'Retry-After': String(ENTRY_RATE_LIMIT_RETRY_AFTER_SECONDS) },
                 },
             );
+        };
+
+        // 멱등키 재생은 페이로드 규칙보다 먼저다 — 재전송은 처음 결과를 그대로 돌려준다 (E04)
+        const attempt = attempts.get(idempotencyKey);
+        if (attempt) {
+            const sameActor = attempt.userId === userId && attempt.eventId === eventId;
+            const retried = parseTickets(body?.tickets);
+            // 본문을 못 읽거나 읽은 내용이 같으면 재전송, 그 외는 같은 키의 다른 요청이다
+            const isReplay = sameActor && (!retried || sameTickets(attempt.tickets, retried));
+            if (isReplay) {
+                // 이미 접수된 건의 재전송이므로 201은 200으로 내려준다
+                const status = attempt.status === 201 ? 200 : attempt.status;
+                return HttpResponse.json(attempt.body as object, { status });
+            }
+            // 다른 요청은 재전송이 아니므로 빈도 제한에 포함한다
+            const limited = rateLimited();
+            if (limited) {
+                return limited;
+            }
+            return fail(409, 'ENTRY-009', '같은 멱등키로 다른 응모를 보낼 수 없습니다');
+        }
+
+        // 사용자별 응모 빈도 제한 — 멱등키 재생은 위에서 먼저 반환돼 여기는 새 요청만 온다
+        const limited = rateLimited();
+        if (limited) {
+            return limited;
         }
 
         const tickets = parseTickets(body?.tickets);
