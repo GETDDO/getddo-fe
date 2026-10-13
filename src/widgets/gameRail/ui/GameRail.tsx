@@ -1,4 +1,5 @@
 import { GameTicketCard, useGameList } from '@entities/game';
+import { hasGamePlayer } from '@features/playGame';
 import { useDragScroll } from '@shared/lib/useDragScroll';
 
 import { gameDetailPath } from '../lib/gamePath';
@@ -21,7 +22,12 @@ export function GameRail({
     const dragScroll = useDragScroll<HTMLDivElement>();
     const ordered = (games ?? [])
         .filter((game) => game.id !== excludeGameId)
-        .sort((a, b) => Number(a.rewardedToday ?? false) - Number(b.rewardedToday ?? false));
+        // 준비 중인 게임은 맨 뒤, 오늘 보상을 받은 게임은 그 앞으로 보낸다
+        .sort(
+            (a, b) =>
+                Number(!hasGamePlayer(a.id)) - Number(!hasGamePlayer(b.id)) ||
+                Number(a.rewardedToday ?? false) - Number(b.rewardedToday ?? false),
+        );
 
     return (
         <section className="flex flex-col gap-6">
@@ -44,7 +50,11 @@ export function GameRail({
                 >
                     {ordered.map((game) => (
                         <div key={game.id} className="shrink-0">
-                            <GameTicketCard game={game} href={gameDetailPath(game.id)} />
+                            <GameTicketCard
+                                game={game}
+                                href={gameDetailPath(game.id)}
+                                ready={hasGamePlayer(game.id)}
+                            />
                         </div>
                     ))}
                 </div>

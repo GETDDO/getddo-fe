@@ -51,10 +51,17 @@ export function useMissionList() {
     });
 }
 
-/** 미션 상세 — 문항·선택지 포함. 정답 필드는 계약상 응답에 없다 (M02) */
-export function useMissionDetail(missionId: string) {
+/**
+ * 미션 상세 — 문항·선택지 포함. 정답 필드는 계약상 응답에 없다 (M02).
+ * enabled: 목록 카드처럼 필요한 미션만 미리 불러올 때 끈다 (기본 켜짐)
+ */
+export function useMissionDetail(
+    missionId: string,
+    { enabled = true }: { enabled?: boolean } = {},
+) {
     return useQuery({
         ...queryPresets.standard,
+        enabled,
         queryKey: [...MISSIONS_KEY, 'detail', missionId],
         queryFn: async () => {
             const { data } = await apiClient.get<unknown>(missionApiPath(missionId));

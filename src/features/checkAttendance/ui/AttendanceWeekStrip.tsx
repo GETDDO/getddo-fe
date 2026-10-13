@@ -16,7 +16,7 @@ export function AttendanceWeekStrip({
     bonusDays: ReadonlySet<number>;
 }) {
     return (
-        <ol className="bg-surface-canvas flex w-full items-center justify-between rounded-lg px-4 py-2">
+        <ol className="bg-surface-canvas flex w-full items-center justify-between rounded-lg px-4 py-3">
             {week.map((day) => {
                 const mascot = getAttendanceMascot(day.date, bonusDays);
                 return (

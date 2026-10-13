@@ -1,4 +1,4 @@
-import { MotionConfig, motion, useReducedMotion } from 'framer-motion';
+import { MotionConfig, motion } from 'framer-motion';
 import { ChevronRight, ChevronUp } from 'lucide-react';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
@@ -8,8 +8,6 @@ import { cn } from '@shared/lib/utils';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
 
-import type { AttendanceExpandOptions } from '../model/attendanceMotion';
-
 import { useCheckAttendance } from '../api/queries';
 import {
     buildAttendanceMonth,
@@ -17,7 +15,6 @@ import {
     countMonthlyAttendance,
     toAttendanceDate,
 } from '../lib/attendanceWeek';
-import { ATTENDANCE_WIDEN_MS } from '../model/attendanceMotion';
 import { AttendanceBakingStage, BAKING_SPRITE_SRC } from './AttendanceBakingStage';
 import { AttendanceMonthGrid } from './AttendanceMonthGrid';
 import { AttendanceWeekStrip } from './AttendanceWeekStrip';
@@ -27,19 +24,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /** 굽기 스프라이트 재생 시간 — 응답이 빨라도 이만큼은 보여주고 끝나면 출석판을 펼친다 */
 const BAKING_MIN_MS = 1600;
 
-/** 카드가 넓어진 뒤 아래로 자라며 출석판을 드러내는 시간(초)과 곡선 */
-const GROW_TRANSITION = { duration: 0.3, ease: [0.22, 1, 0.36, 1] as const };
-
-/** 폭이 바뀌기 직전 카드 내용이 사라지는 시간(초) — 늘어나거나 눌리는 모습이 보이지 않게 한다 */
-const CONTENT_FADE_MS = 80;
-
 /** 접힌 카드 높이(px) — h-75 */
 const COLLAPSED_HEIGHT = 300;
-
-/** 두 카드가 옆으로 나란히 놓이는 너비(lg) — 이보다 좁으면 열 너비가 바뀌지 않으므로 넓어지기를 기다리지 않는다 */
-const SIDE_BY_SIDE_QUERY = '(min-width: 64rem)';
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** 펼친 출석판 머리의 출석 버튼·완료 표시·굽는 중 표시가 모두 같은 너비를 쓰도록 고정한다 */
 const COMPACT_CHECK_WIDTH = 'w-32';
@@ -52,7 +38,8 @@ const DEFAULT_BONUS_REWARDS: ReadonlyMap<number, number> = new Map([
 ]);
 
 /**
- * 펼치거나 접은 직후 카드 안 요소가 위에서부터 차례로 살짝 올라오며 나타난다 (order가 클수록 늦게).
+ * 펼치거나 접은 직후 카드 안 요소가 짧게 떠오르며 나타난다 (order가 클수록 아주 조금 늦게).
+ * 펼침·접힘 자체는 기다림 없이 바로 바뀌고, 이 효과는 바뀐 내용이 눈에 들어오게 하는 정도만 준다.
  * 페이지에 처음 들어올 때는 다른 페이지처럼 바로 보여준다 (enter가 false)
  */
 function Rise({
@@ -68,9 +55,9 @@ function Rise({
 }) {
     return (
         <motion.div
-            initial={enter ? { opacity: 0, y: 12 } : false}
+            initial={enter ? { opacity: 0, y: 6 } : false}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: order * 0.06, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.16, delay: order * 0.02, ease: [0.22, 1, 0.36, 1] }}
             className={className}
         >
             {children}
@@ -110,7 +97,7 @@ export function AttendanceCheckCard({
     className,
 }: {
     expanded: boolean;
-    onExpandedChange: (expanded: boolean, options?: AttendanceExpandOptions) => void;
+    onExpandedChange: (expanded: boolean) => void;
     className?: string;
 }) {
     const { data: status, isPending, isError } = useAttendanceToday();
@@ -156,18 +143,11 @@ export function AttendanceCheckCard({
         return () => clearInterval(timer);
     }, [clock]);
     const [baking, setBaking] = useState(false);
-    // 접힌 카드에서 출석했을 때 굽기 장면이 카드 전체를 채운다 (넓어지는 동안에도 유지)
+    // 접힌 카드에서 출석했을 때 굽기 장면이 카드 전체를 채운다
     const [stageFull, setStageFull] = useState(false);
-    // 펼치기: 옆으로 넓어짐(widening) → 아래로 자람 / 접기: 위로 줄어듦(shrinking) → 옆으로 좁아짐
-    const [widening, setWidening] = useState(false);
-    // 펼치기·접기를 한 번이라도 했는지 — 그 뒤에만 내용이 차례로 올라온다 (처음 들어올 때는 애니메이션 없음)
+    // 펼치기·접기를 한 번이라도 했는지 — 그 뒤에만 내용이 떠오른다 (처음 들어올 때는 애니메이션 없음)
     const [contentEnter, setContentEnter] = useState(false);
-    const [shrinking, setShrinking] = useState(false);
-    const [narrowing, setNarrowing] = useState(false);
-    const [heightAnimating, setHeightAnimating] = useState(false);
-    const reduceMotion = useReducedMotion();
-    // 넓어지는 동안에는 접힌 내용(또는 굽기 장면)을 그대로 두고, 다 넓어진 뒤 펼친 출석판을 보여준다
-    const showExpanded = expanded && !widening;
+    const showExpanded = expanded;
     const [revealDate, setRevealDate] = useState<string | null>(null);
     const handleRevealEnd = useCallback(() => setRevealDate(null), []);
 
@@ -177,54 +157,19 @@ export function AttendanceCheckCard({
         image.src = BAKING_SPRITE_SRC;
     }, []);
 
-    /**
-     * 펼치기 — 카드가 먼저 옆으로 넓어지고, 다 넓어지면 아래로 자라며 출석판을 드러낸다.
-     * beforeGrow는 자라기 직전에 같이 바꿀 상태(굽기 장면 끄기 등)를 넣는다
-     */
-    const expandWithMotion = async (beforeGrow?: () => void) => {
+    // 펼치기·접기 — 기다림 없이 카드 폭·높이와 내용을 한 번에 바꾼다.
+    // beforeExpand는 펼치면서 같이 바꿀 상태(굽기 장면 끄기 등)를 넣는다
+    const expand = (beforeExpand?: () => void) => {
         setContentEnter(true);
-        if (reduceMotion) {
-            beforeGrow?.();
-            onExpandedChange(true);
-            return;
-        }
-        // 내용이 먼저 사라진 뒤 폭이 바뀌기 시작해야 늘어나는 모습이 보이지 않는다
-        setWidening(true);
-        await wait(CONTENT_FADE_MS);
-        onExpandedChange(true, { animate: true });
-        if (window.matchMedia(SIDE_BY_SIDE_QUERY).matches) {
-            await wait(ATTENDANCE_WIDEN_MS);
-        }
-        beforeGrow?.();
-        setWidening(false);
-        setHeightAnimating(true);
+        beforeExpand?.();
+        onExpandedChange(true);
     };
-
-    // 접기 — 펼친 출석판이 먼저 위로 줄어들고, 다 줄어들면(onAnimationComplete) 옆으로 좁아진다
-    const collapseWithMotion = () => {
+    const collapse = () => {
         setContentEnter(true);
-        if (reduceMotion) {
-            onExpandedChange(false);
-            return;
-        }
-        setShrinking(true);
-        setHeightAnimating(true);
+        onExpandedChange(false);
     };
 
-    const handleHeightAnimationComplete = async () => {
-        setHeightAnimating(false);
-        if (!shrinking) return;
-        setShrinking(false);
-        // 좁아지는 동안에는 내용을 숨겼다가, 다 좁아지면 접힌 내용이 올라온다
-        setNarrowing(true);
-        onExpandedChange(false, { animate: true });
-        if (window.matchMedia(SIDE_BY_SIDE_QUERY).matches) {
-            await wait(ATTENDANCE_WIDEN_MS);
-        }
-        setNarrowing(false);
-    };
-
-    // 굽기 스프라이트 → (접혀 있었다면) 카드가 옆으로 넓어지고 아래로 자라며 출석판을 펼침 → 오늘 칸에 타코야끼가 올라오는 순서
+    // 굽기 스프라이트 → (접혀 있었다면) 출석판을 펼침 → 오늘 칸에 타코야끼가 올라오는 순서
     const handleCheck = async () => {
         const fromCollapsed = !expanded;
         const endBaking = () => {
@@ -240,8 +185,8 @@ export function AttendanceCheckCard({
             const granted = receipt.rewards.reduce((sum, reward) => sum + reward.ticketCount, 0);
             setRevealDate(today);
             toast.success(`출석 완료! 응모권 ${granted}장을 받았어요.`);
-            // 굽기 장면을 띄운 채로 카드가 넓어지고, 자라기 시작할 때 굽기 장면을 출석판으로 바꾼다
-            if (fromCollapsed) await expandWithMotion(endBaking);
+            // 굽기 장면이 끝나면 바로 출석판으로 바꿔 펼친다
+            if (fromCollapsed) expand(endBaking);
         } catch {
             toast.error('출석 처리에 실패했어요. 잠시 후 다시 시도해 주세요.');
         } finally {
@@ -288,40 +233,28 @@ export function AttendanceCheckCard({
     return (
         // 운영체제의 동작 줄이기 설정을 켠 사용자에게는 요소 등장 효과를 끈다
         <MotionConfig reducedMotion="user">
-            <motion.div
-                initial={false}
-                // 펼칠 때는 접힌 높이에서 펼친 높이로 자라고, 접을 때는 거꾸로 줄어든다 (그 밖에는 바로 맞춘다)
-                animate={{
-                    height: showExpanded && !stageFull && !shrinking ? 'auto' : COLLAPSED_HEIGHT,
-                }}
-                transition={heightAnimating ? GROW_TRANSITION : { duration: 0 }}
-                onAnimationComplete={() => void handleHeightAnimationComplete()}
+            <div
+                // 접힌 카드는 옆 응모권 내역 카드와 높이를 맞추고, 펼친 카드는 출석판만큼 자란다
+                style={{ height: showExpanded && !stageFull ? 'auto' : COLLAPSED_HEIGHT }}
                 className={cn(
                     'bg-surface-page border-border-default flex flex-col rounded-2xl border p-4 shadow-md',
-                    heightAnimating && 'overflow-hidden',
                     className,
                 )}
             >
                 {stageFull ? (
-                    // 접힌 카드에서 출석하기 — 카드가 넓어지는 동안까지 굽기 장면이 카드 전체를 채운다
+                    // 접힌 카드에서 출석하기 — 굽는 동안 굽기 장면이 카드 전체를 채운다
                     <AttendanceBakingStage durationMs={BAKING_MIN_MS} className="flex-1" />
-                ) : narrowing ? (
-                    // 좁아지는 동안에는 빈 카드 틀만 움직인다
-                    <div className="flex-1" />
                 ) : (
-                    // 넓어지는 동안에는 접힌 내용을 빠르게 숨겨 늘어나는 모습이 보이지 않게 하고,
-                    // 다 넓어지면 펼친 내용으로 바뀌며(key) 위에서부터 차례로 올라온다
-                    <motion.div
+                    // 펼친 내용과 접힌 내용은 key로 갈아 끼워 바뀐 쪽만 떠오르게 한다
+                    <div
                         key={showExpanded ? 'expanded' : 'collapsed'}
-                        initial={false}
-                        animate={{ opacity: widening ? 0 : 1 }}
-                        transition={{ duration: CONTENT_FADE_MS / 1000 }}
                         className={cn(
                             'flex flex-1 flex-col',
                             showExpanded ? 'gap-4' : 'justify-between',
                         )}
                     >
-                        {showExpanded ? (
+                        {/* 접힌 카드의 펼치기 버튼은 최근 7일 스트립 머리에 둔다 */}
+                        {showExpanded && (
                             <Rise
                                 order={0}
                                 enter={contentEnter}
@@ -334,26 +267,13 @@ export function AttendanceCheckCard({
                                 <button
                                     type="button"
                                     aria-expanded="true"
-                                    onClick={collapseWithMotion}
+                                    onClick={collapse}
                                     className="text-body-sm text-fg-primary focus-visible:ring-border-focus focus-visible:ring-offset-surface-page flex shrink-0 cursor-pointer items-center rounded-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                                 >
                                     접기
                                     <ChevronUp className="size-5" />
                                 </button>
                             </Rise>
-                        ) : (
-                            // 펼쳐보기 버튼은 제자리에 그대로 둔다 (등장 효과 없음)
-                            <div className="self-end">
-                                <button
-                                    type="button"
-                                    aria-expanded="false"
-                                    onClick={() => void expandWithMotion()}
-                                    className="text-body-sm text-fg-primary focus-visible:ring-border-focus focus-visible:ring-offset-surface-page flex cursor-pointer items-center rounded-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                                >
-                                    펼쳐보기
-                                    <ChevronRight className="size-5" />
-                                </button>
-                            </div>
                         )}
 
                         {isPending && (
@@ -392,27 +312,49 @@ export function AttendanceCheckCard({
                                 )
                             ) : (
                                 <>
-                                    <Rise order={1} enter={contentEnter} className="p-4">
+                                    <Rise order={1} enter={contentEnter} className="px-4 pt-2">
                                         {stats}
                                     </Rise>
-                                    <Rise order={2} enter={contentEnter}>
-                                        <AttendanceWeekStrip
-                                            week={buildAttendanceWeek(
-                                                shownDates,
-                                                shownCheckedToday,
-                                                now,
-                                            )}
-                                            bonusDays={bonusDays}
-                                        />
-                                    </Rise>
-                                    <Rise order={3} enter={contentEnter}>
-                                        {checkButton}
-                                    </Rise>
+                                    {/* 최근 7일과 출석하기는 한 묶음으로 아래에 붙인다 — 남는 높이는 출석일수와 이 묶음 사이로 간다 */}
+                                    <div className="flex flex-col gap-4">
+                                        {/* 머리 오른쪽 '펼쳐보기'로 이번 달 출석판을 펼친다 */}
+                                        <Rise
+                                            order={2}
+                                            enter={contentEnter}
+                                            className="flex flex-col gap-2"
+                                        >
+                                            <div className="flex items-center justify-between px-1">
+                                                <span className="text-body-sm-bold text-fg-secondary">
+                                                    최근 7일
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    aria-expanded="false"
+                                                    onClick={() => expand()}
+                                                    className="text-body-sm text-fg-primary focus-visible:ring-border-focus focus-visible:ring-offset-surface-page flex cursor-pointer items-center rounded-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                                                >
+                                                    펼쳐보기
+                                                    <ChevronRight className="size-5" />
+                                                </button>
+                                            </div>
+                                            <AttendanceWeekStrip
+                                                week={buildAttendanceWeek(
+                                                    shownDates,
+                                                    shownCheckedToday,
+                                                    now,
+                                                )}
+                                                bonusDays={bonusDays}
+                                            />
+                                        </Rise>
+                                        <Rise order={3} enter={contentEnter}>
+                                            {checkButton}
+                                        </Rise>
+                                    </div>
                                 </>
                             ))}
-                    </motion.div>
+                    </div>
                 )}
-            </motion.div>
+            </div>
         </MotionConfig>
     );
 }

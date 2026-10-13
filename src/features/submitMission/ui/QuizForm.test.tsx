@@ -61,7 +61,7 @@ describe('QuizForm', () => {
         const onCompleted = renderForm();
 
         await user.click(screen.getByRole('radio', { name: 'X' }));
-        await user.click(screen.getByRole('button', { name: '정답 제출' }));
+        await user.click(screen.getByRole('button', { name: '제출하기' }));
 
         expect(
             await screen.findByText('아쉽지만 오답이에요. 답을 고쳐서 다시 도전해 보세요.'),
@@ -75,7 +75,7 @@ describe('QuizForm', () => {
         renderForm();
 
         await user.click(screen.getByRole('radio', { name: 'X' }));
-        await user.click(screen.getByRole('button', { name: '정답 제출' }));
+        await user.click(screen.getByRole('button', { name: '제출하기' }));
         await screen.findByText('아쉽지만 오답이에요. 답을 고쳐서 다시 도전해 보세요.');
 
         await user.click(screen.getByRole('radio', { name: 'O' }));
@@ -91,7 +91,7 @@ describe('QuizForm', () => {
         const onCompleted = renderForm();
 
         await user.click(screen.getByRole('radio', { name: 'O' }));
-        await user.click(screen.getByRole('button', { name: '정답 제출' }));
+        await user.click(screen.getByRole('button', { name: '제출하기' }));
 
         await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(1));
         const [result, isNewSubmission] = onCompleted.mock.calls[0] as [
