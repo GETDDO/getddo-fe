@@ -56,10 +56,17 @@ export function DrawResultSection({ event, results, myResult }: DrawResultSectio
             ) : myResult?.result === 'LOST' ? (
                 <LoseBanner event={event} />
             ) : myResult?.result === 'CANCELED' ? (
-                // 이벤트는 정상 발표됐어도 내 응모만 취소될 수 있다 — 그때 조회창을 띄우면 안 된다
+                /*
+                 * 공개 명단은 정상인데 본인 결과만 취소로 내려오는 경우다.
+                 * 그대로 두면 조회 입력창이 떠서 결과를 더 찾아보라는 말이 된다.
+                 *
+                 * 이벤트 취소인지 본인 응모 취소인지는 계약에 정의가 없어
+                 * (05-api/drawing.md는 '본인 표시의 중간 상태는 후속 계약'으로 남겨 두었다)
+                 * 사유를 단정하지 않고 결과가 없다는 사실만 적는다.
+                 */
                 <section className="bg-surface-page border-border-default rounded-2xl border p-8">
                     <p className="text-body text-fg-secondary text-center">
-                        {EMPTY_NOTICE.CANCELED}
+                        취소되어 확인할 수 있는 결과가 없어요.
                     </p>
                 </section>
             ) : (
