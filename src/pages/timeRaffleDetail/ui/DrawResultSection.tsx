@@ -55,6 +55,13 @@ export function DrawResultSection({ event, results, myResult }: DrawResultSectio
                 <WinnerBanner prize={myResult.prize} />
             ) : myResult?.result === 'LOST' ? (
                 <LoseBanner event={event} />
+            ) : myResult?.result === 'CANCELED' ? (
+                // 이벤트는 정상 발표됐어도 내 응모만 취소될 수 있다 — 그때 조회창을 띄우면 안 된다
+                <section className="bg-surface-page border-border-default rounded-2xl border p-8">
+                    <p className="text-body text-fg-secondary text-center">
+                        {EMPTY_NOTICE.CANCELED}
+                    </p>
+                </section>
             ) : (
                 // 응모하지 않은 사람도 명단을 확인할 수 있어야 한다 — 본인 결과가 없을 때만 연다
                 <WinnerLookupCard prizes={byRankAsc} onLookup={setMySuffix} />
