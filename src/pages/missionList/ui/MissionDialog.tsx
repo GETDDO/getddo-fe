@@ -18,15 +18,16 @@ import {
     DialogTitle,
 } from '@shared/ui/dialog';
 
-import { missionDeadlineLabel } from '../lib/missionBoard';
-import { MissionKindReward } from './MissionKindReward';
+import { MISSION_KIND_LABEL, missionUrgentDeadline } from '../lib/missionBoard';
+import { MissionReward } from './MissionReward';
 
 const PERIOD_FORMAT: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric' };
 
 /**
  * 설문·퀴즈 풀이 모달 — 미션 목록 위에서 바로 풀고 제출한다 (멘토링: 지금 분량이면 페이지 이동보다 모달).
  * 문항 수는 관리자가 정하므로 머리(제목·기간)는 고정하고 문항 영역만 스크롤한다.
- * 이번 제출로 막 완료되면 onRewarded로 받은 응모권 수·등급을 올려 목록이 보상 모달을 띄운다
+ * 이번 제출로 막 완료되면 onRewarded로 받은 응모권 수·등급을 올려 목록이 보상 모달을 띄운다.
+ * 머리와 본문은 점선(절취선)으로 나눈다 — 문항이 길어 스크롤될 때 머리 아래 경계가 남는다
  */
 export function MissionDialog({
     missionId,
@@ -85,6 +86,7 @@ function MissionDialogBody({
 
     const notYetOpen = now < new Date(mission.startsAt);
     const ended = now >= new Date(mission.endsAt);
+    const deadline = missionUrgentDeadline(mission.endsAt, now);
 
     const handleCompleted = (result: MissionSubmissionResult, isNewSubmission: boolean) => {
         // 보상 모달은 이번 제출로 막 완료됐을 때(201)만 — 재제출 재생(200)은 안내만 하고 닫는다
@@ -101,24 +103,14 @@ function MissionDialogBody({
 
     return (
         <>
-            {/* 머리 — 종류·보상·마감, 제목, 설명. 문항이 길어도 머리는 고정된다 */}
-            <header className="border-border-default flex shrink-0 flex-col gap-2 border-b px-6 pt-6 pr-12 pb-5">
+            {/* 머리 — 종류·급한 마감 칩, 제목, 설명, 기간·문항 수·보상 한 줄. 문항이 길어도 머리는 고정된다 */}
+            <header className="border-border-strong flex shrink-0 flex-col gap-2 border-b border-dashed px-6 pt-6 pr-12 pb-5">
                 <div className="flex flex-wrap items-center gap-2">
-                    <MissionKindReward
-                        missionType={mission.missionType}
-                        rewardTicketCount={mission.rewardTicketCount}
-                        muted={mission.completed}
-                    />
-                    {!mission.completed && !notYetOpen && !ended && (
-                        // 오늘 마감은 겟또타임 D-day처럼 검정 알약
-                        <Badge
-                            variant={
-                                missionDeadlineLabel(mission.endsAt, now) === '오늘 마감'
-                                    ? 'inverse'
-                                    : 'surface'
-                            }
-                        >
-                            {missionDeadlineLabel(mission.endsAt, now)}
+                    <Badge variant="neutral">{MISSION_KIND_LABEL[mission.missionType]}</Badge>
+                    {!mission.completed && !notYetOpen && !ended && deadline && (
+                        // 오늘 마감은 겟또타임 D-day처럼 검정 알약, 7일 이내는 흰 바탕+테두리 (카드와 같은 규칙)
+                        <Badge variant={deadline === '오늘 마감' ? 'inverse' : 'outline'}>
+                            {deadline}
                         </Badge>
                     )}
                 </div>
@@ -134,6 +126,13 @@ function MissionDialogBody({
                     {formatKst(mission.startsAt, PERIOD_FORMAT)} ~{' '}
                     {formatKst(mission.endsAt, PERIOD_FORMAT)}
                     {mission.questions.length > 0 && ` · ${mission.questions.length}문항`}
+                    <span aria-hidden>·</span>
+                    <MissionReward
+                        count={mission.rewardTicketCount}
+                        received={mission.completed}
+                        muted={mission.completed}
+                        small
+                    />
                 </p>
             </header>
             {/* 문항이 많아도 모달 높이(화면의 85%) 안에서 문항 영역만 스크롤한다 */}

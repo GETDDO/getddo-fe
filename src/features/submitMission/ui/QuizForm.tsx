@@ -63,9 +63,10 @@ export function QuizForm({
             <MissionAnswersForm
                 questions={mission.questions}
                 isPending={submitMission.isPending}
-                submitLabel="정답 제출"
+                submitLabel="제출하기"
                 pendingLabel="채점 중…"
                 onSubmit={submit}
+                variant="quiz"
                 onAnswersChange={() => {
                     // 답을 고치기 시작하면 오답 배너는 거둔다
                     if (lastResult && !lastResult.isCompleted) setLastResult(null);

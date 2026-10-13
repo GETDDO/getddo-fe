@@ -26,6 +26,20 @@ export const missionDeadlineLabel = (endsAt: string, now: Date) => {
     return days <= 0 ? '오늘 마감' : `D-${days}`;
 };
 
+/** 설문·퀴즈 종류 칩 글자 — 카드와 풀이 모달 머리가 같이 쓴다 */
+export const MISSION_KIND_LABEL = { QUIZ: '퀴즈', SURVEY: '설문' } as const;
+
+/** 마감 칩을 보여 주는 남은 날 — 이보다 많이 남으면 급한 정보가 아니라 칩을 숨긴다 */
+export const URGENT_DEADLINE_DAYS = 7;
+
+/** 카드·모달 머리의 마감 칩 — 오늘 마감과 D-1~D-7만 돌려주고, 그보다 멀거나 끝났으면 null */
+export const missionUrgentDeadline = (endsAt: string, now: Date): string | null => {
+    const label = missionDeadlineLabel(endsAt, now);
+    if (label === '오늘 마감') return label;
+    if (label === '종료') return null;
+    return Number(label.slice(2)) <= URGENT_DEADLINE_DAYS ? label : null;
+};
+
 /** 설문·퀴즈 목록 거르기 */
 export type MissionFilter = 'ALL' | 'QUIZ' | 'SURVEY' | 'DONE';
 
@@ -65,3 +79,11 @@ export const sortMissions = (missions: MissionSummary[], now: Date) => {
         })
         .map(({ mission }) => mission);
 };
+
+/** 카드 문항 요약 — "3문항", 선택 문항이 섞여 있으면 "3문항 · 필수 2개" */
+export function missionQuestionSummary(questions: { required: boolean }[]): string {
+    const required = questions.filter((question) => question.required).length;
+    return required > 0 && required < questions.length
+        ? `${questions.length}문항 · 필수 ${required}개`
+        : `${questions.length}문항`;
+}

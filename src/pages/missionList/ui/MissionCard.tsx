@@ -1,23 +1,28 @@
 import type { MissionSummary } from '@entities/mission';
 
+import { useMissionDetail } from '@entities/mission';
 import { formatKst } from '@shared/lib/date';
 import { Badge } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 
-import { getMissionPhase, missionDeadlineLabel } from '../lib/missionBoard';
-import { MissionKindReward } from './MissionKindReward';
+import {
+    getMissionPhase,
+    MISSION_KIND_LABEL,
+    missionQuestionSummary,
+    missionUrgentDeadline,
+} from '../lib/missionBoard';
+import { MissionReward } from './MissionReward';
 
-const MISSION_COPY = {
-    QUIZ: { description: '정답을 맞히면 받아요', action: '퀴즈 풀기' },
-    SURVEY: { description: '필수 문항에 답하면 받아요', action: '설문 참여' },
-} as const;
+const MISSION_ACTION = { QUIZ: '퀴즈 풀기', SURVEY: '설문 참여' } as const;
 
 const START_FORMAT: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric' };
 
 /**
- * 설문·퀴즈 카드 — 위에 설문/퀴즈 칩과 응모권 보상(+N), 오른쪽 위에 마감까지 남은 날, 제목, 짧은 설명,
- * 오른쪽에 Medium(40) 버튼. 완료한 미션은 '참여 완료' 버튼을 흐리게 둔다.
- * 테두리 없이 그림자만 둬 테두리 버튼과 선이 겹치지 않게 한다.
+ * 설문·퀴즈 카드 — 위에 설문/퀴즈 칩과 급한 마감 칩(오늘 마감·D-7 이내만), 제목,
+ * 보상과 문항 요약 한 줄("🎟 +1 · 2문항 · 필수 1개"), 오른쪽에 Medium(40) 버튼.
+ * 완료·종료한 미션은 버튼을 흐리게 두고 요약 줄은 흐린 보상만 남긴다 (상태는 버튼이 말해 준다).
+ * 문항 수는 목록 계약(MissionSummary)에 없어 참여할 수 있는 미션만 상세를 미리 불러와 센다 —
+ * 모달과 같은 쿼리라 모달이 바로 열린다. 목록에 questionCount가 생기면 그걸로 바꾼다
  * onOpen: 풀이 모달을 연다 (목록 페이지가 모달을 들고 있다)
  */
 export function MissionCard({
@@ -29,42 +34,46 @@ export function MissionCard({
     now: Date;
     onOpen: (missionId: string) => void;
 }) {
-    const copy = MISSION_COPY[mission.missionType];
     const phase = getMissionPhase(mission, now);
-    const deadline = missionDeadlineLabel(mission.endsAt, now);
+    const deadline = missionUrgentDeadline(mission.endsAt, now);
+    const muted = mission.completed || phase === 'ended';
+    const { data: detail } = useMissionDetail(mission.id, { enabled: !muted });
+    const summary = detail && !muted ? missionQuestionSummary(detail.questions) : null;
 
     return (
         <article
             // 위쪽 출석·내역·게임 카드와 같이 테두리를 둔다. 완료·종료 카드는 회색 바탕에 그림자 없이
-            className={`border-border-default flex items-center justify-between gap-4 rounded-2xl border p-5 ${mission.completed || phase === 'ended' ? 'bg-surface-canvas' : 'bg-surface-page shadow-md'}`}
+            className={`border-border-default flex items-center justify-between gap-4 rounded-2xl border p-5 ${muted ? 'bg-surface-canvas' : 'bg-surface-page shadow-md'}`}
         >
             <div className="flex min-w-0 flex-col gap-1">
                 <div className="flex items-center gap-2">
-                    <MissionKindReward
-                        missionType={mission.missionType}
-                        rewardTicketCount={mission.rewardTicketCount}
-                        muted={mission.completed || phase === 'ended'}
-                    />
-                    {/* 참여 완료한 미션에는 마감 정보가 필요 없다 */}
+                    {/* 완료·종료 카드는 회색 바탕이라 칩을 흰 바탕+테두리로 바꿔 묻히지 않게 한다 */}
+                    <Badge variant={muted ? 'outline' : 'neutral'}>
+                        {MISSION_KIND_LABEL[mission.missionType]}
+                    </Badge>
+                    {/* 참여 완료한 미션에는 마감 정보가 필요 없다. 마감은 7일 이내만 칩으로 — 멀리 남은 D-day는 급한 정보가 아니다 */}
                     {!mission.completed &&
                         (phase === 'upcoming' ? (
                             <Badge variant="outline">
                                 {formatKst(mission.startsAt, START_FORMAT)} 시작
                             </Badge>
                         ) : (
-                            // 오늘 마감은 겟또타임·이벤트 카드의 D-day처럼 검정 알약, 그 밖에는 종류 칩(회색)과
-                            // 겹치지 않게 흰 바탕+테두리
-                            <Badge variant={deadline === '오늘 마감' ? 'inverse' : 'outline'}>
-                                {deadline}
-                            </Badge>
+                            deadline && (
+                                // 오늘 마감은 겟또타임·이벤트 카드의 D-day처럼 검정 알약, 그 밖에는 종류 칩(회색)과
+                                // 겹치지 않게 흰 바탕+테두리
+                                <Badge variant={deadline === '오늘 마감' ? 'inverse' : 'outline'}>
+                                    {deadline}
+                                </Badge>
+                            )
                         ))}
                 </div>
-                <h3
-                    className={`text-body-bold ${mission.completed || phase === 'ended' ? 'text-fg-secondary' : 'text-fg-primary'}`}
-                >
+                <h3 className={`text-body-bold ${muted ? 'text-fg-secondary' : 'text-fg-primary'}`}>
                     {mission.title}
                 </h3>
-                <p className="text-body-sm text-fg-tertiary">{copy.description}</p>
+                <p className="text-body-sm text-fg-tertiary flex flex-wrap items-center gap-x-1.5">
+                    <MissionReward count={mission.rewardTicketCount} muted={muted} />
+                    {summary && <span>· {summary}</span>}
+                </p>
             </div>
             {mission.completed ? (
                 <Button disabled className="px-7">
@@ -77,7 +86,7 @@ export function MissionCard({
                     className="px-7"
                     onClick={() => onOpen(mission.id)}
                 >
-                    {copy.action}
+                    {MISSION_ACTION[mission.missionType]}
                 </Button>
             ) : (
                 <Button disabled className="px-7">

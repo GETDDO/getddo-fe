@@ -6,6 +6,8 @@ import {
     filterMissions,
     getMissionPhase,
     missionDeadlineLabel,
+    missionQuestionSummary,
+    missionUrgentDeadline,
     sortMissions,
 } from './missionBoard';
 
@@ -32,6 +34,19 @@ describe('getMissionPhase', () => {
         );
         expect(getMissionPhase(mission({}), NOW)).toBe('open');
         expect(getMissionPhase(mission({ endsAt: '2026-10-12T03:00:00Z' }), NOW)).toBe('ended');
+    });
+});
+
+describe('missionUrgentDeadline', () => {
+    it('오늘 마감과 7일 이내만 칩으로 보여 준다', () => {
+        expect(missionUrgentDeadline('2026-10-12T14:59:59Z', NOW)).toBe('오늘 마감');
+        // 2026-10-19 23:59:59 KST
+        expect(missionUrgentDeadline('2026-10-19T14:59:59Z', NOW)).toBe('D-7');
+    });
+
+    it('8일 이상 남았거나 끝난 미션은 칩이 없다', () => {
+        expect(missionUrgentDeadline('2026-10-20T14:59:59Z', NOW)).toBeNull();
+        expect(missionUrgentDeadline('2026-10-01T00:00:00Z', NOW)).toBeNull();
     });
 });
 
@@ -84,5 +99,15 @@ describe('sortMissions', () => {
             NOW,
         );
         expect(sorted.map((m) => m.id)).toEqual(['soon', 'late', 'upcoming', 'done', 'ended']);
+    });
+});
+
+describe('missionQuestionSummary', () => {
+    it('문항 수, 선택 문항이 섞이면 필수 개수를 붙인다', () => {
+        expect(missionQuestionSummary([{ required: true }])).toBe('1문항');
+        expect(missionQuestionSummary([{ required: true }, { required: false }])).toBe(
+            '2문항 · 필수 1개',
+        );
+        expect(missionQuestionSummary([{ required: false }, { required: false }])).toBe('2문항');
     });
 });
