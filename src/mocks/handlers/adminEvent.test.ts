@@ -4,7 +4,7 @@ import { apiClient } from '@shared/api/client';
 import { IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
 
 // 목업은 모듈 수준 상태를 들고 있어 테스트끼리 영향을 준다 — 변경 테스트는 새로 만든 이벤트로 독립시킨다
-const call = (method: 'get' | 'post' | 'put' | 'delete', path: string, body?: unknown) =>
+const call = (method: 'get' | 'post' | 'delete', path: string, body?: unknown) =>
     apiClient.request<Envelope<unknown>>({
         method,
         url: path,
@@ -134,30 +134,7 @@ describe('관리자 이벤트 목업 핸들러', () => {
         expect(res.status).toBe(400);
     });
 
-    it('진행 예정 이벤트는 수정할 수 있지만 시작 시각을 앞당길 수 없다', async () => {
-        const created = await createEvent();
-
-        const edited = await call(
-            'put',
-            `/admin/events/${created.id}`,
-            validBody({ title: '수정된 제목' }),
-        );
-        expect(edited.status).toBe(200);
-        expect((edited.data as Envelope<AdminEventBody>).data.title).toBe('수정된 제목');
-
-        const earlier = await call(
-            'put',
-            `/admin/events/${created.id}`,
-            validBody({ startsAt: '2099-05-01T00:00:00Z' }),
-        );
-        expect(earlier.status).toBe(409);
-    });
-
-    it('진행 중인 이벤트는 수정할 수 없다', async () => {
-        // evt-001은 진행 중(open) 시드다
-        const res = await call('put', '/admin/events/evt-001', validBody());
-        expect(res.status).toBe(409);
-    });
+    // AE04 수정은 실서버로 전환돼(GD-188) 목업 핸들러가 없다 — 관련 시나리오는 목업 테스트 대상이 아니다
 
     it('취소하면 CANCELED가 되고 사용자 목록에서 사라진다', async () => {
         const created = await createEvent();

@@ -39,7 +39,9 @@ export function useUpdateEvent() {
 
     return useMutation({
         mutationFn: async ({ eventId, body }: { eventId: string; body: EventWriteRequest }) => {
-            const { data } = await apiClient.put<unknown>(adminEventApiPath(eventId), body);
+            // AE04만 실서버로 전환 — 아직 목업인 나머지 관리자 이벤트 경로와 달리
+            // 확정 계약의 /v1 접두사를 붙인다 (알림 N01~N03·AN01~AN05와 같은 규약)
+            const { data } = await apiClient.put<unknown>(`/v1${adminEventApiPath(eventId)}`, body);
             return envelopeSchema(adminEventSchema).parse(data).data;
         },
         onSuccess: () => {
