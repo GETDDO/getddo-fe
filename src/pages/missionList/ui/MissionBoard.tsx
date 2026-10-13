@@ -10,19 +10,16 @@ import {
     type MissionFilter,
     sortMissions,
 } from '../lib/missionBoard';
-import { isMissionOpen } from '../lib/todayRewards';
 import { MissionCard } from './MissionCard';
 import { SectionHeader } from './SectionHeader';
 
 /** 카드 상태(곧 시작·참여 가능·기간 종료)를 다시 판정하는 간격 — 오늘의 적립 배너와 같이 1분 */
 const NOW_REFRESH_MS = 60_000;
 
-/** 진행 점은 이 개수까지만 그린다 — 넘으면 숫자만 둔다 (오늘의 적립 배너와 같은 기준) */
-const MAX_PROGRESS_DOTS = 8;
-
 /**
- * 설문·퀴즈 섹션 — 머리에 지금 참여할 수 있는 미션의 완료 진행, 종류·참여 완료 거르기 칩,
- * 참여 가능한 미션부터 놓은 카드 목록. 미션이 없으면 타꼬가 다음 미션을 알려 준다
+ * 설문·퀴즈 섹션 — 종류·참여 완료 거르기 칩, 참여 가능한 미션부터 놓은 카드 목록.
+ * 완료 진행은 위 "오늘의 적립" 배너 한 곳에서만 보여 준다 (게임 섹션과 통일).
+ * 미션이 없으면 타꼬가 다음 미션을 알려 준다
  */
 export function MissionBoard({
     id,
@@ -44,40 +41,14 @@ export function MissionBoard({
     const now = useVirtualClock().now();
     const [filter, setFilter] = useState<MissionFilter>('ALL');
 
-    // 진행은 배너와 같이 지금 참여할 수 있는 미션만 센다
-    const openMissions = missions?.filter((mission) => isMissionOpen(mission, now)) ?? [];
-    const doneCount = openMissions.filter((mission) => mission.completed).length;
     const shown = missions ? sortMissions(filterMissions(missions, filter), now) : [];
 
     return (
         <section id={id} className={`flex scroll-mt-24 flex-col gap-6 ${className ?? ''}`}>
-            <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-                <SectionHeader
-                    title="설문 · 퀴즈"
-                    caption="미션마다 한 번만 응모권을 받을 수 있어요."
-                />
-                {openMissions.length > 0 && (
-                    // 진행은 위 "오늘의 적립" 칸과 같은 점(●●○)으로 — 다 하면 점이 노랑. 점이 너무 많으면 숫자만 둔다
-                    <div className="flex items-center gap-2">
-                        <span className="text-body-sm text-fg-secondary whitespace-nowrap">
-                            <span className="text-body-sm-bold text-fg-primary tabular-nums">
-                                {doneCount} / {openMissions.length}
-                            </span>{' '}
-                            완료
-                        </span>
-                        {openMissions.length <= MAX_PROGRESS_DOTS && (
-                            <span aria-hidden className="flex shrink-0 gap-1">
-                                {openMissions.map((mission, index) => (
-                                    <span
-                                        key={mission.id}
-                                        className={`size-1.5 rounded-full ${index >= doneCount ? 'bg-border-strong' : doneCount === openMissions.length ? 'bg-ticket-primary' : 'bg-fg-primary'}`}
-                                    />
-                                ))}
-                            </span>
-                        )}
-                    </div>
-                )}
-            </div>
+            <SectionHeader
+                title="설문 · 퀴즈"
+                caption="미션마다 한 번만 응모권을 받을 수 있어요."
+            />
 
             {missions && missions.length > 0 && (
                 // 이벤트 목록의 거르기 칩과 같은 모양 — 고른 칩은 검정 테두리 (마젠타는 "지금" 신호에만, DESIGN-SYSTEM 색 역할 규칙). 고르지 않은 칩은 마우스를 올리면 테두리·글자가 진해지고 바탕이 옅은 회색이 된다

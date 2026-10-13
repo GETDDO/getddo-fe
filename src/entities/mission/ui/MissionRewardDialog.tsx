@@ -37,7 +37,14 @@ export function MissionRewardDialog({
 }) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="flex flex-col items-center gap-4 text-center">
+            <DialogContent
+                // 열릴 때 초점을 버튼이 아닌 모달 상자에 둬, 닫기 버튼에 초점 테두리가 먼저 보여 더 커 보이지 않게 한다 (게임 보상 모달과 같은 방식)
+                onOpenAutoFocus={(event) => {
+                    event.preventDefault();
+                    (event.currentTarget as HTMLElement | null)?.focus();
+                }}
+                className="flex flex-col items-center gap-4 text-center outline-none"
+            >
                 {/* 응모권을 든 타코야끼가 톡 튀어나온다 — 게임 보상 모달과 같은 spring */}
                 {reveal ?? (
                     <motion.img
