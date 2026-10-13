@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useMissionList } from '@entities/mission';
 import emptyMascot from '@shared/assets/ui/reward-mascot.png';
@@ -13,6 +13,9 @@ import {
 import { isMissionOpen } from '../lib/todayRewards';
 import { MissionCard } from './MissionCard';
 import { SectionHeader } from './SectionHeader';
+
+/** 카드 상태(곧 시작·참여 가능·기간 종료)를 다시 판정하는 간격 — 오늘의 적립 배너와 같이 1분 */
+const NOW_REFRESH_MS = 60_000;
 
 /** 진행 점은 이 개수까지만 그린다 — 넘으면 숫자만 둔다 (오늘의 적립 배너와 같은 기준) */
 const MAX_PROGRESS_DOTS = 8;
@@ -31,6 +34,13 @@ export function MissionBoard({
     onOpen: (missionId: string) => void;
 }) {
     const { data: missions, isPending, isError } = useMissionList();
+    // 가상 시계는 시간이 흘러도 다시 그리지 않으므로, 페이지를 열어 둔 채 시작·마감 시각을 지나도
+    // 카드가 바뀌도록 1분마다 다시 그려 지금 시각을 새로 읽는다. 시간 여행은 시계 context가 바뀌어 바로 반영된다
+    const [, setTick] = useState(0);
+    useEffect(() => {
+        const timer = setInterval(() => setTick((tick) => tick + 1), NOW_REFRESH_MS);
+        return () => clearInterval(timer);
+    }, []);
     const now = useVirtualClock().now();
     const [filter, setFilter] = useState<MissionFilter>('ALL');
 

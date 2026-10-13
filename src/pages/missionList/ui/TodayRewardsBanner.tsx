@@ -146,11 +146,12 @@ export function TodayRewardsBanner() {
         // 지금 참여할 수 있는 미션만 센다 — 목록 카드는 기간이 지난 미션도 그대로 보여 준다
         missions: missions?.filter((mission) => isMissionOpen(mission, now)),
     });
-    const allDone =
-        progress.attendance?.done === true &&
+    // 출석·게임·미션을 다 불러오기 전에는 남은 장수가 0으로 잡혀 틀린 숫자가 보이니 '-'로 둔다
+    const ready =
+        progress.attendance !== undefined &&
         progress.games !== undefined &&
-        progress.missions !== undefined &&
-        progress.remaining === 0;
+        progress.missions !== undefined;
+    const allDone = ready && progress.attendance?.done === true && progress.remaining === 0;
     // 오늘 더 받을 장수는 슬롯처럼 무작위 숫자가 잠깐 돌다가 멈춘다 — 작은 수를 세어 올리면 너무 빨리 끝나 어색하다
     const remaining = useSlotNumber(progress.remaining);
     const format = (n: number | undefined) => (n == null ? '-' : formatNumber(n));
@@ -208,7 +209,7 @@ export function TodayRewardsBanner() {
                             <>
                                 오늘 응모권{' '}
                                 <span className="text-display text-fg-primary tabular-nums">
-                                    {remaining}장
+                                    {ready ? remaining : '-'}장
                                 </span>{' '}
                                 더 받을 수 있어요
                             </>

@@ -96,13 +96,13 @@ _(Figma 원본 섹션 라벨은 "2. Button — 버튼"이며, 토큰 이름은 `
 
 ### 6) Border
 
-| Token                 | Hex          | 용도                                    |
-| --------------------- | ------------ | --------------------------------------- |
-| `border/default`      | `#E4E7EA`    | 카드·인풋 기본 테두리                   |
-| `border/strong`       | `#CDD2D8`    | 구분선, 테이블 경계                     |
-| `border/brand`        | `#E6007E`    | 세컨더리 버튼, 선택된 카드              |
-| `border/brand-subtle` | `#F5A3CB`    | 요약 카드 테두리                        |
-| `border/focus`        | `fg/primary` | 키보드 포커스 링 (2px, 요소와 2px 띄움) |
+| Token                 | Hex          | 용도                                          |
+| --------------------- | ------------ | --------------------------------------------- |
+| `border/default`      | `#E4E7EA`    | 카드·인풋 기본 테두리                         |
+| `border/strong`       | `#CDD2D8`    | 구분선, 테이블 경계                           |
+| `border/brand`        | `#E6007E`    | 선택된 카드 (세컨더리 버튼은 `border/strong`) |
+| `border/brand-subtle` | `#F5A3CB`    | 요약 카드 테두리                              |
+| `border/focus`        | `fg/primary` | 키보드 포커스 링 (2px, 요소와 2px 띄움)       |
 
 ### 7) Foreground — 텍스트·아이콘
 

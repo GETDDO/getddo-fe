@@ -30,7 +30,7 @@ interface MissionQuestionFieldProps {
     disabled?: boolean;
     /** 문항 번호(1부터) — 있으면 문항 위에 Q1처럼 보여 준다 */
     number?: number;
-    /** 퀴즈 판 안 — 번호·문항 가운데 정렬, 구분선 없이, 고른 칸은 노랑 */
+    /** 퀴즈 — 번호·문항 가운데 정렬, 구분선 없이, 고른 칸은 노랑 */
     centered?: boolean;
 }
 
@@ -61,7 +61,10 @@ export function MissionQuestionField({
                     : 'border-border-default flex flex-col gap-3 border-b py-6 first:pt-1 last-of-type:border-b-0',
             )}
         >
-            <legend className="sr-only">{question.questionText}</legend>
+            <legend className="sr-only">
+                {question.questionText}
+                {question.required && ' (필수)'}
+            </legend>
             <div className="flex flex-col gap-1.5">
                 {number !== undefined && (
                     <span
@@ -92,6 +95,8 @@ export function MissionQuestionField({
                     // 미선택은 ''로 고정 — undefined로 두면 비제어→제어 전환 경고가 난다
                     value={value?.selectedOptionId ?? ''}
                     onValueChange={(selectedOptionId) => onChange({ selectedOptionId })}
+                    // 별표는 눈으로만 보이는 표시 — 화면 읽기 프로그램에는 입력 컨트롤에 필수 여부를 알린다
+                    aria-required={question.required}
                     className={question.questionType === 'OX' ? 'grid-cols-2 gap-3' : 'gap-2'}
                 >
                     {options.map((option) =>
@@ -131,6 +136,7 @@ export function MissionQuestionField({
                     onChange={(event) => onChange({ answerText: event.target.value })}
                     placeholder="정답을 입력해 주세요"
                     aria-invalid={invalid || undefined}
+                    aria-required={question.required}
                     className="bg-surface-page"
                 />
             ) : (
@@ -140,6 +146,7 @@ export function MissionQuestionField({
                     onChange={(event) => onChange({ answerText: event.target.value })}
                     placeholder="답변을 입력해 주세요"
                     aria-invalid={invalid || undefined}
+                    aria-required={question.required}
                     className="bg-surface-page"
                     rows={4}
                 />

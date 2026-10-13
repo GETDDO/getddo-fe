@@ -24,6 +24,8 @@ export function useSlotNumber(value: number, durationMs = 800): number {
         return () => {
             clearInterval(timer);
             clearTimeout(stop);
+            // 도는 중에 값이 바뀌어 다음 effect가 동작 줄이기로 돌지 않으면, 남은 무작위 숫자가 그대로 굳지 않게 지운다
+            setRolling(null);
         };
     }, [value, durationMs]);
 
