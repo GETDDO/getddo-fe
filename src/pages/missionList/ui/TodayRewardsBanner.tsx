@@ -34,9 +34,11 @@ import { isMissionOpen, summarizeTodayRewards } from '../lib/todayRewards';
 import { useSlotNumber } from '../lib/useSlotNumber';
 import { MISSION_SECTION_IDS } from '../model/sectionIds';
 
-/** 응모권 모양 — 양옆 가운데를 반원으로 파낸다 (왼쪽 반·오른쪽 반에 각각 구멍 하나) */
+/** 응모권 모양 — 양옆 절취선 높이를 반원으로 파낸다 (왼쪽 반·오른쪽 반에 각각 구멍 하나) */
+// 홈은 절취선 높이에 판다 — 카드 아래 여백(p-5 1.25rem) + 내역 줄(body-sm 1.375rem) + 절취선 위 여백(pt-3 0.75rem)
+const PERFORATION_FROM_BOTTOM = '3.375rem';
 const TICKET_NOTCH_MASK: CSSProperties = {
-    mask: 'radial-gradient(circle at 0 50%, transparent 14px, #000 14.5px) left / 51% 100% no-repeat, radial-gradient(circle at 100% 50%, transparent 14px, #000 14.5px) right / 51% 100% no-repeat',
+    mask: `radial-gradient(circle at 0 calc(100% - ${PERFORATION_FROM_BOTTOM}), transparent 14px, #000 14.5px) left / 51% 100% no-repeat, radial-gradient(circle at 100% calc(100% - ${PERFORATION_FROM_BOTTOM}), transparent 14px, #000 14.5px) right / 51% 100% no-repeat`,
 };
 
 /** 기준 시각을 다시 읽는 간격 */
@@ -55,7 +57,7 @@ const scrollToSection = (id: string) =>
 /** 진행 점은 이 개수까지만 그린다 — 넘으면 숫자만 둔다 */
 const MAX_PROGRESS_DOTS = 8;
 
-/** 오늘 할 일 한 칸 — 완료면 노란 테두리와 체크. 숫자 옆 점(●●○)으로 진행을 보여 준다 */
+/** 오늘 할 일 한 칸 — 완료면 노란 테두리와 체크. 숫자 옆 점(●●○)으로 진행을 보여 준다. 마우스를 올려도 움직이지 않는다 */
 function TodayStep({
     icon: Icon,
     label,
@@ -76,7 +78,7 @@ function TodayStep({
         <button
             type="button"
             onClick={() => scrollToSection(sectionId)}
-            className={`bg-surface-page focus-visible:ring-border-focus relative flex min-w-0 cursor-pointer flex-col gap-2 rounded-2xl p-3 text-left shadow-sm transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:outline-none sm:gap-3 sm:p-4 ${done ? 'ring-ticket-primary ring-2' : ''}`}
+            className={`bg-surface-page focus-visible:ring-border-focus relative flex min-w-0 cursor-pointer flex-col gap-2 rounded-2xl p-3 text-left shadow-sm focus-visible:ring-2 focus-visible:outline-none sm:gap-3 sm:p-4 ${done ? 'ring-ticket-primary ring-2' : ''}`}
         >
             <span className="flex items-center">
                 <span
