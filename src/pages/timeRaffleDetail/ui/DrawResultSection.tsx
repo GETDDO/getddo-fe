@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import type { PublicResults, PublishedPrize } from '@entities/drawResult';
+import type { MyResult, PublicResults } from '@entities/drawResult';
 import type { Event } from '@entities/event';
 
 import { LoseBanner } from './LoseBanner';
@@ -19,12 +19,18 @@ const EMPTY_NOTICE: Record<string, string> = {
 interface DrawResultSectionProps {
     event: Event;
     results: PublicResults;
+    /** 본인 결과(E09) — 당첨·낙첨 판정의 유일한 근거다 */
+    myResult?: MyResult;
 }
 
-export function DrawResultSection({ event, results }: DrawResultSectionProps) {
-    // 조회한 뒷자리 — 찾기 전에는 null이다. 명단에 있으면 그 줄을 강조하고, 없으면 낙첨 배너를 연다
-    const [lookedUp, setLookedUp] = useState<{ suffix: string; found: boolean } | null>(null);
-    const mySuffix = lookedUp?.found === true ? lookedUp.suffix : null;
+export function DrawResultSection({ event, results, myResult }: DrawResultSectionProps) {
+    /**
+     * 조회한 뒷자리.
+     *
+     * 뒷자리는 여러 사람이 같을 수 있어 '내가 당첨됐다'의 근거가 되지 못한다.
+     * 명단에서 같은 줄을 찾아 주는 용도로만 쓰고, 당첨 여부는 myResult가 판정한다.
+     */
+    const [mySuffix, setMySuffix] = useState<string | null>(null);
 
     // 발표 전에는 아무것도 열지 않는다. 예정 시각이 지났다는 사실만으로는 공개하지 않는다
     if (!results.isPublished) return null;
@@ -43,28 +49,15 @@ export function DrawResultSection({ event, results }: DrawResultSectionProps) {
     const [topPrize, ...restPrizes] = byRankAsc;
     if (!topPrize) return null;
 
-    // 뒷자리가 여러 등수에 걸릴 수 있다 — 가장 높은 등수를 대표로 알려 준다
-    const myPrize = mySuffix == null ? null : findMyPrize(byRankAsc, mySuffix);
-
     return (
         <section className="flex flex-col gap-4">
-            {myPrize ? (
-                <WinnerBanner
-                    maskedName={
-                        myPrize.winners.find((winner) => winner.maskedPhoneNum === mySuffix)
-                            ?.maskedName ?? ''
-                    }
-                    rank={myPrize.rank}
-                    prizeName={myPrize.name}
-                    onReset={() => setLookedUp(null)}
-                />
-            ) : lookedUp ? (
-                <LoseBanner event={event} onReset={() => setLookedUp(null)} />
+            {myResult?.result === 'WON' ? (
+                <WinnerBanner prize={myResult.prize} />
+            ) : myResult?.result === 'LOST' ? (
+                <LoseBanner event={event} />
             ) : (
-                <WinnerLookupCard
-                    prizes={byRankAsc}
-                    onLookup={(suffix, found) => setLookedUp({ suffix, found })}
-                />
+                // 응모하지 않은 사람도 명단을 확인할 수 있어야 한다 — 본인 결과가 없을 때만 연다
+                <WinnerLookupCard prizes={byRankAsc} onLookup={setMySuffix} />
             )}
 
             <PrizeWinnerCard prize={topPrize} mySuffix={mySuffix} highlighted />
@@ -79,14 +72,6 @@ export function DrawResultSection({ event, results }: DrawResultSectionProps) {
 
             <EntrySummary event={event} />
         </section>
-    );
-}
-
-function findMyPrize(byRankAsc: PublishedPrize[], suffix: string): PublishedPrize | null {
-    return (
-        byRankAsc.find((prize) =>
-            prize.winners.some((winner) => winner.maskedPhoneNum === suffix),
-        ) ?? null
     );
 }
 

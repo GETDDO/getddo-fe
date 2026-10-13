@@ -1,4 +1,5 @@
 import { ChevronRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import type { Event } from '@entities/event';
@@ -6,6 +7,7 @@ import type { Event } from '@entities/event';
 import { useMyTickets, useTicketHistories } from '@entities/ticket';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
+import { useVirtualClock } from '@shared/lib/virtualClock';
 
 import heroMascot from '../assets/hero-mascot.png';
 import { isSameKstMonth, kstDateHeadline } from '../lib/raffleFormat';
@@ -60,13 +62,31 @@ export function TimeRaffleHero({ live, upcoming, closed, now }: TimeRaffleHeroPr
                                 : '예정된 래플 없음'
                         }
                     />
-                    <AnnouncementStep closed={closed} now={now} />
+                    <AnnouncementStep closed={closed} />
                 </dl>
             </div>
 
             <TicketWallet now={now} />
         </section>
     );
+}
+
+/** 발표 예정 시각을 지났는지 판정하려면 흘러가는 시각이 필요하다 — 분 단위면 충분하다 */
+const ANNOUNCE_TICK_MS = 30 * 1000;
+
+function useTickingNow(): Date {
+    const { now } = useVirtualClock();
+    const [value, setValue] = useState(() => now());
+
+    useEffect(() => {
+        const update = () => setValue(now());
+        // 가상 시계를 옮기면 now가 새로 내려온다 — 다음 주기를 기다리지 않고 바로 맞춘다
+        update();
+        const id = setInterval(update, ANNOUNCE_TICK_MS);
+        return () => clearInterval(id);
+    }, [now]);
+
+    return value;
 }
 
 function StepCard({
@@ -98,15 +118,24 @@ function StepCard({
  * 발표 예정 시각이 오늘인 래플을 센다. 예정 시각은 '원래 예정'이라 실제 공개는 늦을 수 있으므로
  * 아직 발표되지 않은 것 중 가장 이른 시각만 알려 주고, 새 시각을 약속하지 않는다.
  */
-function AnnouncementStep({ closed, now }: { closed: Event[]; now: Date }) {
+function AnnouncementStep({ closed }: { closed: Event[] }) {
+    // 마운트 시각으로 고정하면 가상 시계가 자정을 넘기거나 화면을 오래 열어 둘 때 '오늘'이 어긋난다
+    const now = useTickingNow();
+
     const today = closed.filter(
         (event) =>
             event.publicationScheduledAt != null &&
             formatKst(event.publicationScheduledAt, { dateStyle: 'short' }) ===
                 formatKst(now, { dateStyle: 'short' }),
     );
+    // 예정 시각이 이미 지났는데 아직 발표되지 않은 건은 '몇 시 발표'로 적을 수 없다 —
+    // 그 시각은 틀린 약속이고, 새 시각을 임의로 만들지 않는다 (05-api/drawing.md)
     const waiting = today
-        .filter((event) => event.status !== 'drawn')
+        .filter(
+            (event) =>
+                event.status !== 'drawn' &&
+                new Date(event.publicationScheduledAt ?? 0).getTime() > now.getTime(),
+        )
         .sort(
             (a, b) =>
                 new Date(a.publicationScheduledAt ?? 0).getTime() -

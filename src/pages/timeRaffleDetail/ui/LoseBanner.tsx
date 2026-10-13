@@ -10,18 +10,15 @@ import { Button } from '@shared/ui/button';
 
 import loseMascot from '../assets/lose-mascot.png';
 
-interface LoseBannerProps {
-    event: Event;
-    onReset: () => void;
-}
-
 /**
- * 조회했지만 명단에 없을 때의 머리 배너.
+ * 낙첨 배너.
  *
- * '없음'만 알리고 끝내지 않고 다음에 할 수 있는 일을 같이 둔다 — 쓴 응모권과 다음 래플이다.
- * 뒷자리를 잘못 눌렀을 수도 있으므로 '다시 조회'를 늘 함께 둔다.
+ * 본인 결과 조회(E09)가 LOST로 판정했을 때만 연다. 공개 명단에서 뒷자리를 못 찾았다는 것은
+ * 입력을 잘못했을 수도 있어 낙첨의 근거가 되지 못한다.
+ *
+ * '떨어졌다'만 알리고 끝내지 않고 다음에 할 수 있는 일을 같이 둔다 — 쓴 응모권과 다음 래플이다.
  */
-export function LoseBanner({ event, onReset }: LoseBannerProps) {
+export function LoseBanner({ event }: { event: Event }) {
     const userName = useSessionStore((state) => state.user?.name);
     const nextRaffle = useNextRaffle(event.id);
 
@@ -56,9 +53,6 @@ export function LoseBanner({ event, onReset }: LoseBannerProps) {
                     <Link to={nextRaffle ? `/time-raffle/${nextRaffle.id}` : '/time-raffle'}>
                         다음 타임래플 보기
                     </Link>
-                </Button>
-                <Button variant="ghost" size="sm" onClick={onReset}>
-                    다른 번호로 다시 조회
                 </Button>
             </div>
         </section>

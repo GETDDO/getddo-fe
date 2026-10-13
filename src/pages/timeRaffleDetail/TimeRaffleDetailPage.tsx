@@ -183,9 +183,11 @@ export function TimeRaffleDetailPage() {
                         )
                     }
                 />
-                {/* 공개 명단보다 내 결과를 먼저 둔다 — 들어온 이유가 '내가 됐나'이기 때문이다 */}
-                {myResult && <MyResultCard result={myResult} />}
-                {results && <DrawResultSection event={event} results={results} />}
+                {/* 발표 전에는 내 결과 카드가, 발표 후에는 결과 영역의 배너가 본인 결과를 맡는다 */}
+                {myResult?.result === 'PENDING' && <MyResultCard result={myResult} />}
+                {results && (
+                    <DrawResultSection event={event} results={results} myResult={myResult} />
+                )}
                 <MyTicketCard event={event} />
                 <RaffleDetailsCard event={event} />
                 <RaffleRulesCard event={event} />

@@ -177,6 +177,25 @@ export function mockMyEntrySummary(userId: string, eventId: string) {
     };
 }
 
+/**
+ * 이 이벤트에 응모한 사용자 ID를 먼저 응모한 순서로 돌려준다.
+ *
+ * E09 목업이 당첨 자리를 사용자에게 겹치지 않게 배정할 때 쓴다 — 자리 수는 공개 명단(E08)의
+ * 당첨 인원과 같아야 하므로, 사용자마다 따로 뽑으면 1등이 여럿 나올 수 있다.
+ */
+export function mockEventEntrantIds(eventId: string): string[] {
+    const firstAcceptedAt = new Map<string, number>();
+    for (const [userId, list] of entriesByUser) {
+        for (const entry of list) {
+            if (entry.eventId !== eventId || entry.status !== 'ACCEPTED') continue;
+            const at = new Date(entry.acceptedAt ?? entry.requestedAt).getTime();
+            const seen = firstAcceptedAt.get(userId);
+            if (seen == null || at < seen) firstAcceptedAt.set(userId, at);
+        }
+    }
+    return [...firstAcceptedAt.entries()].sort((a, b) => a[1] - b[1]).map(([userId]) => userId);
+}
+
 export const entryHandlers = [
     // E06 초안 — Page<EntryReceipt> 봉투, page·size 파라미터를 적용한다 (페이지는 1부터)
     http.get(api('/users/me/entries'), ({ request }) => {

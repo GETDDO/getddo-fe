@@ -26,8 +26,16 @@ interface PrizeWinnerCardProps {
 export function PrizeWinnerCard({ prize, mySuffix, highlighted = false }: PrizeWinnerCardProps) {
     const [expanded, setExpanded] = useState(false);
 
+    // 강조할 줄이 접힌 자리에 있으면 펼쳐 둔다 — 찾아 준 줄을 다시 눌러야 보는 건 말이 안 된다
+    const matchIndex =
+        mySuffix == null
+            ? -1
+            : prize.winners.findIndex((winner) => winner.maskedPhoneNum === mySuffix);
+    const matchHidden = matchIndex >= COLLAPSED_COUNT;
+
     const hiddenCount = Math.max(0, prize.winners.length - COLLAPSED_COUNT);
-    const visible = expanded ? prize.winners : prize.winners.slice(0, COLLAPSED_COUNT);
+    const open = expanded || matchHidden;
+    const visible = open ? prize.winners : prize.winners.slice(0, COLLAPSED_COUNT);
 
     return (
         <article className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-5">
@@ -79,7 +87,7 @@ export function PrizeWinnerCard({ prize, mySuffix, highlighted = false }: PrizeW
                 })}
             </ul>
 
-            {hiddenCount > 0 && (
+            {hiddenCount > 0 && !matchHidden && (
                 <button
                     type="button"
                     onClick={() => setExpanded((value) => !value)}

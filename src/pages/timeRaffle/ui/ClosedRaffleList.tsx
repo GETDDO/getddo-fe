@@ -121,14 +121,12 @@ function ClosedRaffleRow({ event, now }: { event: Event; now: Date }) {
                 <p className="text-body-bold text-fg-primary truncate">{event.title}</p>
                 <p className="text-caption text-fg-tertiary">{meta.join(' · ')}</p>
             </div>
-            <Button
-                asChild={isDrawn}
-                variant="secondary"
-                size="sm"
-                disabled={!isDrawn}
-                className="shrink-0"
-            >
-                {isDrawn ? <Link to={`/time-raffle/${event.id}`}>결과 보기</Link> : <>발표 전</>}
+            {/*
+             * 발표 전이라도 상세로 들어갈 수 있어야 한다 — 상세 화면은 마감 상태를 지원하고
+             * 발표까지 남은 시간과 내 응모 현황을 보여 준다. 버튼을 막으면 그 경로가 끊긴다
+             */}
+            <Button asChild variant="secondary" size="sm" className="shrink-0">
+                <Link to={`/time-raffle/${event.id}`}>{isDrawn ? '결과 보기' : '상세 보기'}</Link>
             </Button>
         </li>
     );

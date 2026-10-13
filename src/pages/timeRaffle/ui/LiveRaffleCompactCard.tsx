@@ -16,7 +16,9 @@ import { RaffleThumbnail } from './RaffleThumbnail';
  * 마감이 제각각이라 넘겨 보는 동안 다른 래플이 끝날 수 있다. 전부 한눈에 둔다.
  */
 export function LiveRaffleCompactCard({ event }: { event: Event }) {
-    const { data: statistics } = useEntryStatistics(event.id, { isOpen: true });
+    // 폴링은 대표 카드 하나만 한다 (ADR-0007). 작은 카드까지 30초마다 부르면
+    // 진행 중 래플 수만큼 E03 요청이 늘어나는데, 여기서 보여 주는 건 참여자 수 한 줄뿐이다
+    const { data: statistics } = useEntryStatistics(event.id);
 
     return (
         <article className="bg-surface-page border-border-default flex items-center gap-5 rounded-2xl border p-5">

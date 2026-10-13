@@ -5,7 +5,7 @@ import type { MyResult, Prize, PublicResults, PublishedPrize } from '@entities/d
 import { env } from '@shared/config/env';
 
 import { mockNow } from '../now';
-import { mockMyEntrySummary } from './entry';
+import { mockEventEntrantIds, mockMyEntrySummary } from './entry';
 import { ANNOUNCE_DELAY_MS, findMockEvent, type MockEvent } from './event';
 import { fail, ok } from './response';
 
@@ -124,35 +124,19 @@ function buildResults(event: MockEvent, now: number): PublicResults {
 const userIdOf = (request: Request) => request.headers.get('X-User-ID') ?? 'anonymous';
 
 /**
- * 시연에서 당첨 화면을 반드시 한 번은 볼 수 있도록 당첨으로 고정하는 래플.
+ * 본인 당첨 여부 — 공개 명단(E08)의 당첨 자리를 응모 순서대로 나눠 가진다.
  *
- * 실제 확률(당첨 인원 ÷ 참여자)대로만 뽑으면 수천 명짜리 래플에서 거의 낙첨이라
- * 당첨 화면을 보여 줄 수가 없다. 값은 당첨 등수다.
- */
-const DEMO_WIN_RANKS: Record<string, number> = {
-    'evt-101': 1,
-    'evt-113': 2,
-};
-
-/**
- * 본인 당첨 여부 — 같은 사용자·이벤트면 늘 같은 결과다.
+ * 사용자마다 따로 뽑으면 1등 한 자리짜리 래플에서 두 사람이 모두 당첨으로 나올 수 있다.
+ * 자리 수가 곧 공개된 당첨 인원이므로, 응모 순번이 그 안에 들면 그 등수다.
  *
- * 난수를 쓰면 폴링할 때마다 당첨과 낙첨이 뒤집혀 발표된 결과로 보이지 않는다.
+ * 목업에 실제로 응모 기록이 남는 사용자는 이 브라우저에서 응모한 사람뿐이라
+ * (participantCount는 화면 표시용 시드 숫자다) 먼저 응모한 사람이 윗등수를 받는다.
  */
-function seededWin(userId: string, event: MockEvent, prizes: PublishedPrize[]): Prize | null {
-    const fixedRank = DEMO_WIN_RANKS[event.id];
-    const won = prizes.find((prize) => prize.rank === fixedRank);
-    if (won) return toPrize(won);
+function seededWin(userId: string, prizes: PublishedPrize[], entrants: string[]): Prize | null {
+    const slot = entrants.indexOf(userId);
+    if (slot < 0) return null;
 
-    const participants = event.participantCount ?? 0;
-    if (participants === 0) return null;
-
-    let hash = 0;
-    for (const char of `${userId}-${event.id}`) {
-        hash = (hash * 31 + char.charCodeAt(0)) % 1_000_000;
-    }
-    // 등수마다 당첨 인원만큼의 몫을 두고, 해시가 그 구간에 들어가면 그 등수에 당첨된다
-    let cursor = hash % participants;
+    let cursor = slot;
     for (const prize of [...prizes].sort((a, b) => a.rank - b.rank)) {
         if (cursor < prize.winnerCount) return toPrize(prize);
         cursor -= prize.winnerCount;
@@ -199,7 +183,7 @@ function buildMyResult(event: MockEvent, userId: string, now: number): MyResult 
         };
     }
 
-    const prize = seededWin(userId, event, published.prizes);
+    const prize = seededWin(userId, published.prizes, mockEventEntrantIds(event.id));
     return {
         eventId: event.id,
         result: prize ? 'WON' : 'LOST',
