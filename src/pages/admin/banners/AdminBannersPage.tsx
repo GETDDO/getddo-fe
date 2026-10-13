@@ -6,11 +6,11 @@ import { AdminBannerTable, BANNER_MAX_COUNT, useAdminBanners } from '@entities/b
 import { useAdminEvents } from '@entities/event';
 import {
     BannerFormDialog,
-    bannerErrorMessage,
     DeleteBannerDialog,
     moveBannerId,
     useReorderBanners,
 } from '@features/manageBanner';
+import { getErrorMessage } from '@shared/api/errorMessage';
 import { Button } from '@shared/ui/button';
 
 // 연결 이벤트 선택지·제목 해석용 — 이벤트 수가 한 번에 담기는 시연 규모를 전제로 한 페이지로 받는다
@@ -90,7 +90,7 @@ export function AdminBannersPage() {
             )}
             {reorder.isError && (
                 <p role="alert" className="text-destructive text-body-sm">
-                    {bannerErrorMessage(
+                    {getErrorMessage(
                         reorder.error,
                         '노출 순서를 바꾸지 못했습니다. 다시 시도해주세요.',
                     )}
