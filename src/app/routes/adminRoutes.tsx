@@ -109,6 +109,14 @@ export const adminRoutes: RouteObject[] = [
                 ),
             },
             {
+                path: 'notifications',
+                element: lazyPage(() =>
+                    import('@pages/admin/notifications/AdminNotificationsPage').then((m) => ({
+                        default: m.AdminNotificationsPage,
+                    })),
+                ),
+            },
+            {
                 path: 'banners',
                 element: lazyPage(() =>
                     import('@pages/admin/banners/AdminBannersPage').then((m) => ({
