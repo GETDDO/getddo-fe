@@ -7,13 +7,11 @@ import type { MissionAnswer, MissionAnswerDraft, MissionQuestion } from '@entiti
 import { buildMissionAnswers, findMissingRequired, MissionQuestionField } from '@entities/mission';
 import { Button } from '@shared/ui/button';
 
-import mascot from '../assets/quiz-mascot.png';
-
 /**
  * 설문·퀴즈 공통 문항 폼 — 문항 렌더링과 필수 문항 검증만 담당한다.
  * 유효한 제출 payload는 onSubmit으로 올리고, 제출 전 확인(설문)·채점 재도전(퀴즈) 같은
  * 제출 정책은 사용처가 정한다.
- * variant='quiz': 문항 위에 타꼬를 세우고, 문항을 가운데 정렬로 둔다.
+ * variant='quiz': 문항을 가운데 정렬로 둔다.
  * 제출 버튼은 설문·퀴즈 모두 모달 너비를 꽉 채운다.
  */
 export function MissionAnswersForm({
@@ -32,7 +30,7 @@ export function MissionAnswersForm({
     onSubmit: (answers: MissionAnswer[]) => void;
     /** 답변이 하나라도 바뀔 때 호출 — 오답 배너 거두기 같은 부수 처리용 */
     onAnswersChange?: () => void;
-    /** 설문은 문항을 점선 구분선으로 나열, 퀴즈는 캐릭터가 얹힌 판 안에 가운데 정렬 */
+    /** 설문은 문항을 구분선으로 나열, 퀴즈는 가운데 정렬 */
     variant?: 'survey' | 'quiz';
 }) {
     const [missingIds, setMissingIds] = useState<Set<string>>(new Set());
@@ -99,14 +97,7 @@ export function MissionAnswersForm({
             onSubmit={(event) => void handleSubmit(submit)(event)}
             className="flex flex-col"
         >
-            {variant === 'quiz' ? (
-                <div className="flex flex-col items-center gap-4 pt-1">
-                    <img src={mascot} alt="" className="h-24 w-auto" />
-                    <div className="flex w-full flex-col">{fields}</div>
-                </div>
-            ) : (
-                fields
-            )}
+            {fields}
             {/* 제출 줄 — 문항이 길어도 모달 아래에 붙어 있다. 모달 본문 좌우 여백(px-6)만큼 넓혀 가장자리까지 채운다. 구분선 없이 흰 바탕만 문항 위를 덮는다 */}
             <div className="bg-surface-elevated sticky bottom-0 -mx-6 mt-6 flex flex-col gap-3 px-6 py-4">
                 {showProgress && (

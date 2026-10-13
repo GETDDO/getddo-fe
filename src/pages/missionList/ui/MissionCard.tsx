@@ -20,8 +20,8 @@ const START_FORMAT: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric'
 /**
  * 설문·퀴즈 카드 — 위에 설문/퀴즈 칩과 급한 마감 칩(오늘 마감·D-7 이내만), 제목,
  * 보상과 문항 요약 한 줄("🎟 +1 · 2문항 · 필수 1개"), 오른쪽에 Medium(40) 버튼.
- * 완료·종료한 미션은 버튼을 흐리게 두고 요약 줄은 흐린 보상만 남긴다 (상태는 버튼이 말해 준다).
- * 문항 수는 목록 계약(MissionSummary)에 없어 참여할 수 있는 미션만 상세를 미리 불러와 센다 —
+ * 완료·종료한 미션은 버튼을 흐리게 두고 요약 줄도 흐리게 한다 (상태는 버튼이 말해 준다). 종료된 미션은 보상만 남긴다.
+ * 문항 수는 목록 계약(MissionSummary)에 없어 종료되지 않았거나 참여 완료한 미션만 상세를 미리 불러와 센다 —
  * 모달과 같은 쿼리라 모달이 바로 열린다. 목록에 questionCount가 생기면 그걸로 바꾼다
  * onOpen: 풀이 모달을 연다 (목록 페이지가 모달을 들고 있다)
  */
@@ -37,8 +37,10 @@ export function MissionCard({
     const phase = getMissionPhase(mission, now);
     const deadline = missionUrgentDeadline(mission.endsAt, now);
     const muted = mission.completed || phase === 'ended';
-    const { data: detail } = useMissionDetail(mission.id, { enabled: !muted });
-    const summary = detail && !muted ? missionQuestionSummary(detail.questions) : null;
+    // 문항 요약은 참여 완료한 미션에도 둔다 — 기간이 끝나 참여하지 못한 미션만 상세를 부르지 않는다
+    const showSummary = mission.completed || phase !== 'ended';
+    const { data: detail } = useMissionDetail(mission.id, { enabled: showSummary });
+    const summary = detail && showSummary ? missionQuestionSummary(detail.questions) : null;
 
     return (
         <article

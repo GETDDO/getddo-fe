@@ -1,4 +1,5 @@
 import { CalendarDays } from 'lucide-react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import type { MissionSubmissionResult } from '@entities/mission';
@@ -23,11 +24,22 @@ import { MissionReward } from './MissionReward';
 
 const PERIOD_FORMAT: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric' };
 
+/** 절취선 양 끝 펀칭 구멍 반지름 — 응모권 카드(shared/ui/ticket-card)와 같은 크기 */
+const PUNCH_RADIUS = 13.4;
+
+/** 양옆 y 높이에 반원 구멍을 도려내는 마스크 — 두 원을 각각 뺀 모양을 겹친다(intersect) */
+const punchMask = (y: number) =>
+    [
+        `radial-gradient(circle ${PUNCH_RADIUS}px at left ${y}px, transparent 98%, black 100%)`,
+        `radial-gradient(circle ${PUNCH_RADIUS}px at right ${y}px, transparent 98%, black 100%)`,
+    ].join(', ');
+
 /**
  * 설문·퀴즈 풀이 모달 — 미션 목록 위에서 바로 풀고 제출한다 (멘토링: 지금 분량이면 페이지 이동보다 모달).
  * 문항 수는 관리자가 정하므로 머리(제목·기간)는 고정하고 문항 영역만 스크롤한다.
  * 이번 제출로 막 완료되면 onRewarded로 받은 응모권 수·등급을 올려 목록이 보상 모달을 띄운다.
- * 머리와 본문은 점선(절취선)으로 나눈다 — 문항이 길어 스크롤될 때 머리 아래 경계가 남는다
+ * 머리와 본문은 점선(절취선)으로 나누고 양 끝에 응모권처럼 펀칭 구멍을 뚫는다 — 문항이 길어 스크롤될 때 머리 아래 경계도 남는다.
+ * 열 때 첫 입력칸에 포커스를 주지 않고 모달 자체에 둔다 — 서술형 칸에 바로 커서가 서거나 첫 선택지에 포커스 링이 보이지 않게
  */
 export function MissionDialog({
     missionId,
@@ -46,7 +58,14 @@ export function MissionDialog({
                 if (!open) onClose();
             }}
         >
-            <DialogContent className="bg-surface-elevated flex max-h-[85vh] flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-xl">
+            <DialogContent
+                // 바탕은 안쪽 틀(MissionDialogBody)이 칠한다 — 펀칭 구멍으로 뒤가 비치도록 틀에 마스크를 건다
+                className="flex max-h-[85vh] flex-col gap-0 overflow-hidden rounded-2xl bg-transparent p-0 ring-0 sm:max-w-xl"
+                onOpenAutoFocus={(event) => {
+                    event.preventDefault();
+                    (event.currentTarget as HTMLElement | null)?.focus();
+                }}
+            >
                 {/* 상세 조회는 미션을 열었을 때만 — 빈 id로 요청하지 않게 내용은 열린 동안에만 그린다 */}
                 {missionId !== null && (
                     <MissionDialogBody
@@ -72,10 +91,24 @@ function MissionDialogBody({
     const { data: mission, isPending, isError } = useMissionDetail(missionId);
     // 기간 판정은 서버 몫 — 여기의 now 비교는 표시용 안내에만 쓴다 (시간 규칙)
     const now = useVirtualClock().now();
+    const headerRef = useRef<HTMLElement>(null);
+    const [punchY, setPunchY] = useState<number | null>(null);
+    const loaded = mission !== undefined;
+
+    // 펀칭 중심은 머리 아래 점선 높이 — 제목·설명 길이나 글자 크기 설정에 따라 바뀌어 재서 맞춘다
+    useLayoutEffect(() => {
+        const header = headerRef.current;
+        if (!header) return;
+        const measure = () => setPunchY(header.offsetHeight - 0.5);
+        measure();
+        const observer = new ResizeObserver(measure);
+        observer.observe(header);
+        return () => observer.disconnect();
+    }, [loaded]);
 
     if (isPending || isError || !mission) {
         return (
-            <div className="flex flex-col gap-2 p-6">
+            <div className="bg-surface-elevated flex flex-col gap-2 rounded-2xl p-6">
                 <DialogTitle>{isPending ? '불러오는 중…' : '미션을 불러오지 못했어요'}</DialogTitle>
                 <DialogDescription>
                     {isPending ? '잠시만 기다려 주세요.' : '잠시 후 다시 시도해 주세요.'}
@@ -102,9 +135,19 @@ function MissionDialogBody({
     };
 
     return (
-        <>
+        <div
+            className="bg-surface-elevated flex min-h-0 flex-1 flex-col rounded-2xl"
+            style={
+                punchY === null
+                    ? undefined
+                    : { maskImage: punchMask(punchY), maskComposite: 'intersect' }
+            }
+        >
             {/* 머리 — 종류·급한 마감 칩, 제목, 설명, 기간·문항 수·보상 한 줄. 문항이 길어도 머리는 고정된다 */}
-            <header className="border-border-strong flex shrink-0 flex-col gap-2 border-b border-dashed px-6 pt-6 pr-12 pb-5">
+            <header
+                ref={headerRef}
+                className="border-border-strong flex shrink-0 flex-col gap-2 border-b border-dashed px-6 pt-6 pr-12 pb-5"
+            >
                 <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="neutral">{MISSION_KIND_LABEL[mission.missionType]}</Badge>
                     {!mission.completed && !notYetOpen && !ended && deadline && (
@@ -163,6 +206,6 @@ function MissionDialogBody({
                     <SurveyForm mission={mission} onCompleted={handleCompleted} />
                 )}
             </div>
-        </>
+        </div>
     );
 }
