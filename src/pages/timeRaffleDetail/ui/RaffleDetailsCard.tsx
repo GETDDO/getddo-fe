@@ -95,12 +95,11 @@ function SpecGroup({
                     .map(({ label, value }) => (
                         // 좁은 화면에서는 위아래로 쌓는다 — 라벨 칸을 넓게 잡으면 값 칸이 너무 좁아진다
                         <div key={label} className="flex flex-col sm:flex-row sm:items-start">
-                            <dt className="text-body text-fg-secondary sm:w-32 sm:shrink-0">
+                            {/* 굵은 값이 줄줄이 이어지면 표 전체가 무거워 보여, 굵기 대신 색(라벨 연하게·값 진하게)으로만 나눈다 */}
+                            <dt className="text-body text-fg-tertiary sm:w-32 sm:shrink-0">
                                 {label}
                             </dt>
-                            <dd className="text-body-bold text-fg-primary min-w-0 sm:flex-1">
-                                {value}
-                            </dd>
+                            <dd className="text-body text-fg-primary min-w-0 sm:flex-1">{value}</dd>
                         </div>
                     ))}
             </dl>

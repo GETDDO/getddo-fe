@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
 
-import { Clock, Gift, Ticket, UsersRound } from 'lucide-react';
+import { Clock, Gift } from 'lucide-react';
 
 import type { Event } from '@entities/event';
 
 import { useEntryStatistics } from '@entities/entry';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
+import { useVirtualClock } from '@shared/lib/virtualClock';
 
 const CHIP = 'text-caption bg-surface-sunken flex items-center gap-2.5 rounded-full px-3 py-1';
 
@@ -33,12 +34,19 @@ interface RaffleDetailHeroProps {
 /** 상세 화면 대표 카드 — 목록 히어로와 달리 이미지가 카드에 꽉 차고, 현황은 칩으로 줄어든다 */
 export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHeroProps) {
     // 응모 현황은 E03 전용 조회로 받는다 — 진행 중일 때만 30초 폴링 (ADR-0007)
-    const { data: statistics } = useEntryStatistics(event.id, { isOpen: event.status === 'open' });
+    const isOpen = event.status === 'open';
+    const { data: statistics, dataUpdatedAt } = useEntryStatistics(event.id, { isOpen });
+    const { override } = useVirtualClock();
+    // 진행 중에는 30초마다 바뀌는 값이라 언제 기준인지 같이 적는다 — 가상 시계로 멈춰 두면 그 시각으로 맞춘다
+    const fetchedAt = isOpen && dataUpdatedAt ? (override ?? new Date(dataUpdatedAt)) : null;
 
     return (
-        <article className="bg-surface-page flex flex-col overflow-hidden rounded-2xl lg:min-h-95 lg:flex-row lg:gap-5">
-            {/* 상품 이미지 — 그림 크기가 카드 높이를 바꾸지 않게 칸을 채워 담는다. 발표까지 남은 시간은 아래 발표 대기 카드가 늘 보여 준다 */}
-            <div className="bg-surface-canvas relative h-48 w-full shrink-0 self-stretch overflow-hidden rounded-2xl lg:h-auto lg:w-130">
+        <article className="bg-surface-page flex flex-col overflow-hidden rounded-2xl lg:flex-row lg:gap-5">
+            {/*
+             * 상품 이미지는 래플마다 같은 크기의 정사각형(440)으로 위에 맞춘다. 오른쪽 높이를 따라 늘이면
+             * 응모권 선택이 긴 래플만 이미지가 세로로 길어져 상품이 작아 보였다
+             */}
+            <div className="bg-surface-canvas relative aspect-square w-full max-w-110 shrink-0 self-center overflow-hidden rounded-2xl lg:size-110 lg:self-start">
                 {event.bannerImageUrl ? (
                     <img
                         src={event.bannerImageUrl}
@@ -71,23 +79,25 @@ export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHe
                             {formatKst(event.startsAt, KST_HOUR_MINUTE)} ~{' '}
                             {formatKst(event.endsAt, KST_HOUR_MINUTE)}
                         </span>
-                        {statistics && (
-                            <>
-                                <span className={`${CHIP} text-fg-primary`}>
-                                    <UsersRound className="size-5" />
-                                    {formatNumber(statistics.participantCount)}명 참여 중
-                                </span>
-                                <span className={`${CHIP} text-fg-primary`}>
-                                    <Ticket className="size-5" />
-                                    {formatNumber(statistics.totalSpentTicketCount)}장 사용
-                                </span>
-                            </>
-                        )}
                     </div>
 
                     <div className="flex flex-col gap-4">
                         <h2 className="text-title-1 text-fg-primary">{event.title}</h2>
-                        <p className="text-body text-fg-primary">{event.description}</p>
+                        {/* 전문은 아래 '이벤트 상세 안내'에 있다 — 위에서는 세 줄로 잘라 응모 칸을 밀어내지 않게 한다 */}
+                        <p className="text-body text-fg-primary line-clamp-3">
+                            {event.description}
+                        </p>
+                        {/*
+                         * 참여 수·쓴 장수는 응모 판단에 꼭 필요한 값이 아니라 칩 대신 설명 아래 한 줄로 낮춘다.
+                         * 칩이 넷이면 '진행중'과 운영 시간이 묻힌다
+                         */}
+                        {statistics && (
+                            <p className="text-caption text-fg-tertiary">
+                                {formatNumber(statistics.participantCount)}명 참여 · 응모권{' '}
+                                {formatNumber(statistics.totalSpentTicketCount)}장 사용
+                                {fetchedAt && ` · ${formatKst(fetchedAt, KST_HOUR_MINUTE)} 기준`}
+                            </p>
+                        )}
                     </div>
                 </div>
 

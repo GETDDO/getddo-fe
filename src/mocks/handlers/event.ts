@@ -134,7 +134,7 @@ function raffleDetail(intro: string, prizeComposition: string) {
         paragraphs: [intro, DRAW_PARAGRAPH, TICKET_PARAGRAPH],
         prizeComposition,
         shippingSchedule: '당첨자 발표 후 3 영업일 이내 일괄 발송',
-        membershipNote: '일반/멤버십 구분에 따라 응모 가중치 적용',
+        membershipNote: '멤버십 등급에 따라 응모할 수 있어요',
     };
 }
 

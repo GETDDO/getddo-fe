@@ -1,7 +1,13 @@
 import type { RefObject } from 'react';
 
+import { Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import type { EntryTickets } from '@entities/entry';
+
+import { TICKET_GRADE_WEIGHT, ticketGradeSchema } from '@entities/ticket';
+import { KST_HOUR_MINUTE, formatKst, formatKstDot, isSameKstDate } from '@shared/lib/date';
+import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
 import {
     Dialog,
@@ -12,33 +18,67 @@ import {
     DialogTitle,
 } from '@shared/ui/dialog';
 
+import { GradeTicketTiles } from './GradeTicketTiles';
+
 interface EntryCompleteDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    /** 이번 응모로 쓴 응모권 수 */
-    deductedTicketCount: number;
-    /** 응모권을 쓰지 않는 이벤트 — 장수 문구 대신 무상 참여 안내를 보여준다 */
-    freeEntry?: boolean;
-    /** 한도까지 더 쓸 수 있는 응모권 수 — 0이면 추가 응모 안내를 빼고 한도 도달로 알리고, 상한이 없는 이벤트는 null이다 */
+    /** 응모한 래플 이름 */
+    title: string;
+    /** 이번 응모에 쓴 등급별 장수 — 생략된 등급은 0이다 */
+    tickets: EntryTickets;
+    /** 등급을 추첨에 반영하는 래플인가 — 반영할 때만 '브론즈 몇 장만큼'을 보인다 */
+    gradeReflected: boolean;
+    /** 응모 뒤 남은 전체 응모권 — 잔액을 몰랐으면 null */
+    remainingBalance: number | null;
+    /** 한도까지 더 쓸 수 있는 응모권 수 — 상한이 없는 이벤트는 null이다 */
     remainingAllowance: number | null;
+    /** 발표 예정 시각 — 정해지지 않았으면 null */
+    announceAt: string | null;
     /** 닫은 뒤 포커스를 되돌릴 요소 — 트리거 없이 상태로 여는 모달이라 Radix가 포커스를 body로 떨어뜨린다 */
     returnFocusTo?: RefObject<HTMLElement | null>;
 }
 
+/**
+ * 응모 완료 모달 — 무엇을 썼는지보다 '언제·어디서 결과를 보는지'를 알려 주는 게 목적이다.
+ * 쓴 응모권·남은 응모권은 영수증처럼 회색 상자에, 발표 시각과 알림 안내는 그 아래에 둔다
+ */
 export function EntryCompleteDialog({
     open,
     onOpenChange,
-    freeEntry = false,
-    deductedTicketCount,
+    title,
+    tickets,
+    gradeReflected,
+    remainingBalance,
     remainingAllowance,
+    announceAt,
     returnFocusTo,
 }: EntryCompleteDialogProps) {
-    const canEnterMore = remainingAllowance === null || remainingAllowance >= 1;
+    const { now } = useVirtualClock();
+    const used = ticketGradeSchema.options.filter((grade) => (tickets[grade] ?? 0) > 0);
+    const total = used.reduce((sum, grade) => sum + (tickets[grade] ?? 0), 0);
+    const reflected = used.reduce(
+        (sum, grade) => sum + (tickets[grade] ?? 0) * TICKET_GRADE_WEIGHT[grade],
+        0,
+    );
+
+    const announceLabel = announceAt
+        ? isSameKstDate(announceAt, now())
+            ? `오늘 ${formatKst(announceAt, KST_HOUR_MINUTE)}`
+            : formatKstDot(announceAt, true)
+        : null;
+    const moreRule =
+        total === 0
+            ? null
+            : remainingAllowance === null
+              ? '마감 전까지 장수 제한 없이 더 응모할 수 있어요.'
+              : remainingAllowance > 0
+                ? `마감 전까지 ${remainingAllowance}장 더 응모할 수 있어요.`
+                : null;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
-                showCloseButton={false}
                 onCloseAutoFocus={(event) => {
                     if (!returnFocusTo?.current) return;
                     event.preventDefault();
@@ -46,39 +86,67 @@ export function EntryCompleteDialog({
                 }}
                 className="bg-surface-page border-border-default gap-6 rounded-2xl border p-6 shadow-md ring-0 sm:max-w-120 sm:p-8"
             >
-                <DialogHeader className="gap-2">
-                    {/* 한도가 남아 있으면 아직 '접수'다 — 추가 응모까지 마쳐야 '완료'로 알린다 */}
-                    <DialogTitle className="text-title-3 text-fg-primary">
-                        {canEnterMore ? '응모가 접수되었습니다' : '응모가 완료되었습니다'}
+                <DialogHeader className="gap-1 pr-8">
+                    <p className="text-caption text-fg-tertiary">{title}</p>
+                    {/* cn(tailwind-merge)이 text-title-3을 글자색과 겹친다고 보고 지워 16px로 줄어든다 — 안쪽 span에 문자열로 준다 */}
+                    <DialogTitle className="leading-normal">
+                        <span className="text-title-3 text-fg-primary block">응모했어요</span>
                     </DialogTitle>
-                    <DialogDescription className="text-body text-fg-secondary">
-                        {freeEntry
-                            ? '응모권 없이 참여가 완료됐어요.'
-                            : `응모권 ${deductedTicketCount}장을 사용했어요. ${
-                                  remainingAllowance === null
-                                      ? '장수 제한 없이 계속 응모할 수 있어요.'
-                                      : canEnterMore
-                                        ? `${remainingAllowance}장까지 추가로 응모할 수 있어요.`
-                                        : '이 이벤트에 쓸 수 있는 응모권을 모두 사용했어요.'
-                              }`}
-                    </DialogDescription>
                 </DialogHeader>
 
+                {/* 응모 확인 모달과 같은 꼴 — 쓴 등급은 등급 색 칸으로, 그 아래 절취선 뒤에 영수증처럼 적는다 */}
+                {total > 0 ? (
+                    <div className="flex flex-col gap-4">
+                        <GradeTicketTiles
+                            label="사용한 응모권"
+                            items={used.map((grade) => ({ grade, count: tickets[grade] ?? 0 }))}
+                        />
+                        <dl className="border-border-default flex flex-col gap-2.5 border-t border-dashed pt-4">
+                            <div className="flex items-center justify-between gap-3">
+                                <dt className="text-body-sm text-fg-secondary">사용한 응모권</dt>
+                                <dd className="text-body-bold text-fg-primary tabular-nums">
+                                    {total}장
+                                </dd>
+                            </div>
+                            {gradeReflected && (
+                                <div className="flex items-center justify-between gap-3">
+                                    <dt className="text-body-sm text-fg-secondary">추첨 반영</dt>
+                                    <dd className="text-body-bold text-fg-primary tabular-nums">
+                                        브론즈 {reflected}장만큼
+                                    </dd>
+                                </div>
+                            )}
+                            <div className="flex items-center justify-between gap-3">
+                                <dt className="text-body-sm text-fg-secondary">남은 응모권</dt>
+                                <dd className="text-body-bold text-fg-primary tabular-nums">
+                                    {remainingBalance === null ? '-' : `${remainingBalance}장`}
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                ) : (
+                    <p className="text-body-sm text-fg-secondary">응모권 없이 참여했어요.</p>
+                )}
+
+                <div className="flex items-start gap-3">
+                    <Bell aria-hidden className="text-fg-secondary mt-0.5 size-5 shrink-0" />
+                    <div className="flex flex-col gap-0.5">
+                        <p className="text-body-bold text-fg-primary">
+                            {announceLabel ? `${announceLabel}에 발표해요` : '마감 뒤 발표해요'}
+                        </p>
+                        <DialogDescription className="text-body-sm text-fg-tertiary">
+                            결과가 나오면 알림으로 알려 드려요.{moreRule ? ` ${moreRule}` : ''}
+                        </DialogDescription>
+                    </div>
+                </div>
+
                 <div className="flex gap-4">
+                    <Button asChild variant="secondary" className="flex-1">
+                        <Link to="/my-entries">내 응모 내역 보기</Link>
+                    </Button>
                     <DialogClose asChild>
-                        <Button variant="secondary" className="flex-1">
-                            {canEnterMore ? '닫기' : '확인'}
-                        </Button>
+                        <Button className="flex-1">확인</Button>
                     </DialogClose>
-                    {canEnterMore ? (
-                        <DialogClose asChild>
-                            <Button className="flex-1">추가 응모하기</Button>
-                        </DialogClose>
-                    ) : (
-                        <Button asChild className="flex-1">
-                            <Link to="/my-entries">내 응모 내역</Link>
-                        </Button>
-                    )}
                 </div>
             </DialogContent>
         </Dialog>
