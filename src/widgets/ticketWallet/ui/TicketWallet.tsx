@@ -62,11 +62,18 @@ export function TicketWallet({ now, action }: TicketWalletProps) {
                     </p>
                     <p className="text-title-2 text-fg-primary tabular-nums">{format(balance)}장</p>
 
-                    <ul className="mt-4 grid grid-cols-3 gap-2" aria-label="등급별 보유 응모권">
+                    {/*
+                     * 등급 칸은 바탕 없이 얇은 세로선으로만 나눈다 — 응모권 그림이 이미 등급 색이라 바탕까지 칠하면
+                     * 회색(실버 바탕 포함)이 다시 생기고 노란 가게 배너 위에서 색이 많아진다
+                     */}
+                    <ul
+                        className="divide-border-default mt-4 grid grid-cols-3 divide-x"
+                        aria-label="등급별 보유 응모권"
+                    >
                         {TICKET_GRADES.map((grade) => (
                             <li
                                 key={grade}
-                                className="bg-surface-sunken flex flex-col items-center gap-1 rounded-xl px-1.5 pt-2 pb-1.5"
+                                className="flex flex-col items-center gap-1 px-1.5 pt-2 pb-1.5"
                             >
                                 <img
                                     src={TICKET_GRADE_IMAGE[grade]}
