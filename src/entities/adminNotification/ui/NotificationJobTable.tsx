@@ -13,9 +13,9 @@ import { NOTIFICATION_JOB_STATUS_LABEL, NOTIFICATION_TYPE_LABEL } from '../model
 const CHIP = 'text-caption rounded-md px-2 py-0.5 font-medium whitespace-nowrap';
 
 const STATUS_CHIP: Record<NotificationJobStatus, string> = {
-    PENDING: 'bg-surface-sunken text-fg-secondary',
+    PENDING: 'bg-status-revision text-status-revision-text',
     PROCESSING: 'bg-status-active text-status-active-text',
-    COMPLETED: 'bg-surface-sunken text-fg-secondary',
+    COMPLETED: 'bg-status-approved text-status-approved-text',
     FAILED: 'bg-status-rejected text-status-rejected-text',
 };
 

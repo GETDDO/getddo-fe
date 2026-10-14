@@ -153,8 +153,7 @@ export function AdminBannerTable({
                                 </Button>
                                 <Button
                                     size="sm"
-                                    variant="ghost"
-                                    className="hover:bg-surface-pressed"
+                                    variant="destructive"
                                     aria-label={`${title} 배너 삭제`}
                                     onClick={() => onDelete(row.original)}
                                 >

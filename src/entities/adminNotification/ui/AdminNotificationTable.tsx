@@ -13,8 +13,8 @@ import { MOCK_DELIVERY_STATUS_LABEL } from '../model/types';
 const CHIP = 'text-caption rounded-md px-2 py-0.5 font-medium whitespace-nowrap';
 
 const STATUS_CHIP: Record<MockDeliveryStatus, string> = {
-    PENDING: 'bg-surface-sunken text-fg-secondary',
-    SENT: 'bg-status-active text-status-active-text',
+    PENDING: 'bg-status-revision text-status-revision-text',
+    SENT: 'bg-status-approved text-status-approved-text',
     FAILED: 'bg-status-rejected text-status-rejected-text',
 };
 
@@ -56,7 +56,7 @@ export function AdminNotificationTable({
                             </span>
                             <span
                                 title={row.original.id}
-                                className="text-caption text-fg-tertiary max-w-56 truncate"
+                                className="text-caption text-fg-secondary max-w-56 truncate"
                             >
                                 {row.original.id}
                             </span>
