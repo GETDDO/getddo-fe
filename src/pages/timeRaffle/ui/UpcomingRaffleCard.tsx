@@ -35,11 +35,7 @@ export function UpcomingRaffleCard({ event, now, ticketLimit }: UpcomingRaffleCa
              * 상품 그림은 1:1 썸네일로 옆에 둔다 — 카드 폭 전체에 그림을 깔면 그림 없는 래플은 회색 칸이 카드 절반이 됐다
              */}
             <div className="flex items-start gap-4">
-                <RaffleThumbnail
-                    src={event.bannerImageUrl}
-                    className="w-24 rounded-xl"
-                    fallbackIconClassName="size-6"
-                />
+                <RaffleThumbnail src={event.bannerImageUrl} className="w-24 rounded-xl" />
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                     {soon ? (
                         <span className="text-caption text-fg-primary flex w-fit items-center gap-1.5 py-1">

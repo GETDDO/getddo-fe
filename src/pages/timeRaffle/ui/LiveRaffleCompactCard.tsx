@@ -22,11 +22,7 @@ export function LiveRaffleCompactCard({ event }: { event: Event }) {
 
     return (
         <article className="bg-surface-page border-border-default flex items-center gap-5 rounded-2xl border p-5 shadow-md">
-            <RaffleThumbnail
-                src={event.bannerImageUrl}
-                className="w-32 shrink-0 rounded-xl"
-                fallbackIconClassName="size-8"
-            />
+            <RaffleThumbnail src={event.bannerImageUrl} className="w-32 shrink-0 rounded-xl" />
 
             <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <div className="flex flex-wrap items-center gap-2">

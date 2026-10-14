@@ -116,7 +116,6 @@ export function FeaturedEventCard({
                 <EventThumbnail
                     src={event.bannerImageUrl}
                     className="size-24 rounded-xl sm:size-36"
-                    iconClassName="size-8"
                 />
             </div>
             {/* 상세로 이동하는 버튼은 주 행동(검정) — 카드 아래에 붙여 글 길이가 달라도 같은 자리에 둔다 */}

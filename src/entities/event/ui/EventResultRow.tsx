@@ -1,4 +1,4 @@
-import { ChevronRight, Gift } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { toKst } from '@shared/lib/date';
@@ -34,9 +34,7 @@ export function EventResultRow({ event }: { event: Event }) {
                     className="aspect-video h-20 shrink-0 rounded-lg object-cover"
                 />
             ) : (
-                <div className="bg-surface-canvas flex aspect-video h-20 shrink-0 items-center justify-center rounded-lg">
-                    <Gift className="text-fg-disabled size-8" />
-                </div>
+                <div className="bg-surface-canvas aspect-video h-20 shrink-0 rounded-lg" />
             )}
             <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <StatusDot tone="muted">{drawn ? '종료' : '응모 마감 · 발표 예정'}</StatusDot>

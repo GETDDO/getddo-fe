@@ -153,7 +153,6 @@ function ClosedRaffleRow({ event, now }: { event: Event; now: Date }) {
                 <RaffleThumbnail
                     src={event.bannerImageUrl}
                     className="aspect-video h-20 rounded-lg"
-                    fallbackIconClassName="size-8"
                 />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                     {/* 내 당첨 여부는 결과 화면에서 본다 — 목록에는 발표 상태만 둔다. 발표 전만 "지금" 신호 점을 찍는다 */}

@@ -1,4 +1,4 @@
-import { ChevronDown, Gift } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 
 import type { PublishedPrize } from '@entities/drawResult';
@@ -68,9 +68,7 @@ export function PrizeWinnerCard({
                     className="absolute inset-0 size-full object-contain p-3 mix-blend-multiply dark:mix-blend-normal"
                 />
             ) : (
-                <div className="flex size-full items-center justify-center">
-                    <Gift className="text-fg-disabled size-8" />
-                </div>
+                <div className="size-full" />
             )}
         </div>
     );

@@ -1,4 +1,3 @@
-import { Gift } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -24,9 +23,7 @@ export function EventListCard({ event }: { event: Event }) {
             {event.bannerImageUrl ? (
                 <img src={event.bannerImageUrl} alt="" className="h-37.5 w-full object-cover" />
             ) : (
-                <div className="bg-surface-sunken flex h-37.5 items-center justify-center">
-                    <Gift className="text-fg-disabled size-8" />
-                </div>
+                <div className="bg-surface-sunken h-37.5" />
             )}
             <div className="flex flex-col gap-3 p-3.5">
                 {((event.tags?.length ?? 0) > 0 || hasDDay) && (
