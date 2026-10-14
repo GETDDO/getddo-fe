@@ -11,6 +11,7 @@ import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
 import { Input } from '@shared/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
+import { CardSkeleton, LoadingBlock } from '@shared/ui/skeleton';
 
 import type { EventFormInput, EventFormValues } from './lib/eventFormValues';
 
@@ -67,7 +68,11 @@ export function AdminEventFormPage() {
     const showTicketOptions = eventType === 'TICKET';
 
     if (isEdit && isPending) {
-        return <p className="text-body-sm text-fg-secondary pb-10">불러오는 중…</p>;
+        return (
+            <LoadingBlock className="pb-10">
+                <CardSkeleton rows={8} />
+            </LoadingBlock>
+        );
     }
     if (isEdit && (isError || !event)) {
         return (

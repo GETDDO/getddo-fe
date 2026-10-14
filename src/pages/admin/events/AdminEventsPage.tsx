@@ -14,6 +14,7 @@ import { Button } from '@shared/ui/button';
 import { Input } from '@shared/ui/input';
 import { Pager } from '@shared/ui/pager';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
+import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
 
 const PAGE_SIZE = 10;
 
@@ -150,7 +151,11 @@ export function AdminEventsPage() {
                 </Button>
             </div>
 
-            {isPending && <p className="text-body-sm text-fg-secondary">불러오는 중…</p>}
+            {isPending && (
+                <LoadingBlock>
+                    <TableSkeleton />
+                </LoadingBlock>
+            )}
             {isError && (
                 <p className="text-semantic-error-strong text-body-sm">
                     이벤트 목록을 불러오지 못했습니다.

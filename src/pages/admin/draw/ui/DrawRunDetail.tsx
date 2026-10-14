@@ -18,6 +18,7 @@ import { getErrorMessage } from '@shared/api/errorMessage';
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
+import { CardSkeleton, LoadingBlock } from '@shared/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
 import { DrawCandidatesSection } from './DrawCandidatesSection';
@@ -69,7 +70,13 @@ interface DrawRunDetailProps {
 export function DrawRunDetail({ drawId, eventCanceled, onRunCreated }: DrawRunDetailProps) {
     const { data: run, isPending, isError, refetch, isFetching } = useDrawRun(drawId);
 
-    if (isPending) return <p className="text-body-sm text-fg-secondary">불러오는 중…</p>;
+    if (isPending) {
+        return (
+            <LoadingBlock>
+                <CardSkeleton rows={8} />
+            </LoadingBlock>
+        );
+    }
     if (isError) {
         return (
             <div className="flex items-center gap-3">

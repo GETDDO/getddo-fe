@@ -61,7 +61,7 @@ export function AdminTicketsPage() {
                                 'text-body-sm focus-visible:ring-border-focus focus-visible:ring-offset-surface-canvas rounded-full px-4 py-2 font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
                                 selected
                                     ? 'bg-action-neutral text-fg-on-brand hover:bg-action-neutral-hover active:bg-action-neutral-pressed'
-                                    : 'text-fg-secondary hover:bg-surface-sunken',
+                                    : 'text-fg-secondary hover:bg-surface-pressed hover:text-fg-primary',
                             )}
                         >
                             {tab.label}

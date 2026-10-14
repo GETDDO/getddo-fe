@@ -1,4 +1,5 @@
 import { createColumnHelper, flexRender, tableFeatures, useTable } from '@tanstack/react-table';
+import { Ticket } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { formatKst } from '@shared/lib/date';
@@ -8,7 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 import type { AdminEvent } from '../model/adminTypes';
 
-import { ADMIN_STATUS_META, EVENT_TYPE_LABEL, MEMBERSHIP_LABEL } from '../model/adminStatusMeta';
+import {
+    ADMIN_STATUS_META,
+    EVENT_TYPE_CHIP,
+    EVENT_TYPE_LABEL,
+    MEMBERSHIP_LABEL,
+} from '../model/adminStatusMeta';
 
 const CHIP = 'text-caption rounded-md px-2 py-0.5 font-medium whitespace-nowrap';
 
@@ -47,7 +53,9 @@ export function AdminEventTable({
                             <span className="text-body-sm text-fg-primary truncate font-medium">
                                 {getValue()}
                             </span>
-                            <span className="text-caption text-fg-tertiary">{row.original.id}</span>
+                            <span className="text-caption text-fg-secondary">
+                                {row.original.id}
+                            </span>
                         </div>
                     ),
                 }),
@@ -55,11 +63,20 @@ export function AdminEventTable({
                     header: '유형',
                     cell: ({ row, getValue }) => (
                         <div className="flex flex-col gap-1">
-                            <span className={cn(CHIP, 'bg-surface-sunken text-fg-secondary w-fit')}>
+                            <span
+                                className={cn(
+                                    CHIP,
+                                    'w-fit items-center gap-1',
+                                    EVENT_TYPE_CHIP[getValue()],
+                                )}
+                            >
+                                {getValue() === 'TICKET' && (
+                                    <Ticket className="size-3" aria-hidden />
+                                )}
                                 {EVENT_TYPE_LABEL[getValue()]}
                             </span>
                             {getValue() === 'TICKET' && (
-                                <span className="text-caption text-fg-tertiary">
+                                <span className="text-caption text-fg-secondary">
                                     {row.original.weightingEnabled
                                         ? `가중치 · ${row.original.maxTicketsPerUser === null ? '상한 없음' : `최대 ${row.original.maxTicketsPerUser}장`}`
                                         : '가중치 없음 · 1장'}
@@ -111,7 +128,7 @@ export function AdminEventTable({
                 helper.accessor('createdAt', {
                     header: '등록일',
                     cell: ({ getValue }) => (
-                        <span className="text-body-sm text-fg-tertiary whitespace-nowrap">
+                        <span className="text-body-sm text-fg-secondary whitespace-nowrap">
                             {formatKst(getValue(), {
                                 year: 'numeric',
                                 month: '2-digit',
@@ -128,6 +145,7 @@ export function AdminEventTable({
                             <Button
                                 size="sm"
                                 variant="ghost"
+                                className="hover:bg-surface-pressed"
                                 aria-label={`${row.original.title} 상세`}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -170,7 +188,7 @@ export function AdminEventTable({
                             key={row.id}
                             onClick={() => onRowClick?.(row.original)}
                             className={cn(
-                                'hover:bg-surface-canvas',
+                                'hover:bg-surface-sunken focus-within:bg-surface-sunken',
                                 onRowClick && 'cursor-pointer',
                             )}
                         >

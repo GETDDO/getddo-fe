@@ -3,6 +3,7 @@ import { getErrorMessage } from '@shared/api/errorMessage';
 import { formatKst } from '@shared/lib/date';
 import { Badge } from '@shared/ui/badge';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@shared/ui/sheet';
+import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 
 import { useAdminTicketHistories, useTicketConsistency } from '../api/admin';
 import { TICKET_OPERATION_LABEL, TICKET_STATUS_LABEL } from '../model/admin';
@@ -43,7 +44,9 @@ export function TicketConsistencyDrawer({
                 </SheetHeader>
                 <div className="flex flex-col gap-5 px-4 pb-6">
                     {consistency.isPending && consistency.fetchStatus !== 'idle' && (
-                        <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>
+                        <LoadingBlock>
+                            <SkeletonRows rows={4} />
+                        </LoadingBlock>
                     )}
                     {notFound && (
                         <p className="text-body-sm text-fg-secondary">
@@ -111,7 +114,9 @@ export function TicketConsistencyDrawer({
                                     최근 이력
                                 </h3>
                                 {histories.isPending && (
-                                    <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>
+                                    <LoadingBlock>
+                                        <SkeletonRows rows={3} />
+                                    </LoadingBlock>
                                 )}
                                 {histories.isError && (
                                     <p className="text-semantic-error-strong text-body-sm">

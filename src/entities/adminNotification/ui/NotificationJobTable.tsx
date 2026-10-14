@@ -108,6 +108,7 @@ export function NotificationJobTable({
                         <Button
                             size="sm"
                             variant="ghost"
+                            className="hover:bg-surface-pressed"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onRowClick?.(row.original);
@@ -148,7 +149,7 @@ export function NotificationJobTable({
                         <TableRow
                             key={row.id}
                             className={cn(
-                                'hover:bg-surface-canvas',
+                                'hover:bg-surface-sunken focus-within:bg-surface-sunken',
                                 onRowClick && 'cursor-pointer',
                             )}
                             onClick={() => onRowClick?.(row.original)}

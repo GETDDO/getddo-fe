@@ -34,7 +34,12 @@ export {
     useEvent,
     useEventList,
 } from './api/queries';
-export { ADMIN_STATUS_META, EVENT_TYPE_LABEL, MEMBERSHIP_LABEL } from './model/adminStatusMeta';
+export {
+    ADMIN_STATUS_META,
+    EVENT_TYPE_CHIP,
+    EVENT_TYPE_LABEL,
+    MEMBERSHIP_LABEL,
+} from './model/adminStatusMeta';
 export { AdminEventTable } from './ui/AdminEventTable';
 export { EventCard } from './ui/EventCard';
 export { EventResultRow } from './ui/EventResultRow';

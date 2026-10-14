@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { useResultChanges } from '@entities/winner';
 import { formatKst } from '@shared/lib/date';
+import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
 import { PagedFooter } from './PagedFooter';
@@ -22,7 +23,11 @@ export function ResultChangesSection({ eventId }: { eventId: string }) {
                 공개 명단 변경 이력
             </h3>
 
-            {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {isPending && (
+                <LoadingBlock>
+                    <SkeletonRows rows={3} />
+                </LoadingBlock>
+            )}
             {isError && (
                 <p role="alert" className="text-semantic-error-strong text-body-sm">
                     변경 이력을 불러오지 못했습니다.

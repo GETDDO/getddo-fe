@@ -9,6 +9,7 @@ import {
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
+import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
 import { PagedFooter } from './PagedFooter';
@@ -30,7 +31,13 @@ export function DrawRunList({ eventId, selectedId, onSelect }: DrawRunListProps)
         size: DRAW_RUN_PAGE_SIZE,
     });
 
-    if (isPending) return <p className="text-body-sm text-fg-secondary">불러오는 중…</p>;
+    if (isPending) {
+        return (
+            <LoadingBlock>
+                <TableSkeleton rows={4} />
+            </LoadingBlock>
+        );
+    }
     if (isError) {
         return (
             <div className="flex items-center gap-3">
@@ -103,14 +110,14 @@ export function DrawRunList({ eventId, selectedId, onSelect }: DrawRunListProps)
                                     key={run.id}
                                     aria-selected={selected}
                                     className={cn(
-                                        'hover:bg-surface-canvas',
+                                        'hover:bg-surface-sunken focus-within:bg-surface-sunken',
                                         selected && 'bg-surface-canvas',
                                     )}
                                 >
                                     <TableCell className="text-body-sm px-4 py-3 font-medium">
                                         {run.runNumber}회차
                                         {run.originalDrawId === null && (
-                                            <span className="text-caption text-fg-tertiary ml-1">
+                                            <span className="text-caption text-fg-secondary ml-1">
                                                 (최초)
                                             </span>
                                         )}

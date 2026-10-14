@@ -59,7 +59,7 @@ export function AbuseCaseTable({
                             <span className="text-body-sm text-fg-primary">
                                 {row.original.userNickname}
                             </span>
-                            <span className="text-caption text-fg-tertiary">
+                            <span className="text-caption text-fg-secondary">
                                 {row.original.userId}
                             </span>
                         </div>
@@ -91,7 +91,7 @@ export function AbuseCaseTable({
                     cell: ({ getValue }) => (
                         <span
                             title={getValue()}
-                            className="text-body-sm text-fg-tertiary block max-w-50 truncate"
+                            className="text-body-sm text-fg-secondary block max-w-50 truncate"
                         >
                             {getValue()}
                         </span>
@@ -104,6 +104,7 @@ export function AbuseCaseTable({
                         <Button
                             size="sm"
                             variant="ghost"
+                            className="hover:bg-surface-pressed"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onRowClick?.(row.original);
@@ -144,7 +145,7 @@ export function AbuseCaseTable({
                         <TableRow
                             key={row.id}
                             className={cn(
-                                'hover:bg-surface-canvas',
+                                'hover:bg-surface-sunken focus-within:bg-surface-sunken',
                                 onRowClick && 'cursor-pointer',
                             )}
                             onClick={() => onRowClick?.(row.original)}

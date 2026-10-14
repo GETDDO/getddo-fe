@@ -1,4 +1,5 @@
 import { useSessionStore, useVirtualUsers, VirtualUserTable } from '@entities/user';
+import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
 
 export function AdminVirtualUsersPage() {
     const { data: users, isPending, isError } = useVirtualUsers();
@@ -15,7 +16,11 @@ export function AdminVirtualUsersPage() {
                 </p>
             </div>
 
-            {isPending && <p className="text-body-sm text-fg-secondary">불러오는 중…</p>}
+            {isPending && (
+                <LoadingBlock>
+                    <TableSkeleton />
+                </LoadingBlock>
+            )}
             {isError && (
                 <p role="alert" className="text-semantic-error-strong text-body-sm">
                     가상 사용자 목록을 불러오지 못했습니다.

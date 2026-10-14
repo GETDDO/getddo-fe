@@ -13,6 +13,7 @@ import { EventActionDialog } from '@features/manageEvent';
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
+import { CardSkeleton, LoadingBlock } from '@shared/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
 const KST_YMD_HM: Intl.DateTimeFormatOptions = {
@@ -40,7 +41,11 @@ export function AdminEventDetailPage() {
     const [action, setAction] = useState<EventActionKind | null>(null);
 
     if (isPending) {
-        return <p className="text-body-sm text-fg-secondary pb-10">불러오는 중…</p>;
+        return (
+            <LoadingBlock className="pb-10">
+                <CardSkeleton rows={8} />
+            </LoadingBlock>
+        );
     }
     if (isError || !event) {
         return (

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { Pager } from '@shared/ui/pager';
+import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
 
 interface PageData<T> {
     items: T[];
@@ -17,6 +18,7 @@ function PagedResult<T>({
     onPageChange,
     emptyText,
     errorText,
+    loadingContent,
     children,
 }: {
     data: PageData<T> | undefined;
@@ -26,13 +28,20 @@ function PagedResult<T>({
     onPageChange: (page: number) => void;
     emptyText: string;
     errorText: string;
+    /** 초기 로딩 모양 — 생략 시 테이블형 스켈레톤. 재조회에는 나타나지 않는다 */
+    loadingContent?: ReactNode;
     children: (items: T[]) => ReactNode;
 }) {
     const totalPages = data ? Math.max(1, Math.ceil(data.totalElements / data.size)) : 0;
 
     return (
         <div className="flex flex-col gap-4">
-            {isPending && <p className="text-body-sm text-fg-secondary">불러오는 중…</p>}
+            {isPending &&
+                (loadingContent ?? (
+                    <LoadingBlock>
+                        <TableSkeleton rows={4} />
+                    </LoadingBlock>
+                ))}
             {isError && <p className="text-semantic-error-strong text-body-sm">{errorText}</p>}
             {!isPending && !isError && data && data.items.length === 0 && (
                 <p className="text-fg-secondary text-body-sm py-6">{emptyText}</p>

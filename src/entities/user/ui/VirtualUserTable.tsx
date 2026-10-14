@@ -40,7 +40,7 @@ export function VirtualUserTable({
                 helper.accessor('id', {
                     header: '사용자 ID',
                     cell: ({ getValue }) => (
-                        <span className="text-caption text-fg-tertiary">{getValue()}</span>
+                        <span className="text-caption text-fg-secondary">{getValue()}</span>
                     ),
                 }),
                 helper.accessor('role', {
@@ -75,7 +75,7 @@ export function VirtualUserTable({
                                 사용 중
                             </span>
                         ) : (
-                            <span className="text-body-sm text-fg-tertiary">-</span>
+                            <span className="text-body-sm text-fg-secondary">-</span>
                         ),
                 }),
             ]),
@@ -106,7 +106,7 @@ export function VirtualUserTable({
                 </TableHeader>
                 <TableBody>
                     {table.getRowModel().rows.map((row) => (
-                        <TableRow key={row.id} className="hover:bg-surface-canvas">
+                        <TableRow key={row.id} className="hover:bg-surface-sunken">
                             {row.getAllCells().map((cell) => (
                                 <TableCell key={cell.id} className="px-4 py-3 align-middle">
                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

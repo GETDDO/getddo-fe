@@ -156,7 +156,10 @@ export function AdminNotificationTable({
                 </TableHeader>
                 <TableBody>
                     {table.getRowModel().rows.map((row) => (
-                        <TableRow key={row.id} className="hover:bg-surface-canvas">
+                        <TableRow
+                            key={row.id}
+                            className="hover:bg-surface-sunken focus-within:bg-surface-sunken"
+                        >
                             {row.getAllCells().map((cell) => (
                                 <TableCell key={cell.id} className="px-4 py-3 align-top">
                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

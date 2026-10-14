@@ -12,6 +12,7 @@ import {
 } from '@features/manageBanner';
 import { getErrorMessage } from '@shared/api/errorMessage';
 import { Button } from '@shared/ui/button';
+import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
 
 // 연결 이벤트 선택지·제목 해석용 — 이벤트 수가 한 번에 담기는 시연 규모를 전제로 한 페이지로 받는다
 const EVENT_LOOKUP_SIZE = 100;
@@ -79,7 +80,11 @@ export function AdminBannersPage() {
                 </p>
             )}
 
-            {isPending && <p className="text-body-sm text-fg-secondary">불러오는 중…</p>}
+            {isPending && (
+                <LoadingBlock>
+                    <TableSkeleton />
+                </LoadingBlock>
+            )}
             {isError && (
                 <p role="alert" className="text-semantic-error-strong text-body-sm">
                     배너 목록을 불러오지 못했습니다.

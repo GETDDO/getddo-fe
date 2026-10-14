@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { formatKst } from '@shared/lib/date';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@shared/ui/sheet';
+import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 
 import type { AuditLogSummary } from '../model/types';
 
@@ -79,9 +80,9 @@ export function AuditLogDetailDrawer({
                             </>
                         ) : (
                             isPending && (
-                                <p className="text-body-sm text-fg-tertiary">
-                                    상세 정보를 불러오는 중…
-                                </p>
+                                <LoadingBlock label="상세 정보를 불러오는 중…">
+                                    <SkeletonRows rows={2} />
+                                </LoadingBlock>
                             )
                         )}
                     </div>

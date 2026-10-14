@@ -1,3 +1,5 @@
+import type { KeyboardEvent } from 'react';
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -7,6 +9,7 @@ import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
+import { CardSkeleton, LoadingBlock } from '@shared/ui/skeleton';
 
 import { DrawRunDetail } from './DrawRunDetail';
 import { DRAW_RUN_PAGE_SIZE, DrawRunList } from './DrawRunList';
@@ -23,7 +26,7 @@ const TABS: { value: PanelTab; label: string }[] = [
 // 이벤트 하나의 추첨 관리 — 실행 목록(AD01)·상세(AD02)·변경 이력(AD07)
 export function DrawEventPanel({ eventId }: { eventId: string }) {
     const { now } = useVirtualClock();
-    const { data: event } = useAdminEvent(eventId);
+    const { data: event, isPending: eventPending } = useAdminEvent(eventId);
     // 사용자가 고르지 않으면 가장 최근 실행을 본다 — AD01 첫 페이지 캐시를 목록과 공유한다
     const latest = useEventDraws(eventId, { page: 1, size: DRAW_RUN_PAGE_SIZE });
     const [chosenId, setChosenId] = useState<string | null>(null);
@@ -37,8 +40,28 @@ export function DrawEventPanel({ eventId }: { eventId: string }) {
     const awaitingFirstPublication = event?.status === 'DRAW_CONFIRMED';
     const scheduledPassed = event ? now() >= new Date(event.publicationScheduledAt) : false;
 
+    // 비선택 탭은 tabIndex=-1이라 방향키로 이동한다 — APG 탭 패턴의 roving tabindex
+    const handleTabKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        e.preventDefault();
+        const index = TABS.findIndex((t) => t.value === tab);
+        const nextIndex =
+            e.key === 'ArrowRight'
+                ? (index + 1) % TABS.length
+                : (index - 1 + TABS.length) % TABS.length;
+        const nextTab = TABS[nextIndex];
+        if (!nextTab) return;
+        setTab(nextTab.value);
+        document.getElementById(`draw-tab-${nextTab.value}`)?.focus();
+    };
+
     return (
         <div className="flex flex-col gap-6">
+            {eventPending && (
+                <LoadingBlock>
+                    <CardSkeleton rows={2} />
+                </LoadingBlock>
+            )}
             {event && status && (
                 <section className="bg-surface-page border-border-default flex flex-col gap-3 rounded-2xl border p-6">
                     <div className="flex flex-wrap items-center gap-3">
@@ -71,7 +94,12 @@ export function DrawEventPanel({ eventId }: { eventId: string }) {
                 </section>
             )}
 
-            <div role="tablist" aria-label="추첨 관리 구분" className="flex gap-1">
+            <div
+                role="tablist"
+                aria-label="추첨 관리 구분"
+                className="flex gap-1"
+                onKeyDown={handleTabKeyDown}
+            >
                 {TABS.map(({ value, label }) => (
                     <button
                         key={value}
@@ -80,12 +108,13 @@ export function DrawEventPanel({ eventId }: { eventId: string }) {
                         id={`draw-tab-${value}`}
                         aria-selected={tab === value}
                         aria-controls={`draw-panel-${value}`}
+                        tabIndex={tab === value ? 0 : -1}
                         onClick={() => setTab(value)}
                         className={cn(
                             'text-body-sm focus-visible:ring-border-focus focus-visible:ring-offset-surface-page rounded-lg px-3 py-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
                             tab === value
                                 ? 'bg-surface-inverse text-fg-inverse font-medium'
-                                : 'text-fg-secondary hover:bg-surface-sunken',
+                                : 'text-fg-secondary hover:bg-surface-pressed hover:text-fg-primary',
                         )}
                     >
                         {label}

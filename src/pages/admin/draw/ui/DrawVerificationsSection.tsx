@@ -7,6 +7,7 @@ import { getErrorMessage } from '@shared/api/errorMessage';
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
+import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 
 import { PagedFooter } from './PagedFooter';
 
@@ -68,7 +69,11 @@ export function DrawVerificationsSection({ drawId, canVerify }: DrawVerification
                 </p>
             )}
 
-            {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {isPending && (
+                <LoadingBlock>
+                    <SkeletonRows rows={3} />
+                </LoadingBlock>
+            )}
             {isError && (
                 <p role="alert" className="text-semantic-error-strong text-body-sm">
                     검증 이력을 불러오지 못했습니다.

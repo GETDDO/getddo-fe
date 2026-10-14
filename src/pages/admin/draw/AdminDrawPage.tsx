@@ -4,6 +4,7 @@ import type { AdminEventStatus } from '@entities/event';
 
 import { ADMIN_STATUS_META, useAdminEvents } from '@entities/event';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
+import { CardSkeleton, LoadingBlock } from '@shared/ui/skeleton';
 
 import { DrawEventPanel } from './ui/DrawEventPanel';
 import { PolicyPendingNotice } from './ui/PolicyPendingNotice';
@@ -55,7 +56,11 @@ export function AdminDrawPage() {
                 </Select>
             </div>
 
-            {isPending && <p className="text-body-sm text-fg-secondary">불러오는 중…</p>}
+            {isPending && (
+                <LoadingBlock>
+                    <CardSkeleton rows={3} />
+                </LoadingBlock>
+            )}
             {isError && (
                 <p role="alert" className="text-semantic-error-strong text-body-sm">
                     이벤트 목록을 불러오지 못했습니다.
