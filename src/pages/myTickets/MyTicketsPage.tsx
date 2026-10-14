@@ -33,7 +33,8 @@ export function MyTicketsPage() {
     const groups = groupTicketHistories(historiesQuery.data ?? []);
     const thisMonth = groups.filter((group) => isSameKstMonth(group.createdAt, now));
     const monthReceived = thisMonth
-        .filter((group) => group.operationType === 'GRANT' || group.operationType === 'REFUND')
+        // 아래 기록의 '받은' 거르기와 같이 지급만 센다 — 반환은 '만료·반환'에 속한다
+        .filter((group) => group.operationType === 'GRANT')
         .reduce((sum, group) => sum + group.count, 0);
     const monthUsed = thisMonth
         .filter((group) => group.operationType === 'USE')

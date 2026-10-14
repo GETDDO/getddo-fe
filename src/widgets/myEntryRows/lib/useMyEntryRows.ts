@@ -57,5 +57,22 @@ export function useMyEntryRows() {
                 new Date(b.entry.requestedAt).getTime() - new Date(a.entry.requestedAt).getTime(),
         );
 
-    return { rows, isPending: entriesQuery.isPending, isError: entriesQuery.isError };
+    return {
+        rows,
+        isPending: entriesQuery.isPending,
+        isError: entriesQuery.isError,
+        // 일부 이벤트의 본인 결과(E09)만 실패하면 그 줄은 결과 없이 남고 결과별 개수에서 빠진다 — 쓰는 쪽이 안내를 띄운다
+        isResultError: resultQueries.some((query) => query.isError),
+    };
+}
+
+/**
+ * 당첨 줄 중 가장 최근 발표 시각 — 응모순 목록의 첫 당첨이 가장 늦게 발표된 것은 아니라 발표 시각으로 고른다.
+ * 발표 예정 시각이 없으면 응모 시각으로 대신한다
+ */
+export function latestWonAt(rows: readonly MyEntryRow[]): string | undefined {
+    return rows
+        .filter((row) => row.result === 'WON')
+        .map((row) => row.event?.publicationScheduledAt ?? row.entry.requestedAt)
+        .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
 }

@@ -34,10 +34,13 @@ export function RecentEntriesCard({
     rows,
     isPending,
     isError,
+    isResultError = false,
 }: {
     rows: MyEntryRow[];
     isPending: boolean;
     isError: boolean;
+    /** 일부 응모의 본인 결과(E09)를 받지 못했는가 — 그 줄은 결과 칩 없이 보인다 */
+    isResultError?: boolean;
 }) {
     return (
         <SectionCard
@@ -49,6 +52,11 @@ export function RecentEntriesCard({
             {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
             {isError && (
                 <p className="text-destructive text-body-sm">응모 내역을 불러오지 못했습니다.</p>
+            )}
+            {isResultError && (
+                <p role="status" className="text-body-sm text-destructive">
+                    일부 응모의 결과를 불러오지 못했어요.
+                </p>
             )}
             {!isPending && !isError && rows.length === 0 && (
                 <p className="text-body-sm text-fg-tertiary py-6 text-center">

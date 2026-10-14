@@ -3,7 +3,7 @@ import { useSessionStore } from '@entities/user';
 import { AppearanceSettings } from '@features/appearanceSettings';
 import { formatKstDot, isSameKstDate } from '@shared/lib/date';
 import { useVirtualClock } from '@shared/lib/virtualClock';
-import { useMyEntryRows } from '@widgets/myEntryRows';
+import { latestWonAt, useMyEntryRows } from '@widgets/myEntryRows';
 
 import { AccountInfoCard } from './ui/AccountInfoCard';
 import { ProfileCard } from './ui/ProfileCard';
@@ -33,7 +33,7 @@ export function MyPage() {
         .filter((group) => group.operationType === 'GRANT' && isSameKstDate(group.createdAt, now))
         .reduce((sum, group) => sum + group.count, 0);
     const won = entries.rows.filter((row) => row.result === 'WON');
-    const lastWon = won[0];
+    const lastWonAt = latestWonAt(won);
 
     return (
         <main className="mx-auto flex w-full max-w-312 flex-col gap-6 px-6 pt-12 pb-28">
@@ -44,12 +44,7 @@ export function MyPage() {
                     stats={{
                         pendingCount: entries.rows.filter((row) => row.result === 'PENDING').length,
                         wonCount: won.length,
-                        lastWonLabel: lastWon
-                            ? formatKstDot(
-                                  lastWon.event?.publicationScheduledAt ??
-                                      lastWon.entry.requestedAt,
-                              )
-                            : null,
+                        lastWonLabel: lastWonAt ? formatKstDot(lastWonAt) : null,
                         todayGranted,
                     }}
                 />
@@ -61,6 +56,7 @@ export function MyPage() {
                         rows={entries.rows}
                         isPending={entries.isPending}
                         isError={entries.isError}
+                        isResultError={entries.isResultError}
                     />
                     <RecentTicketsCard
                         histories={recentHistories}

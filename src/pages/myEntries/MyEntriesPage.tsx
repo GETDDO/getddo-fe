@@ -10,7 +10,7 @@ import { Button } from '@shared/ui/button';
 import { PageHeader } from '@shared/ui/page-header';
 import { Segmented } from '@shared/ui/segmented';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
-import { useMyEntryRows } from '@widgets/myEntryRows';
+import { latestWonAt, useMyEntryRows } from '@widgets/myEntryRows';
 
 import type { StatusTile } from './ui/EntryStatusTiles';
 
@@ -63,7 +63,7 @@ export function MyEntriesPage() {
     const filters = readEntryFilters(params);
     const clock = useVirtualClock();
     const now = clock.now();
-    const { rows, isPending, isError } = useMyEntryRows();
+    const { rows, isPending, isError, isResultError } = useMyEntryRows();
     const [visible, setVisible] = useState(PAGE_SIZE);
 
     const setFilter = (key: string, value: string, fallback: string) => {
@@ -89,7 +89,7 @@ export function MyEntriesPage() {
         .map((row) => row.event?.publicationScheduledAt)
         .filter((at): at is string => !!at && new Date(at).getTime() > now.getTime())
         .sort()[0];
-    const lastWonAt = won[0]?.event?.publicationScheduledAt ?? won[0]?.entry.requestedAt;
+    const lastWonAt = latestWonAt(won);
     const lostTickets = lost.reduce((sum, row) => sum + row.entry.deductedTicketCount, 0);
 
     const tiles: StatusTile[] = [
@@ -131,6 +131,12 @@ export function MyEntriesPage() {
                 title="내 응모 내역"
                 description="이벤트·겟또타임에 응모한 기록과 결과를 모두 볼 수 있어요."
             />
+
+            {isResultError && (
+                <p role="status" className="text-body-sm text-destructive">
+                    일부 응모의 결과를 불러오지 못했어요. 결과 칸 개수에서 빠졌을 수 있어요.
+                </p>
+            )}
 
             <EntryStatusTiles
                 tiles={tiles}
