@@ -124,7 +124,7 @@ export function MyEntriesPage() {
     ];
 
     return (
-        <main className="mx-auto flex w-full max-w-312 flex-col gap-6 px-6 pt-12 pb-28">
+        <main className="mx-auto flex w-full max-w-312 flex-col gap-6 px-6 pb-28">
             <PageHeader
                 backTo="/mypage"
                 backLabel="마이페이지"

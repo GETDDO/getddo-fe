@@ -24,7 +24,7 @@ import { RaffleDetailHero } from './ui/RaffleDetailHero';
 import { RaffleDetailsCard } from './ui/RaffleDetailsCard';
 import { RaffleRulesCard } from './ui/RaffleRulesCard';
 
-const CONTAINER = 'mx-auto w-full max-w-312 px-6 pt-20 pb-47.5';
+const CONTAINER = 'mx-auto w-full max-w-312 px-6 pb-47.5';
 
 /** 응모도 결과 확인도 할 수 없는 상태에서 버튼에 대신 표시하는 문구 */
 const STATUS_LABEL: Record<Exclude<Event['status'], 'drawn'>, string> = {

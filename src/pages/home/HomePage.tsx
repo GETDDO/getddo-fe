@@ -26,8 +26,8 @@ export function HomePage() {
     );
 
     return (
-        // 피그마 홈 간격 — 헤더 아래 80, 섹션 사이 80, 섹션 제목과 내용 24, 마지막 섹션과 푸터도 섹션 사이와 같은 80
-        <main className="flex w-full flex-col gap-20 pt-20 pb-20">
+        // 피그마 홈 간격 — 헤더 아래 64(UserLayout이 준다), 섹션 사이 80, 섹션 제목과 내용 24, 마지막 섹션과 푸터도 섹션 사이와 같은 80
+        <main className="flex w-full flex-col gap-20 pb-20">
             <div className={`${CONTAINER} flex flex-col gap-20`}>
                 <BannerSlider
                     renderStatus={(event, isActive) => (

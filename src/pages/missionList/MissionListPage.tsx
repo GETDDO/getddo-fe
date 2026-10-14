@@ -32,7 +32,7 @@ export function MissionListPage() {
     }>({ open: false, tickets: 0, grade: null });
 
     return (
-        <main className="flex flex-col pt-12 pb-28">
+        <main className="flex flex-col pb-28">
             <div className={CONTAINER}>
                 {/* 페이지 머리 — 오늘의 적립: 오늘 더 받을 응모권·진행 세 칸과 내 응모권 지갑 */}
                 <TodayRewardsBanner />
