@@ -100,7 +100,7 @@ export function TodayRewardsBanner() {
         <section
             aria-labelledby="today-rewards-title"
             // 타코야끼 가게 — 벽(피그마 image 197 벽 부분)을 배경으로 깔고 아래에 카운터 띠(image 211)를 둔다. --counter는 카운터 띠 높이
-            className="bg-play-yellow-soft relative overflow-hidden rounded-3xl bg-cover bg-top [--counter:clamp(4.5rem,8vw,6rem)]"
+            className="force-light bg-play-yellow-soft relative overflow-hidden rounded-3xl bg-cover bg-top [--counter:clamp(4.5rem,8vw,6rem)]"
             style={{ backgroundImage: `url(${shopWall})` }}
         >
             {/* 벽 그림이 어두운 웜톤이라 흰 막을 얇게 덮어 페이지 바탕과 어울리게 밝힌다 */}

@@ -119,15 +119,13 @@ export function WinnerBanner({ prize }: { prize: Prize | null }) {
             transition={{ type: 'spring', stiffness: 120, damping: 20 }}
             onMouseEnter={replay}
             onClick={onClick}
-            className="bg-ticket-accent relative overflow-hidden rounded-2xl"
+            className="force-light bg-ticket-accent relative overflow-hidden rounded-2xl"
         >
             <img
                 src={winBg}
                 alt=""
                 className="pointer-events-none absolute inset-0 size-full object-cover"
             />
-            {/* 그림이 밝은 노랑이라 다크 모드에서는 어둡게 덮어 글자가 읽히게 한다 */}
-            <div aria-hidden className="bg-surface-page/70 absolute inset-0 hidden dark:block" />
             {/* 오른쪽 장식 — 바깥에서 안쪽으로 천천히 밀려 들어온다 */}
             <div data-hover="deco" className="pointer-events-none absolute inset-y-0 right-0">
                 <motion.img

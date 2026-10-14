@@ -13,6 +13,7 @@ import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Badge } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 import { Pager } from '@shared/ui/pager';
+import { Skeleton } from '@shared/ui/skeleton';
 
 import bannerBackground from '../assets/banner-bg.jpg';
 import bannerMascot from '../assets/banner-mascot.webp';
@@ -98,7 +99,7 @@ export function BannerSlider({
     };
 
     if (isPending) {
-        return <div className="bg-surface-sunken h-[280px] w-full animate-pulse rounded-2xl" />;
+        return <Skeleton className="min-h-91.25 w-full rounded-2xl" />;
     }
 
     if (isError || slides.length === 0) {
@@ -119,7 +120,8 @@ export function BannerSlider({
             }}
         >
             {/* 모든 슬라이드를 한 줄로 나열 — 트랙 높이가 가장 큰 슬라이드로 고정돼 전환 중 크기 변환이 없고 transform만 애니메이션된다 */}
-            <div className="overflow-hidden rounded-2xl">
+            {/* 노란 그림 배너라 다크 모드에서도 라이트 색을 쓴다 (tokens.css force-light) — 아래 넘김 화살표는 페이지 색을 따른다 */}
+            <div className="force-light overflow-hidden rounded-2xl">
                 <div
                     className="flex ease-out motion-safe:transition-transform motion-safe:duration-500"
                     style={{ transform: `translateX(-${safeIndex * 100}%)` }}

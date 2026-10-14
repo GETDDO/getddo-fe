@@ -19,6 +19,7 @@ import {
     DialogTrigger,
 } from '@shared/ui/dialog';
 import { Input } from '@shared/ui/input';
+import { Loading } from '@shared/ui/loading';
 import { RadioGroup, RadioGroupItem } from '@shared/ui/radio-group';
 import {
     Select,
@@ -29,6 +30,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@shared/ui/select';
+import { Skeleton, SkeletonList } from '@shared/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -234,6 +236,21 @@ export function UiGalleryPage() {
                     <Button variant="secondary" onClick={() => toast('결과 발표가 예정되었습니다')}>
                         default
                     </Button>
+                </div>
+            </Section>
+
+            <Section
+                title="Loading · Skeleton"
+                usage="로딩은 페이지·모달처럼 모양을 모를 때, 스켈레톤은 목록·카드처럼 모양을 알 때"
+            >
+                <div className="grid gap-6 md:grid-cols-2">
+                    <div className="border-border-default rounded-2xl border">
+                        <Loading />
+                    </div>
+                    <div className="flex flex-col gap-4">
+                        <Skeleton className="h-40 rounded-2xl" />
+                        <SkeletonList count={3} />
+                    </div>
                 </div>
             </Section>
         </main>

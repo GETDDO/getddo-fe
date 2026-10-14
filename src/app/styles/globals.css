@@ -4,7 +4,8 @@
 @import 'shadcn/tailwind.css';
 @import './tokens.css';
 
-@custom-variant dark (&:is(.dark *));
+/* force-light 구역(밝은 그림 배너) 안에서는 dark: 유틸리티도 켜지지 않는다 — tokens.css '.dark .force-light' */
+@custom-variant dark (&:is(.dark *):not(.force-light, .force-light *));
 
 @theme inline {
     --color-sidebar-ring: var(--sidebar-ring);

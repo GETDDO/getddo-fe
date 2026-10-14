@@ -5,6 +5,7 @@ import type { Event } from '@entities/event';
 
 import { EventCard } from '@entities/event';
 import { Button } from '@shared/ui/button';
+import { Skeleton } from '@shared/ui/skeleton';
 
 export function EventCardList({
     title,
@@ -44,7 +45,14 @@ export function EventCardList({
                     </Button>
                 )}
             </div>
-            {isPending && <p className="text-fg-tertiary text-body-sm">불러오는 중…</p>}
+            {/* 불러오는 동안 카드 4장 자리를 잡아 둔다 */}
+            {isPending && (
+                <div aria-hidden className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {Array.from({ length: 4 }, (_, index) => (
+                        <Skeleton key={index} className="h-70 rounded-2xl" />
+                    ))}
+                </div>
+            )}
             {isError && (
                 <p className="text-destructive text-body-sm">이벤트 목록을 불러오지 못했습니다.</p>
             )}

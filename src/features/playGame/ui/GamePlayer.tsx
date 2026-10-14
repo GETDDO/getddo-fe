@@ -1,5 +1,7 @@
 import { lazy, Suspense } from 'react';
 
+import { Loading } from '@shared/ui/loading';
+
 import type { GameOverHandler } from '../model/types';
 
 import { GameImageButton } from './GameImageButton';
@@ -22,9 +24,7 @@ function GameLoading({ onExit }: { onExit: () => void }) {
             <div className="absolute top-2 left-2">
                 <GameImageButton kind="exit" size="small" onClick={onExit} />
             </div>
-            <p className="text-body text-fg-secondary flex h-full items-center justify-center">
-                게임을 불러오는 중이에요
-            </p>
+            <Loading label="게임을 불러오는 중이에요" className="h-full" />
         </div>
     );
 }

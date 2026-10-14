@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 
 import { Pager } from '@shared/ui/pager';
 
+import { SkeletonList } from './skeleton';
+
 interface PageData<T> {
     items: T[];
     size: number;
@@ -32,7 +34,7 @@ function PagedResult<T>({
 
     return (
         <div className="flex flex-col gap-4">
-            {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {isPending && <SkeletonList count={5} rowClassName="h-12" />}
             {isError && <p className="text-destructive text-body-sm">{errorText}</p>}
             {!isPending && !isError && data && data.items.length === 0 && (
                 <p className="text-fg-tertiary text-body-sm py-6">{emptyText}</p>

@@ -106,7 +106,7 @@ export function FeaturedEventCard({
                         ))}
                     </dl>
                     {mySpentTicketCount != null && mySpentTicketCount > 0 && (
-                        <span className="bg-ticket-accent text-ticket-on text-caption flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1">
+                        <span className="bg-ticket-accent text-fg-primary text-caption flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1">
                             <Ticket aria-hidden className="size-3.5" />
                             응모권 {formatNumber(mySpentTicketCount)}장으로 응모했어요
                         </span>

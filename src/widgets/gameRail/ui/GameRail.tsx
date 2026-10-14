@@ -1,6 +1,7 @@
 import { GameTicketCard, gameDetailPath, useGameList } from '@entities/game';
 import { hasGamePlayer } from '@features/playGame';
 import { useDragScroll } from '@shared/lib/useDragScroll';
+import { Skeleton } from '@shared/ui/skeleton';
 
 /**
  * 게임 티켓 카드 가로 목록 섹션 — 게임별 하루 1회 응모권 1장. 오늘 보상을 이미 받은 게임은 뒤로 보낸다.
@@ -33,7 +34,14 @@ export function GameRail({
                 <h2 className="text-title-3 text-fg-primary">{title}</h2>
                 {caption && <p className="text-body-sm text-fg-tertiary">{caption}</p>}
             </div>
-            {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {/* 불러오는 동안 게임 카드 자리를 잡아 둔다 */}
+            {isPending && (
+                <div aria-hidden className="flex gap-4 overflow-hidden">
+                    {Array.from({ length: 4 }, (_, index) => (
+                        <Skeleton key={index} className="h-90 w-66.25 shrink-0 rounded-2xl" />
+                    ))}
+                </div>
+            )}
             {isError && (
                 <p className="text-body-sm text-destructive">게임 목록을 불러오지 못했습니다.</p>
             )}

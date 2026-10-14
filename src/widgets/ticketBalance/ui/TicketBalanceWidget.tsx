@@ -1,6 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
 
-import { motion, useReducedMotion } from 'framer-motion';
 import { CalendarCheck, ChevronRight, ClipboardList, Gamepad2, Ticket } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -8,24 +7,26 @@ import type { Game } from '@entities/game';
 
 import { useAttendanceToday } from '@entities/attendance';
 import { GameTicketCard, gameDetailPath, useGameList } from '@entities/game';
-import { useMissionList } from '@entities/mission';
+import { missionThumbnail, useMissionList } from '@entities/mission';
 import { hasGamePlayer } from '@features/playGame';
 import { useDragScroll } from '@shared/lib/useDragScroll';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
+import { Skeleton } from '@shared/ui/skeleton';
 import { TicketCard } from '@shared/ui/ticket-card';
 
-interface EarnCard {
+import type { OrderableEarnCard } from '../lib/orderEarnCards';
+
+import { orderEarnCards } from '../lib/orderEarnCards';
+
+interface EarnCard extends OrderableEarnCard {
     id: string;
-    category: string;
     title: string;
     description: string;
     /** 스텁에 적는 보상 단위 — 출석은 브론즈 고정, 미션·게임은 지급 시 확률 추첨의 등급 응모권 (getddo-spec ticket.md) */
     rewardKind: string;
-    rewardTickets: number;
     href: string;
     actionLabel: string;
-    completed: boolean;
     /** 카드 상단 썸네일 — 이미지가 있으면 보여주고(게임), 없으면 임시로 회색 블록 + 아이콘 */
     thumbnailUrl: string | null;
     thumbnailIcon: LucideIcon;
@@ -36,23 +37,22 @@ interface EarnCard {
 /**
  * railClassName: 카드 가로 스크롤 영역에 덧붙일 클래스 (예: 화면 끝까지 펼치기)
  * cardClassName: 카드에 덧붙일 클래스 (예: 고정 너비) — 넘기지 않으면 기존 모양 그대로다
- * sortCompletedLast: 오늘 참여를 마친 카드(출석 완료 등)를 목록 맨 뒤로 보낸다
  * hideMoreLink: 제목 옆 '더보기' 링크를 숨긴다 (미션 페이지처럼 이미 전체 목록인 곳)
  */
 export function TicketBalanceWidget({
     railClassName,
     cardClassName,
-    sortCompletedLast = false,
     hideMoreLink = false,
 }: {
     railClassName?: string;
     cardClassName?: string;
-    sortCompletedLast?: boolean;
     hideMoreLink?: boolean;
 } = {}) {
-    const { data: attendance } = useAttendanceToday();
-    const { data: missions } = useMissionList();
-    const { data: games } = useGameList();
+    const { data: attendance, isPending: attendancePending } = useAttendanceToday();
+    const { data: missions, isPending: missionsPending } = useMissionList();
+    const { data: games, isPending: gamesPending } = useGameList();
+    // 셋 다 아직이면 카드 자리를 잡아 둔다 — 비어 있다가 갑자기 섹션이 생기면 아래 내용이 밀린다
+    const loading = attendancePending && missionsPending && gamesPending;
     // 마우스 드래그 + 관성 스크롤은 공용 훅을 쓴다 (터치는 브라우저 네이티브 스크롤)
     const dragScroll = useDragScroll<HTMLDivElement>();
 
@@ -61,7 +61,7 @@ export function TicketBalanceWidget({
             ? [
                   {
                       id: 'attendance',
-                      category: 'ATTENDANCE',
+                      category: 'ATTENDANCE' as const,
                       title: '오늘 출석 체크',
                       description: '하루 한 번, 누르면 바로 받아요',
                       rewardKind: '브론즈 응모권',
@@ -77,7 +77,7 @@ export function TicketBalanceWidget({
             : []),
         ...(missions ?? []).map((mission) => ({
             id: mission.id,
-            category: 'MISSION',
+            category: 'MISSION' as const,
             title: mission.title,
             description: '미션 완료 시 등급 추첨 응모권을 받아요',
             rewardKind: '등급 응모권',
@@ -86,12 +86,12 @@ export function TicketBalanceWidget({
             href: `/missions?mission=${mission.id}`,
             actionLabel: '미션하러 가기',
             completed: mission.completed,
-            thumbnailUrl: null,
+            thumbnailUrl: missionThumbnail(mission),
             thumbnailIcon: ClipboardList,
         })),
         ...(games ?? []).map((game) => ({
             id: game.id,
-            category: 'GAME',
+            category: 'GAME' as const,
             title: game.title,
             description: `하루 최대 ${game.dailyLimit}회, 보상은 등급 추첨 응모권 1장`,
             rewardKind: '등급 응모권',
@@ -104,14 +104,9 @@ export function TicketBalanceWidget({
             game,
         })),
     ];
+    const orderedCards = orderEarnCards(cards);
 
-    // 운영체제의 동작 줄이기 설정을 켠 사용자에게는 카드 이동 애니메이션을 끈다
-    const reduceMotion = useReducedMotion();
-    const orderedCards = sortCompletedLast
-        ? [...cards.filter((card) => !card.completed), ...cards.filter((card) => card.completed)]
-        : cards;
-
-    if (cards.length === 0) {
+    if (cards.length === 0 && !loading) {
         return null;
     }
 
@@ -134,8 +129,14 @@ export function TicketBalanceWidget({
                 )}
             </div>
             {/* 한 화면에 N.5장 — 반 장이 잘려 보이며 옆으로 더 있다는 암시를 준다. 마우스는 드래그로, 터치는 브라우저 네이티브 스크롤로 움직인다 */}
-            <motion.div
-                layoutScroll
+            {loading && (
+                <div aria-hidden className="flex gap-4 overflow-hidden">
+                    {Array.from({ length: 4 }, (_, index) => (
+                        <Skeleton key={index} className="h-90 w-66.25 shrink-0 rounded-2xl" />
+                    ))}
+                </div>
+            )}
+            <div
                 {...dragScroll}
                 className={cn(
                     // 카드 그림자가 잘리지 않게 사방에 12px 여백을 두고 같은 만큼 당긴다
@@ -144,14 +145,8 @@ export function TicketBalanceWidget({
                 )}
             >
                 {orderedCards.map((card) => (
-                    // 순서가 바뀌면(완료 카드 뒤로 보내기 등) 카드가 새 자리로 미끄러져 이동한다
-                    <motion.div
-                        layout="position"
-                        transition={{
-                            layout: reduceMotion
-                                ? { duration: 0 }
-                                : { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
-                        }}
+                    // 자리 이동 애니메이션은 두지 않는다 — 새로고침 때 출석·미션·게임이 따로 불러와지며 순서가 바뀌어 카드가 미끄러져 보였다
+                    <div
                         key={card.id}
                         className={cn(
                             // 게임 페이지 티켓 카드와 같은 크기 (너비 265, 높이 360)
@@ -170,9 +165,9 @@ export function TicketBalanceWidget({
                         ) : (
                             <EarnTicketCard card={card} />
                         )}
-                    </motion.div>
+                    </div>
                 ))}
-            </motion.div>
+            </div>
         </section>
     );
 }
@@ -191,7 +186,7 @@ function EarnTicketCard({ card }: { card: EarnCard }) {
                 <>
                     <div className="mt-3.75 flex h-4.5 items-center justify-between gap-2">
                         <span className="text-fg-tertiary text-caption">{card.rewardKind}</span>
-                        <span className="text-ticket-on text-body-sm-bold flex items-center gap-1">
+                        <span className="text-fg-primary text-body-sm-bold flex items-center gap-1">
                             <Ticket className="size-4.5" />+{card.rewardTickets}
                         </span>
                     </div>
@@ -222,9 +217,12 @@ function EarnTicketCard({ card }: { card: EarnCard }) {
                     className="absolute inset-0 z-1 rounded-2xl"
                 />
             )}
-            <div className="bg-surface-canvas flex h-30 shrink-0 items-center justify-center overflow-hidden rounded-lg">
+            {/* 미션 그림(16:9, 바탕 투명)은 바탕 없이 카드 위에 바로 얹는다 — 그림이 없을 때만 회색 칸 + 아이콘 */}
+            <div
+                className={`${card.thumbnailUrl ? '' : 'bg-surface-canvas'} flex h-30 shrink-0 items-center justify-center overflow-hidden rounded-lg`}
+            >
                 {card.thumbnailUrl ? (
-                    <img src={card.thumbnailUrl} alt="" className="size-full object-cover" />
+                    <img src={card.thumbnailUrl} alt="" className="size-full object-contain" />
                 ) : (
                     <card.thumbnailIcon className="text-fg-disabled size-8" />
                 )}

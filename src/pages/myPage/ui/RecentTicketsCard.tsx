@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react';
 
 import { TicketHistoryRow, type TicketHistory } from '@entities/ticket';
+import { SkeletonList } from '@shared/ui/skeleton';
 
 import { SectionCard } from './SectionCard';
 
@@ -29,7 +30,7 @@ export function RecentTicketsCard({
             moreTo="/my-tickets"
             moreLabel="응모권 내역 전체 보기"
         >
-            {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {isPending && <SkeletonList />}
             {isError && (
                 <p className="text-destructive text-body-sm">응모권 내역을 불러오지 못했습니다.</p>
             )}

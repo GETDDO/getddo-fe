@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 
 import { useEvent } from '@entities/event';
 import { formatYmd } from '@shared/lib/date';
+import { Loading } from '@shared/ui/loading';
 
 const CONTAINER = 'mx-auto w-full max-w-312 px-6 pb-28';
 
@@ -12,7 +13,7 @@ export function EventDetailPage() {
     if (isPending) {
         return (
             <main className={CONTAINER}>
-                <p className="text-fg-tertiary text-body-sm">불러오는 중…</p>
+                <Loading size="lg" />
             </main>
         );
     }

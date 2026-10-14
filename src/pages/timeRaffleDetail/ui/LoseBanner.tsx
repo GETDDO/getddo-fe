@@ -56,15 +56,14 @@ export function LoseBanner({ event }: { event: Event }) {
             animate={inView ? { opacity: 1, y: 0 } : undefined}
             transition={{ type: 'spring', stiffness: 120, damping: 20 }}
             onMouseEnter={replay}
-            className="bg-play-lavender-soft relative overflow-hidden rounded-2xl"
+            // 밝은 하늘 그림이라 다크 모드에서도 라이트 색을 쓴다 (tokens.css force-light)
+            className="force-light bg-play-lavender-soft relative overflow-hidden rounded-2xl"
         >
             <img
                 src={loseBg}
                 alt=""
                 className="pointer-events-none absolute inset-0 size-full object-cover"
             />
-            {/* 그림이 밝은 하늘색이라 다크 모드에서는 어둡게 덮어 글자가 읽히게 한다 */}
-            <div aria-hidden className="bg-surface-page/70 absolute inset-0 hidden dark:block" />
             {/* 장식은 화면에 들어온 뒤 위아래로 천천히 둥실거린다 (동작 줄이기 설정이면 멈춘다 — MotionConfig) */}
             <motion.img
                 src={loseDeco}

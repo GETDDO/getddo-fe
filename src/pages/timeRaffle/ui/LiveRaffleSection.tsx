@@ -1,5 +1,7 @@
 import type { Event } from '@entities/event';
 
+import { Badge } from '@shared/ui/badge';
+
 import { LiveRaffleCard } from './LiveRaffleCard';
 import { LiveRaffleCompactCard } from './LiveRaffleCompactCard';
 
@@ -22,13 +24,13 @@ export function LiveRaffleSection({ id, events }: LiveRaffleSectionProps) {
     const [first, ...rest] = events;
 
     return (
-        <section id={id} className="flex scroll-mt-24 flex-col gap-5">
+        <section id={id} className="flex scroll-mt-24 flex-col gap-6">
             <div className="flex items-center gap-2">
                 <h2 className="text-title-3 text-fg-primary">지금 진행 중</h2>
                 {events.length > 0 && (
-                    <span className="bg-surface-sunken text-label-sm text-fg-secondary rounded-full px-2.5 py-1">
+                    <Badge variant="neutral" size="sm">
                         {events.length}
-                    </span>
+                    </Badge>
                 )}
                 {events.length > 1 && (
                     <span className="text-caption text-fg-tertiary">마감이 가까운 순</span>

@@ -121,6 +121,7 @@ export function ProfileCard({
                                     key={grade}
                                     grade={grade}
                                     count={tickets.countByGrade[grade]}
+                                    unit="장"
                                 />
                             ))}
                         </span>

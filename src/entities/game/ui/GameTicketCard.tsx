@@ -39,7 +39,7 @@ export function GameTicketCard({
                         {rewarded ? (
                             <span className="text-caption text-fg-tertiary">오늘 받음</span>
                         ) : (
-                            <span className="text-body-sm-bold text-ticket-on flex items-center gap-1">
+                            <span className="text-body-sm-bold text-fg-primary flex items-center gap-1">
                                 <Ticket aria-hidden className="size-4.5" />+{DAILY_GAME_REWARD}
                             </span>
                         )}

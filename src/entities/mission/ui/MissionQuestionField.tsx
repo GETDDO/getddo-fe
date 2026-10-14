@@ -137,7 +137,8 @@ export function MissionQuestionField({
                     placeholder="정답을 입력해 주세요"
                     aria-invalid={invalid || undefined}
                     aria-required={question.required}
-                    className="bg-surface-page"
+                    // 아래 제출 버튼(Large 48px)과 같은 높이 — 기본 32px은 답 칸으로 너무 얇았다
+                    className="bg-surface-page h-12 px-4"
                 />
             ) : (
                 <Textarea

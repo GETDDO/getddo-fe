@@ -4,6 +4,7 @@ import { type CSSProperties, useEffect, useEffectEvent, useRef, useState } from 
 import type { TicketGrade } from '@entities/ticket';
 
 import { formatNumber } from '@shared/lib/format';
+import { Loading } from '@shared/ui/loading';
 
 import type { GameOverHandler } from '../model/types';
 
@@ -463,11 +464,14 @@ export function TakkoRunGame({
                 </div>
             )}
 
-            {!images && (
-                <p className="text-body-sm text-fg-tertiary absolute inset-0 flex items-center justify-center">
-                    {loadFailed ? '게임을 불러오지 못했어요.' : '불러오는 중…'}
-                </p>
-            )}
+            {!images &&
+                (loadFailed ? (
+                    <p className="text-body-sm text-fg-tertiary absolute inset-0 flex items-center justify-center">
+                        게임을 불러오지 못했어요.
+                    </p>
+                ) : (
+                    <Loading label="게임을 불러오는 중이에요" className="absolute inset-0" />
+                ))}
 
             {/* 왼쪽 위 — 나가기(도트 버튼 Small 36)와 그 오른쪽 배경 음악 소리 버튼(image 117, 설정은 이 브라우저에 기억) */}
             {/* 휴대폰처럼 좁은 화면에서는 나가기 아래 줄에 소리·일시정지를 둬 점수판과 겹치지 않게 한다 */}

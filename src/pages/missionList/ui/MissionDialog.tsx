@@ -18,6 +18,7 @@ import {
     DialogDescription,
     DialogTitle,
 } from '@shared/ui/dialog';
+import { Loading } from '@shared/ui/loading';
 
 import { MISSION_KIND_LABEL, missionUrgentDeadline } from '../lib/missionBoard';
 import { MissionReward } from './MissionReward';
@@ -106,13 +107,22 @@ function MissionDialogBody({
         return () => observer.disconnect();
     }, [loaded]);
 
-    if (isPending || isError || !mission) {
+    if (isPending) {
+        return (
+            <div className="bg-surface-elevated rounded-2xl p-6">
+                {/* 모달 제목은 화면 낭독기용으로만 남기고, 화면에는 도는 타코야키를 둔다 */}
+                <DialogTitle className="sr-only">미션을 불러오는 중이에요</DialogTitle>
+                <DialogDescription className="sr-only">잠시만 기다려 주세요.</DialogDescription>
+                <Loading label="미션을 불러오는 중이에요" />
+            </div>
+        );
+    }
+
+    if (isError || !mission) {
         return (
             <div className="bg-surface-elevated flex flex-col gap-2 rounded-2xl p-6">
-                <DialogTitle>{isPending ? '불러오는 중…' : '미션을 불러오지 못했어요'}</DialogTitle>
-                <DialogDescription>
-                    {isPending ? '잠시만 기다려 주세요.' : '잠시 후 다시 시도해 주세요.'}
-                </DialogDescription>
+                <DialogTitle>미션을 불러오지 못했어요</DialogTitle>
+                <DialogDescription>잠시 후 다시 시도해 주세요.</DialogDescription>
             </div>
         );
     }
@@ -196,8 +206,11 @@ function MissionDialogBody({
                                   ? `${formatKst(mission.startsAt, PERIOD_FORMAT)}부터 참여할 수 있어요.`
                                   : '운영 기간이 지나 제출할 수 없어요.'}
                         </p>
+                        {/* 보상 모달과 같이 모달 너비만큼 — 짧은 버튼은 눈에 덜 띄고 누르기 어렵다 */}
                         <DialogClose asChild>
-                            <Button variant="secondary">닫기</Button>
+                            <Button variant="secondary" className="mt-2 w-full">
+                                닫기
+                            </Button>
                         </DialogClose>
                     </div>
                 ) : mission.missionType === 'QUIZ' ? (

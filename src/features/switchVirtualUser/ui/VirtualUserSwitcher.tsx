@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react';
 
 import { useSessionStore, useVirtualUsers } from '@entities/user';
 import { cn } from '@shared/lib/utils';
+import { Loading } from '@shared/ui/loading';
 import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
 
 interface VirtualUserSwitcherProps {
@@ -39,11 +40,7 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                 </div>
                 <div className="border-border-default border-t" />
                 <div className="flex max-h-80 flex-col gap-1 overflow-y-auto">
-                    {isPending && (
-                        <p className="text-fg-tertiary text-body-sm py-4 text-center">
-                            불러오는 중…
-                        </p>
-                    )}
+                    {isPending && <Loading size="sm" />}
                     {isError && (
                         <p className="text-destructive text-body-sm py-4 text-center">
                             사용자 목록을 불러오지 못했습니다.
