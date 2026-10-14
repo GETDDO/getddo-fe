@@ -8,6 +8,7 @@ import { useEntryStatistics } from '@entities/entry';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { Button } from '@shared/ui/button';
+import { StatusDot } from '@shared/ui/status-dot';
 
 import { kstDayLabel } from '../lib/raffleFormat';
 import { RaffleThumbnail } from './RaffleThumbnail';
@@ -16,8 +17,6 @@ import { RaffleThumbnail } from './RaffleThumbnail';
 const PREVIEW_COUNT = 3;
 /** 마감한 래플 화면에서 '더 보기'를 누를 때마다 늘리는 줄 수 */
 const PAGE_SIZE = 10;
-
-const ROW_CHIP = 'text-caption rounded-full px-2.5 py-1';
 
 interface ClosedRaffleListProps {
     /** 머리의 진행 칸이 스크롤해 올 위치 */
@@ -91,11 +90,12 @@ export function ClosedRaffleList({
                 <div className="flex flex-col">
                     {groups.map((group) => (
                         <div key={group.label} className="flex flex-col">
-                            {/* 머리말·줄 모두 안쪽 여백 없이 제목과 같은 왼쪽 선에 맞춘다 */}
-                            <p className="text-caption text-fg-tertiary pt-3.5 pb-0.5">
+                            {/* 머리말은 줄 안의 썸네일과 같은 왼쪽 선(16px)에 맞춘다 */}
+                            <p className="text-caption text-fg-tertiary px-4 pt-3.5 pb-0.5">
                                 {group.label}
                             </p>
-                            <ul className="divide-border-default flex flex-col divide-y">
+                            {/* 홈 '발표 대기 · 결과'와 같은 목록 — 구분선은 호버 배경과 같은 8px 안쪽에서 시작한다 */}
+                            <ul className="[&>*+*]:before:bg-border-default flex flex-col [&>*+*]:relative [&>*+*]:before:absolute [&>*+*]:before:inset-x-2 [&>*+*]:before:top-0 [&>*+*]:before:h-px">
                                 {group.rows.map((event) => (
                                     <ClosedRaffleRow key={event.id} event={event} now={now} />
                                 ))}
@@ -140,33 +140,28 @@ function ClosedRaffleRow({ event, now }: { event: Event; now: Date }) {
     ].filter(Boolean);
 
     return (
-        <li className="flex items-center gap-4 py-4">
-            <RaffleThumbnail
-                src={event.bannerImageUrl}
-                className="w-20 rounded-lg"
-                fallbackIconClassName="size-6"
-            />
-            <div className="flex min-w-0 flex-1 flex-col gap-2">
-                {/*
-                 * 내 당첨 여부는 결과 화면에서 본다 — 목록에는 발표 상태만 둔다.
-                 * 발표 완료가 대부분이라 모든 줄에 칩을 달면 정보가 되지 않는다. 아직 발표 전인 줄만 칩으로 띄우고
-                 * 발표 완료는 오른쪽 '결과 보기' 버튼이 대신 알린다
-                 */}
-                {!isDrawn && (
-                    <span className={`${ROW_CHIP} bg-surface-sunken text-fg-secondary w-fit`}>
-                        {statusLabel}
-                    </span>
-                )}
-                <p className="text-body-bold text-fg-primary truncate">{event.title}</p>
-                <p className="text-caption text-fg-tertiary">{meta.join(' · ')}</p>
-            </div>
+        <li>
             {/*
-             * 발표 전이라도 상세로 들어갈 수 있어야 한다 — 상세 화면은 마감 상태를 지원하고
-             * 발표까지 남은 시간과 내 응모 현황을 보여 준다. 버튼을 막으면 그 경로가 끊긴다
+             * 홈 '발표 대기 · 결과' 줄(EventResultRow)과 같은 꼴 — 줄 전체를 누르는 링크, 16:9 썸네일, 상태 점, 오른쪽 화살표.
+             * 발표 전이라도 상세로 들어갈 수 있어야 한다 — 상세는 발표까지 남은 시간과 내 응모 현황을 보여 준다
              */}
-            <Button asChild variant="secondary" size="sm" className="shrink-0">
-                <Link to={`/time-raffle/${event.id}`}>{isDrawn ? '결과 보기' : '상세 보기'}</Link>
-            </Button>
+            <Link
+                to={`/time-raffle/${event.id}`}
+                className="group focus-visible:ring-border-focus focus-visible:ring-offset-surface-page after:bg-surface-canvas/60 relative isolate flex items-center gap-4 rounded-2xl p-4 after:absolute after:inset-2 after:-z-10 after:rounded-xl after:opacity-0 hover:after:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:after:transition-opacity motion-safe:after:duration-200"
+            >
+                <RaffleThumbnail
+                    src={event.bannerImageUrl}
+                    className="aspect-video h-20 rounded-lg"
+                    fallbackIconClassName="size-8"
+                />
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    {/* 내 당첨 여부는 결과 화면에서 본다 — 목록에는 발표 상태만 둔다. 발표 전만 "지금" 신호 점을 찍는다 */}
+                    <StatusDot tone={isDrawn ? 'muted' : 'info'}>{statusLabel}</StatusDot>
+                    <p className="text-body-bold text-fg-primary truncate">{event.title}</p>
+                    <p className="text-caption text-fg-tertiary">{meta.join(' · ')}</p>
+                </div>
+                <ChevronRight className="text-fg-secondary group-hover:text-fg-primary size-7 shrink-0 motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-hover:translate-x-1" />
+            </Link>
         </li>
     );
 }

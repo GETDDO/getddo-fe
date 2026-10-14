@@ -1,6 +1,12 @@
 import type { Event } from '@entities/event';
 
-import { KST_HOUR_MINUTE, formatKst, kstDayDiff } from '@shared/lib/date';
+import {
+    KST_HOUR_MINUTE,
+    formatKst,
+    formatKstTimeRange,
+    formatRemaining,
+    kstDayDiff,
+} from '@shared/lib/date';
 
 const MONTH_DAY: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric' };
 const WEEKDAY: Intl.DateTimeFormatOptions = { weekday: 'short' };
@@ -10,24 +16,9 @@ export function kstDateHeadline(now: Date): string {
     return `${formatKst(now, MONTH_DAY)}(${formatKst(now, WEEKDAY)})`;
 }
 
-/**
- * 마감까지 남은 시간 — "13분 48초"처럼 읽는 단위로 쓴다.
- *
- * 시각 포맷(00:13:48)은 한 시간을 넘는 래플에서 앞자리가 늘 0이라 읽기 어렵다.
- * 한 시간이 넘으면 초는 떼고 시간·분만 남긴다 — 초 단위가 의미를 갖는 구간이 아니다.
- * 하루가 넘으면 날짜 단위로 적는다 — '480시간 43분'은 셈을 해야 읽힌다.
- */
+/** 마감까지 남은 시간 — "9분 50초" · "1시간 23분" · "19일 23시간" (shared/lib/date formatRemaining) */
 export function formatCloseCountdown(remainingMs: number): string {
-    const total = Math.max(0, Math.floor(remainingMs / 1000));
-    const hours = Math.floor(total / 3600);
-    const minutes = Math.floor((total % 3600) / 60);
-    const seconds = total % 60;
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) return hours % 24 > 0 ? `${days}일 ${hours % 24}시간` : `${days}일`;
-    if (hours > 0) return `${hours}시간 ${minutes}분`;
-    if (minutes > 0) return `${minutes}분 ${seconds}초`;
-    return `${seconds}초`;
+    return formatRemaining(remainingMs);
 }
 
 /** KST 날짜를 '오늘 / 어제 / 내일 / 10월 3일'로 적는다 */
@@ -44,9 +35,9 @@ export function formatOpenChip(event: Event, now: Date): string {
     return `${kstDayLabel(event.startsAt, now)} ${formatKst(event.startsAt, KST_HOUR_MINUTE)} 오픈`;
 }
 
-/** 진행 중 래플의 운영 시간 칩 — "18:00 ~ 19:00" */
+/** 진행 중 래플의 운영 시간 — 같은 날이면 "18:00 ~ 19:00", 날을 넘기면 "11월 3일 14:42 마감" */
 export function formatRunningRange(event: Event): string {
-    return `${formatKst(event.startsAt, KST_HOUR_MINUTE)} ~ ${formatKst(event.endsAt, KST_HOUR_MINUTE)}`;
+    return formatKstTimeRange(event.startsAt, event.endsAt);
 }
 
 /**

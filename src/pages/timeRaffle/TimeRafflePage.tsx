@@ -34,6 +34,8 @@ export function TimeRafflePage() {
     const view: RaffleView = searchParams.get(VIEW_PARAM) === 'closed' ? 'closed' : 'now';
     // 칸을 바꾼 뒤 내려갈 곳 — 바꾸기 전에는 그 섹션이 화면에 없어 렌더가 끝난 뒤 스크롤한다
     const pendingScroll = useRef<string | null>(null);
+    // 처음 들어왔을 때는 움직이지 않는다 — 진행 중 카드가 밀려 들어오면 정보가 늦게 읽힌다. 전체보기·뒤로로 바꿀 때만 민다
+    const [slideOnSwitch, setSlideOnSwitch] = useState(false);
 
     const scrollTo = (target: string) => {
         document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -51,6 +53,7 @@ export function TimeRafflePage() {
             return;
         }
         pendingScroll.current = target;
+        setSlideOnSwitch(true);
         setSearchParams(next === 'closed' ? { [VIEW_PARAM]: 'closed' } : {});
     };
 
@@ -113,7 +116,9 @@ export function TimeRafflePage() {
                  */}
                 <motion.div
                     key={view}
-                    initial={{ opacity: 0, x: view === 'closed' ? 24 : -24 }}
+                    initial={
+                        slideOnSwitch ? { opacity: 0, x: view === 'closed' ? 24 : -24 } : false
+                    }
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.25, ease: 'easeOut' }}
                     className="flex flex-col gap-14"
