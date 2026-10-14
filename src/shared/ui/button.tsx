@@ -11,10 +11,11 @@ import * as React from 'react';
  * · emphasis(드물게 쓰는 아주 중요한 행동 — brand/primary 핑크).
  * 크기: sm 36(글자 14) · default 40(글자 16) · lg 48(글자 16), 모두 SemiBold·모서리 8·좌우 12.
  * 각 색은 기본·호버·누름 토큰을 쓰고, 비활성은 surface/disabled 바탕에 fg/disabled 글자다.
+ * 바탕은 투명 테두리 밑까지 칠한다 — 테두리 안쪽만 칠하면 채운 버튼이 테두리 버튼보다 1px씩 작아 보인다
  * 글자 크기는 text-sm/text-base(14/16px)로 둔다 — 커스텀 타이포 토큰(text-body-bold 등)은 공용 cn이 글자색과 같은 묶음으로 보고 색을 지운다
  */
 const buttonVariants = cva(
-    "group/button inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-transparent bg-clip-padding whitespace-nowrap transition-colors outline-none select-none focus-visible:ring-2 focus-visible:ring-border-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface-page disabled:cursor-not-allowed disabled:border-transparent disabled:bg-surface-disabled disabled:text-fg-disabled aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    "group/button inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-transparent whitespace-nowrap transition-colors outline-none select-none focus-visible:ring-2 focus-visible:ring-border-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface-page disabled:cursor-not-allowed disabled:border-transparent disabled:bg-surface-disabled disabled:text-fg-disabled aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
     {
         variants: {
             variant: {

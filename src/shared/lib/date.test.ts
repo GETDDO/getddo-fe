@@ -1,4 +1,5 @@
 import {
+    formatKstDot,
     kstDateStartUtcIso,
     kstInputToUtcIso,
     kstNextDateStartUtcIso,
@@ -52,5 +53,13 @@ describe('kstDateStartUtcIso / kstNextDateStartUtcIso', () => {
     it('월말·연말 경계를 넘긴다', () => {
         expect(kstNextDateStartUtcIso('2026-10-31')).toBe('2026-10-31T15:00:00.000Z');
         expect(kstNextDateStartUtcIso('2026-12-31')).toBe('2026-12-31T15:00:00.000Z');
+    });
+});
+
+describe('formatKstDot', () => {
+    it('UTC 시각을 KST 날짜(와 시각)로 짧게 적는다', () => {
+        // UTC 9월 17일 15:30 = KST 9월 18일 00:30
+        expect(formatKstDot('2026-09-17T15:30:00Z')).toBe('09.18');
+        expect(formatKstDot('2026-09-17T15:30:00Z', true)).toBe('09.18 00:30');
     });
 });

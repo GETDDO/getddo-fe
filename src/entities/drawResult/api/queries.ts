@@ -1,10 +1,12 @@
+import type { Query } from '@tanstack/react-query';
+
 import { useQueries, useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@shared/api/client';
 import { envelopeSchema, pageSchema } from '@shared/api/envelopeSchema';
 import { queryPresets } from '@shared/api/queryPresets';
 
-import type { DrawRunStatus } from '../model/types';
+import type { DrawRunStatus, MyResult } from '../model/types';
 
 import { isDrawRunInProgress } from '../model/runStatus';
 import {
@@ -44,6 +46,18 @@ export function useEventResults(eventId: string, enabled = true) {
 // getddo-spec 05-api/drawing.md E09 — 본인 결과 조회
 export const eventMyResultApiPath = (eventId: string) => `/events/${eventId}/my-result`;
 
+/** 본인 결과 한 이벤트의 쿼리 설정 — 단건(useMyResult)과 여러 건(useMyResults)이 같은 캐시를 나눠 쓴다 */
+const myResultOptions = (eventId: string) => ({
+    ...queryPresets.realtime,
+    queryKey: [...DRAW_RESULTS_KEY, eventId, 'me'],
+    queryFn: async () => {
+        const { data } = await apiClient.get<unknown>(eventMyResultApiPath(eventId));
+        return envelopeSchema(myResultSchema).parse(data).data;
+    },
+    refetchInterval: (query: Query<MyResult>) =>
+        query.state.data?.isPublished ? false : queryPresets.realtime.refetchInterval,
+});
+
 /**
  * 로그인한 본인의 이벤트 결과.
  *
@@ -52,17 +66,15 @@ export const eventMyResultApiPath = (eventId: string) => `/events/${eventId}/my-
  * 폴링 기준은 E08과 같다 — 공개된 뒤에는 멈춘다.
  */
 export function useMyResult(eventId: string, enabled = true) {
-    return useQuery({
-        ...queryPresets.realtime,
-        queryKey: [...DRAW_RESULTS_KEY, eventId, 'me'],
-        enabled,
-        queryFn: async () => {
-            const { data } = await apiClient.get<unknown>(eventMyResultApiPath(eventId));
-            return envelopeSchema(myResultSchema).parse(data).data;
-        },
-        refetchInterval: (query) =>
-            query.state.data?.isPublished ? false : queryPresets.realtime.refetchInterval,
-    });
+    return useQuery({ ...myResultOptions(eventId), enabled });
+}
+
+/**
+ * 내가 응모한 여러 이벤트의 본인 결과를 한꺼번에 받는다 (E09는 이벤트 단위라 이벤트마다 한 번씩).
+ * 내 응모 내역·마이페이지에서 쓴다. 단건 조회와 캐시 키가 같아 상세 화면과 결과를 나눠 쓴다
+ */
+export function useMyResults(eventIds: readonly string[]) {
+    return useQueries({ queries: eventIds.map((eventId) => myResultOptions(eventId)) });
 }
 
 // ── 관리자 추첨 관리(GD-125) ──

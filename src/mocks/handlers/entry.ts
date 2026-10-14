@@ -111,6 +111,50 @@ const seedEntry = (): EntryReceipt => ({
     rejectionReason: null,
 });
 
+const HOUR_MS = 60 * 60 * 1000;
+
+/**
+ * 내 응모 내역 화면이 발표 대기·당첨·미당첨을 모두 보여 줄 수 있게 마감·발표된 겟또타임에 심는 시드.
+ * 응모 시각은 마감 몇 시간 전으로 잡는다. 결과는 E09 목업(drawResult)이 이벤트 상태로 판정한다.
+ * evt-107은 E09 테스트가 "응모하지 않은 사람"을 확인하는 래플이라 시드를 두지 않는다
+ */
+const DEMO_ENTRY_SEEDS: { eventId: string; tickets: TicketsByGrade; hoursBeforeEnd: number }[] = [
+    { eventId: 'evt-106', tickets: { BRONZE: 0, SILVER: 2, GOLD: 1 }, hoursBeforeEnd: 2 },
+    { eventId: 'evt-108', tickets: { BRONZE: 1, SILVER: 0, GOLD: 0 }, hoursBeforeEnd: 3 },
+    { eventId: 'evt-110', tickets: { BRONZE: 0, SILVER: 1, GOLD: 0 }, hoursBeforeEnd: 4 },
+    { eventId: 'evt-109', tickets: { BRONZE: 3, SILVER: 0, GOLD: 0 }, hoursBeforeEnd: 5 },
+    { eventId: 'evt-111', tickets: { BRONZE: 0, SILVER: 2, GOLD: 0 }, hoursBeforeEnd: 1 },
+    { eventId: 'evt-006', tickets: { ...ZERO_TICKETS }, hoursBeforeEnd: 24 * 20 },
+];
+
+const demoSeedEntries = (): EntryReceipt[] =>
+    DEMO_ENTRY_SEEDS.flatMap(({ eventId, tickets, hoursBeforeEnd }) => {
+        const event = findMockEvent(eventId);
+        if (!event) return [];
+        const at = new Date(
+            Math.min(
+                new Date(event.endsAt).getTime() - hoursBeforeEnd * HOUR_MS,
+                mockNow().getTime() - HOUR_MS,
+            ),
+        ).toISOString();
+        return [
+            {
+                id: crypto.randomUUID(),
+                eventId,
+                eventTitle: event.title,
+                requestedTicketCount: totalOf(tickets),
+                requestedTicketsByGrade: tickets,
+                deductedTicketCount: totalOf(tickets),
+                deductedTicketsByGrade: tickets,
+                status: 'ACCEPTED' as const,
+                requestedAt: at,
+                acceptedAt: at,
+                rejectionCode: null,
+                rejectionReason: null,
+            },
+        ];
+    });
+
 const userIdOf = (request: Request) => request.headers.get('X-User-ID') ?? 'anonymous';
 
 /** 관리자 목업이 삭제 가능 여부(응모 이력 없음, 도메인 규칙)를 판정할 때 쓴다 */
@@ -139,9 +183,8 @@ const myEntriesFor = (userId: string) => {
     let list = entriesByUser.get(userId);
     if (!list) {
         // 시연 첫 진입에도 목록이 비어 보이지 않게 사용자별 시드 하나를 둔다
-        const seed = seedEntry();
-        seededEntries.add(seed);
-        list = [seed];
+        list = [seedEntry(), ...demoSeedEntries()];
+        for (const seed of list) seededEntries.add(seed);
         entriesByUser.set(userId, list);
     }
     return list;

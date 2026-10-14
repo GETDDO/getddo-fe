@@ -24,7 +24,8 @@ const initialNotifications: Notification[] = [
     {
         id: '3f4a1b2c-0002-4000-8000-000000000002',
         title: '당첨자 발표 안내',
-        body: '5G 프리미어 가입 감사 이벤트 당첨자가 발표되었습니다.',
+        // 결과 발표 알림은 당첨·낙첨을 담지 않고 결과 화면으로 안내한다 (getddo-spec 02-domain/notification.md). 드로어 테스트가 이동 없이 읽음 처리만 보도록 링크는 비워 둔다
+        body: '무너 한정 굿즈 타임 래플 결과가 발표됐어요. 결과 화면에서 당첨 여부를 확인해 보세요.',
         isRead: false,
         createdAt: '2026-09-29T02:00:00Z',
         eventId: null,

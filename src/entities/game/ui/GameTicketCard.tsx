@@ -11,6 +11,7 @@ const DAILY_GAME_REWARD = 1;
 
 /**
  * 게임 티켓 카드 — 썸네일, 설명, 오늘 받을 응모권, 플레이 버튼 (공용 TicketCard, 피그마 Group 633903).
+ * 카드 어디를 눌러도 게임 화면으로 들어간다. 카드에 마우스를 올려도 움직이지 않는다 (다른 카드와 통일).
  * 게임은 횟수 제한 없이 플레이할 수 있어서, 오늘 보상을 받은 뒤에도 버튼은 계속 누를 수 있다
  */
 export function GameTicketCard({
@@ -30,7 +31,7 @@ export function GameTicketCard({
     return (
         <TicketCard
             className={className}
-            cardClassName="h-90 w-66.25"
+            cardClassName="relative h-90 w-66.25"
             stub={
                 <>
                     <div className="mt-3.75 flex h-4.5 items-center justify-between gap-2">
@@ -46,7 +47,13 @@ export function GameTicketCard({
                     {/* 공용 버튼 Large(48) — 보조 버튼(secondary) — 응모권 카드는 출석만 primary, 게임·미션은 한 단계 낮춘다.
                         준비 중인 게임은 누를 수 없게 막는다 */}
                     {ready ? (
-                        <Button asChild variant="secondary" size="lg" className="mt-2 w-full">
+                        // 카드 전체를 덮는 링크(아래) 위에 버튼을 올린다
+                        <Button
+                            asChild
+                            variant="secondary"
+                            size="lg"
+                            className="relative z-2 mt-2 w-full"
+                        >
                             <Link to={href}>{rewarded ? '한 번 더 하기' : '게임하러 가기'}</Link>
                         </Button>
                     ) : (
@@ -57,6 +64,16 @@ export function GameTicketCard({
                 </>
             }
         >
+            {/* 카드 어디를 눌러도 들어가도록 카드 전체를 덮는 링크. 버튼과 같은 곳이라 낭독기·키보드에서는 감추고 버튼 하나로만 읽힌다.
+                버튼의 after로 덮으면 누르는 순간(active) 걸리는 brightness 필터가 덮개를 버튼 크기로 줄여 이동이 안 된다 */}
+            {ready && (
+                <Link
+                    to={href}
+                    aria-hidden
+                    tabIndex={-1}
+                    className="absolute inset-0 z-1 rounded-2xl"
+                />
+            )}
             <div className="bg-surface-canvas flex h-30 shrink-0 items-center justify-center overflow-hidden rounded-lg">
                 {game.thumbnailUrl ? (
                     <img src={game.thumbnailUrl} alt="" className="size-full object-cover" />

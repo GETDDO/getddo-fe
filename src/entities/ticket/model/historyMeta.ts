@@ -1,4 +1,4 @@
-import type { TicketOperationType } from '@entities/ticket';
+import type { TicketOperationType } from './history';
 
 type TicketHistoryMeta = {
     /** 접힌 행 둘째 줄과 상세의 '구분'에 쓰는 이름 */

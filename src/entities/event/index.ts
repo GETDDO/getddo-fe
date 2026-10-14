@@ -40,3 +40,4 @@ export { EventCard } from './ui/EventCard';
 export { EventResultRow } from './ui/EventResultRow';
 export { FeaturedEventCard } from './ui/FeaturedEventCard';
 export { UpcomingEventCard } from './ui/UpcomingEventCard';
+export { EventThumbnail } from './ui/EventThumbnail';

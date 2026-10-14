@@ -22,7 +22,9 @@ export {
     eventResultsApiPath,
     useEventResults,
     useMyResult,
+    useMyResults,
 } from './api/queries';
+export { MyResultBadge } from './ui/MyResultBadge';
 export {
     cancellationRedrawsApiPath,
     DRAWS_KEY,

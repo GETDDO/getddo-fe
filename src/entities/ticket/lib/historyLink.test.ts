@@ -1,4 +1,4 @@
-import { getTicketHistoryLink } from './ticketHistoryLink';
+import { getTicketHistoryLink } from './historyLink';
 
 describe('getTicketHistoryLink', () => {
     it('응모·반환에 연결된 래플이 있으면 그 래플 상세로 보낸다', () => {

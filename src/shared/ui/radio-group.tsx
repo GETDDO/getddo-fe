@@ -15,6 +15,10 @@ function RadioGroup({
     );
 }
 
+/**
+ * 라디오 하나 — 안 고른 원은 흰 바탕 + border/strong 테두리라 회색 칸 위에서도 또렷하고,
+ * 고르면 잉크(action/neutral)로 채우고 가운데 흰 점을 둔다. 마젠타는 "지금" 신호에만 쓰므로 선택 표시에 쓰지 않는다 (DESIGN-SYSTEM 색 역할)
+ */
 function RadioGroupItem({
     className,
     ...props
@@ -23,16 +27,16 @@ function RadioGroupItem({
         <RadioGroupPrimitive.Item
             data-slot="radio-group-item"
             className={cn(
-                'group/radio-group-item peer border-input group-has-[:focus-visible]/field-label:not-data-checked:border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:aria-checked:border-primary dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground group-has-[:focus-visible]/field-label:data-checked:border-primary dark:data-checked:bg-primary relative flex aspect-square size-4 shrink-0 rounded-full border outline-none group-has-[:focus-visible]/field-label:ring-0 after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-3',
+                'group/radio-group-item peer bg-surface-page border-border-strong focus-visible:ring-border-focus aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-checked:border-action-neutral data-checked:bg-action-neutral relative flex aspect-square size-5 shrink-0 rounded-full border-[1.5px] transition-colors outline-none after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-2',
                 className,
             )}
             {...props}
         >
             <RadioGroupPrimitive.Indicator
                 data-slot="radio-group-indicator"
-                className="flex size-4 items-center justify-center"
+                className="flex size-full items-center justify-center"
             >
-                <span className="bg-primary-foreground absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full" />
+                <span className="bg-fg-on-brand absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full" />
             </RadioGroupPrimitive.Indicator>
         </RadioGroupPrimitive.Item>
     );

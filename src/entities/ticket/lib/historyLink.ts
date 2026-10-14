@@ -1,6 +1,6 @@
-import type { TicketHistory } from '@entities/ticket';
+import type { TicketHistory } from '../model/history';
 
-import { TICKET_HISTORY_META } from '../model/ticketHistoryMeta';
+import { TICKET_HISTORY_META } from '../model/historyMeta';
 
 /**
  * 내역 상세에서 이어서 볼 화면.

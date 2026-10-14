@@ -6,3 +6,18 @@ export const TICKET_GRADE_LABEL: Record<TicketGrade, string> = {
     SILVER: '실버',
     GOLD: '골드',
 };
+
+// 가중치를 적용하는 겟또타임에서 장당 추첨 가중치 — getddo-spec 02-domain/drawing.md "가중치 및 중복 당첨"
+export const TICKET_GRADE_WEIGHT: Record<TicketGrade, number> = {
+    BRONZE: 1,
+    SILVER: 3,
+    GOLD: 5,
+};
+
+// 게임·미션 보상 1장의 등급 확률(%) — getddo-spec 02-domain/ticket.md "게임·미션 보상의 등급 추첨". 출석은 브론즈 고정.
+// 얻는 확률은 보상 규칙이라 안내하지만, 당첨 확률은 어디에도 보여 주지 않는다 (요구사항 §7)
+export const TICKET_GRADE_ODDS: Record<TicketGrade, number> = {
+    BRONZE: 80,
+    SILVER: 18,
+    GOLD: 2,
+};
