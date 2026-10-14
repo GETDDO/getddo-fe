@@ -327,20 +327,40 @@ export function AdminEventFormPage() {
                         </div>
                         <div className="flex flex-wrap gap-3">
                             <div className="flex w-24 flex-col gap-1">
-                                <label className="text-caption text-fg-tertiary">등수</label>
+                                <label
+                                    htmlFor={`prize-${field.fieldKey}-rank`}
+                                    className="text-caption text-fg-tertiary"
+                                >
+                                    등수
+                                </label>
                                 <Input
+                                    id={`prize-${field.fieldKey}-rank`}
                                     type="number"
                                     min={1}
                                     {...register(`prizes.${index}.rank`)}
                                 />
                             </div>
                             <div className="flex min-w-48 flex-1 flex-col gap-1">
-                                <label className="text-caption text-fg-tertiary">경품명</label>
-                                <Input {...register(`prizes.${index}.name`)} />
+                                <label
+                                    htmlFor={`prize-${field.fieldKey}-name`}
+                                    className="text-caption text-fg-tertiary"
+                                >
+                                    경품명
+                                </label>
+                                <Input
+                                    id={`prize-${field.fieldKey}-name`}
+                                    {...register(`prizes.${index}.name`)}
+                                />
                             </div>
                             <div className="flex w-28 flex-col gap-1">
-                                <label className="text-caption text-fg-tertiary">당첨 인원</label>
+                                <label
+                                    htmlFor={`prize-${field.fieldKey}-winner-count`}
+                                    className="text-caption text-fg-tertiary"
+                                >
+                                    당첨 인원
+                                </label>
                                 <Input
+                                    id={`prize-${field.fieldKey}-winner-count`}
                                     type="number"
                                     min={1}
                                     {...register(`prizes.${index}.winnerCount`)}
@@ -349,14 +369,28 @@ export function AdminEventFormPage() {
                         </div>
                         <div className="flex flex-wrap gap-3">
                             <div className="flex min-w-48 flex-1 flex-col gap-1">
-                                <label className="text-caption text-fg-tertiary">설명 (선택)</label>
-                                <Input {...register(`prizes.${index}.description`)} />
+                                <label
+                                    htmlFor={`prize-${field.fieldKey}-description`}
+                                    className="text-caption text-fg-tertiary"
+                                >
+                                    설명 (선택)
+                                </label>
+                                <Input
+                                    id={`prize-${field.fieldKey}-description`}
+                                    {...register(`prizes.${index}.description`)}
+                                />
                             </div>
                             <div className="flex min-w-48 flex-1 flex-col gap-1">
-                                <label className="text-caption text-fg-tertiary">
+                                <label
+                                    htmlFor={`prize-${field.fieldKey}-image-key`}
+                                    className="text-caption text-fg-tertiary"
+                                >
                                     이미지 키 (선택)
                                 </label>
-                                <Input {...register(`prizes.${index}.imageKey`)} />
+                                <Input
+                                    id={`prize-${field.fieldKey}-image-key`}
+                                    {...register(`prizes.${index}.imageKey`)}
+                                />
                             </div>
                         </div>
                         {(errors.prizes?.[index]?.rank ||
