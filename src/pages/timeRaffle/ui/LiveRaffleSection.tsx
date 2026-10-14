@@ -4,6 +4,8 @@ import { LiveRaffleCard } from './LiveRaffleCard';
 import { LiveRaffleCompactCard } from './LiveRaffleCompactCard';
 
 interface LiveRaffleSectionProps {
+    /** 머리의 진행 칸이 스크롤해 올 위치 */
+    id?: string;
     /** 마감이 임박한 순서로 정렬된 진행 중 래플 */
     events: Event[];
 }
@@ -14,11 +16,11 @@ interface LiveRaffleSectionProps {
  * 마감이 가장 가까운 하나를 크게 두고 나머지는 작은 카드로 함께 보여 준다.
  * 넘겨 보는 방식에서는 보지 못한 래플이 그동안 마감될 수 있었다.
  */
-export function LiveRaffleSection({ events }: LiveRaffleSectionProps) {
+export function LiveRaffleSection({ id, events }: LiveRaffleSectionProps) {
     const [first, ...rest] = events;
 
     return (
-        <section className="flex flex-col gap-5">
+        <section id={id} className="flex scroll-mt-24 flex-col gap-5">
             <div className="flex items-center gap-2">
                 <h2 className="text-title-3 text-fg-primary">지금 진행 중</h2>
                 {events.length > 0 && (

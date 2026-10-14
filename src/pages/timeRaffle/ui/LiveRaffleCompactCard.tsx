@@ -21,7 +21,7 @@ export function LiveRaffleCompactCard({ event }: { event: Event }) {
     const { data: statistics } = useEntryStatistics(event.id);
 
     return (
-        <article className="bg-surface-page border-border-default flex items-center gap-5 rounded-2xl border p-5">
+        <article className="bg-surface-page border-border-default flex items-center gap-5 rounded-2xl border p-5 shadow-md">
             <RaffleThumbnail
                 src={event.bannerImageUrl}
                 className="h-32 w-42 shrink-0 rounded-xl"
@@ -44,7 +44,7 @@ export function LiveRaffleCompactCard({ event }: { event: Event }) {
                     {statistics && ` · ${formatNumber(statistics.participantCount)}명 참여 중`}
                 </p>
 
-                <Button asChild variant="secondary" className="mt-1 w-full">
+                <Button asChild className="mt-1 w-full">
                     <Link to={`/time-raffle/${event.id}`}>응모하러 가기</Link>
                 </Button>
             </div>

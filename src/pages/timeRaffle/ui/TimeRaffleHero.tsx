@@ -1,16 +1,19 @@
-import { ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 
 import type { Event } from '@entities/event';
 
-import { useMyTickets, useTicketHistories } from '@entities/ticket';
+import shopCounter from '@shared/assets/shop/shop-counter.jpg';
+import shopWall from '@shared/assets/shop/shop-wall.jpg';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { useVirtualClock } from '@shared/lib/virtualClock';
+import { StepTile } from '@shared/ui/step-tile';
+import { TicketWallet } from '@widgets/ticketWallet';
 
-import heroMascot from '../assets/hero-mascot.png';
-import { isSameKstMonth, kstDateHeadline } from '../lib/raffleFormat';
+import itemGumball from '../assets/item-gumball.png';
+import itemTicketsGift from '../assets/item-tickets-gift.png';
+import { kstDateHeadline } from '../lib/raffleFormat';
+import { RAFFLE_SECTION_IDS } from '../model/sectionIds';
 
 interface TimeRaffleHeroProps {
     live: Event[];
@@ -22,51 +25,90 @@ interface TimeRaffleHeroProps {
 
 /**
  * 겟또타임 머리 — 오늘 무엇을 할 수 있는지 한 줄로 알려 주고 응모권 잔액을 함께 둔다.
+ * 미션 "오늘의 적립"과 같은 틀이다 — 진행 칸(누르면 해당 섹션으로)과 같은 응모권 지갑(바로가기만 "응모권 모으러 가기").
  *
  * 래플은 시간이 지나면 사라지는 화면이라 '지금 몇 개가 열려 있는지'가 제목이어야 한다.
  * 응모권을 보려고 마이페이지로 나갔다 오지 않도록 잔액도 같은 줄에 둔다.
  */
 export function TimeRaffleHero({ live, upcoming, closed, now }: TimeRaffleHeroProps) {
     return (
-        <section className="bg-surface-canvas flex flex-col gap-10 rounded-2xl p-10 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex min-w-0 flex-col gap-2">
-                <p className="text-body-sm-bold text-fg-secondary">
-                    {kstDateHeadline(now)} · 겟또타임
-                </p>
-                <h1 className="text-display text-fg-primary">
-                    {live.length > 0
-                        ? `지금 응모할 수 있는 래플 ${formatNumber(live.length)}개`
-                        : '지금 열린 래플이 없어요'}
-                </h1>
-                <p className="text-body text-fg-secondary">
-                    마감 직후 바로 추첨해요. 응모권을 많이 쓸수록 당첨 기회가 커져요.
-                </p>
-
-                <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <StepCard
-                        label="진행 중"
-                        live
-                        count={live.length}
-                        hint={
-                            live[0]
-                                ? `가장 빠른 마감 ${formatKst(live[0].endsAt, KST_HOUR_MINUTE)}`
-                                : '열린 래플 없음'
-                        }
-                    />
-                    <StepCard
-                        label="오픈 예정"
-                        count={upcoming.length}
-                        hint={
-                            upcoming[0]
-                                ? `다음 오픈 ${formatKst(upcoming[0].startsAt, KST_HOUR_MINUTE)}`
-                                : '예정된 래플 없음'
-                        }
-                    />
-                    <AnnouncementStep closed={closed} />
-                </dl>
+        <section
+            aria-labelledby="time-raffle-title"
+            // 미션 페이지 "오늘의 적립"과 같은 가게 — 벽(image 197)을 깔고 아래에 카운터 띠(image 211)를 둔다. --counter는 카운터 띠 높이
+            className="bg-play-yellow-soft relative overflow-hidden rounded-3xl bg-cover bg-top [--counter:clamp(4.5rem,8vw,6rem)]"
+            style={{ backgroundImage: `url(${shopWall})` }}
+        >
+            {/* 벽 그림이 어두운 웜톤이라 흰 막을 얇게 덮어 페이지 바탕과 어울리게 밝힌다 */}
+            <div aria-hidden className="bg-surface-page/45 absolute inset-0" />
+            {/* 카운터 띠 — 이음매 없이 이어지도록 자른 타일·상판·나무를 가로로 반복한다 */}
+            <div
+                aria-hidden
+                className="absolute inset-x-0 bottom-0 h-(--counter) bg-size-[auto_100%] bg-left bg-repeat-x"
+                style={{ backgroundImage: `url(${shopCounter})` }}
+            />
+            {/* 카운터 위 소품(image 212) — 왼쪽 끝 응모권 상자·선물, 오른쪽 끝 뽑기 기계.
+                뽑기 기계 꼭대기(0.6+0.9배)도 내용 아래 여백(--counter의 1.5배) 안에 들어와 내용을 가리지 않는다 */}
+            <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-3 bottom-[calc(var(--counter)*0.6)] flex items-end justify-between md:inset-x-5"
+            >
+                <img src={itemTicketsGift} alt="" className="h-[calc(var(--counter)*0.7)] w-auto" />
+                <img src={itemGumball} alt="" className="h-[calc(var(--counter)*0.9)] w-auto" />
             </div>
 
-            <TicketWallet now={now} />
+            <div className="relative grid items-center gap-8 p-6 pb-[calc(var(--counter)*1.5+0.5rem)] md:p-10 md:pb-[calc(var(--counter)*1.5+0.5rem)] lg:grid-cols-[1fr_22rem]">
+                <div className="flex min-w-0 flex-col">
+                    <p className="text-body-sm-bold text-fg-secondary">
+                        {kstDateHeadline(now)} · 겟또타임
+                    </p>
+                    <h1
+                        id="time-raffle-title"
+                        className="text-title-1 text-fg-primary mt-2 break-keep"
+                    >
+                        {live.length > 0 ? (
+                            <>
+                                지금 응모할 수 있는 래플{' '}
+                                <span className="text-display text-fg-primary tabular-nums">
+                                    {formatNumber(live.length)}개
+                                </span>
+                            </>
+                        ) : (
+                            '지금 열린 래플이 없어요'
+                        )}
+                    </h1>
+                    <p className="text-body text-fg-secondary mt-2 break-keep">
+                        마감 직후 바로 추첨해요. 응모권을 많이 쓸수록 당첨 기회가 커져요.
+                    </p>
+
+                    {/* 좁은 화면에서도 세 칸을 가로로 둔다 — 세로로 쌓으면 머리가 화면을 다 차지한다 */}
+                    <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
+                        <StepCard
+                            label="진행 중"
+                            live
+                            count={live.length}
+                            targetId={RAFFLE_SECTION_IDS.live}
+                            hint={
+                                live[0]
+                                    ? `가장 빠른 마감 ${formatKst(live[0].endsAt, KST_HOUR_MINUTE)}`
+                                    : '열린 래플 없음'
+                            }
+                        />
+                        <StepCard
+                            label="오픈 예정"
+                            count={upcoming.length}
+                            targetId={RAFFLE_SECTION_IDS.upcoming}
+                            hint={
+                                upcoming[0]
+                                    ? `다음 오픈 ${formatKst(upcoming[0].startsAt, KST_HOUR_MINUTE)}`
+                                    : '예정된 래플 없음'
+                            }
+                        />
+                        <AnnouncementStep closed={closed} />
+                    </div>
+                </div>
+
+                <TicketWallet now={now} action={{ to: '/missions', label: '응모권 모으러 가기' }} />
+            </div>
         </section>
     );
 }
@@ -89,26 +131,30 @@ function useTickingNow(): Date {
     return value;
 }
 
+/** 진행 칸 하나 — 개수와 다음 시각 한 줄. 미션과 달리 아이콘 없이 숫자만 둔다. 진행 중은 "지금" 신호로 마젠타 점을 붙인다 */
 function StepCard({
     label,
     count,
     hint,
+    targetId,
     live = false,
 }: {
     label: string;
     count: number;
     hint: string;
+    targetId: string;
     live?: boolean;
 }) {
     return (
-        <div className="bg-surface-page flex flex-col gap-1 rounded-xl px-4 py-3.5">
-            <dt className="text-body-sm text-fg-secondary flex items-center gap-1.5">
-                {live && <span className="bg-brand-primary size-1.5 rounded-full" />}
-                {label}
-            </dt>
-            <dd className="text-title-3 text-fg-primary">{formatNumber(count)}개</dd>
-            <p className="text-caption text-fg-tertiary">{hint}</p>
-        </div>
+        <StepTile
+            label={label}
+            labelPrefix={
+                live ? <span className="bg-brand-primary size-1.5 rounded-full" /> : undefined
+            }
+            value={`${formatNumber(count)}개`}
+            hint={hint}
+            targetId={targetId}
+        />
     );
 }
 
@@ -147,6 +193,7 @@ function AnnouncementStep({ closed }: { closed: Event[] }) {
         <StepCard
             label="오늘 발표"
             count={today.length}
+            targetId={RAFFLE_SECTION_IDS.closed}
             hint={
                 next?.publicationScheduledAt
                     ? `${formatNumber(waiting.length)}개는 ${formatKst(next.publicationScheduledAt, KST_HOUR_MINUTE)} 발표`
@@ -155,54 +202,5 @@ function AnnouncementStep({ closed }: { closed: Event[] }) {
                       : '오늘 발표 없음'
             }
         />
-    );
-}
-
-/**
- * 응모권 지갑 — 절취선과 양옆 홈으로 티켓 모양을 만든다.
- *
- * '이번 달 사용'은 이력(T02)에서 센다. 보유 조회(T01)는 지금 남은 장수만 주기 때문이다.
- * 이력은 미션 화면과 같은 쿼리 키를 쓰므로 화면을 오가도 다시 받지 않는다.
- */
-function TicketWallet({ now }: { now: Date }) {
-    const { data: tickets } = useMyTickets();
-    const { data: histories } = useTicketHistories();
-
-    const usedThisMonth = (histories ?? []).filter(
-        (history) => history.operationType === 'USE' && isSameKstMonth(history.createdAt, now),
-    ).length;
-
-    return (
-        <div className="bg-surface-page relative shrink-0 rounded-2xl px-6 py-7 lg:w-85">
-            {/* 티켓 가장자리의 반원 홈 — 배경과 같은 색으로 덮어 파인 것처럼 보이게 한다 */}
-            <span className="bg-surface-canvas absolute bottom-19 -left-2 size-4 rounded-full" />
-            <span className="bg-surface-canvas absolute -right-2 bottom-19 size-4 rounded-full" />
-
-            {/* 카드 위로 걸쳐 올라오는 장식 — 잔액은 아래 글에서 읽히므로 읽어 줄 내용이 없다 */}
-            <img
-                src={heroMascot}
-                alt=""
-                className="pointer-events-none absolute -top-11 -right-2 size-26 object-contain"
-            />
-
-            <p className="text-body-sm text-fg-secondary">사용 가능 응모권</p>
-            <p className="text-title-1 text-fg-primary">
-                {tickets ? `${formatNumber(tickets.availableCount)}장` : '-'}
-            </p>
-            <p className="text-caption text-fg-tertiary mt-1">응모 1회에 1장부터 쓸 수 있어요</p>
-
-            <div className="border-border-default mt-4 flex items-center justify-between gap-4 border-t border-dashed pt-4">
-                <p className="text-caption text-fg-tertiary">
-                    이번 달 사용 {formatNumber(usedThisMonth)}장
-                </p>
-                <Link
-                    to="/missions"
-                    className="text-body-sm-bold text-fg-primary flex items-center gap-1"
-                >
-                    응모권 모으러 가기
-                    <ChevronRight className="size-4" />
-                </Link>
-            </div>
-        </div>
     );
 }

@@ -18,7 +18,7 @@ export function TimeRaffleTrustNotice() {
             <ul className="flex flex-col gap-2">
                 {NOTICES.map((notice) => (
                     <li key={notice} className="flex items-center gap-2">
-                        <span className="bg-brand-primary size-1.5 shrink-0 rounded-full" />
+                        <span className="bg-fg-tertiary size-1.5 shrink-0 rounded-full" />
                         <span className="text-body-sm text-fg-primary">{notice}</span>
                     </li>
                 ))}

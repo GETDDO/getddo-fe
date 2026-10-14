@@ -3,13 +3,14 @@ import { useState } from 'react';
 import { useEventList } from '@entities/event';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 
+import { RAFFLE_SECTION_IDS } from './model/sectionIds';
 import { ClosedRaffleList } from './ui/ClosedRaffleList';
 import { LiveRaffleSection } from './ui/LiveRaffleSection';
 import { TimeRaffleHero } from './ui/TimeRaffleHero';
 import { TimeRaffleTrustNotice } from './ui/TimeRaffleTrustNotice';
 import { UpcomingRaffleCard } from './ui/UpcomingRaffleCard';
 
-const CONTAINER = 'mx-auto w-full max-w-312 px-6 pt-20 pb-54';
+const CONTAINER = 'mx-auto w-full max-w-312 px-6 pb-54';
 
 /** ADR-010 — 가중치 적용 이벤트는 사용자·이벤트별 누적 5장까지만 쓸 수 있다 */
 const ENTRY_TICKET_LIMIT = 5;
@@ -67,9 +68,12 @@ export function TimeRafflePage() {
                     now={now}
                 />
 
-                <LiveRaffleSection events={byEndsAtAsc} />
+                <LiveRaffleSection id={RAFFLE_SECTION_IDS.live} events={byEndsAtAsc} />
 
-                <section className="flex flex-col gap-5">
+                <section
+                    id={RAFFLE_SECTION_IDS.upcoming}
+                    className="flex scroll-mt-24 flex-col gap-5"
+                >
                     <div className="flex items-center gap-2">
                         <h2 className="text-title-3 text-fg-primary">오픈 예정</h2>
                         {byOpensAtAsc.length > 0 && (
@@ -94,7 +98,7 @@ export function TimeRafflePage() {
                     )}
                 </section>
 
-                <ClosedRaffleList events={byEndsAtDesc} now={now} />
+                <ClosedRaffleList id={RAFFLE_SECTION_IDS.closed} events={byEndsAtDesc} now={now} />
 
                 <TimeRaffleTrustNotice />
             </div>

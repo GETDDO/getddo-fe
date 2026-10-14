@@ -98,7 +98,7 @@ export function LiveRaffleCard({ event }: LiveRaffleCardProps) {
                     )}
                 </div>
 
-                <Button asChild variant="emphasis" size="lg" className="w-full">
+                <Button asChild size="lg" className="w-full">
                     <Link to={`/time-raffle/${event.id}`}>응모하러 가기</Link>
                 </Button>
             </div>

@@ -21,11 +21,13 @@ const COLLAPSED_COUNT = 5;
 const ROW_CHIP = 'text-caption rounded-full px-2.5 py-1';
 
 interface ClosedRaffleListProps {
+    /** 머리의 진행 칸이 스크롤해 올 위치 */
+    id?: string;
     events: Event[];
     now: Date;
 }
 
-export function ClosedRaffleList({ events, now }: ClosedRaffleListProps) {
+export function ClosedRaffleList({ id, events, now }: ClosedRaffleListProps) {
     const [expanded, setExpanded] = useState(false);
 
     const visible = expanded ? events : events.slice(0, COLLAPSED_COUNT);
@@ -40,7 +42,7 @@ export function ClosedRaffleList({ events, now }: ClosedRaffleListProps) {
     }
 
     return (
-        <section className="flex flex-col gap-5">
+        <section id={id} className="flex scroll-mt-24 flex-col gap-5">
             <div className="flex items-center justify-between gap-4">
                 <h2 className="text-title-3 text-fg-primary">마감한 래플</h2>
                 {events.length > COLLAPSED_COUNT && (
