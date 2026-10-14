@@ -47,7 +47,9 @@ export function useSubmitMission(missionId: string) {
             attemptRef.current = null;
             // 완료되지 않은 제출(퀴즈 오답)은 완료 상태·잔액이 바뀌지 않는다 — 완료됐을 때만 갱신한다
             if (!outcome.result.isCompleted) return;
-            return Promise.all([
+            // 재조회를 기다리지 않는다 — 기다리면 새 상세(completed)가 먼저 와서 풀이 폼이 '이미 완료' 화면으로 바뀌며
+            // 언마운트되고, 폼의 mutate 콜백(보상 모달 열기)이 불리지 않는다
+            void Promise.all([
                 queryClient.invalidateQueries({ queryKey: MISSIONS_KEY }),
                 queryClient.invalidateQueries({ queryKey: TICKETS_KEY }),
             ]);
