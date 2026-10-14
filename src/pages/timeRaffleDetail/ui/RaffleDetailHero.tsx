@@ -8,8 +8,6 @@ import { useEntryStatistics } from '@entities/entry';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 
-import { AnnounceCountdown } from './AnnounceCountdown';
-
 const CHIP = 'text-caption bg-surface-sunken flex items-center gap-2.5 rounded-full px-3 py-1';
 
 /**
@@ -36,37 +34,26 @@ interface RaffleDetailHeroProps {
 export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHeroProps) {
     // 응모 현황은 E03 전용 조회로 받는다 — 진행 중일 때만 30초 폴링 (ADR-0007)
     const { data: statistics } = useEntryStatistics(event.id, { isOpen: event.status === 'open' });
-    const hasPublicationSchedule = event.publicationScheduledAt != null;
 
     return (
-        <article className="bg-surface-page border-border-brand flex flex-col items-center overflow-hidden rounded-2xl border lg:min-h-95 lg:flex-row lg:gap-5">
-            {/*
-             * 마우스를 올리거나 키보드로 포커스하면 발표까지 남은 시간이 덮인다.
-             * 발표 예정 시각이 없으면 보여 줄 게 없으므로 오버레이도, 포커스 정지도 두지 않는다.
-             */}
-            <div
-                tabIndex={hasPublicationSchedule ? 0 : undefined}
-                role={hasPublicationSchedule ? 'group' : undefined}
-                aria-label={
-                    hasPublicationSchedule ? '상품 이미지 — 당첨자 발표까지 남은 시간' : undefined
-                }
-                className="bg-surface-canvas focus-visible:ring-border-focus focus-visible:ring-offset-surface-page group relative h-48 w-full self-stretch focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none lg:h-auto lg:w-130 lg:shrink-0"
-            >
+        <article className="bg-surface-page flex flex-col overflow-hidden rounded-2xl lg:min-h-95 lg:flex-row lg:gap-5">
+            {/* 상품 이미지 — 그림 크기가 카드 높이를 바꾸지 않게 칸을 채워 담는다. 발표까지 남은 시간은 아래 발표 대기 카드가 늘 보여 준다 */}
+            <div className="bg-surface-canvas relative h-48 w-full shrink-0 self-stretch overflow-hidden rounded-2xl lg:h-auto lg:w-130">
                 {event.bannerImageUrl ? (
-                    <img src={event.bannerImageUrl} alt="" className="size-full object-cover" />
+                    <img
+                        src={event.bannerImageUrl}
+                        alt=""
+                        className="absolute inset-0 size-full object-contain p-6 mix-blend-multiply dark:mix-blend-normal"
+                    />
                 ) : (
                     <div className="flex size-full items-center justify-center">
                         <Gift className="text-fg-disabled size-12" />
                     </div>
                 )}
-                {hasPublicationSchedule && (
-                    <div className="bg-surface-overlay pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-                        <AnnounceCountdown event={event} />
-                    </div>
-                )}
             </div>
 
-            <div className="flex h-full min-w-0 flex-1 flex-col justify-between gap-5 px-4 py-5">
+            {/* 피그마 시안처럼 글은 위에서부터 쌓고, 수량·버튼은 아래쪽에 붙인다 */}
+            <div className="flex min-w-0 flex-1 flex-col gap-5 px-4 py-5">
                 <div className="flex flex-col gap-5">
                     <div className="flex flex-wrap items-center gap-2">
                         <span
@@ -78,8 +65,9 @@ export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHe
                         >
                             {STATUS_CHIP[event.status].label}
                         </span>
-                        <span className="bg-surface-sunken text-fg-secondary text-body-sm-bold flex items-center gap-1 rounded-full px-3 py-1">
-                            <Clock className="size-4.5" />
+                        {/* 시간 칩도 옆 칩들과 같은 글자(caption)·아이콘 크기를 쓴다 */}
+                        <span className={`${CHIP} text-fg-primary`}>
+                            <Clock className="size-5" />
                             {formatKst(event.startsAt, KST_HOUR_MINUTE)} ~{' '}
                             {formatKst(event.endsAt, KST_HOUR_MINUTE)}
                         </span>
@@ -103,11 +91,14 @@ export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHe
                     </div>
                 </div>
 
-                <hr className="border-border-default" />
-
-                {quantityControl}
-
-                {cta}
+                {/* 구분선·수량·버튼은 카드 아래쪽에 붙인다 — 상태가 달라 위 글 길이가 달라도 버튼 위치는 늘 같다 */}
+                {(quantityControl || cta) && (
+                    <div className="mt-auto flex flex-col gap-5">
+                        <hr className="border-border-default" />
+                        {quantityControl}
+                        {cta}
+                    </div>
+                )}
             </div>
         </article>
     );

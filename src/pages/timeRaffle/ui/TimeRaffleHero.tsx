@@ -10,8 +10,9 @@ import { useVirtualClock } from '@shared/lib/virtualClock';
 import { StepTile } from '@shared/ui/step-tile';
 import { TicketWallet } from '@widgets/ticketWallet';
 
-import itemGumball from '../assets/item-gumball.png';
-import itemTicketsGift from '../assets/item-tickets-gift.png';
+import itemGift from '../assets/item-gift.webp';
+import itemGumball from '../assets/item-gumball.webp';
+import itemTickets from '../assets/item-tickets.webp';
 import { kstDateHeadline } from '../lib/raffleFormat';
 import { RAFFLE_SECTION_IDS } from '../model/sectionIds';
 
@@ -46,13 +47,20 @@ export function TimeRaffleHero({ live, upcoming, closed, now }: TimeRaffleHeroPr
                 className="absolute inset-x-0 bottom-0 h-(--counter) bg-size-[auto_100%] bg-left bg-repeat-x"
                 style={{ backgroundImage: `url(${shopCounter})` }}
             />
-            {/* 카운터 위 소품(image 212) — 왼쪽 끝 응모권 상자·선물, 오른쪽 끝 뽑기 기계.
+            {/* 카운터 위 소품(image 221 픽셀 소품) — 왼쪽 끝 응모권·선물 상자, 오른쪽 끝 뽑기 기계.
                 뽑기 기계 꼭대기(0.6+0.9배)도 내용 아래 여백(--counter의 1.5배) 안에 들어와 내용을 가리지 않는다 */}
             <div
                 aria-hidden
                 className="pointer-events-none absolute inset-x-3 bottom-[calc(var(--counter)*0.6)] flex items-end justify-between md:inset-x-5"
             >
-                <img src={itemTicketsGift} alt="" className="h-[calc(var(--counter)*0.7)] w-auto" />
+                <div className="flex items-end gap-1">
+                    <img src={itemTickets} alt="" className="h-[calc(var(--counter)*0.5)] w-auto" />
+                    <img
+                        src={itemGift}
+                        alt=""
+                        className="hidden h-[calc(var(--counter)*0.65)] w-auto -scale-x-100 sm:block"
+                    />
+                </div>
                 <img src={itemGumball} alt="" className="h-[calc(var(--counter)*0.9)] w-auto" />
             </div>
 

@@ -1,7 +1,7 @@
 import type { TicketsByGrade } from '@entities/entry';
 import type { TicketGrade } from '@entities/ticket';
 
-import { TICKET_GRADE_LABEL, ticketGradeSchema } from '@entities/ticket';
+import { TICKET_GRADE_IMAGE, TICKET_GRADE_LABEL, ticketGradeSchema } from '@entities/ticket';
 
 import { QuantityStepper } from './QuantityStepper';
 
@@ -36,16 +36,24 @@ export function GradeTicketSteppers({
     };
 
     return (
-        <div className="flex flex-col gap-3" role="group" aria-label="등급별 응모권 장수">
+        <div className="flex flex-col gap-4" role="group" aria-label="등급별 응모권 장수">
             {ticketGradeSchema.options.map((grade) => (
                 <div key={grade} className="flex items-center justify-between gap-4">
-                    <div className="flex flex-col">
-                        <span className="text-body-bold text-fg-primary">
-                            {TICKET_GRADE_LABEL[grade]}
-                        </span>
-                        <span className="text-caption text-fg-tertiary">
-                            보유 {availableByGrade ? `${availableByGrade[grade]}장` : '-'}
-                        </span>
+                    {/* 등급 이름 왼쪽에 등급 응모권 그림을 작게 둔다 — 이름은 글로 읽히니 그림은 장식이다 */}
+                    <div className="flex items-center gap-3">
+                        <img
+                            src={TICKET_GRADE_IMAGE[grade]}
+                            alt=""
+                            className="h-auto w-10 shrink-0"
+                        />
+                        <div className="flex flex-col">
+                            <span className="text-body-bold text-fg-primary">
+                                {TICKET_GRADE_LABEL[grade]}
+                            </span>
+                            <span className="text-caption text-fg-tertiary">
+                                보유 {availableByGrade ? `${availableByGrade[grade]}장` : '-'}
+                            </span>
+                        </div>
                     </div>
                     <QuantityStepper
                         value={value[grade]}
@@ -56,9 +64,17 @@ export function GradeTicketSteppers({
                     />
                 </div>
             ))}
-            <p className="text-caption text-fg-tertiary" aria-live="polite">
-                합계 {total}장
-                {remainingLimit !== null && ` · ${remainingLimit}장까지 더 응모할 수 있어요`}
+            {/* 합계는 버튼 바로 위에서 굵게 — 누르기 전에 몇 장을 쓰는지 확인하게 한다 */}
+            <p
+                className="border-border-default flex items-center justify-between gap-3 border-t pt-4"
+                aria-live="polite"
+            >
+                <span className="text-body-bold text-fg-primary">합계 {total}장</span>
+                {remainingLimit !== null && (
+                    <span className="text-caption text-fg-tertiary">
+                        {remainingLimit}장까지 더 응모할 수 있어요
+                    </span>
+                )}
             </p>
         </div>
     );

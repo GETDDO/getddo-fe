@@ -48,7 +48,7 @@ export function AnnounceCountdown({ event }: { event: Event }) {
 
     return (
         <div className="flex flex-col items-center gap-2 text-center">
-            <span className="text-fg-inverse/80 text-body-sm-bold flex items-center gap-1.5">
+            <span className="text-fg-secondary text-body-sm-bold flex items-center gap-1.5">
                 <Timer className="size-4.5" />
                 {label}
             </span>
@@ -57,7 +57,7 @@ export function AnnounceCountdown({ event }: { event: Event }) {
                     role="timer"
                     aria-live="off"
                     aria-label={`당첨자 발표까지 ${formatCountdown(remainingMs)} 남음`}
-                    className="text-fg-inverse text-title-2 tabular-nums"
+                    className="text-fg-primary text-title-1 tabular-nums"
                 >
                     {formatCountdown(remainingMs)}
                 </span>

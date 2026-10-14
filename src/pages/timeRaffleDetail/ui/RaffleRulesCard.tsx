@@ -20,12 +20,12 @@ export function RaffleRulesCard({ event }: { event: Event }) {
     ];
 
     return (
-        <section className="bg-surface-page border-border-default flex flex-col gap-5 rounded-2xl border p-5 sm:p-8">
+        <section className="bg-surface-page border-border-default flex flex-col gap-5 rounded-2xl border p-5">
             <h2 className="text-subhead text-fg-primary">응모 및 추첨 안내</h2>
             <ul className="flex flex-col gap-2.5">
                 {rules.map((rule) => (
                     <li key={rule} className="flex items-start gap-2">
-                        <span className="text-body-sm text-brand-primary leading-normal">•</span>
+                        <span className="text-body-sm text-fg-tertiary leading-normal">•</span>
                         <span className="text-body text-fg-secondary min-w-0 flex-1">{rule}</span>
                     </li>
                 ))}

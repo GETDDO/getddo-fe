@@ -11,18 +11,18 @@ import { fail, ok } from './response';
 
 const api = (path: string) => `${env.apiBaseUrl}${path}`;
 
-// 마스킹된 이름 풀 — 서버가 가린 값을 흉내 낸다. 화면은 받은 문자열을 그대로 쓴다
+// 마스킹된 이름 풀 — 서버가 가린 값을 흉내 낸다(가운데 글자를 가린다). 화면은 받은 문자열을 그대로 쓴다
 const MASKED_NAMES = [
-    '서준**',
+    '서*준',
     '김*겸',
-    '이하*',
-    '박서*',
-    '최민*',
-    '정우*',
-    '한지*',
-    '오예*',
-    '윤도*',
-    '강하*',
+    '이*하',
+    '박*서',
+    '최*민',
+    '정*우',
+    '한*지',
+    '오*예',
+    '윤*도',
+    '강*하',
 ];
 
 /**
@@ -61,7 +61,7 @@ function seededWinner(eventId: string, rank: number, index: number) {
         hash = (hash * 31 + char.charCodeAt(0)) % 100_000;
     }
     return {
-        maskedName: MASKED_NAMES[hash % MASKED_NAMES.length] ?? '익명**',
+        maskedName: MASKED_NAMES[hash % MASKED_NAMES.length] ?? '익*명',
         maskedPhoneNum: String(hash % 10_000).padStart(4, '0'),
     };
 }

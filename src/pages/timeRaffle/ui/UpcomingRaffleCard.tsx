@@ -1,6 +1,4 @@
-import { Check } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 import type { Event } from '@entities/event';
 
@@ -17,11 +15,15 @@ interface UpcomingRaffleCardProps {
 }
 
 export function UpcomingRaffleCard({ event, now, ticketLimit }: UpcomingRaffleCardProps) {
-    // 구독이 아니라 '눈여겨봐 둔 래플' 표시다 — 새로고침하면 사라진다
-    const [marked, setMarked] = useState(false);
-
     return (
-        <article className="bg-surface-elevated border-border-default flex flex-col gap-4 rounded-2xl border p-5 shadow-md">
+        <article className="bg-surface-elevated border-border-default relative flex flex-col gap-4 rounded-2xl border p-5 shadow-md">
+            {/* 카드 어디를 눌러도 상세로 간다 — 키보드·스크린 리더는 아래 버튼 하나로 들어간다 */}
+            <Link
+                to={`/time-raffle/${event.id}`}
+                aria-hidden
+                tabIndex={-1}
+                className="absolute inset-0 z-1 rounded-2xl"
+            />
             <RaffleThumbnail src={event.bannerImageUrl} className="h-39 w-full rounded-xl" />
 
             <div className="flex flex-col gap-2">
@@ -35,34 +37,12 @@ export function UpcomingRaffleCard({ event, now, ticketLimit }: UpcomingRaffleCa
             </div>
 
             {/*
+             * 오픈 전에도 상세에서 상품·일정·규칙을 미리 볼 수 있게 한다.
              * TODO: 오픈 알림 구독은 API 계약이 없다 (getddo-spec 05-api/notification.md의 N01~N03은 조회·읽음뿐).
-             * 계약이 생기면 features/subscribeRaffleOpen으로 빼서 연결한다.
-             *
-             * 그때까지는 '신청됐다'고 말하지 않는다 — 버튼만 눌린 모양으로 두고 알림이 갈 것처럼
-             * 적으면 사용자가 기다리다 오픈을 놓친다. 표시와 안내가 같은 말을 하도록 맞춘다.
+             * 계약이 생기면 상세에 '오픈 알림 받기'를 붙인다 — 그전에는 알림이 갈 것처럼 보이는 버튼을 두지 않는다
              */}
-            <Button
-                variant={marked ? 'ghost' : 'secondary'}
-                className={marked ? 'bg-surface-sunken w-full' : 'w-full'}
-                aria-pressed={marked}
-                onClick={() => {
-                    const next = !marked;
-                    setMarked(next);
-                    toast.info(
-                        next
-                            ? '오픈 알림 기능은 준비 중이에요. 지금은 표시만 해 둘게요.'
-                            : '표시를 해제했어요.',
-                    );
-                }}
-            >
-                {marked ? (
-                    <>
-                        <Check className="size-4" />
-                        관심 표시함
-                    </>
-                ) : (
-                    '관심 표시하기'
-                )}
+            <Button asChild variant="secondary" className="relative z-2 w-full">
+                <Link to={`/time-raffle/${event.id}`}>자세히 보기</Link>
             </Button>
         </article>
     );

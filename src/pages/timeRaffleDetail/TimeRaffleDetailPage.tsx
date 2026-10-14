@@ -27,10 +27,11 @@ import { RaffleRulesCard } from './ui/RaffleRulesCard';
 const CONTAINER = 'mx-auto w-full max-w-312 px-6 pb-47.5';
 
 /** 응모도 결과 확인도 할 수 없는 상태에서 버튼에 대신 표시하는 문구 */
-const STATUS_LABEL: Record<Exclude<Event['status'], 'drawn'>, string> = {
+const STATUS_LABEL: Record<Event['status'], string> = {
     open: '응모하기',
     upcoming: '오픈 예정',
     closed: '추첨 진행 중',
+    drawn: '발표 완료',
 };
 
 export function TimeRaffleDetailPage() {
@@ -175,16 +176,19 @@ export function TimeRaffleDetailPage() {
                                           ? '추가 응모하기'
                                           : '응모하기'}
                             </Button>
-                        ) : // 발표가 끝난 래플은 결과가 바로 아래에 있어 따로 누를 것이 없다
-                        event.status === 'drawn' ? undefined : (
+                        ) : (
+                            // 진행 중이 아니면 상태를 비활성 버튼으로 알린다 — 발표가 끝난 래플도 시안처럼 '발표 완료'를 둔다
                             <Button disabled size="lg" className="w-full">
                                 {STATUS_LABEL[event.status]}
                             </Button>
                         )
                     }
                 />
-                {/* 발표 전에는 내 결과 카드가, 발표 후에는 결과 영역의 배너가 본인 결과를 맡는다 */}
-                {myResult?.result === 'PENDING' && <MyResultCard result={myResult} />}
+                {/* 발표 전에는 발표 대기 카드(남은 시간)가, 발표 후에는 결과 영역의 배너가 본인 결과를 맡는다 */}
+                {(myResult?.result === 'PENDING' ||
+                    (event.status === 'closed' && !results?.isPublished)) && (
+                    <MyResultCard event={event} entered={myResult?.result === 'PENDING'} />
+                )}
                 {results && (
                     <DrawResultSection event={event} results={results} myResult={myResult} />
                 )}
