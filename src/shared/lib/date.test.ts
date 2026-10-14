@@ -81,6 +81,9 @@ describe('formatRemaining', () => {
     it('분 단위로 그리는 곳은 초를 올려 분만 적는다', () => {
         expect(formatRemaining(9 * MIN + 50_000, 'minute')).toBe('10분');
         expect(formatRemaining(20_000, 'minute')).toBe('1분');
+        expect(formatRemaining(60_001, 'minute')).toBe('2분');
+        expect(formatRemaining(0, 'minute')).toBe('0분');
+        expect(formatRemaining(-5_000, 'minute')).toBe('0분');
     });
 });
 

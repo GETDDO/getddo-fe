@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 
 import type { Event } from '@entities/event';
 
-import { useEventList } from '@entities/event';
+import { eventDetailPath, useEventList } from '@entities/event';
 import { formatRemaining } from '@shared/lib/date';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Badge } from '@shared/ui/badge';
@@ -60,7 +60,8 @@ export function BannerSlider({
     const slides = useMemo(
         () =>
             (events ?? [])
-                .filter((event) => event.status === 'open' && event.requiredTickets > 0)
+                // '오늘의 겟또타임' 배너라 진행 중인 겟또타임만 싣는다
+                .filter((event) => event.status === 'open' && event.isTimeRaffle)
                 .sort((a, b) => new Date(a.endsAt).getTime() - new Date(b.endsAt).getTime())
                 .slice(0, MAX_SLIDES),
         [events],
@@ -171,7 +172,7 @@ export function BannerSlider({
                                     </div>
                                     {/* 상세로 이동하는 버튼이라 '응모하러 가기' — 실제로 응모권을 쓰는 '응모하기'와 구분한다 */}
                                     <Button asChild size="lg" className="px-7">
-                                        <Link to={`/events/${event.id}`}>응모하러 가기</Link>
+                                        <Link to={eventDetailPath(event)}>응모하러 가기</Link>
                                     </Button>
                                 </div>
                             </div>

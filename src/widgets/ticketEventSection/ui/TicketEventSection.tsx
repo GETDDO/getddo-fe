@@ -40,11 +40,11 @@ export function TicketEventSection({
                 <div className="flex flex-wrap items-center gap-3">
                     <h2 className="text-title-3 text-fg-primary">겟또타임</h2>
                     <span className="text-fg-tertiary text-caption">
-                        모은 응모권으로 응모하는 시간 한정 래플이에요.
+                        모은 응모권으로 정해진 시간에만 응모할 수 있어요.
                     </span>
                 </div>
                 <Button asChild variant="link" size="text">
-                    <Link to="/events">
+                    <Link to="/time-raffle">
                         더보기
                         <ChevronRight />
                     </Link>
@@ -87,6 +87,7 @@ function FeaturedEvent({ event }: { event: Event }) {
             event={event}
             participantCount={statistics?.participantCount}
             totalSpentTicketCount={statistics?.totalSpentTicketCount}
+            mySpentTicketCount={statistics?.mySpentTicketCount}
         />
     );
 }

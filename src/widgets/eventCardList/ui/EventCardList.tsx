@@ -8,6 +8,7 @@ import { Button } from '@shared/ui/button';
 
 export function EventCardList({
     title,
+    description,
     moreHref,
     moreLabel = '더보기',
     events,
@@ -16,6 +17,8 @@ export function EventCardList({
     emptyMessage = '표시할 이벤트가 없습니다.',
 }: {
     title: string;
+    /** 제목 옆 작은 설명 — 다른 홈 섹션과 같은 꼴 */
+    description?: string;
     moreHref?: string;
     moreLabel?: string;
     events: Event[];
@@ -25,8 +28,13 @@ export function EventCardList({
 }) {
     return (
         <section className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-title-3 text-fg-primary">{title}</h2>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                    <h2 className="text-title-3 text-fg-primary">{title}</h2>
+                    {description && (
+                        <span className="text-fg-tertiary text-caption">{description}</span>
+                    )}
+                </div>
                 {moreHref && (
                     <Button asChild variant="link" size="text">
                         <Link to={moreHref}>

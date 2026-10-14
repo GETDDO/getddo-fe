@@ -10,6 +10,7 @@ import { Card } from '@shared/ui/card';
 
 import type { Event } from '../model/types';
 
+import { eventDetailPath } from '../lib/eventPath';
 import { EventThumbnail } from './EventThumbnail';
 
 interface FeaturedEventCardProps {
@@ -20,6 +21,8 @@ interface FeaturedEventCardProps {
      */
     participantCount?: number;
     totalSpentTicketCount?: number;
+    /** 내가 이 래플에 쓴 응모권 — E03이 정확한 값을 준다. 회차 × 장수로 어림하면 여러 장 응모를 적게 센다 */
+    mySpentTicketCount?: number;
 }
 
 /** 마감까지 남은 시간을 다시 셈하는 주기 — 분 단위로 적으니 30초면 충분하다 */
@@ -48,6 +51,7 @@ export function FeaturedEventCard({
     event,
     participantCount,
     totalSpentTicketCount,
+    mySpentTicketCount,
 }: FeaturedEventCardProps) {
     const remainingMs = useRemainingMs(event.endsAt);
 
@@ -63,10 +67,6 @@ export function FeaturedEventCard({
             value: totalSpentTicketCount != null ? `${formatNumber(totalSpentTicketCount)}장` : '-',
         },
     ];
-
-    const myEntries = event.myEntryCount ?? 0;
-    // 한 번에 여러 장을 쓸 수 있어 쓴 장수가 따로 오면 그 값을, 없으면 회차 × 1회 차감량으로 근사한다
-    const myTickets = event.myTicketCount ?? myEntries * event.requiredTickets;
 
     return (
         <Card size="lg" className="gap-5 p-(--card-spacing)">
@@ -105,10 +105,10 @@ export function FeaturedEventCard({
                             </div>
                         ))}
                     </dl>
-                    {myEntries > 0 && (
+                    {mySpentTicketCount != null && mySpentTicketCount > 0 && (
                         <span className="bg-ticket-accent text-ticket-on text-caption flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1">
                             <Ticket aria-hidden className="size-3.5" />
-                            응모권 {formatNumber(myTickets)}장으로 응모했어요
+                            응모권 {formatNumber(mySpentTicketCount)}장으로 응모했어요
                         </span>
                     )}
                 </div>
@@ -121,7 +121,7 @@ export function FeaturedEventCard({
             </div>
             {/* 상세로 이동하는 버튼은 주 행동(검정) — 카드 아래에 붙여 글 길이가 달라도 같은 자리에 둔다 */}
             <Button asChild size="lg" className="mt-auto w-full">
-                <Link to={`/events/${event.id}`}>응모하러 가기</Link>
+                <Link to={eventDetailPath(event)}>응모하러 가기</Link>
             </Button>
         </Card>
     );

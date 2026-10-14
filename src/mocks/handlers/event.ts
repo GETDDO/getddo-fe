@@ -2,6 +2,7 @@ import { http } from 'msw';
 
 import type { EventStatus, MembershipRule } from '@entities/event';
 
+import { MEMBERSHIP_LABEL } from '@entities/event';
 import { env } from '@shared/config/env';
 
 import { mockNow } from '../now';
@@ -134,7 +135,8 @@ function raffleDetail(intro: string, prizeComposition: string) {
         paragraphs: [intro, DRAW_PARAGRAPH, TICKET_PARAGRAPH],
         prizeComposition,
         shippingSchedule: '당첨자 발표 후 3 영업일 이내 일괄 발송',
-        membershipNote: '멤버십 등급에 따라 응모할 수 있어요',
+        // 이벤트마다 자격 등급이 달라 응답을 만들 때 그 래플의 등급으로 채운다 (toResponse)
+        membershipNote: '',
     };
 }
 
@@ -198,9 +200,11 @@ export function entryRuleOf(event: MockEvent) {
     return { eventType, weightingEnabled, maxTicketsPerUser, membershipRule };
 }
 
+// 응모권을 쓰는 응모는 모두 겟또타임이다 — 홈·목록은 겟또타임과 응모권 미사용 이벤트로만 나눈다
 export const mockEvents: MockEvent[] = [
     {
         id: 'evt-001',
+        isTimeRaffle: true,
         isRecommended: true,
         title: '갤럭시 버즈 위클리 래플',
         description: '응모권 1장으로 참여하는 주간 추첨 이벤트',
@@ -222,6 +226,7 @@ export const mockEvents: MockEvent[] = [
     },
     {
         id: 'evt-002',
+        isTimeRaffle: true,
         isRecommended: true,
         title: '출석왕 챌린지',
         description:
@@ -241,6 +246,7 @@ export const mockEvents: MockEvent[] = [
     },
     {
         id: 'evt-005',
+        isTimeRaffle: true,
         title: '스타벅스 e카드 래플',
         description: '응모권 1장으로 참여하는 스타벅스 e카드 추첨 이벤트',
         bannerImageUrl: '/images/events/starbucks-set.webp',
@@ -293,6 +299,7 @@ export const mockEvents: MockEvent[] = [
     },
     {
         id: 'evt-010',
+        isTimeRaffle: true,
         title: 'VVIP 전용 데이터 쿠폰 래플',
         description: 'VVIP·VIP 등급 대상 데이터 쿠폰 추첨 이벤트. 응모권 1장부터 참여할 수 있어요.',
         // 유일한 멤버십 제한 시드 — 우수 등급 사용자는 ENTRY-003으로 거절된다
@@ -312,6 +319,7 @@ export const mockEvents: MockEvent[] = [
     },
     {
         id: 'evt-008',
+        isTimeRaffle: true,
         title: '9월 데이터 쿠폰 래플',
         description: '응모권 1장으로 참여했던 데이터 쿠폰 추첨 이벤트',
         bannerImageUrl: '/images/events/data-coupon.webp',
@@ -329,6 +337,7 @@ export const mockEvents: MockEvent[] = [
     },
     {
         id: 'evt-009',
+        isTimeRaffle: true,
         title: '8월 출석왕 챌린지',
         description: '8월 출석 미션 완주자 대상 추첨 이벤트',
         bannerImageUrl: null,
@@ -419,6 +428,7 @@ export const mockEvents: MockEvent[] = [
 
     {
         id: 'evt-201',
+        isTimeRaffle: true,
         isRecommended: true,
         title: '갤럭시 탭 S11 응모',
         description: '응모권 1장으로 참여하는 태블릿 추첨 이벤트',
@@ -471,6 +481,7 @@ export const mockEvents: MockEvent[] = [
     },
     {
         id: 'evt-204',
+        isTimeRaffle: true,
         isRecommended: true,
         title: '데이터 2GB 충전 쿠폰 응모',
         description: '응모권 1장으로 참여하는 데이터 충전 쿠폰 추첨 이벤트',
@@ -506,6 +517,7 @@ export const mockEvents: MockEvent[] = [
     },
     {
         id: 'evt-206',
+        isTimeRaffle: true,
         isRecommended: true,
         title: 'CGV 영화 관람권 응모',
         description:
@@ -525,6 +537,7 @@ export const mockEvents: MockEvent[] = [
     },
     {
         id: 'evt-207',
+        isTimeRaffle: true,
         isRecommended: true,
         title: '에어팟 4 응모',
         description: '응모권 1장부터 참여하고 많이 쓸수록 당첨 확률이 올라가는 이어폰 추첨 이벤트',
@@ -980,9 +993,15 @@ function toResponse(event: MockEvent, now: number) {
     void participantCount;
     void usedTicketCount;
     const ends = new Date(event.endsAt).getTime();
+    const rule = entryRuleOf(event);
     return {
         ...rest,
-        ...entryRuleOf(event),
+        ...rule,
+        // 멤버십 안내는 공통 문구가 아니라 이 래플의 자격 등급으로 적는다
+        raffleDetail: event.raffleDetail && {
+            ...event.raffleDetail,
+            membershipNote: `${MEMBERSHIP_LABEL[rule.membershipRule]} 등급 이상 응모할 수 있어요`,
+        },
         status: statusAt(event.startsAt, event.endsAt, now),
         publicationScheduledAt: new Date(ends + ANNOUNCE_DELAY_MS).toISOString(),
     };

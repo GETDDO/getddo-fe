@@ -95,7 +95,10 @@ export function LiveRaffleCard({ event }: LiveRaffleCardProps) {
                     <span className="text-caption text-fg-tertiary">마감까지</span>
                     <CloseCountdownChip endsAt={event.endsAt} size="lg" />
                 </div>
-                <EntryConditions event={event} />
+                <EntryConditions
+                    event={event}
+                    mySpentTicketCount={statistics?.mySpentTicketCount}
+                />
                 <Button asChild size="lg" className="mt-auto w-full">
                     <Link to={`/time-raffle/${event.id}`}>응모하러 가기</Link>
                 </Button>
@@ -105,11 +108,14 @@ export function LiveRaffleCard({ event }: LiveRaffleCardProps) {
 }
 
 /** 응모 칸의 응모 조건 — 무엇으로 몇 장까지 낼 수 있는지, 내가 이미 냈는지 */
-function EntryConditions({ event }: { event: Event }) {
-    const myEntries = event.myEntryCount ?? 0;
-    // 한 번에 여러 장을 쓸 수 있어 쓴 장수가 따로 오면 그 값을, 없으면 회차 × 1회 차감량으로 근사한다
-    const myTickets = event.myTicketCount ?? myEntries * event.requiredTickets;
-
+function EntryConditions({
+    event,
+    mySpentTicketCount,
+}: {
+    event: Event;
+    /** 내가 쓴 응모권 — E03의 정확한 값만 쓴다. 회차 × 장수로 어림하면 여러 장 응모를 적게 센다 */
+    mySpentTicketCount: number | undefined;
+}) {
     const rows = [
         { label: '응모 방식', value: entryMethodLabel(event) },
         event.eventType === 'TICKET' && {
@@ -119,7 +125,11 @@ function EntryConditions({ event }: { event: Event }) {
                     ? '제한 없음'
                     : `${formatNumber(event.maxTicketsPerUser)}장`,
         },
-        myEntries > 0 && { label: '내 응모', value: `${formatNumber(myTickets)}장` },
+        mySpentTicketCount != null &&
+            mySpentTicketCount > 0 && {
+                label: '내 응모',
+                value: `${formatNumber(mySpentTicketCount)}장`,
+            },
     ].filter((row) => row !== false);
 
     return (

@@ -91,7 +91,18 @@ export function formatRemaining(
     remainingMs: number,
     precision: 'second' | 'minute' = 'second',
 ): string {
-    const totalSeconds = Math.max(0, Math.floor(remainingMs / 1000));
+    const ms = Math.max(0, remainingMs);
+    if (precision === 'minute') {
+        // 남은 몫을 분으로 올려 센다 — 0은 0분, 60,001ms는 2분
+        const totalMinutes = Math.ceil(ms / 60_000);
+        const days = Math.floor(totalMinutes / 1440);
+        const hours = Math.floor((totalMinutes % 1440) / 60);
+        if (days > 0) return hours > 0 ? `${days}일 ${hours}시간` : `${days}일`;
+        if (hours > 0) return `${hours}시간 ${totalMinutes % 60}분`;
+        return `${totalMinutes}분`;
+    }
+
+    const totalSeconds = Math.floor(ms / 1000);
     const days = Math.floor(totalSeconds / 86400);
     const hours = Math.floor((totalSeconds % 86400) / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -99,7 +110,6 @@ export function formatRemaining(
 
     if (days > 0) return hours > 0 ? `${days}일 ${hours}시간` : `${days}일`;
     if (hours > 0) return `${hours}시간 ${minutes}분`;
-    if (precision === 'minute') return `${Math.max(1, minutes + (seconds > 0 ? 1 : 0))}분`;
     if (minutes > 0) return `${minutes}분 ${seconds}초`;
     return `${seconds}초`;
 }
