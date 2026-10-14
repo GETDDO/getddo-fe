@@ -1,4 +1,4 @@
-import { Clock, Gift, Ticket, UsersRound } from 'lucide-react';
+import { Clock, Ticket, UsersRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { formatKst } from '@shared/lib/date';
@@ -8,6 +8,8 @@ import { Button } from '@shared/ui/button';
 import { Card } from '@shared/ui/card';
 
 import type { Event } from '../model/types';
+
+import { EventThumbnail } from './EventThumbnail';
 
 const TIME_ONLY: Intl.DateTimeFormatOptions = {
     hour: 'numeric',
@@ -108,18 +110,13 @@ export function FeaturedEventCard({
                     </div>
                 )}
             </div>
-            <div className="flex w-full shrink-0 flex-col gap-5 sm:w-62.5">
-                {event.bannerImageUrl ? (
-                    <img
-                        src={event.bannerImageUrl}
-                        alt=""
-                        className="h-46.5 w-full rounded-2xl object-cover"
-                    />
-                ) : (
-                    <div className="bg-surface-canvas flex h-46.5 items-center justify-center rounded-2xl">
-                        <Gift className="text-fg-disabled size-8" />
-                    </div>
-                )}
+            <div className="flex w-full shrink-0 flex-col gap-5 sm:w-50">
+                {/* 겟또타임 대표 래플이라 상품 그림 — 1:1로 잘리지 않게 맞춘다 (DESIGN-SYSTEM '이미지 비율') */}
+                <EventThumbnail
+                    src={event.bannerImageUrl}
+                    className="size-auto w-full rounded-2xl"
+                    iconClassName="size-8"
+                />
                 {/* 상세로 이동하는 버튼은 주 행동(검정) — 마젠타는 실제로 응모권을 쓰는 버튼에만 쓴다 */}
                 <Button asChild size="lg" className="w-full">
                     <Link to={`/events/${event.id}`}>응모하러 가기</Link>

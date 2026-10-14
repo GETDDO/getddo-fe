@@ -29,10 +29,10 @@ export function EventResultRow({ event }: { event: Event }) {
                 <img
                     src={event.bannerImageUrl}
                     alt=""
-                    className="h-20 w-40 shrink-0 rounded-lg object-cover"
+                    className="aspect-video h-20 shrink-0 rounded-lg object-cover"
                 />
             ) : (
-                <div className="bg-surface-canvas flex h-20 w-40 shrink-0 items-center justify-center rounded-lg">
+                <div className="bg-surface-canvas flex aspect-video h-20 shrink-0 items-center justify-center rounded-lg">
                     <Gift className="text-fg-disabled size-8" />
                 </div>
             )}
