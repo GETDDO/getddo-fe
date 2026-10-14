@@ -15,13 +15,16 @@ export function kstDateHeadline(now: Date): string {
  *
  * 시각 포맷(00:13:48)은 한 시간을 넘는 래플에서 앞자리가 늘 0이라 읽기 어렵다.
  * 한 시간이 넘으면 초는 떼고 시간·분만 남긴다 — 초 단위가 의미를 갖는 구간이 아니다.
+ * 하루가 넘으면 날짜 단위로 적는다 — '480시간 43분'은 셈을 해야 읽힌다.
  */
 export function formatCloseCountdown(remainingMs: number): string {
     const total = Math.max(0, Math.floor(remainingMs / 1000));
     const hours = Math.floor(total / 3600);
     const minutes = Math.floor((total % 3600) / 60);
     const seconds = total % 60;
+    const days = Math.floor(hours / 24);
 
+    if (days > 0) return hours % 24 > 0 ? `${days}일 ${hours % 24}시간` : `${days}일`;
     if (hours > 0) return `${hours}시간 ${minutes}분`;
     if (minutes > 0) return `${minutes}분 ${seconds}초`;
     return `${seconds}초`;

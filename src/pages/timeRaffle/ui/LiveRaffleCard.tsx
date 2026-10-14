@@ -1,10 +1,11 @@
 import { Clock } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import type { Event } from '@entities/event';
 
 import { useEntryStatistics } from '@entities/entry';
+import { queryPresets } from '@shared/api/queryPresets';
+import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
@@ -13,7 +14,8 @@ import { formatRunningRange } from '../lib/raffleFormat';
 import { CloseCountdownChip } from './CloseCountdownChip';
 import { RaffleThumbnail } from './RaffleThumbnail';
 
-const CHIP = 'text-caption flex items-center rounded-full px-2.5 py-1';
+/** 참여 현황을 다시 받아오는 주기(초) — 폴링 설정과 문구가 따로 놀지 않게 같은 값을 쓴다 */
+const REFRESH_SECONDS = queryPresets.realtime.refetchInterval / 1000;
 
 interface LiveRaffleCardProps {
     event: Event;
@@ -22,50 +24,36 @@ interface LiveRaffleCardProps {
 export function LiveRaffleCard({ event }: LiveRaffleCardProps) {
     // 이 카드는 현재 보이는 진행 중 래플 1건이라 이 이벤트의 E03만 폴링한다 (ADR-0007)
     const { data: statistics, dataUpdatedAt } = useEntryStatistics(event.id, { isOpen: true });
-    const { now } = useVirtualClock();
-    // 마감까지 남은 시간은 가상 시계를, 받아온 지 얼마나 됐는지는 실제 시계를 본다.
-    // updatedAt은 쿼리가 실제 시각으로 적는 값이라, 가상 시계로 시간을 옮기면
-    // 섞어 뺀 값이 몇 시간 전으로 튄다
-    const [ticks, setTicks] = useState(() => ({ virtual: now().getTime(), real: Date.now() }));
+    const { override } = useVirtualClock();
+    // 참여 현황은 폴링으로 따라가는 값이라 지금 이 순간의 수가 아니다 — 언제 기준인지 시각으로 적는다.
+    // updatedAt은 쿼리가 실제 시각으로 적는 값이다. 관리자가 가상 시계로 시간을 멈춰 두면
+    // 화면의 다른 시각과 어긋나지 않게 그 시각을 기준으로 적는다.
+    // 매초 바뀌는 'n초 전'은 눈에 걸려 분 단위 기준 시각과 갱신 주기만 적는다
+    const fetchedAt = dataUpdatedAt ? (override ?? new Date(dataUpdatedAt)) : null;
 
-    useEffect(() => {
-        const update = () => setTicks({ virtual: now().getTime(), real: Date.now() });
-        // 가상 시계를 옮기면 now가 새로 내려오므로 다음 초를 기다리지 않고 바로 맞춘다
-        update();
-        const id = setInterval(update, 1000);
-        return () => clearInterval(id);
-    }, [now]);
-
-    // 참여 현황은 폴링으로 따라가는 값이라 지금 이 순간의 수가 아니다 — 언제 기준인지 같이 적는다
-    const staleSeconds = Math.max(0, Math.floor((ticks.real - dataUpdatedAt) / 1000));
-
+    // 숫자는 회색 상자 셋 대신 한 줄로 낮춘다 — 작은 카드의 '당첨 3명 · 2,048명 참여 중'과 같은 말투다
     const stats = [
-        { label: '당첨 인원', value: `${formatNumber(event.winnerCount)}명` },
-        {
-            label: '참여 중',
-            value: statistics ? `${formatNumber(statistics.participantCount)}명` : '-',
-        },
-        {
-            label: '사용된 응모권',
-            value: statistics ? `${formatNumber(statistics.totalSpentTicketCount)}장` : '-',
-        },
-    ];
+        `당첨 ${formatNumber(event.winnerCount)}명`,
+        statistics && `${formatNumber(statistics.participantCount)}명 참여 중`,
+        statistics && `응모권 ${formatNumber(statistics.totalSpentTicketCount)}장 사용`,
+    ].filter(Boolean);
 
     return (
         <article className="bg-surface-elevated border-border-default flex flex-col gap-8 rounded-2xl border py-6 pr-8 pl-6 shadow-md lg:flex-row lg:items-center">
             <RaffleThumbnail
                 src={event.bannerImageUrl}
-                className="h-56 w-full rounded-xl lg:h-72 lg:w-80"
+                className="w-full max-w-72 self-center rounded-xl lg:w-72 lg:self-auto"
                 fallbackIconClassName="size-12"
             />
 
             <div className="flex min-w-0 flex-1 flex-col gap-3.5">
-                <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-body-sm text-fg-primary flex items-center gap-1.5">
+                {/* 윗줄은 점·글자 한 결로 맞춘다 — 시간만 회색 알약이면 셋의 꼴이 제각각이었다 */}
+                <div className="text-body-sm flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="text-fg-primary flex items-center gap-1.5">
                         <span className="bg-brand-primary size-1.5 rounded-full" />
                         진행중
                     </span>
-                    <span className={`${CHIP} bg-surface-sunken text-fg-secondary gap-1`}>
+                    <span className="text-fg-secondary flex items-center gap-1 tabular-nums">
                         <Clock className="size-3.5" />
                         {formatRunningRange(event)}
                     </span>
@@ -79,21 +67,12 @@ export function LiveRaffleCard({ event }: LiveRaffleCardProps) {
                     </p>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                    <dl className="flex flex-col gap-2 sm:flex-row">
-                        {stats.map(({ label, value }) => (
-                            <div
-                                key={label}
-                                className="bg-surface-sunken flex flex-1 flex-col gap-0.5 rounded-xl px-4 py-3"
-                            >
-                                <dt className="text-caption text-fg-tertiary">{label}</dt>
-                                <dd className="text-body-bold text-fg-primary">{value}</dd>
-                            </div>
-                        ))}
-                    </dl>
-                    {statistics && (
+                <div className="flex flex-col gap-0.5">
+                    <p className="text-body-sm-bold text-fg-primary">{stats.join(' · ')}</p>
+                    {statistics && fetchedAt && (
                         <p className="text-caption text-fg-tertiary">
-                            참여 수는 {staleSeconds}초 전 기준이에요.
+                            {formatKst(fetchedAt, KST_HOUR_MINUTE)} 기준 · {REFRESH_SECONDS}초마다
+                            갱신돼요
                         </p>
                     )}
                 </div>

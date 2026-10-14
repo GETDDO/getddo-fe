@@ -2,10 +2,14 @@ import { Link } from 'react-router-dom';
 
 import type { Event } from '@entities/event';
 
+import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { Button } from '@shared/ui/button';
 
 import { formatEntryRule, formatOpenChip } from '../lib/raffleFormat';
 import { RaffleThumbnail } from './RaffleThumbnail';
+
+/** 이 시간 안에 열리면 '곧 오픈'으로 마젠타 점을 찍는다 — "지금" 신호 (DESIGN-SYSTEM 13절) */
+const SOON_MS = 30 * 60 * 1000;
 
 interface UpcomingRaffleCardProps {
     event: Event;
@@ -15,8 +19,11 @@ interface UpcomingRaffleCardProps {
 }
 
 export function UpcomingRaffleCard({ event, now, ticketLimit }: UpcomingRaffleCardProps) {
+    const untilOpen = new Date(event.startsAt).getTime() - now.getTime();
+    const soon = untilOpen > 0 && untilOpen <= SOON_MS;
+
     return (
-        <article className="bg-surface-elevated border-border-default relative flex flex-col gap-4 rounded-2xl border p-5 shadow-md">
+        <article className="bg-surface-elevated border-border-default relative flex flex-col justify-between gap-4 rounded-2xl border p-5 shadow-md">
             {/* 카드 어디를 눌러도 상세로 간다 — 키보드·스크린 리더는 아래 버튼 하나로 들어간다 */}
             <Link
                 to={`/time-raffle/${event.id}`}
@@ -24,16 +31,31 @@ export function UpcomingRaffleCard({ event, now, ticketLimit }: UpcomingRaffleCa
                 tabIndex={-1}
                 className="absolute inset-0 z-1 rounded-2xl"
             />
-            <RaffleThumbnail src={event.bannerImageUrl} className="h-39 w-full rounded-xl" />
-
-            <div className="flex flex-col gap-2">
-                <span className="bg-surface-sunken text-caption text-fg-secondary w-fit rounded-full px-2.5 py-1">
-                    {formatOpenChip(event, now)}
-                </span>
-                <h3 className="text-subhead text-fg-primary line-clamp-2">{event.title}</h3>
-                <p className="text-caption text-fg-tertiary">
-                    {formatEntryRule(event, ticketLimit)}
-                </p>
+            {/*
+             * 상품 그림은 1:1 썸네일로 옆에 둔다 — 카드 폭 전체에 그림을 깔면 그림 없는 래플은 회색 칸이 카드 절반이 됐다
+             */}
+            <div className="flex items-start gap-4">
+                <RaffleThumbnail
+                    src={event.bannerImageUrl}
+                    className="w-24 rounded-xl"
+                    fallbackIconClassName="size-6"
+                />
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                    {soon ? (
+                        <span className="text-caption text-fg-primary flex w-fit items-center gap-1.5 py-1">
+                            <span className="bg-brand-primary size-1.5 rounded-full" />
+                            {formatKst(event.startsAt, KST_HOUR_MINUTE)} 곧 오픈
+                        </span>
+                    ) : (
+                        <span className="bg-surface-sunken text-caption text-fg-secondary w-fit rounded-full px-2.5 py-1">
+                            {formatOpenChip(event, now)}
+                        </span>
+                    )}
+                    <h3 className="text-subhead text-fg-primary line-clamp-2">{event.title}</h3>
+                    <p className="text-caption text-fg-tertiary">
+                        {formatEntryRule(event, ticketLimit)}
+                    </p>
+                </div>
             </div>
 
             {/*

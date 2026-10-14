@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -7,14 +7,15 @@ import type { Event } from '@entities/event';
 import { useEntryStatistics } from '@entities/entry';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
-import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
 
 import { kstDayLabel } from '../lib/raffleFormat';
 import { RaffleThumbnail } from './RaffleThumbnail';
 
-/** 접었을 때 보여 주는 줄 수 — 더 있으면 '지난 래플 전체보기'로 펼친다 */
-const COLLAPSED_COUNT = 5;
+/** 기본 화면에서 미리 보여 주는 줄 수 — 나머지는 '마감한 래플' 화면에서 본다 */
+const PREVIEW_COUNT = 3;
+/** 마감한 래플 화면에서 '더 보기'를 누를 때마다 늘리는 줄 수 */
+const PAGE_SIZE = 10;
 
 const ROW_CHIP = 'text-caption rounded-full px-2.5 py-1';
 
@@ -23,12 +24,29 @@ interface ClosedRaffleListProps {
     id?: string;
     events: Event[];
     now: Date;
+    /**
+     * preview — 기본 화면 아래에 최근 몇 줄만 두고 '전체보기'로 마감한 래플 화면으로 넘긴다.
+     * full — 마감한 래플 화면. 전부를 날짜별로 묶고 '더 보기'로 이어 붙인다
+     */
+    mode: 'preview' | 'full';
+    /** preview의 '전체보기' — 페이지를 옮기지 않고 내용 칸만 마감한 래플로 바꾼다 */
+    onShowAll?: () => void;
+    /** full의 '뒤로' — 기본 화면으로 칸을 되돌린다 */
+    onBack?: () => void;
 }
 
-export function ClosedRaffleList({ id, events, now }: ClosedRaffleListProps) {
-    const [expanded, setExpanded] = useState(false);
+export function ClosedRaffleList({
+    id,
+    events,
+    now,
+    mode,
+    onShowAll,
+    onBack,
+}: ClosedRaffleListProps) {
+    const [shown, setShown] = useState(PAGE_SIZE);
 
-    const visible = expanded ? events : events.slice(0, COLLAPSED_COUNT);
+    const limit = mode === 'preview' ? PREVIEW_COUNT : shown;
+    const visible = events.slice(0, limit);
 
     // 날짜가 바뀌는 자리에만 '오늘 / 어제' 머리말을 넣는다
     const groups: { label: string; rows: Event[] }[] = [];
@@ -41,22 +59,31 @@ export function ClosedRaffleList({ id, events, now }: ClosedRaffleListProps) {
 
     return (
         <section id={id} className="flex scroll-mt-24 flex-col gap-5">
-            <div className="flex items-center justify-between gap-4">
-                <h2 className="text-title-3 text-fg-primary">마감한 래플</h2>
-                {events.length > COLLAPSED_COUNT && (
-                    <Button
-                        variant="link"
-                        size="text"
-                        onClick={() => setExpanded((value) => !value)}
-                        aria-expanded={expanded}
-                    >
-                        {expanded ? '접기' : '지난 래플 전체보기'}
-                        <ChevronRight
-                            className={cn('transition-transform', expanded && 'rotate-90')}
-                        />
+            {mode === 'full' && (
+                <div className="flex flex-col items-start gap-3">
+                    <Button variant="link" size="text" onClick={onBack}>
+                        <ChevronLeft />
+                        진행 중인 래플 보기
                     </Button>
-                )}
-            </div>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-title-3 text-fg-primary">마감한 래플</h2>
+                        <span className="bg-surface-sunken text-label-sm text-fg-secondary rounded-full px-2.5 py-1">
+                            {formatNumber(events.length)}
+                        </span>
+                    </div>
+                </div>
+            )}
+            {mode === 'preview' && (
+                <div className="flex items-center justify-between gap-4">
+                    <h2 className="text-title-3 text-fg-primary">마감한 래플</h2>
+                    {events.length > PREVIEW_COUNT && (
+                        <Button variant="link" size="text" onClick={onShowAll}>
+                            전체보기
+                            <ChevronRight />
+                        </Button>
+                    )}
+                </div>
+            )}
 
             {events.length === 0 ? (
                 <p className="text-body-sm text-fg-tertiary">마감한 래플이 없어요.</p>
@@ -64,7 +91,8 @@ export function ClosedRaffleList({ id, events, now }: ClosedRaffleListProps) {
                 <div className="flex flex-col">
                     {groups.map((group) => (
                         <div key={group.label} className="flex flex-col">
-                            <p className="text-caption text-fg-tertiary px-5 pt-3.5 pb-0.5">
+                            {/* 머리말·줄 모두 안쪽 여백 없이 제목과 같은 왼쪽 선에 맞춘다 */}
+                            <p className="text-caption text-fg-tertiary pt-3.5 pb-0.5">
                                 {group.label}
                             </p>
                             <ul className="divide-border-default flex flex-col divide-y">
@@ -74,6 +102,15 @@ export function ClosedRaffleList({ id, events, now }: ClosedRaffleListProps) {
                             </ul>
                         </div>
                     ))}
+                    {mode === 'full' && events.length > shown && (
+                        <Button
+                            variant="secondary"
+                            className="mt-4 self-center"
+                            onClick={() => setShown((count) => count + PAGE_SIZE)}
+                        >
+                            더 보기
+                        </Button>
+                    )}
                 </div>
             )}
         </section>
@@ -103,17 +140,23 @@ function ClosedRaffleRow({ event, now }: { event: Event; now: Date }) {
     ].filter(Boolean);
 
     return (
-        <li className="flex items-center gap-4 p-4">
+        <li className="flex items-center gap-4 py-4">
             <RaffleThumbnail
                 src={event.bannerImageUrl}
-                className="h-20 w-40 rounded-lg"
+                className="w-20 rounded-lg"
                 fallbackIconClassName="size-6"
             />
             <div className="flex min-w-0 flex-1 flex-col gap-2">
-                {/* 내 당첨 여부는 결과 화면에서 본다 — 목록에는 발표 상태만 둔다 */}
-                <span className={`${ROW_CHIP} bg-surface-sunken text-fg-secondary w-fit`}>
-                    {statusLabel}
-                </span>
+                {/*
+                 * 내 당첨 여부는 결과 화면에서 본다 — 목록에는 발표 상태만 둔다.
+                 * 발표 완료가 대부분이라 모든 줄에 칩을 달면 정보가 되지 않는다. 아직 발표 전인 줄만 칩으로 띄우고
+                 * 발표 완료는 오른쪽 '결과 보기' 버튼이 대신 알린다
+                 */}
+                {!isDrawn && (
+                    <span className={`${ROW_CHIP} bg-surface-sunken text-fg-secondary w-fit`}>
+                        {statusLabel}
+                    </span>
+                )}
                 <p className="text-body-bold text-fg-primary truncate">{event.title}</p>
                 <p className="text-caption text-fg-tertiary">{meta.join(' · ')}</p>
             </div>

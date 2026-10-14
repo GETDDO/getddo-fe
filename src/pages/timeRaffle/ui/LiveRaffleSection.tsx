@@ -15,6 +15,8 @@ interface LiveRaffleSectionProps {
  *
  * 마감이 가장 가까운 하나를 크게 두고 나머지는 작은 카드로 함께 보여 준다.
  * 넘겨 보는 방식에서는 보지 못한 래플이 그동안 마감될 수 있었다.
+ * 대표는 운영자가 고르거나 무작위로 바꾸지 않고 '마감 임박'이라는 하나의 기준으로 정한다 — 기준을 제목 옆에 적어
+ * 특정 래플을 밀어 주는 것처럼 보이지 않게 하고, 새로고침마다 카드가 바뀌어 찾던 래플을 놓치는 일도 없게 한다.
  */
 export function LiveRaffleSection({ id, events }: LiveRaffleSectionProps) {
     const [first, ...rest] = events;
@@ -27,6 +29,9 @@ export function LiveRaffleSection({ id, events }: LiveRaffleSectionProps) {
                     <span className="bg-surface-sunken text-label-sm text-fg-secondary rounded-full px-2.5 py-1">
                         {events.length}
                     </span>
+                )}
+                {events.length > 1 && (
+                    <span className="text-caption text-fg-tertiary">마감이 가까운 순</span>
                 )}
             </div>
 

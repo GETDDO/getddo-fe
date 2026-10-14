@@ -19,6 +19,8 @@ interface StepTileProps {
     done?: boolean;
     /** 누르면 내려갈 섹션의 id */
     targetId: string;
+    /** 바로 스크롤하지 않고 화면이 먼저 할 일이 있을 때 (예: 겟또타임이 마감 화면에서 기본 화면으로 바꾼 뒤 내려가기) */
+    onSelect?: (targetId: string) => void;
 }
 
 const scrollToSection = (id: string) =>
@@ -40,6 +42,7 @@ function StepTile({
     hint,
     done = false,
     targetId,
+    onSelect,
 }: StepTileProps) {
     const labelNode = (
         <span className="text-caption sm:text-body-sm text-fg-secondary flex items-center gap-1.5 pr-5">
@@ -52,7 +55,7 @@ function StepTile({
     return (
         <button
             type="button"
-            onClick={() => scrollToSection(targetId)}
+            onClick={() => (onSelect ? onSelect(targetId) : scrollToSection(targetId))}
             className={`group/step bg-surface-page focus-visible:ring-border-focus relative flex min-h-26.5 min-w-0 cursor-pointer flex-col justify-between gap-2 rounded-2xl p-3 text-left shadow-sm transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:outline-none sm:min-h-32.5 sm:gap-3 sm:p-4 ${done ? 'ring-ticket-primary ring-2' : ''}`}
         >
             <ArrowDown
