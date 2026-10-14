@@ -31,38 +31,31 @@ const TICKET_PUNCH =
 
 /**
  * 요약 칸 하나 — 누르면 해당 내역으로 간다.
- * 응모권 칸은 바탕색 대신 좌우에 구멍을 뚫은 응모권 모양으로 구분한다. 구멍을 따라 윤곽선이 돌도록
+ * 네 칸 모두 좌우에 구멍을 뚫은 응모권 모양이다. 구멍을 따라 윤곽선이 돌도록
  * 바탕·테두리는 뒤쪽 층(drop-shadow 윤곽)에 두고, 초점 테두리가 잘리지 않게 링크 자체에는 마스크를 걸지 않는다
  */
 function StatTile({
     to,
     label,
     value,
-    highlight = false,
     children,
 }: {
     to: string;
     label: string;
     value: string;
-    highlight?: boolean;
     children: React.ReactNode;
 }) {
     return (
-        <Link
-            to={to}
-            className={`${TILE} group ${highlight ? 'isolate' : 'border-border-default hover:bg-surface-canvas border'}`}
-        >
-            {highlight && (
+        <Link to={to} className={`${TILE} group isolate`}>
+            <span
+                aria-hidden
+                className="absolute inset-0 -z-10"
+                style={{ filter: TICKET_OUTLINE_FILTER }}
+            >
                 <span
-                    aria-hidden
-                    className="absolute inset-0 -z-10"
-                    style={{ filter: TICKET_OUTLINE_FILTER }}
-                >
-                    <span
-                        className={`bg-surface-page group-hover:bg-surface-canvas block size-full rounded-xl transition-colors ${TICKET_PUNCH}`}
-                    />
-                </span>
-            )}
+                    className={`bg-surface-page group-hover:bg-surface-canvas block size-full rounded-xl transition-colors ${TICKET_PUNCH}`}
+                />
+            </span>
             <span className="text-body-sm text-fg-secondary">{label}</span>
             <span className="text-title-2 text-fg-primary">{value}</span>
             <ChevronRight aria-hidden className="text-fg-primary absolute top-4 right-4 size-4" />
@@ -120,7 +113,6 @@ export function ProfileCard({
                     to="/my-tickets"
                     label="응모권"
                     value={tickets ? `${formatNumber(tickets.availableCount)}장` : '–'}
-                    highlight
                 >
                     {tickets && (
                         <span className="flex flex-wrap gap-1">
