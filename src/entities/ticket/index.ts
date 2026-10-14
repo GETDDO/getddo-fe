@@ -6,7 +6,12 @@ export {
     ticketStatusSchema,
 } from './model/history';
 export type { TicketHistory, TicketOperationType, TicketStatus } from './model/history';
-export { TICKET_GRADE_LABEL, TICKET_GRADE_ODDS, TICKET_GRADE_WEIGHT } from './model/grade';
+export {
+    TICKET_GRADE_DOT,
+    TICKET_GRADE_LABEL,
+    TICKET_GRADE_ODDS,
+    TICKET_GRADE_WEIGHT,
+} from './model/grade';
 export { TICKET_GRADE_IMAGE, TICKET_GRADES } from './model/gradeImage';
 export { TICKET_OPERATION_DELTA } from './model/operation';
 export {

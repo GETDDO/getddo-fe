@@ -7,6 +7,13 @@ export const TICKET_GRADE_LABEL: Record<TicketGrade, string> = {
     GOLD: '골드',
 };
 
+// 등급 진한 색 점 — 알약·내역 줄에서 등급을 색으로 구분한다 (DESIGN-SYSTEM "Grade — 응모권 등급")
+export const TICKET_GRADE_DOT: Record<TicketGrade, string> = {
+    BRONZE: 'bg-grade-bronze',
+    SILVER: 'bg-grade-silver',
+    GOLD: 'bg-grade-gold',
+};
+
 // 가중치를 적용하는 겟또타임에서 장당 추첨 가중치 — getddo-spec 02-domain/drawing.md "가중치 및 중복 당첨"
 export const TICKET_GRADE_WEIGHT: Record<TicketGrade, number> = {
     BRONZE: 1,
