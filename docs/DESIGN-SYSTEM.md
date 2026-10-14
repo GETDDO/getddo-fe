@@ -117,27 +117,28 @@ _(Figma 원본 섹션 라벨은 "2. Button — 버튼"이며, 토큰 이름은 `
 
 ### 8) Semantic
 
-| Token                   | Hex       | 용도                                   |
-| ----------------------- | --------- | -------------------------------------- |
-| `semantic/success`      | `#14A378` | 성공 아이콘, 완료 표시                 |
-| `semantic/success-soft` | `#E8FAF3` | 성공 뱃지·배너 배경                    |
-| `semantic/error`        | `#F04438` | 에러 아이콘, 삭제 버튼                 |
-| `semantic/error-strong` | `#D92D20` | `error-soft` 배경 위에 올라가는 텍스트 |
+| Token                    | Hex       | 용도                                     |
+| ------------------------ | --------- | ---------------------------------------- |
+| `semantic/success`       | `#14A378` | 성공 아이콘, 완료 표시                   |
+| `semantic/success-soft`  | `#E8FAF3` | 성공 뱃지·배너 배경                      |
+| `semantic/error`         | `#F04438` | 에러 아이콘                              |
+| `semantic/error-strong`  | `#D92D20` | 밝은 배경 위 에러 텍스트, 삭제 버튼 바탕 |
+| `semantic/error-pressed` | `#B42318` | 삭제 버튼 호버·누름, 상태 뱃지 텍스트    |
 
 ### 9) Status — 관리자 전용
 
-| Token                  | Hex       | 용도                                              |
-| ---------------------- | --------- | ------------------------------------------------- |
-| `status/pending`       | `#F1F3F5` | 검토 대기 뱃지 배경                               |
-| `status/active`        | `#E7F0FE` | 진행 중 뱃지 배경                                 |
-| `status/revision`      | `#FBF0D9` | 보완 요청 뱃지 배경                               |
-| `status/approved`      | `#E6F5EE` | 승인 뱃지 배경                                    |
-| `status/rejected`      | `#FBEBEE` | 반려 뱃지 배경                                    |
-| `status/pending-text`  | `#4B525C` | 검토 대기 뱃지 텍스트                             |
-| `status/active-text`   | `#1D4ED8` | 진행 중 뱃지 텍스트                               |
-| `status/revision-text` | `#B45309` | 보완 요청 뱃지 텍스트                             |
-| `status/approved-text` | `#0B6549` | 승인 뱃지 텍스트                                  |
-| `status/rejected-text` | `#D92D20` | 반려 뱃지 텍스트 (`semantic/error-strong` 재사용) |
+| Token                  | Hex       | 용도                                               |
+| ---------------------- | --------- | -------------------------------------------------- |
+| `status/pending`       | `#F1F3F5` | 검토 대기 뱃지 배경                                |
+| `status/active`        | `#E7F0FE` | 진행 중 뱃지 배경                                  |
+| `status/revision`      | `#FBF0D9` | 보완 요청 뱃지 배경                                |
+| `status/approved`      | `#E6F5EE` | 승인 뱃지 배경                                     |
+| `status/rejected`      | `#FBEBEE` | 반려 뱃지 배경                                     |
+| `status/pending-text`  | `#4B525C` | 검토 대기 뱃지 텍스트                              |
+| `status/active-text`   | `#1D4ED8` | 진행 중 뱃지 텍스트                                |
+| `status/revision-text` | `#B45309` | 보완 요청 뱃지 텍스트                              |
+| `status/approved-text` | `#0B6549` | 승인 뱃지 텍스트                                   |
+| `status/rejected-text` | `#B42318` | 반려 뱃지 텍스트 (`semantic/error-pressed` 재사용) |
 
 ### 10) Chart — 관리자 전용
 

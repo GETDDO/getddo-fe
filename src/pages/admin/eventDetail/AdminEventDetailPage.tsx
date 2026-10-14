@@ -40,12 +40,14 @@ export function AdminEventDetailPage() {
     const [action, setAction] = useState<EventActionKind | null>(null);
 
     if (isPending) {
-        return <p className="text-body-sm text-fg-tertiary pb-10">불러오는 중…</p>;
+        return <p className="text-body-sm text-fg-secondary pb-10">불러오는 중…</p>;
     }
     if (isError || !event) {
         return (
             <div className="flex flex-col gap-4 pb-10">
-                <p className="text-destructive text-body-sm">이벤트를 불러오지 못했습니다.</p>
+                <p className="text-semantic-error-strong text-body-sm">
+                    이벤트를 불러오지 못했습니다.
+                </p>
                 <Button variant="secondary" className="w-fit" asChild>
                     <Link to="/admin/events">목록으로</Link>
                 </Button>

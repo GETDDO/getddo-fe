@@ -105,7 +105,7 @@ export function PublishRedrawDialog({ run, open, onOpenChange }: PublishRedrawDi
                     <p
                         id="publish-redraw-error"
                         role="alert"
-                        className="text-destructive text-body-sm"
+                        className="text-semantic-error-strong text-body-sm"
                     >
                         {getErrorMessage(
                             publish.error,

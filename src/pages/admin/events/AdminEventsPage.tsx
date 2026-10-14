@@ -94,7 +94,7 @@ export function AdminEventsPage() {
                         className="w-40"
                         aria-label="시작일 필터"
                     />
-                    <span className="text-fg-tertiary self-center">~</span>
+                    <span className="text-fg-secondary self-center">~</span>
                     <Input
                         type="date"
                         value={toInput}
@@ -150,12 +150,14 @@ export function AdminEventsPage() {
                 </Button>
             </div>
 
-            {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {isPending && <p className="text-body-sm text-fg-secondary">불러오는 중…</p>}
             {isError && (
-                <p className="text-destructive text-body-sm">이벤트 목록을 불러오지 못했습니다.</p>
+                <p className="text-semantic-error-strong text-body-sm">
+                    이벤트 목록을 불러오지 못했습니다.
+                </p>
             )}
             {!isPending && !isError && data && data.items.length === 0 && (
-                <p className="text-fg-tertiary text-body-sm py-6">해당하는 이벤트가 없습니다.</p>
+                <p className="text-fg-secondary text-body-sm py-6">해당하는 이벤트가 없습니다.</p>
             )}
             {data && data.items.length > 0 && (
                 <>
@@ -164,7 +166,7 @@ export function AdminEventsPage() {
                         onRowClick={(event) => void navigate(`/admin/events/${event.id}`)}
                     />
                     <div className="flex items-center justify-between">
-                        <span className="text-body-sm text-fg-tertiary">
+                        <span className="text-body-sm text-fg-secondary">
                             총 {data.totalElements}건
                         </span>
                         <Pager

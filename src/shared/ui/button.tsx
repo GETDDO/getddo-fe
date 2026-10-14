@@ -31,7 +31,7 @@ const buttonVariants = cva(
                     'bg-brand-primary text-fg-on-brand hover:bg-brand-primary-hover active:bg-brand-primary-pressed',
                 ghost: 'text-fg-secondary hover:bg-surface-sunken hover:text-fg-primary active:bg-surface-pressed aria-expanded:bg-surface-sunken',
                 destructive:
-                    'bg-semantic-error text-fg-on-brand hover:bg-semantic-error-strong active:bg-semantic-error-strong',
+                    'bg-semantic-error-strong text-fg-on-brand hover:bg-semantic-error-pressed active:bg-semantic-error-pressed dark:bg-semantic-error/15 dark:text-semantic-error-strong dark:hover:bg-semantic-error/25 dark:active:bg-semantic-error/35',
                 // 텍스트 버튼(전체보기 등) — 잉크 글씨, 호버 밑줄, 누름은 한 단계 옅게. size='text'와 함께 쓴다
                 link: 'text-fg-primary underline-offset-4 hover:underline active:text-fg-secondary active:underline disabled:bg-transparent',
             },

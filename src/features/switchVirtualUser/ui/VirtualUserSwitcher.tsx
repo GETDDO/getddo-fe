@@ -45,7 +45,7 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                         </p>
                     )}
                     {isError && (
-                        <p className="text-destructive text-body-sm py-4 text-center">
+                        <p className="text-semantic-error-strong text-body-sm py-4 text-center">
                             사용자 목록을 불러오지 못했습니다.
                         </p>
                     )}

@@ -15,7 +15,7 @@ const CHIP = 'text-caption rounded-md px-2 py-0.5 font-medium whitespace-nowrap'
 const STATUS_CHIP: Record<MockDeliveryStatus, string> = {
     PENDING: 'bg-surface-sunken text-fg-secondary',
     SENT: 'bg-status-active text-status-active-text',
-    FAILED: 'bg-destructive/10 text-destructive',
+    FAILED: 'bg-status-rejected text-status-rejected-text',
 };
 
 // 정렬·필터는 서버 쿼리로 처리하므로 행 모델만 쓰는 표시용 테이블 — 기능 슬롯을 등록하지 않는다

@@ -73,23 +73,23 @@ export function AdminBannersPage() {
                 </Button>
             </div>
             {full && (
-                <p className="text-fg-tertiary text-body-sm">
+                <p className="text-fg-secondary text-body-sm">
                     배너가 {BANNER_MAX_COUNT}개라 더 등록할 수 없습니다. 기존 배너를 삭제하면 등록할
                     수 있습니다.
                 </p>
             )}
 
-            {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {isPending && <p className="text-body-sm text-fg-secondary">불러오는 중…</p>}
             {isError && (
-                <p role="alert" className="text-destructive text-body-sm">
+                <p role="alert" className="text-semantic-error-strong text-body-sm">
                     배너 목록을 불러오지 못했습니다.
                 </p>
             )}
             {banners && banners.length === 0 && (
-                <p className="text-fg-tertiary text-body-sm py-6">등록된 배너가 없습니다.</p>
+                <p className="text-fg-secondary text-body-sm py-6">등록된 배너가 없습니다.</p>
             )}
             {reorder.isError && (
-                <p role="alert" className="text-destructive text-body-sm">
+                <p role="alert" className="text-semantic-error-strong text-body-sm">
                     {getErrorMessage(
                         reorder.error,
                         '노출 순서를 바꾸지 못했습니다. 다시 시도해주세요.',

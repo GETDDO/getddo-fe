@@ -18,7 +18,7 @@ function BannerThumbnail({ src, label }: { src: string; label: string }) {
 
     if (failedSrc === src) {
         return (
-            <div className="bg-surface-sunken text-caption text-fg-tertiary flex h-12 w-24 items-center justify-center rounded-md">
+            <div className="bg-surface-sunken text-caption text-fg-secondary flex h-12 w-24 items-center justify-center rounded-md">
                 이미지 없음
             </div>
         );

@@ -35,7 +35,7 @@ export function AdminLayout() {
                                     'text-subhead flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors',
                                     isActive
                                         ? 'bg-surface-inverse-muted text-fg-inverse'
-                                        : 'text-fg-secondary hover:bg-surface-sunken',
+                                        : 'text-fg-inverse/75 hover:bg-surface-inverse-muted hover:text-fg-inverse',
                                 )
                             }
                         >
@@ -47,7 +47,7 @@ export function AdminLayout() {
                 <div className="border-border border-t p-3">
                     <NavLink
                         to="/"
-                        className="text-body-sm text-fg-tertiary hover:bg-surface-sunken flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors"
+                        className="text-body-sm text-fg-inverse/60 hover:bg-surface-inverse-muted hover:text-fg-inverse flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors"
                     >
                         사용자 화면으로
                     </NavLink>

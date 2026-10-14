@@ -69,11 +69,11 @@ interface DrawRunDetailProps {
 export function DrawRunDetail({ drawId, eventCanceled, onRunCreated }: DrawRunDetailProps) {
     const { data: run, isPending, isError, refetch, isFetching } = useDrawRun(drawId);
 
-    if (isPending) return <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>;
+    if (isPending) return <p className="text-body-sm text-fg-secondary">불러오는 중…</p>;
     if (isError) {
         return (
             <div className="flex items-center gap-3">
-                <p role="alert" className="text-destructive text-body-sm">
+                <p role="alert" className="text-semantic-error-strong text-body-sm">
                     추첨 실행 상세를 불러오지 못했습니다.
                 </p>
                 <Button size="sm" variant="secondary" onClick={() => void refetch()}>
@@ -237,12 +237,12 @@ function RunDetailBody({
                     </p>
                 )}
                 {start.isError && (
-                    <p role="alert" className="text-destructive text-body-sm">
+                    <p role="alert" className="text-semantic-error-strong text-body-sm">
                         {getErrorMessage(start.error, '재추첨을 시작·재개하지 못했습니다.')}
                     </p>
                 )}
                 {resumeInitial.isError && (
-                    <p role="alert" className="text-destructive text-body-sm">
+                    <p role="alert" className="text-semantic-error-strong text-body-sm">
                         {getErrorMessage(resumeInitial.error, '최초 추첨을 재개하지 못했습니다.')}
                     </p>
                 )}

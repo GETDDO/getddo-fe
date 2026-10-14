@@ -17,7 +17,7 @@ import type { EventFormInput, EventFormValues } from './lib/eventFormValues';
 import { eventFormSchema, eventFormToRequest, eventToFormValues } from './lib/eventFormValues';
 
 const FIELD_LABEL = 'text-body-bold text-fg-primary';
-const FIELD_ERROR = 'text-destructive text-caption';
+const FIELD_ERROR = 'text-semantic-error-strong text-caption';
 const INPUT_LIKE =
     'border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-lg border bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:ring-3 disabled:opacity-50';
 
@@ -67,12 +67,14 @@ export function AdminEventFormPage() {
     const showTicketOptions = eventType === 'TICKET';
 
     if (isEdit && isPending) {
-        return <p className="text-body-sm text-fg-tertiary pb-10">불러오는 중…</p>;
+        return <p className="text-body-sm text-fg-secondary pb-10">불러오는 중…</p>;
     }
     if (isEdit && (isError || !event)) {
         return (
             <div className="flex flex-col gap-4 pb-10">
-                <p className="text-destructive text-body-sm">이벤트를 불러오지 못했습니다.</p>
+                <p className="text-semantic-error-strong text-body-sm">
+                    이벤트를 불러오지 못했습니다.
+                </p>
                 <Button variant="secondary" className="w-fit" asChild>
                     <Link to="/admin/events">목록으로</Link>
                 </Button>

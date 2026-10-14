@@ -72,7 +72,7 @@ export function AdminAbuseCasesPage() {
                         className="w-40"
                         aria-label="시작일 필터"
                     />
-                    <span className="text-fg-tertiary self-center">~</span>
+                    <span className="text-fg-secondary self-center">~</span>
                     <Input
                         type="date"
                         value={toInput}
@@ -105,19 +105,25 @@ export function AdminAbuseCasesPage() {
                 </Select>
             </div>
 
-            {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {isPending && <p className="text-body-sm text-fg-secondary">불러오는 중…</p>}
             {isError && (
-                <p className="text-destructive text-body-sm">차단 내역을 불러오지 못했습니다.</p>
+                <p className="text-semantic-error-strong text-body-sm">
+                    차단 내역을 불러오지 못했습니다.
+                </p>
             )}
             {!isPending && !isError && data && data.items.length === 0 && (
-                <p className="text-fg-tertiary text-body-sm py-6">해당하는 차단 내역이 없습니다.</p>
+                <p className="text-fg-secondary text-body-sm py-6">
+                    해당하는 차단 내역이 없습니다.
+                </p>
             )}
             {data && data.items.length > 0 && (
                 <AbuseCaseTable cases={data.items} onRowClick={setSelected} />
             )}
             {data && data.totalElements > 0 && (
                 <div className="flex items-center justify-between">
-                    <span className="text-body-sm text-fg-tertiary">총 {data.totalElements}건</span>
+                    <span className="text-body-sm text-fg-secondary">
+                        총 {data.totalElements}건
+                    </span>
                     <Pager
                         current={page - 1}
                         total={totalPages}

@@ -56,7 +56,7 @@ export function DeleteBannerDialog({ banner, eventTitle, onOpenChange }: DeleteB
                 </DialogHeader>
 
                 {deleteBanner.isError && (
-                    <p role="alert" className="text-destructive text-body-sm">
+                    <p role="alert" className="text-semantic-error-strong text-body-sm">
                         {getErrorMessage(
                             deleteBanner.error,
                             '배너를 삭제하지 못했습니다. 다시 시도해주세요.',

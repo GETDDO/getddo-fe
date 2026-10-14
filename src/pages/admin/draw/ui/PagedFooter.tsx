@@ -12,7 +12,7 @@ export function PagedFooter({ page, size, totalElements, onPageChange }: PagedFo
     const totalPages = Math.max(1, Math.ceil(totalElements / size));
     return (
         <div className="flex items-center justify-between">
-            <span className="text-body-sm text-fg-tertiary">총 {totalElements}건</span>
+            <span className="text-body-sm text-fg-secondary">총 {totalElements}건</span>
             <Pager
                 current={page - 1}
                 total={totalPages}

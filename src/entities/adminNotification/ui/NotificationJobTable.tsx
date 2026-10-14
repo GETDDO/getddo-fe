@@ -15,8 +15,8 @@ const CHIP = 'text-caption rounded-md px-2 py-0.5 font-medium whitespace-nowrap'
 const STATUS_CHIP: Record<NotificationJobStatus, string> = {
     PENDING: 'bg-surface-sunken text-fg-secondary',
     PROCESSING: 'bg-status-active text-status-active-text',
-    COMPLETED: 'bg-surface-sunken text-fg-tertiary',
-    FAILED: 'bg-destructive/10 text-destructive',
+    COMPLETED: 'bg-surface-sunken text-fg-secondary',
+    FAILED: 'bg-status-rejected text-status-rejected-text',
 };
 
 // 정렬·필터는 서버 쿼리로 처리하므로 행 모델만 쓰는 표시용 테이블 — 기능 슬롯을 등록하지 않는다
@@ -63,7 +63,7 @@ export function NotificationJobTable({
                                 {NOTIFICATION_JOB_STATUS_LABEL[getValue()]}
                             </span>
                             {row.original.generationStoppedBy && (
-                                <span className={cn(CHIP, 'bg-surface-sunken text-fg-tertiary')}>
+                                <span className={cn(CHIP, 'bg-surface-sunken text-fg-secondary')}>
                                     중지
                                 </span>
                             )}

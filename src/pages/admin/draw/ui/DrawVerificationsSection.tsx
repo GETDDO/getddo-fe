@@ -63,14 +63,14 @@ export function DrawVerificationsSection({ drawId, canVerify }: DrawVerification
                 </p>
             )}
             {verify.isError && (
-                <p role="alert" className="text-destructive text-body-sm">
+                <p role="alert" className="text-semantic-error-strong text-body-sm">
                     {getErrorMessage(verify.error, '정합성 검증을 실행하지 못했습니다.')}
                 </p>
             )}
 
             {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
             {isError && (
-                <p role="alert" className="text-destructive text-body-sm">
+                <p role="alert" className="text-semantic-error-strong text-body-sm">
                     검증 이력을 불러오지 못했습니다.
                 </p>
             )}
@@ -109,7 +109,7 @@ export function DrawVerificationsSection({ drawId, canVerify }: DrawVerification
                                                 className={
                                                     check.passed
                                                         ? 'text-status-approved-text'
-                                                        : 'text-destructive'
+                                                        : 'text-semantic-error-strong'
                                                 }
                                             >
                                                 {check.passed ? '✓' : '✕'}

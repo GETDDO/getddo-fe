@@ -138,7 +138,9 @@ export function MismatchValue({
 }) {
     return (
         <span
-            className={differs ? 'text-destructive text-body-sm' : 'text-body-sm text-fg-primary'}
+            className={
+                differs ? 'text-semantic-error-strong text-body-sm' : 'text-body-sm text-fg-primary'
+            }
         >
             {TICKET_STATUS_LABEL[status]} · v{version}
         </span>

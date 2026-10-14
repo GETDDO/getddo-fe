@@ -32,15 +32,17 @@ function PagedResult<T>({
 
     return (
         <div className="flex flex-col gap-4">
-            {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
-            {isError && <p className="text-destructive text-body-sm">{errorText}</p>}
+            {isPending && <p className="text-body-sm text-fg-secondary">불러오는 중…</p>}
+            {isError && <p className="text-semantic-error-strong text-body-sm">{errorText}</p>}
             {!isPending && !isError && data && data.items.length === 0 && (
-                <p className="text-fg-tertiary text-body-sm py-6">{emptyText}</p>
+                <p className="text-fg-secondary text-body-sm py-6">{emptyText}</p>
             )}
             {data && data.items.length > 0 && children(data.items)}
             {data && data.totalElements > 0 && (
                 <div className="flex items-center justify-between">
-                    <span className="text-body-sm text-fg-tertiary">총 {data.totalElements}건</span>
+                    <span className="text-body-sm text-fg-secondary">
+                        총 {data.totalElements}건
+                    </span>
                     <Pager
                         current={page - 1}
                         total={totalPages}

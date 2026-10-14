@@ -15,19 +15,21 @@ export function AdminVirtualUsersPage() {
                 </p>
             </div>
 
-            {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {isPending && <p className="text-body-sm text-fg-secondary">불러오는 중…</p>}
             {isError && (
-                <p role="alert" className="text-destructive text-body-sm">
+                <p role="alert" className="text-semantic-error-strong text-body-sm">
                     가상 사용자 목록을 불러오지 못했습니다.
                 </p>
             )}
             {users && users.length === 0 && (
-                <p className="text-fg-tertiary text-body-sm py-6">등록된 가상 사용자가 없습니다.</p>
+                <p className="text-fg-secondary text-body-sm py-6">
+                    등록된 가상 사용자가 없습니다.
+                </p>
             )}
             {users && users.length > 0 && (
                 <>
                     <VirtualUserTable users={users} currentUserId={currentUserId} />
-                    <span className="text-body-sm text-fg-tertiary">총 {users.length}명</span>
+                    <span className="text-body-sm text-fg-secondary">총 {users.length}명</span>
                 </>
             )}
         </div>

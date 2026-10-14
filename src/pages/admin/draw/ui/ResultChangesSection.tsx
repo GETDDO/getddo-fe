@@ -24,7 +24,7 @@ export function ResultChangesSection({ eventId }: { eventId: string }) {
 
             {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
             {isError && (
-                <p role="alert" className="text-destructive text-body-sm">
+                <p role="alert" className="text-semantic-error-strong text-body-sm">
                     변경 이력을 불러오지 못했습니다.
                 </p>
             )}

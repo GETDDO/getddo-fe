@@ -30,11 +30,11 @@ export function DrawRunList({ eventId, selectedId, onSelect }: DrawRunListProps)
         size: DRAW_RUN_PAGE_SIZE,
     });
 
-    if (isPending) return <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>;
+    if (isPending) return <p className="text-body-sm text-fg-secondary">불러오는 중…</p>;
     if (isError) {
         return (
             <div className="flex items-center gap-3">
-                <p role="alert" className="text-destructive text-body-sm">
+                <p role="alert" className="text-semantic-error-strong text-body-sm">
                     추첨 실행 목록을 불러오지 못했습니다.
                 </p>
                 <Button size="sm" variant="secondary" onClick={() => void refetch()}>
@@ -45,7 +45,7 @@ export function DrawRunList({ eventId, selectedId, onSelect }: DrawRunListProps)
     }
     if (data.items.length === 0) {
         return (
-            <p className="text-fg-tertiary text-body-sm py-4">
+            <p className="text-fg-secondary text-body-sm py-4">
                 아직 추첨 실행이 없습니다. 마감 후 자동 추첨이 시작되면 이곳에 표시됩니다.
             </p>
         );

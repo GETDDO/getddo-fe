@@ -88,7 +88,7 @@ export function AbuseCaseDetailDrawer({
                               )}
                         {isError && (
                             <div className="flex items-center gap-3">
-                                <p className="text-destructive text-body-sm">
+                                <p className="text-semantic-error-strong text-body-sm">
                                     상세 정보를 불러오지 못했습니다.
                                 </p>
                                 <Button

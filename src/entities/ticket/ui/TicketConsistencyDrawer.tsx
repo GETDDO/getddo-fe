@@ -51,7 +51,7 @@ export function TicketConsistencyDrawer({
                         </p>
                     )}
                     {consistency.isError && !notFound && (
-                        <p className="text-destructive text-body-sm">
+                        <p className="text-semantic-error-strong text-body-sm">
                             {getErrorMessage(consistency.error, '정합성을 불러오지 못했습니다.')}
                         </p>
                     )}
@@ -114,7 +114,7 @@ export function TicketConsistencyDrawer({
                                     <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>
                                 )}
                                 {histories.isError && (
-                                    <p className="text-destructive text-body-sm">
+                                    <p className="text-semantic-error-strong text-body-sm">
                                         이력을 불러오지 못했습니다.
                                     </p>
                                 )}

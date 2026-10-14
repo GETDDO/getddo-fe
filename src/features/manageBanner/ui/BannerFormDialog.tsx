@@ -118,7 +118,9 @@ function BannerForm({
                     )}
                 />
                 {errors.eventId && (
-                    <p className="text-destructive text-caption">{errors.eventId.message}</p>
+                    <p className="text-semantic-error-strong text-caption">
+                        {errors.eventId.message}
+                    </p>
                 )}
             </div>
 
@@ -133,7 +135,9 @@ function BannerForm({
                     {...register('imageKey')}
                 />
                 {errors.imageKey && (
-                    <p className="text-destructive text-caption">{errors.imageKey.message}</p>
+                    <p className="text-semantic-error-strong text-caption">
+                        {errors.imageKey.message}
+                    </p>
                 )}
                 {/* 확정된 정책처럼 보이지 않도록 임시 기준임을 함께 밝힌다 */}
                 <p className="text-fg-tertiary text-caption">
@@ -143,7 +147,7 @@ function BannerForm({
             </div>
 
             {mutation.isError && (
-                <p role="alert" className="text-destructive text-body-sm">
+                <p role="alert" className="text-semantic-error-strong text-body-sm">
                     {getErrorMessage(
                         mutation.error,
                         `배너를 ${isEdit ? '수정' : '등록'}하지 못했습니다. 다시 시도해주세요.`,
