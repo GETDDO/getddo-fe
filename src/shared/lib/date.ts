@@ -82,6 +82,40 @@ export function formatCountdown(remainingMs: number): string {
 }
 
 /**
+ * 남은 시간을 읽는 단위로 적는다 — "7일 2시간" · "1시간 23분" · "9분 50초".
+ *
+ * 시각 꼴(169:59:58)은 하루가 넘으면 셈을 해야 읽힌다. 큰 단위 둘까지만 적고,
+ * 1분마다 다시 그리는 곳은 precision을 'minute'로 두어 멈춰 보이는 초를 적지 않는다.
+ */
+export function formatRemaining(
+    remainingMs: number,
+    precision: 'second' | 'minute' = 'second',
+): string {
+    const totalSeconds = Math.max(0, Math.floor(remainingMs / 1000));
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (days > 0) return hours > 0 ? `${days}일 ${hours}시간` : `${days}일`;
+    if (hours > 0) return `${hours}시간 ${minutes}분`;
+    if (precision === 'minute') return `${Math.max(1, minutes + (seconds > 0 ? 1 : 0))}분`;
+    if (minutes > 0) return `${minutes}분 ${seconds}초`;
+    return `${seconds}초`;
+}
+
+/**
+ * 운영 시간 — 같은 날 열고 닫으면 "14:00 ~ 15:00", 날을 넘기면 "11월 3일 14:42 마감".
+ * 여러 날짜에 걸친 래플을 시각만 적으면 "14:42 ~ 14:42"처럼 같은 시각으로 보였다
+ */
+export function formatKstTimeRange(startIso: string, endIso: string): string {
+    if (isSameKstDate(startIso, endIso)) {
+        return `${formatKst(startIso, KST_HOUR_MINUTE)} ~ ${formatKst(endIso, KST_HOUR_MINUTE)}`;
+    }
+    return `${formatKst(endIso, { month: 'long', day: 'numeric' })} ${formatKst(endIso, KST_HOUR_MINUTE)} 마감`;
+}
+
+/**
  * `datetime-local` 입력값("YYYY-MM-DDTHH:mm")을 KST로 해석해 UTC ISO 문자열로 변환한다.
  * 관리자가 화면에 입력하는 운영 시각은 KST 기준이다 (getddo-spec 기능 요구사항 공통 시간 기준).
  */

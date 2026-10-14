@@ -5,6 +5,8 @@ import {
     kstNextDateStartUtcIso,
     kstNextMonthStart,
     utcIsoToKstInput,
+    formatKstTimeRange,
+    formatRemaining,
 } from './date';
 
 describe('kstNextMonthStart', () => {
@@ -61,5 +63,36 @@ describe('formatKstDot', () => {
         // UTC 9월 17일 15:30 = KST 9월 18일 00:30
         expect(formatKstDot('2026-09-17T15:30:00Z')).toBe('09.18');
         expect(formatKstDot('2026-09-17T15:30:00Z', true)).toBe('09.18 00:30');
+    });
+});
+
+describe('formatRemaining', () => {
+    const MIN = 60 * 1000;
+    const HOUR = 60 * MIN;
+    it('하루가 넘으면 일·시간만 적는다', () => {
+        expect(formatRemaining(7 * 24 * HOUR + 2 * HOUR + 5 * MIN)).toBe('7일 2시간');
+        expect(formatRemaining(3 * 24 * HOUR)).toBe('3일');
+    });
+    it('한 시간이 넘으면 시간·분, 그 안쪽은 분·초', () => {
+        expect(formatRemaining(HOUR + 23 * MIN + 10_000)).toBe('1시간 23분');
+        expect(formatRemaining(9 * MIN + 50_000)).toBe('9분 50초');
+        expect(formatRemaining(42_000)).toBe('42초');
+    });
+    it('분 단위로 그리는 곳은 초를 올려 분만 적는다', () => {
+        expect(formatRemaining(9 * MIN + 50_000, 'minute')).toBe('10분');
+        expect(formatRemaining(20_000, 'minute')).toBe('1분');
+    });
+});
+
+describe('formatKstTimeRange', () => {
+    it('같은 날이면 시작~마감 시각', () => {
+        expect(formatKstTimeRange('2026-10-14T05:00:00Z', '2026-10-14T06:00:00Z')).toBe(
+            '14:00 ~ 15:00',
+        );
+    });
+    it('날을 넘기면 마감 날짜·시각', () => {
+        expect(formatKstTimeRange('2026-10-14T05:42:00Z', '2026-11-03T05:42:00Z')).toBe(
+            '11월 3일 14:42 마감',
+        );
     });
 });
