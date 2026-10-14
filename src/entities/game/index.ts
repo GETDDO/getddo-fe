@@ -1,4 +1,5 @@
 export { getGameContent } from './model/gameContent';
+export { gameDetailPath } from './model/gamePath';
 export type { GameContent, GameGuideStep } from './model/gameContent';
 export { gameSchema } from './model/types';
 export type { Game } from './model/types';

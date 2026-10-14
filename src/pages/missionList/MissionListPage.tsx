@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 
 import { MissionRewardDialog } from '@entities/mission';
 import { TICKET_GRADE_LABEL, type TicketGrade, TicketGradeReveal } from '@entities/ticket';
@@ -17,13 +17,52 @@ import { TodayRewardsBanner } from './ui/TodayRewardsBanner';
 
 const CONTAINER = 'mx-auto w-full max-w-312 px-6';
 
+/** 미션 풀이 모달을 바로 열 때 쓰는 주소 값 — /missions?mission=<id> */
+const MISSION_PARAM = 'mission';
+/** 위쪽 카드가 불러와져 자리가 밀린 뒤 다시 맞추는 시점 */
+const SETTLE_SCROLL_MS = 600;
+
 export function MissionListPage() {
     // 출석 카드를 펼치면(펼쳐보기·출석 완료) 출석 카드가 넓어지고 응모권 내역 카드가 좁아진다.
     // 펼침 상태는 저장하지 않는다 — 페이지에 들어올 때마다 접힌 상태로 새로 시작한다
     const [attendanceExpanded, setAttendanceExpanded] = useState(false);
 
     // 설문·퀴즈 풀이 모달로 연 미션, 완료 직후 보상 모달에 보여줄 응모권 수
-    const [openMissionId, setOpenMissionId] = useState<string | null>(null);
+    // 홈 카드처럼 다른 화면에서 ?mission=<id>로 들어오면 그 미션 풀이 모달을 바로 연다
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [openMissionId, setOpenMissionIdState] = useState<string | null>(() =>
+        searchParams.get(MISSION_PARAM),
+    );
+    // 다른 화면에서 들어올 때 뒤 배경도 그 자리로 내려 둔다 — #섹션이 있으면 그 섹션, 미션 모달로 들어오면 미션 섹션.
+    // 모달을 닫았을 때 페이지 맨 위가 아니라 방금 고른 카드가 있는 자리가 보인다
+    const { hash } = useLocation();
+    // 들어온 순간의 목적지만 쓴다 — 모달을 닫으며 주소를 지워도 다시 스크롤하지 않는다
+    const [scrollTarget] = useState(() =>
+        hash
+            ? hash.slice(1)
+            : searchParams.has(MISSION_PARAM)
+              ? MISSION_SECTION_IDS.missions
+              : null,
+    );
+    useEffect(() => {
+        if (!scrollTarget) return;
+        const scroll = () =>
+            document.getElementById(scrollTarget)?.scrollIntoView({ block: 'start' });
+        // 레이아웃의 스크롤 복원이 맨 위로 올린 뒤에 한 번, 위쪽 출석·게임 카드가 불러와져 높이가 늘어난 뒤에 한 번 더 맞춘다
+        const frame = requestAnimationFrame(scroll);
+        const settle = setTimeout(scroll, SETTLE_SCROLL_MS);
+        return () => {
+            cancelAnimationFrame(frame);
+            clearTimeout(settle);
+        };
+    }, [scrollTarget]);
+    const setOpenMissionId = (id: string | null) => {
+        setOpenMissionIdState(id);
+        // 닫으면 주소의 미션 표시도 지워 새로고침했을 때 다시 열리지 않게 한다
+        if (id === null && searchParams.has(MISSION_PARAM)) {
+            setSearchParams({}, { replace: true });
+        }
+    };
     // 응모권 수는 닫히는 동안에도 남겨 두어야 닫힘 애니메이션에서 0장으로 바뀌지 않는다
     const [reward, setReward] = useState<{
         open: boolean;

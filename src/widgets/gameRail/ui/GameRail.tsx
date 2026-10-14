@@ -1,8 +1,6 @@
-import { GameTicketCard, useGameList } from '@entities/game';
+import { GameTicketCard, gameDetailPath, useGameList } from '@entities/game';
 import { hasGamePlayer } from '@features/playGame';
 import { useDragScroll } from '@shared/lib/useDragScroll';
-
-import { gameDetailPath } from '../lib/gamePath';
 
 /**
  * 게임 티켓 카드 가로 목록 섹션 — 게임별 하루 1회 응모권 1장. 오늘 보상을 이미 받은 게임은 뒤로 보낸다.

@@ -4,9 +4,12 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { CalendarCheck, ChevronRight, ClipboardList, Gamepad2, Ticket } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import type { Game } from '@entities/game';
+
 import { useAttendanceToday } from '@entities/attendance';
-import { useGameList } from '@entities/game';
+import { GameTicketCard, gameDetailPath, useGameList } from '@entities/game';
 import { useMissionList } from '@entities/mission';
+import { hasGamePlayer } from '@features/playGame';
 import { useDragScroll } from '@shared/lib/useDragScroll';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
@@ -26,6 +29,8 @@ interface EarnCard {
     /** 카드 상단 썸네일 — 이미지가 있으면 보여주고(게임), 없으면 임시로 회색 블록 + 아이콘 */
     thumbnailUrl: string | null;
     thumbnailIcon: LucideIcon;
+    /** 게임 카드면 미션 페이지와 같은 공용 게임 카드(GameTicketCard)로 그린다 */
+    game?: Game;
 }
 
 /**
@@ -61,7 +66,8 @@ export function TicketBalanceWidget({
                       description: '하루 한 번, 누르면 바로 받아요',
                       rewardKind: '브론즈 응모권',
                       rewardTickets: attendance.dailyRewardTicketCount,
-                      href: '/missions',
+                      // 미션 페이지의 출석 섹션으로 바로 내려간다 (missionList MISSION_SECTION_IDS.attendance)
+                      href: '/missions#today-attendance',
                       actionLabel: '출석하러 가기',
                       completed: attendance.attended,
                       thumbnailUrl: null,
@@ -76,7 +82,8 @@ export function TicketBalanceWidget({
             description: '미션 완료 시 등급 추첨 응모권을 받아요',
             rewardKind: '등급 응모권',
             rewardTickets: mission.rewardTicketCount,
-            href: '/missions',
+            // 미션 페이지에서 그 미션의 풀이 모달을 바로 연다
+            href: `/missions?mission=${mission.id}`,
             actionLabel: '미션하러 가기',
             completed: mission.completed,
             thumbnailUrl: null,
@@ -89,11 +96,12 @@ export function TicketBalanceWidget({
             description: `하루 최대 ${game.dailyLimit}회, 보상은 등급 추첨 응모권 1장`,
             rewardKind: '등급 응모권',
             rewardTickets: 1,
-            href: `/missions/games/${game.id}`,
+            href: gameDetailPath(game.id),
             actionLabel: '게임하러 가기',
             completed: game.remainingPlays === 0,
             thumbnailUrl: game.thumbnailUrl ?? null,
             thumbnailIcon: Gamepad2,
+            game,
         })),
     ];
 
@@ -151,68 +159,83 @@ export function TicketBalanceWidget({
                             cardClassName,
                         )}
                     >
-                        {/* 공용 티켓 카드 — 펀칭은 절취선 높이에 맞춰 실제로 도려낸다 (피그마 Group 633903) */}
-                        <TicketCard
-                            className="w-full"
-                            cardClassName="h-90"
-                            stub={
-                                <>
-                                    <div className="mt-3.75 flex h-4.5 items-center justify-between gap-2">
-                                        <span className="text-fg-tertiary text-caption">
-                                            {card.rewardKind}
-                                        </span>
-                                        <span className="text-ticket-on text-body-sm-bold flex items-center gap-1">
-                                            <Ticket className="size-4.5" />+{card.rewardTickets}
-                                        </span>
-                                    </div>
-                                    {card.completed ? (
-                                        <Button disabled size="lg" className="mt-2 w-full">
-                                            오늘 참여 완료
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            asChild
-                                            // 출석만 primary(검정), 게임·미션 카드는 secondary로 한 단계 낮춘다
-                                            variant={
-                                                card.id === 'attendance' ? 'primary' : 'secondary'
-                                            }
-                                            size="lg"
-                                            className="mt-2 w-full"
-                                        >
-                                            <Link to={card.href}>{card.actionLabel}</Link>
-                                        </Button>
-                                    )}
-                                </>
-                            }
-                        >
-                            <div className="bg-surface-canvas flex h-30 shrink-0 items-center justify-center overflow-hidden rounded-lg">
-                                {card.thumbnailUrl ? (
-                                    <img
-                                        src={card.thumbnailUrl}
-                                        alt=""
-                                        className="size-full object-cover"
-                                    />
-                                ) : (
-                                    <card.thumbnailIcon className="text-fg-disabled size-8" />
-                                )}
-                            </div>
-                            <div className="mt-3 flex flex-col gap-2">
-                                <div className="flex flex-col">
-                                    <span className="text-fg-tertiary text-caption">
-                                        {card.category}
-                                    </span>
-                                    <p className="text-body-bold text-fg-primary truncate">
-                                        {card.title}
-                                    </p>
-                                </div>
-                                <p className="text-fg-tertiary text-body-sm line-clamp-2">
-                                    {card.description}
-                                </p>
-                            </div>
-                        </TicketCard>
+                        {card.game ? (
+                            // 미션 페이지 게임 목록과 같은 카드 — 카드 어디를 눌러도 게임으로 들어가고, 준비 중인 게임은 막는다
+                            <GameTicketCard
+                                game={card.game}
+                                href={card.href}
+                                ready={hasGamePlayer(card.game.id)}
+                                className="w-full"
+                            />
+                        ) : (
+                            <EarnTicketCard card={card} />
+                        )}
                     </motion.div>
                 ))}
             </motion.div>
         </section>
+    );
+}
+
+/**
+ * 출석·미션 티켓 카드 — 게임 카드(GameTicketCard)와 같은 꼴로, 카드 어디를 눌러도 들어간다.
+ * 홈의 검정 버튼은 '응모하러 가기'에만 쓰므로 출석도 secondary다 (DESIGN-SYSTEM 13절 — primary는 행동 묶음마다 하나)
+ */
+function EarnTicketCard({ card }: { card: EarnCard }) {
+    return (
+        // 공용 티켓 카드 — 펀칭은 절취선 높이에 맞춰 실제로 도려낸다 (피그마 Group 633903)
+        <TicketCard
+            className="w-full"
+            cardClassName="relative h-90"
+            stub={
+                <>
+                    <div className="mt-3.75 flex h-4.5 items-center justify-between gap-2">
+                        <span className="text-fg-tertiary text-caption">{card.rewardKind}</span>
+                        <span className="text-ticket-on text-body-sm-bold flex items-center gap-1">
+                            <Ticket className="size-4.5" />+{card.rewardTickets}
+                        </span>
+                    </div>
+                    {card.completed ? (
+                        <Button disabled size="lg" className="mt-2 w-full">
+                            오늘 참여 완료
+                        </Button>
+                    ) : (
+                        // 카드 전체를 덮는 링크(아래) 위에 버튼을 올린다
+                        <Button
+                            asChild
+                            variant="secondary"
+                            size="lg"
+                            className="relative z-2 mt-2 w-full"
+                        >
+                            <Link to={card.href}>{card.actionLabel}</Link>
+                        </Button>
+                    )}
+                </>
+            }
+        >
+            {/* 카드 전체를 덮는 링크 — 버튼과 같은 곳이라 낭독기·키보드에서는 감추고 버튼 하나로만 읽힌다 */}
+            {!card.completed && (
+                <Link
+                    to={card.href}
+                    aria-hidden
+                    tabIndex={-1}
+                    className="absolute inset-0 z-1 rounded-2xl"
+                />
+            )}
+            <div className="bg-surface-canvas flex h-30 shrink-0 items-center justify-center overflow-hidden rounded-lg">
+                {card.thumbnailUrl ? (
+                    <img src={card.thumbnailUrl} alt="" className="size-full object-cover" />
+                ) : (
+                    <card.thumbnailIcon className="text-fg-disabled size-8" />
+                )}
+            </div>
+            <div className="mt-3 flex flex-col gap-2">
+                <div className="flex flex-col">
+                    <span className="text-fg-tertiary text-caption">{card.category}</span>
+                    <p className="text-body-bold text-fg-primary truncate">{card.title}</p>
+                </div>
+                <p className="text-fg-tertiary text-body-sm line-clamp-2">{card.description}</p>
+            </div>
+        </TicketCard>
     );
 }
