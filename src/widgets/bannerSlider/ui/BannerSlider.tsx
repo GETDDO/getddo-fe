@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import type { Event } from '@entities/event';
 
 import { useEventList } from '@entities/event';
-import { formatCountdown } from '@shared/lib/date';
+import { formatRemaining } from '@shared/lib/date';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Badge } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
@@ -86,6 +86,15 @@ export function BannerSlider({
     }, [slides.length, autoplayStopped]);
 
     const safeIndex = Math.min(index, Math.max(slides.length - 1, 0));
+    // 화살표로 직접 넘기면 그때부터 자동 넘김을 끈다
+    const goPrev = () => {
+        setUserControlled(true);
+        setIndex((safeIndex - 1 + slides.length) % slides.length);
+    };
+    const goNext = () => {
+        setUserControlled(true);
+        setIndex((safeIndex + 1) % slides.length);
+    };
 
     if (isPending) {
         return <div className="bg-surface-sunken h-[280px] w-full animate-pulse rounded-2xl" />;
@@ -125,16 +134,20 @@ export function BannerSlider({
                                 className="bg-play-yellow relative flex min-h-91.25 w-full shrink-0 flex-col bg-cover bg-right-bottom"
                                 style={{ backgroundImage: `url(${bannerBackground})` }}
                             >
-                                {/* 마감 시간 — 배너 왼쪽 끝에 붙은 흰 탭 (공용 Badge surface xl) */}
+                                {/* 마감 시간 — 배너 왼쪽 끝에 붙은 흰 탭 (공용 Badge surface xl). 시각 꼴(169:59:58) 대신 읽는 단위로 적는다 */}
                                 <Badge
                                     variant="surface"
                                     size="xl"
                                     className="absolute top-7.5 left-0 rounded-l-none pl-12.5 tabular-nums"
                                 >
                                     <Clock />
-                                    마감까지 {formatCountdown(remainingMs)}
+                                    마감까지 {formatRemaining(remainingMs)}
                                 </Badge>
-                                <div className="flex flex-1 flex-col items-start gap-5 px-6 pt-21 pb-8 sm:px-12.5 sm:pb-8.75">
+                                {/*
+                                 * 글 덩어리는 세로 가운데에 모은다 — 버튼만 바닥에 붙이면 설명이 짧을 때
+                                 * 글은 위로 쏠리고 칩과 버튼 사이가 비어 허전했다
+                                 */}
+                                <div className="flex flex-1 flex-col items-start justify-center gap-6 px-6 pt-21 pb-8 sm:px-12.5 sm:pb-8.75">
                                     <div className="flex max-w-150 flex-col gap-1">
                                         <div className="flex items-center gap-1">
                                             {/* 채운 불꽃 아이콘 — 아이콘·글자 모두 잉크(fg/primary) */}
@@ -147,18 +160,17 @@ export function BannerSlider({
                                             </span>
                                         </div>
                                         <div className="flex flex-col gap-3">
-                                            <h2 className="text-title-1 text-fg-primary">
+                                            <h2 className="text-display text-fg-primary break-keep">
                                                 {event.title}
                                             </h2>
-                                            <p className="text-body text-fg-primary break-keep whitespace-pre-line">
+                                            <p className="text-body text-fg-primary line-clamp-2 break-keep whitespace-pre-line">
                                                 {event.description}
                                             </p>
                                             {renderStatus?.(event, slideIndex === safeIndex)}
                                         </div>
                                     </div>
-                                    {/* 버튼은 배너 아래에서 35px 위에 고정 — 설명이 한 줄이어도 피그마와 같은 자리.
-                                        상세로 이동하는 버튼이라 '응모하러 가기' — 실제로 응모권을 쓰는 '응모하기'와 구분한다 */}
-                                    <Button asChild size="lg" className="mt-auto px-7">
+                                    {/* 상세로 이동하는 버튼이라 '응모하러 가기' — 실제로 응모권을 쓰는 '응모하기'와 구분한다 */}
+                                    <Button asChild size="lg" className="px-7">
                                         <Link to={`/events/${event.id}`}>응모하러 가기</Link>
                                     </Button>
                                 </div>
@@ -168,14 +180,6 @@ export function BannerSlider({
                 </div>
             </div>
             {/* 피그마 홈 — 배너 오른쪽에 무너 캐릭터가 배너 밖으로 살짝 걸쳐 있다 (넓은 화면만) */}
-            {SHOW_MASCOT && (
-                <img
-                    src={bannerMascot}
-                    alt=""
-                    aria-hidden
-                    className="pointer-events-none absolute -top-16.75 right-8 hidden w-125 select-none xl:block"
-                />
-            )}
             {slides.length > 1 && (
                 <div className="relative z-10 flex justify-end">
                     {/* 피그마 홈 — 원형 화살표 사이에 '01 / 04' (공용 Pager) */}
@@ -184,16 +188,18 @@ export function BannerSlider({
                         total={slides.length}
                         prevLabel="이전 이벤트"
                         nextLabel="다음 이벤트"
-                        onPrev={() => {
-                            setUserControlled(true);
-                            setIndex((safeIndex - 1 + slides.length) % slides.length);
-                        }}
-                        onNext={() => {
-                            setUserControlled(true);
-                            setIndex((safeIndex + 1) % slides.length);
-                        }}
+                        onPrev={goPrev}
+                        onNext={goNext}
                     />
                 </div>
+            )}
+            {SHOW_MASCOT && (
+                <img
+                    src={bannerMascot}
+                    alt=""
+                    aria-hidden
+                    className="pointer-events-none absolute -top-16.75 right-8 hidden w-125 select-none xl:block"
+                />
             )}
         </section>
     );

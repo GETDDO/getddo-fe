@@ -35,6 +35,7 @@ export function HomePage() {
                             eventId={event.id}
                             isOpen={event.status === 'open'}
                             enabled={isActive}
+                            winnerCount={event.winnerCount}
                         />
                     )}
                 />

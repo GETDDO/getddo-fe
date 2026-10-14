@@ -35,8 +35,14 @@ export function TicketEventSection({
 
     return (
         <section className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-title-3 text-fg-primary">겟또타임 · 응모권 사용</h2>
+            {/* 다른 홈 섹션처럼 제목 옆에 작은 설명을 둔다 */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                    <h2 className="text-title-3 text-fg-primary">겟또타임</h2>
+                    <span className="text-fg-tertiary text-caption">
+                        모은 응모권으로 응모하는 시간 한정 래플이에요.
+                    </span>
+                </div>
                 <Button asChild variant="link" size="text">
                     <Link to="/events">
                         더보기

@@ -1,21 +1,16 @@
-import { Clock, Ticket, UsersRound } from 'lucide-react';
+import { Clock, Ticket, Timer } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { formatKst } from '@shared/lib/date';
+import { formatKstTimeRange, formatRemaining } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
-import { Badge } from '@shared/ui/badge';
+import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
 import { Card } from '@shared/ui/card';
 
 import type { Event } from '../model/types';
 
 import { EventThumbnail } from './EventThumbnail';
-
-const TIME_ONLY: Intl.DateTimeFormatOptions = {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: false,
-};
 
 interface FeaturedEventCardProps {
     event: Event;
@@ -27,101 +22,107 @@ interface FeaturedEventCardProps {
     totalSpentTicketCount?: number;
 }
 
-/** 홈 '타임 래플 · 응모권 사용' 섹션의 대표 진행 이벤트 카드 — 마감이 가장 임박한 open 이벤트 1개를 크게 노출한다 */
+/** 마감까지 남은 시간을 다시 셈하는 주기 — 분 단위로 적으니 30초면 충분하다 */
+const TICK_MS = 30 * 1000;
+
+function useRemainingMs(endsAt: string): number {
+    const { now } = useVirtualClock();
+    const [tick, setTick] = useState(() => now().getTime());
+    useEffect(() => {
+        const update = () => setTick(now().getTime());
+        update();
+        const id = setInterval(update, TICK_MS);
+        return () => clearInterval(id);
+    }, [now]);
+    return new Date(endsAt).getTime() - tick;
+}
+
+/**
+ * 홈 '겟또타임 · 응모권 사용' 섹션의 대표 진행 래플 카드 — 마감이 가장 임박한 open 래플 1개를 크게 노출한다.
+ *
+ * 겟또타임 목록의 대표 카드와 같은 말투로 맞춘다: 윗줄은 '● 진행중 · 시간 · 남은 시간', 숫자는 아이콘 칸 대신 한 줄.
+ * 당첨 인원은 제목 옆 괄호 대신 숫자 줄에 '당첨 N명'으로 적는다 — 괄호만으로는 당첨인지 참여인지 헷갈렸다.
+ * 내 응모는 응모했을 때만 응모권 칩으로 보인다 — 응모하지 않은 사람에게 빈 칸을 보이지 않는다.
+ */
 export function FeaturedEventCard({
     event,
     participantCount,
     totalSpentTicketCount,
 }: FeaturedEventCardProps) {
+    const remainingMs = useRemainingMs(event.endsAt);
+
+    // 이름 위·값 아래로 세 칸 — 한 줄로 이어 쓰면 숫자가 문장에 묻혀 눈에 안 들어왔다
     const stats = [
+        { label: '당첨', value: `${formatNumber(event.winnerCount)}명` },
         {
-            key: 'participants',
-            label: '총 참여자',
-            value: participantCount,
-            unit: '명',
-            icon: UsersRound,
-            accent: false,
+            label: '참여',
+            value: participantCount != null ? `${formatNumber(participantCount)}명` : '-',
         },
         {
-            key: 'tickets',
             label: '사용된 응모권',
-            value: totalSpentTicketCount,
-            unit: '장',
-            icon: Ticket,
-            accent: false,
+            value: totalSpentTicketCount != null ? `${formatNumber(totalSpentTicketCount)}장` : '-',
         },
-        {
-            key: 'mine',
-            label: '내 응모',
-            value: event.myEntryCount,
-            unit: '장',
-            icon: Ticket,
-            accent: true,
-        },
-    ].filter((stat) => stat.value != null && stat.value > 0);
+    ];
+
+    const myEntries = event.myEntryCount ?? 0;
+    // 한 번에 여러 장을 쓸 수 있어 쓴 장수가 따로 오면 그 값을, 없으면 회차 × 1회 차감량으로 근사한다
+    const myTickets = event.myTicketCount ?? myEntries * event.requiredTickets;
 
     return (
-        // 피그마 홈 — 기본 테두리·그림자, 왼쪽 정보 / 오른쪽 이미지·버튼(250)
-        <Card size="lg" className="flex-col gap-4 p-(--card-spacing) sm:flex-row">
-            <div className="flex min-w-0 flex-1 flex-col justify-between gap-6">
-                <div className="flex flex-col gap-5">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="brand" size="md">
+        <Card size="lg" className="gap-5 p-(--card-spacing)">
+            <div className="flex gap-5">
+                <div className="flex min-w-0 flex-1 flex-col gap-3">
+                    <div className="text-body-sm flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className="text-fg-primary flex items-center gap-1.5">
+                            <span aria-hidden className="bg-brand-primary size-1.5 rounded-full" />
                             진행중
-                        </Badge>
-                        <Badge variant="neutral" size="lg">
-                            <Clock className="size-4.5" />
-                            {formatKst(event.startsAt, TIME_ONLY)} ~{' '}
-                            {formatKst(event.endsAt, TIME_ONLY)}
-                        </Badge>
+                        </span>
+                        {/* 남은 시간이 판단에 더 쓰이는 값이라 진하게, 운영 시간은 보조색으로 뒤에 둔다 */}
+                        {remainingMs > 0 && (
+                            <span className="text-fg-primary text-body-sm-bold flex items-center gap-1 tabular-nums">
+                                <Timer aria-hidden className="size-3.5" />
+                                {formatRemaining(remainingMs, 'minute')} 남음
+                            </span>
+                        )}
+                        <span className="text-fg-tertiary flex items-center gap-1 tabular-nums">
+                            <Clock aria-hidden className="size-3.5" />
+                            {formatKstTimeRange(event.startsAt, event.endsAt)}
+                        </span>
                     </div>
-                    <div className="flex flex-col gap-3">
-                        <p className="text-title-3 text-fg-primary">
-                            {event.title}{' '}
-                            <span className="text-fg-tertiary">({event.winnerCount}명)</span>
-                        </p>
-                        <p className="text-body-sm text-fg-primary line-clamp-2 break-keep">
+                    <div className="flex flex-col gap-1.5">
+                        <p className="text-title-3 text-fg-primary line-clamp-2">{event.title}</p>
+                        <p className="text-body-sm text-fg-secondary line-clamp-2 break-keep">
                             {event.description}
                         </p>
                     </div>
-                </div>
-                {stats.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-4">
-                        {stats.map(({ key, label, value, unit, icon: Icon, accent }, index) => (
-                            <div key={key} className="flex items-center gap-2">
-                                {/* 내 응모는 아이콘 없이 앞 칸과 짧은 세로선으로 구분한다 (피그마) */}
-                                {accent && index > 0 ? (
-                                    <span
-                                        aria-hidden
-                                        className="bg-border-default -ml-2 h-9 w-px"
-                                    />
-                                ) : (
-                                    <Icon aria-hidden className="text-fg-primary size-6" />
-                                )}
-                                <div className="flex flex-col gap-0.5">
-                                    <span className="text-caption text-fg-tertiary">{label}</span>
-                                    <span className="text-body-sm-bold text-fg-primary">
-                                        {formatNumber(value!)}
-                                        {unit}
-                                    </span>
-                                </div>
+                    <dl className="divide-border-default mt-1 grid grid-cols-3 divide-x">
+                        {stats.map(({ label, value }) => (
+                            <div key={label} className="flex flex-col gap-0.5 px-3 first:pl-0">
+                                <dt className="text-caption text-fg-tertiary">{label}</dt>
+                                <dd className="text-subhead text-fg-primary tabular-nums">
+                                    {value}
+                                </dd>
                             </div>
                         ))}
-                    </div>
-                )}
-            </div>
-            <div className="flex w-full shrink-0 flex-col gap-5 sm:w-50">
-                {/* 겟또타임 대표 래플이라 상품 그림 — 1:1로 잘리지 않게 맞춘다 (DESIGN-SYSTEM '이미지 비율') */}
+                    </dl>
+                    {myEntries > 0 && (
+                        <span className="bg-ticket-accent text-ticket-on text-caption flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1">
+                            <Ticket aria-hidden className="size-3.5" />
+                            응모권 {formatNumber(myTickets)}장으로 응모했어요
+                        </span>
+                    )}
+                </div>
+                {/* 상품 그림은 1:1(DESIGN-SYSTEM '이미지 비율')이되 작게 — 크게 두면 설명이 짧을 때 왼쪽이 텅 빈다 */}
                 <EventThumbnail
                     src={event.bannerImageUrl}
-                    className="size-auto w-full rounded-2xl"
+                    className="size-24 rounded-xl sm:size-36"
                     iconClassName="size-8"
                 />
-                {/* 상세로 이동하는 버튼은 주 행동(검정) — 마젠타는 실제로 응모권을 쓰는 버튼에만 쓴다 */}
-                <Button asChild size="lg" className="w-full">
-                    <Link to={`/events/${event.id}`}>응모하러 가기</Link>
-                </Button>
             </div>
+            {/* 상세로 이동하는 버튼은 주 행동(검정) — 카드 아래에 붙여 글 길이가 달라도 같은 자리에 둔다 */}
+            <Button asChild size="lg" className="mt-auto w-full">
+                <Link to={`/events/${event.id}`}>응모하러 가기</Link>
+            </Button>
         </Card>
     );
 }
