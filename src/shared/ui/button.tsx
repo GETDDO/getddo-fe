@@ -6,9 +6,9 @@ import * as React from 'react';
 /**
  * 버튼 — 피그마 01 Design System > 04 Button 기준.
  * 이름은 색이 아니라 역할로 붙인다 (색이 바뀌어도 쓰는 곳은 그대로):
- * primary(기본, 화면의 주된 행동 — action/neutral 검정) · secondary(보조 행동 — 흰 바탕+border/strong 테두리,
- * 호버·누름은 회색이면 비활성과 헷갈려 연노랑 ticket/accent 계열 — 피그마 '컴포넌트 수정안')
- * · emphasis(드물게 쓰는 아주 중요한 행동 — brand/primary 핑크).
+ * primary(화면의 주된 행동 — action/neutral 검정) · secondary(보조 행동·취소 — 흰 바탕+border/strong 테두리)
+ * · ghost(아이콘·닫기) · destructive(삭제 등 위험한 행동) · link(텍스트 이동) 5종이다.
+ * 마젠타는 버튼 바탕에 쓰지 않고(emphasis 제거), 노랑 버튼은 쓸 곳이 생길 때 따로 정한다 (DESIGN-SYSTEM 13절).
  * 크기: sm 36(글자 14) · default 40(글자 16) · lg 48(글자 16), 모두 SemiBold·모서리 8·좌우 12.
  * 각 색은 기본·호버·누름 토큰을 쓰고, 비활성은 surface/disabled 바탕에 fg/disabled 글자다.
  * 바탕은 투명 테두리 밑까지 칠한다 — 테두리 안쪽만 칠하면 채운 버튼이 테두리 버튼보다 1px씩 작아 보인다
@@ -22,14 +22,11 @@ const buttonVariants = cva(
                 // 주된 행동 — action/neutral (피그마 Button/*/active)
                 primary:
                     'bg-action-neutral text-fg-on-brand hover:bg-action-neutral-hover active:bg-action-neutral-pressed',
-                // 보조 행동 — outline (피그마 Button/*/outline). 마우스를 올리면 진한 노랑으로 채우고 테두리는 연노랑으로 받친다, 누르면 한 단계 어둡게.
-                // 회색 마우스 올림은 비활성과 비슷해 보여 쓰지 않고, 연노랑 바탕+진한 테두리는 무게가 맞지 않아 쓰지 않는다
+                // 보조 행동 — outline (피그마 Button/*/outline). 취소 버튼도 여기라 노랑으로 채우지 않는다.
+                // 마우스를 올리면 연회색 바탕에 테두리를 한 단계 진하게 — 비활성(테두리 없음·연한 글씨)과 테두리·글자로 구분된다
                 secondary:
-                    'bg-surface-elevated border-border-strong text-fg-primary hover:bg-ticket-primary hover:border-ticket-accent-pressed hover:text-ticket-on active:bg-ticket-primary active:border-ticket-accent-pressed active:text-ticket-on active:brightness-95',
-                // 강조 — brand (피그마 Button/*/brand), 자주 쓰지 않는다
-                emphasis:
-                    'bg-brand-primary text-fg-on-brand hover:bg-brand-primary-hover active:bg-brand-primary-pressed',
-                ghost: 'text-fg-secondary hover:bg-surface-sunken hover:text-fg-primary active:bg-surface-pressed aria-expanded:bg-surface-sunken',
+                    'bg-surface-elevated border-border-strong text-fg-primary hover:bg-surface-canvas hover:border-fg-disabled active:bg-surface-pressed active:border-fg-disabled',
+                ghost: 'text-fg-secondary hover:bg-surface-canvas hover:text-fg-primary active:bg-surface-pressed aria-expanded:bg-surface-canvas',
                 destructive:
                     'bg-semantic-error text-fg-on-brand hover:bg-semantic-error-strong active:bg-semantic-error-strong',
                 // 텍스트 버튼(전체보기 등) — 잉크 글씨, 호버 밑줄, 누름은 한 단계 옅게. size='text'와 함께 쓴다
