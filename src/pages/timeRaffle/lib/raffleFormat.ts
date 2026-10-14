@@ -1,8 +1,24 @@
 import type { Event } from '@entities/event';
 
-import { KST_HOUR_MINUTE, formatKst, kstDayDiff } from '@shared/lib/date';
+import { KST_HOUR_MINUTE, formatKst, kstDayDiff, toKst } from '@shared/lib/date';
 
 const MONTH_DAY: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric' };
+const WEEKDAY: Intl.DateTimeFormatOptions = { weekday: 'short' };
+
+/** 히어로 머리말의 오늘 날짜 — "10월 13일(월)" */
+export function kstDateHeadline(now: Date): string {
+    return `${formatKst(now, MONTH_DAY)}(${formatKst(now, WEEKDAY)})`;
+}
+
+/** 두 시각이 KST 기준 같은 달인지 — 응모권 '이번 달 사용'을 세는 기준이다 */
+export function isSameKstMonth(a: Date | string, b: Date | string): boolean {
+    const left = toKst(a);
+    const right = toKst(b);
+    return (
+        left.getUTCFullYear() === right.getUTCFullYear() &&
+        left.getUTCMonth() === right.getUTCMonth()
+    );
+}
 
 /**
  * 마감까지 남은 시간 — "13분 48초"처럼 읽는 단위로 쓴다.

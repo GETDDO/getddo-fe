@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import type { EntryTickets, TicketsByGrade } from '@entities/entry';
 import type { Event } from '@entities/event';
 
-import { useEventResults } from '@entities/drawResult';
+import { useEventResults, useMyResult } from '@entities/drawResult';
 import { useEntryEligibility } from '@entities/entry';
 import { useEvent } from '@entities/event';
 import { ticketGradeSchema, useMyTickets } from '@entities/ticket';
@@ -18,6 +18,7 @@ import { EntryCompleteDialog } from './ui/EntryCompleteDialog';
 import { EntryConfirmDialog } from './ui/EntryConfirmDialog';
 import { GradeTicketSteppers } from './ui/GradeTicketSteppers';
 import { InsufficientTicketsDialog } from './ui/InsufficientTicketsDialog';
+import { MyResultCard } from './ui/MyResultCard';
 import { MyTicketCard } from './ui/MyTicketCard';
 import { RaffleDetailHero } from './ui/RaffleDetailHero';
 import { RaffleDetailsCard } from './ui/RaffleDetailsCard';
@@ -41,10 +42,10 @@ export function TimeRaffleDetailPage() {
         enabled: event?.status === 'open',
     });
     // 마감 전에는 결과가 존재하지 않으므로 묻지 않는다
-    const { data: results } = useEventResults(
-        id,
-        event?.status === 'closed' || event?.status === 'drawn',
-    );
+    const isAfterClose = event?.status === 'closed' || event?.status === 'drawn';
+    const { data: results } = useEventResults(id, isAfterClose);
+    // 본인 결과도 마감 후에만 묻는다 — 공개 전에는 서버가 PENDING으로 고정해 돌려준다
+    const { data: myResult } = useMyResult(id, isAfterClose);
     const enterEvent = useEnterEvent(id);
     // 가중치 적용 이벤트에서 사용자가 등급별로 고르는 장수 — 브론즈 0장 사용자를 위해 0장에서 시작한다
     const [tickets, setTickets] = useState<TicketsByGrade>({ BRONZE: 0, SILVER: 0, GOLD: 0 });
@@ -182,7 +183,11 @@ export function TimeRaffleDetailPage() {
                         )
                     }
                 />
-                {results && <DrawResultSection event={event} results={results} />}
+                {/* 발표 전에는 내 결과 카드가, 발표 후에는 결과 영역의 배너가 본인 결과를 맡는다 */}
+                {myResult?.result === 'PENDING' && <MyResultCard result={myResult} />}
+                {results && (
+                    <DrawResultSection event={event} results={results} myResult={myResult} />
+                )}
                 <MyTicketCard event={event} />
                 <RaffleDetailsCard event={event} />
                 <RaffleRulesCard event={event} />

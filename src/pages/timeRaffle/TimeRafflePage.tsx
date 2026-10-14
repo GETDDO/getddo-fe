@@ -5,6 +5,7 @@ import { useVirtualClock } from '@shared/lib/virtualClock';
 
 import { ClosedRaffleList } from './ui/ClosedRaffleList';
 import { LiveRaffleSection } from './ui/LiveRaffleSection';
+import { TimeRaffleHero } from './ui/TimeRaffleHero';
 import { TimeRaffleTrustNotice } from './ui/TimeRaffleTrustNotice';
 import { UpcomingRaffleCard } from './ui/UpcomingRaffleCard';
 
@@ -58,18 +59,25 @@ export function TimeRafflePage() {
 
     return (
         <main className={CONTAINER}>
-            <div className="flex flex-col gap-18">
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-title-1 text-fg-primary">겟또타임</h1>
-                    <p className="text-body-sm text-fg-tertiary">
-                        정해진 시간에만 열리는 응모예요. 응모권을 쓸수록 당첨 기회가 높아져요.
-                    </p>
-                </div>
+            <div className="flex flex-col gap-14">
+                <TimeRaffleHero
+                    live={byEndsAtAsc}
+                    upcoming={byOpensAtAsc}
+                    closed={byEndsAtDesc}
+                    now={now}
+                />
 
                 <LiveRaffleSection events={byEndsAtAsc} />
 
                 <section className="flex flex-col gap-5">
-                    <h2 className="text-title-3 text-fg-primary">오픈 예정</h2>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-title-3 text-fg-primary">오픈 예정</h2>
+                        {byOpensAtAsc.length > 0 && (
+                            <span className="bg-surface-sunken text-label-sm text-fg-secondary rounded-full px-2.5 py-1">
+                                {byOpensAtAsc.length}
+                            </span>
+                        )}
+                    </div>
                     {byOpensAtAsc.length === 0 ? (
                         <p className="text-body-sm text-fg-tertiary">오픈 예정인 래플이 없어요.</p>
                     ) : (

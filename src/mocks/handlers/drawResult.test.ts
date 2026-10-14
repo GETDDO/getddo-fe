@@ -1,9 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
-import type { PublicResults } from '@entities/drawResult';
+import type { MyResult, PublicResults } from '@entities/drawResult';
 
 import { myResultSchema, publicResultsSchema } from '@entities/drawResult';
 import { apiClient } from '@shared/api/client';
+import { IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
+import { VIRTUAL_CLOCK_STORAGE_KEY } from '@shared/lib/virtualClock';
 
 async function results(eventId: string): Promise<PublicResults> {
     const { data } = await apiClient.get<unknown>(`/events/${eventId}/results`);
@@ -63,23 +65,101 @@ describe('공개 추첨 결과 목업 (E08)', () => {
     });
 });
 
+// ── E09 본인 결과 ──
+
+/** 발표는 마감 + 5분이다 (ADR-009) — 그 경계를 넘나들며 확인한다 */
+const ANNOUNCE_DELAY_MS = 5 * 60 * 1000;
+/** 진행 중이라 응모할 수 있는 래플 */
+const OPEN_EVENT_ID = 'evt-101';
+
+const asUser = (userId: string) => {
+    apiClient.defaults.headers.common['X-User-ID'] = userId;
+    apiClient.defaults.headers.common['X-User-Role'] = 'USER';
+    apiClient.defaults.headers.common['X-User-Membership'] = 'vvip';
+};
+
+const setClock = (at: Date | null) => {
+    if (at) sessionStorage.setItem(VIRTUAL_CLOCK_STORAGE_KEY, at.toISOString());
+    else sessionStorage.removeItem(VIRTUAL_CLOCK_STORAGE_KEY);
+};
+
+async function myResult(eventId: string): Promise<MyResult> {
+    const { data } = await apiClient.get<unknown>(`/events/${eventId}/my-result`);
+    return myResultSchema.parse((data as { data: unknown }).data);
+}
+
+async function endsAtOf(eventId: string): Promise<number> {
+    const { data } = await apiClient.get<unknown>(`/events/${eventId}`);
+    return new Date((data as { data: { endsAt: string } }).data.endsAt).getTime();
+}
+
+async function enter(eventId: string) {
+    await apiClient.post(
+        `/events/${eventId}/entries`,
+        { tickets: { BRONZE: 1 } },
+        { headers: { [IDEMPOTENCY_HEADER]: crypto.randomUUID() } },
+    );
+}
+
 describe('본인 결과 목업 (E09)', () => {
-    async function myResult(eventId: string, userId: string) {
-        const { data } = await apiClient.get<unknown>(`/events/${eventId}/my-result`, {
-            headers: { 'X-User-ID': userId },
+    afterEach(() => {
+        setClock(null);
+    });
+
+    it('응모하지 않았으면 발표가 끝나도 NOT_ENTERED다', async () => {
+        asUser('vu-e09-absent');
+        setClock(new Date((await endsAtOf(DRAWN_EVENT_ID)) + ANNOUNCE_DELAY_MS + 60_000));
+
+        // 공개 명단은 열렸지만 내 결과는 '응모 안 함'이어야 한다 — 낙첨으로 적으면 안 된다
+        expect((await results(DRAWN_EVENT_ID)).isPublished).toBe(true);
+
+        const mine = await myResult(DRAWN_EVENT_ID);
+        expect(mine.result).toBe('NOT_ENTERED');
+        expect(mine.prize).toBeNull();
+    });
+
+    it('응모했고 공개 전이면 추첨 시각이 지나도 PENDING을 유지한다', async () => {
+        asUser('vu-e09-pending');
+        await enter(OPEN_EVENT_ID);
+
+        // 마감은 지났지만 발표 예정 시각 전이다
+        setClock(new Date((await endsAtOf(OPEN_EVENT_ID)) + 60_000));
+
+        const mine = await myResult(OPEN_EVENT_ID);
+        expect(mine.result).toBe('PENDING');
+        expect(mine.prize).toBeNull();
+        // 공개 전에는 revision도 내려주지 않는다 (05-api/drawing.md)
+        expect(mine.revision).toBeNull();
+    });
+
+    it('발표 후에는 당첨 여부와 경품을 돌려준다', async () => {
+        asUser('vu-e09-won');
+        await enter(OPEN_EVENT_ID);
+        setClock(new Date((await endsAtOf(OPEN_EVENT_ID)) + ANNOUNCE_DELAY_MS + 60_000));
+
+        const mine = await myResult(OPEN_EVENT_ID);
+        expect(mine.isPublished).toBe(true);
+        expect(mine.result).toBe('WON');
+        expect(mine.prize?.rank).toBe(1);
+    });
+
+    it('같은 사용자·이벤트면 다시 물어도 결과가 바뀌지 않는다', async () => {
+        asUser('vu-e09-stable');
+        await enter(OPEN_EVENT_ID);
+        setClock(new Date((await endsAtOf(OPEN_EVENT_ID)) + ANNOUNCE_DELAY_MS + 60_000));
+
+        // 30초 폴링마다 당첨과 낙첨이 뒤집히면 발표된 결과로 보이지 않는다
+        const first = await myResult(OPEN_EVENT_ID);
+        const second = await myResult(OPEN_EVENT_ID);
+        expect(second.result).toBe(first.result);
+        expect(second.prize?.name).toBe(first.prize?.name);
+    });
+
+    it('없는 이벤트는 404로 답한다', async () => {
+        asUser('vu-e09-absent');
+        await expect(myResult('evt-nope')).rejects.toMatchObject({
+            status: 404,
+            code: 'EVENT_NOT_FOUND',
         });
-        return myResultSchema.parse((data as { data: unknown }).data);
-    }
-
-    it('응모하지 않은 이벤트는 NOT_ENTERED, 시드 응모가 있는 발표 완료 래플은 고정 결과를 준다', async () => {
-        const userId = `my-result-${crypto.randomUUID()}`;
-        // 내역을 한 번 열어야 사용자별 시드 응모가 생긴다 (E06)
-        await apiClient.get('/users/me/entries', { headers: { 'X-User-ID': userId } });
-
-        expect((await myResult(PENDING_EVENT_ID, userId)).result).toBe('NOT_ENTERED');
-        const won = await myResult('evt-110', userId);
-        expect(won.result).toBe('WON');
-        expect(won.prize).not.toBeNull();
-        expect((await myResult('evt-109', userId)).result).toBe('LOST');
     });
 });

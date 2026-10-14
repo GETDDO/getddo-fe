@@ -13,7 +13,6 @@ const RESULT_META: Record<
     LOST: { label: '미당첨', variant: 'neutral', className: 'text-fg-tertiary' },
     CANCELED: { label: '취소', variant: 'neutral' },
     NOT_ENTERED: { label: '미응모', variant: 'neutral' },
-    EXCLUDED: { label: '제외', variant: 'neutral' },
 };
 
 /** 내 결과 칩 (E09 my-result) — 결과를 아직 못 받았으면 발표 대기로 보지 않고 자리만 비운다 */

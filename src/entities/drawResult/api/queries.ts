@@ -44,27 +44,37 @@ export function useEventResults(eventId: string, enabled = true) {
 }
 
 // getddo-spec 05-api/drawing.md E09 — 본인 결과 조회
-export const myResultApiPath = (eventId: string) => `/events/${eventId}/my-result`;
+export const eventMyResultApiPath = (eventId: string) => `/events/${eventId}/my-result`;
+
+/** 본인 결과 한 이벤트의 쿼리 설정 — 단건(useMyResult)과 여러 건(useMyResults)이 같은 캐시를 나눠 쓴다 */
+const myResultOptions = (eventId: string) => ({
+    ...queryPresets.realtime,
+    queryKey: [...DRAW_RESULTS_KEY, eventId, 'me'],
+    queryFn: async () => {
+        const { data } = await apiClient.get<unknown>(eventMyResultApiPath(eventId));
+        return envelopeSchema(myResultSchema).parse(data).data;
+    },
+    refetchInterval: (query: Query<MyResult>) =>
+        query.state.data?.isPublished ? false : queryPresets.realtime.refetchInterval,
+});
 
 /**
- * 내가 응모한 이벤트들의 본인 결과를 한꺼번에 받는다 (E09는 이벤트 단위라 이벤트마다 한 번씩).
- * 발표 전(PENDING)인 결과만 계속 따라가고, 결과가 나온 이벤트는 폴링을 멈춘다
+ * 로그인한 본인의 이벤트 결과.
+ *
+ * 공개 명단(E08)에서 뒷자리로 찾아보는 것과 달리 서버가 본인 것만 바로 답한다.
+ * 공개 전에는 PENDING으로 고정되므로, 공개 여부를 화면이 따로 판정하지 않는다.
+ * 폴링 기준은 E08과 같다 — 공개된 뒤에는 멈춘다.
+ */
+export function useMyResult(eventId: string, enabled = true) {
+    return useQuery({ ...myResultOptions(eventId), enabled });
+}
+
+/**
+ * 내가 응모한 여러 이벤트의 본인 결과를 한꺼번에 받는다 (E09는 이벤트 단위라 이벤트마다 한 번씩).
+ * 내 응모 내역·마이페이지에서 쓴다. 단건 조회와 캐시 키가 같아 상세 화면과 결과를 나눠 쓴다
  */
 export function useMyResults(eventIds: readonly string[]) {
-    return useQueries({
-        queries: eventIds.map((eventId) => ({
-            ...queryPresets.realtime,
-            queryKey: [...DRAW_RESULTS_KEY, 'me', eventId],
-            queryFn: async () => {
-                const { data } = await apiClient.get<unknown>(myResultApiPath(eventId));
-                return envelopeSchema(myResultSchema).parse(data).data;
-            },
-            refetchInterval: (query: Query<MyResult>) =>
-                query.state.data?.result === 'PENDING'
-                    ? queryPresets.realtime.refetchInterval
-                    : false,
-        })),
-    });
+    return useQueries({ queries: eventIds.map((eventId) => myResultOptions(eventId)) });
 }
 
 // ── 관리자 추첨 관리(GD-125) ──
