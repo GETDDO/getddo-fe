@@ -50,49 +50,52 @@ export function TicketWallet({ now, action }: TicketWalletProps) {
                 alt=""
                 className="pointer-events-none absolute -top-9 right-2 z-10 size-28 object-contain"
             />
-            <div
-                className="bg-surface-page border-border-default rounded-2xl border p-5 pt-6"
-                style={TICKET_NOTCH_MASK}
-            >
-                <p className="text-body-sm text-fg-secondary flex items-center gap-1">
-                    사용 가능 응모권
-                    <TicketGradeInfo />
-                </p>
-                <p className="text-title-2 text-fg-primary tabular-nums">{format(balance)}장</p>
+            {/*
+             * 왼쪽 진행 칸들처럼 테두리 없이 옅은 그림자로 띄운다. 홈을 파내는 mask가 box-shadow까지 잘라
+             * 그림자는 바깥 감싸개의 drop-shadow로 준다 — 파인 홈 모양을 그대로 따라간다
+             */}
+            <div className="drop-shadow-[0_1px_2px_rgb(from_var(--color-ink)_r_g_b_/_0.1)]">
+                <div className="bg-surface-page rounded-2xl p-5 pt-6" style={TICKET_NOTCH_MASK}>
+                    <p className="text-body-sm text-fg-secondary flex items-center gap-1">
+                        사용 가능 응모권
+                        <TicketGradeInfo />
+                    </p>
+                    <p className="text-title-2 text-fg-primary tabular-nums">{format(balance)}장</p>
 
-                <ul className="mt-4 grid grid-cols-3 gap-2" aria-label="등급별 보유 응모권">
-                    {TICKET_GRADES.map((grade) => (
-                        <li
-                            key={grade}
-                            className="bg-surface-canvas flex flex-col items-center gap-1 rounded-xl px-1.5 pt-2 pb-1.5"
+                    <ul className="mt-4 grid grid-cols-3 gap-2" aria-label="등급별 보유 응모권">
+                        {TICKET_GRADES.map((grade) => (
+                            <li
+                                key={grade}
+                                className="bg-surface-sunken flex flex-col items-center gap-1 rounded-xl px-1.5 pt-2 pb-1.5"
+                            >
+                                <img
+                                    src={TICKET_GRADE_IMAGE[grade]}
+                                    alt=""
+                                    className="h-auto w-full max-w-11"
+                                />
+                                <span className="text-caption text-fg-secondary">
+                                    {TICKET_GRADE_LABEL[grade]}
+                                </span>
+                                <span className="text-body-sm-bold text-fg-primary tabular-nums">
+                                    {format(tickets?.countByGrade[grade])}장
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+
+                    {/* 절취선 */}
+                    <div className="border-border-default mt-4 flex items-center justify-between gap-3 border-t border-dashed pt-3">
+                        <span className="text-caption text-fg-tertiary whitespace-nowrap">
+                            이번 달 적립 {format(monthly?.earned)} · 사용 {format(monthly?.used)}
+                        </span>
+                        <Link
+                            to={action.to}
+                            className="text-body-sm-bold text-fg-primary focus-visible:ring-border-focus flex shrink-0 items-center gap-0.5 rounded-sm whitespace-nowrap hover:underline focus-visible:ring-2 focus-visible:outline-none"
                         >
-                            <img
-                                src={TICKET_GRADE_IMAGE[grade]}
-                                alt=""
-                                className="h-auto w-full max-w-11"
-                            />
-                            <span className="text-caption text-fg-secondary">
-                                {TICKET_GRADE_LABEL[grade]}
-                            </span>
-                            <span className="text-body-sm-bold text-fg-primary tabular-nums">
-                                {format(tickets?.countByGrade[grade])}장
-                            </span>
-                        </li>
-                    ))}
-                </ul>
-
-                {/* 절취선 */}
-                <div className="border-border-default mt-4 flex items-center justify-between gap-3 border-t border-dashed pt-3">
-                    <span className="text-caption text-fg-tertiary whitespace-nowrap">
-                        이번 달 적립 {format(monthly?.earned)} · 사용 {format(monthly?.used)}
-                    </span>
-                    <Link
-                        to={action.to}
-                        className="text-body-sm-bold text-fg-primary focus-visible:ring-border-focus flex shrink-0 items-center gap-0.5 rounded-sm whitespace-nowrap hover:underline focus-visible:ring-2 focus-visible:outline-none"
-                    >
-                        {action.label}
-                        <ChevronRight className="size-4" />
-                    </Link>
+                            {action.label}
+                            <ChevronRight className="size-4" />
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>

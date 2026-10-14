@@ -137,7 +137,8 @@ export function TodayRewardsBanner() {
                 </div>
             </div>
 
-            <div className="relative grid items-center gap-8 p-6 pb-[calc(var(--counter)*1.5+0.5rem)] md:p-10 md:pb-[calc(var(--counter)*1.5+0.5rem)] lg:grid-cols-[1fr_22rem]">
+            {/* 왼쪽 진행 칸과 오른쪽 지갑의 아래 끝을 맞춘다 — 가운데 맞춤이면 높이 차이만큼 5px 어긋났다 */}
+            <div className="relative grid items-end gap-8 p-6 pb-[calc(var(--counter)*1.5+0.5rem)] md:p-10 md:pb-[calc(var(--counter)*1.5+0.5rem)] lg:grid-cols-[1fr_22rem]">
                 <div className="flex min-w-0 flex-col">
                     <p className="text-body-sm-bold text-fg-secondary">
                         {DATE_FORMAT.format(now)} · 오늘의 적립

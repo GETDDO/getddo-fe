@@ -101,7 +101,7 @@ export function AttendanceMonthGrid({
     };
 
     return (
-        <ol className="bg-surface-canvas grid w-full grid-cols-8 gap-x-1.5 gap-y-3 rounded-lg p-4 sm:gap-x-4">
+        <ol className="bg-surface-sunken grid w-full grid-cols-8 gap-x-1.5 gap-y-3 rounded-lg p-4 sm:gap-x-4">
             {days.map((day) => {
                 const isBonus = isStreakBonusDate(day.date, bonusDays);
                 const bonusTickets = isBonus ? bonusRewards?.get(day.day) : undefined;

@@ -45,7 +45,7 @@ export function MissionCard({
     return (
         <article
             // 위쪽 출석·내역·게임 카드와 같이 테두리를 둔다. 완료·종료 카드는 회색 바탕에 그림자 없이
-            className={`border-border-default flex items-center justify-between gap-4 rounded-2xl border p-5 ${muted ? 'bg-surface-canvas' : 'bg-surface-page shadow-md'}`}
+            className={`border-border-default flex items-center justify-between gap-4 rounded-2xl border p-5 ${muted ? 'bg-surface-sunken' : 'bg-surface-page shadow-md'}`}
         >
             <div className="flex min-w-0 flex-col gap-1">
                 <div className="flex items-center gap-2">

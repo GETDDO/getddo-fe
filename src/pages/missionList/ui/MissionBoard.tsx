@@ -73,7 +73,7 @@ export function MissionBoard({
             )}
 
             {missions && shown.length === 0 && (
-                <div className="bg-surface-canvas flex flex-col items-center gap-3 rounded-2xl px-6 py-10 text-center">
+                <div className="bg-surface-sunken flex flex-col items-center gap-3 rounded-2xl px-6 py-10 text-center">
                     <img src={emptyMascot} alt="" className="h-24 w-auto" />
                     <p className="text-body-bold text-fg-primary">
                         {missions.length === 0
