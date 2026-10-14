@@ -80,7 +80,6 @@ export function UiGalleryPage() {
                     <div className="flex flex-wrap items-center gap-2">
                         <Button>primary</Button>
                         <Button variant="secondary">secondary</Button>
-                        <Button variant="emphasis">emphasis</Button>
                         <Button variant="ghost">ghost</Button>
                         <Button variant="destructive">destructive</Button>
                         <Button variant="link">link</Button>

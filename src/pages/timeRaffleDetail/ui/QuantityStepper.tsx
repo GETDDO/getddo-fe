@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { cn } from '@shared/lib/utils';
 
 const STEP_BUTTON =
@@ -12,7 +14,11 @@ interface QuantityStepperProps {
     label?: string;
 }
 
-/** 응모 수량 조절 — 보유 응모권과 1인 한도 안에서만 오르내린다 */
+/**
+ * 응모 수량 조절 — 보유 응모권과 1인 한도 안에서만 오르내린다.
+ * 가운데 숫자는 직접 입력할 수도 있다. 숫자만 받고, 범위를 넘으면 최댓값·최솟값으로 맞춘다.
+ * 입력 중에 칸을 비워도 되고, 칸을 벗어날 때 비어 있으면 최솟값으로 돌린다
+ */
 export function QuantityStepper({
     value,
     min,
@@ -20,6 +26,10 @@ export function QuantityStepper({
     onChange,
     label = '응모 수량',
 }: QuantityStepperProps) {
+    // 입력 중인 글자 — 지우는 도중의 빈 칸을 0으로 바꾸지 않으려고 따로 둔다. null이면 value를 그대로 보여 준다
+    const [draft, setDraft] = useState<string | null>(null);
+    const clamp = (n: number) => Math.min(max, Math.max(min, n));
+
     return (
         <div className="flex items-center gap-3">
             <button
@@ -31,13 +41,28 @@ export function QuantityStepper({
             >
                 −
             </button>
-            <span
-                aria-live="polite"
+            <input
+                type="text"
+                inputMode="numeric"
                 aria-label={label}
-                className="text-body-bold text-fg-primary flex h-8 w-10 items-center justify-center"
-            >
-                {value}
-            </span>
+                value={draft ?? String(value)}
+                onFocus={(event) => event.currentTarget.select()}
+                onChange={(event) => {
+                    const digits = event.target.value.replace(/\D/g, '');
+                    if (digits === '') {
+                        setDraft('');
+                        return;
+                    }
+                    const next = clamp(Number(digits));
+                    setDraft(String(next));
+                    onChange(next);
+                }}
+                onBlur={() => {
+                    if (draft === '') onChange(clamp(min));
+                    setDraft(null);
+                }}
+                className="text-body-bold text-fg-primary border-border-default focus-visible:border-border-focus h-8 w-12 rounded-lg border text-center tabular-nums outline-none"
+            />
             <button
                 type="button"
                 aria-label={`${label} 늘리기`}

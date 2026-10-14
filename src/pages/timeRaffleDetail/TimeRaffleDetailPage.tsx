@@ -13,6 +13,7 @@ import { useEnterEvent } from '@features/enterEvent';
 import { getErrorMessage } from '@shared/api/errorMessage';
 import { Button } from '@shared/ui/button';
 
+import { BronzeOnlyTicket } from './ui/BronzeOnlyTicket';
 import { DrawResultSection } from './ui/DrawResultSection';
 import { EntryCompleteDialog } from './ui/EntryCompleteDialog';
 import { EntryConfirmDialog } from './ui/EntryConfirmDialog';
@@ -23,14 +24,16 @@ import { MyTicketCard } from './ui/MyTicketCard';
 import { RaffleDetailHero } from './ui/RaffleDetailHero';
 import { RaffleDetailsCard } from './ui/RaffleDetailsCard';
 import { RaffleRulesCard } from './ui/RaffleRulesCard';
+import { TicketSelectHeader } from './ui/TicketSelectHeader';
 
-const CONTAINER = 'mx-auto w-full max-w-312 px-6 pt-20 pb-47.5';
+const CONTAINER = 'mx-auto w-full max-w-312 px-6 pb-24';
 
 /** 응모도 결과 확인도 할 수 없는 상태에서 버튼에 대신 표시하는 문구 */
-const STATUS_LABEL: Record<Exclude<Event['status'], 'drawn'>, string> = {
+const STATUS_LABEL: Record<Event['status'], string> = {
     open: '응모하기',
     upcoming: '오픈 예정',
     closed: '추첨 진행 중',
+    drawn: '발표 완료',
 };
 
 export function TimeRaffleDetailPage() {
@@ -53,7 +56,8 @@ export function TimeRaffleDetailPage() {
     const [shortfallOpen, setShortfallOpen] = useState(false);
     const [completeOpen, setCompleteOpen] = useState(false);
     // 완료 모달이 쓸 값 — 접수 직후에는 이벤트 쿼리가 아직 갱신 전이라 응답 기준으로 계산해 담아 둔다
-    const [lastDeductedCount, setLastDeductedCount] = useState(0);
+    const [lastTickets, setLastTickets] = useState<EntryTickets>({});
+    const [lastBalance, setLastBalance] = useState<number | null>(null);
     const [lastRemaining, setLastRemaining] = useState<number | null>(0);
     // 모달을 닫으면 방금 누른 응모 버튼으로 포커스를 되돌린다
     const entryButtonRef = useRef<HTMLButtonElement>(null);
@@ -126,13 +130,8 @@ export function TimeRaffleDetailPage() {
                       (grade) => tickets[grade] <= ticket.countByGrade[grade],
                   )
                 : ticket.countByGrade.BRONZE >= 1));
-    // 미적용 이벤트는 브론즈만 쓸 수 있으니 확인 모달의 보유 표시도 브론즈로 맞춘다
-    const dialogBalance =
-        ticket == null
-            ? null
-            : isWeighted || isFree
-              ? ticket.availableCount
-              : ticket.countByGrade.BRONZE;
+    // 확인 모달은 응모 후 남는 전체 응모권을 보인다 — 브론즈만 쓰는 래플이어도 전체에서 그만큼 줄어든다
+    const dialogBalance = ticket?.availableCount ?? null;
 
     return (
         <main className={CONTAINER}>
@@ -140,18 +139,25 @@ export function TimeRaffleDetailPage() {
                 <RaffleDetailHero
                     event={event}
                     quantityControl={
-                        !isOpen ? undefined : isWeighted ? (
-                            <GradeTicketSteppers
-                                value={tickets}
-                                onChange={setTickets}
-                                availableByGrade={ticket?.countByGrade ?? null}
-                                remainingLimit={remainingLimit}
-                            />
-                        ) : isFree ? undefined : (
-                            // 가중치 미적용 이벤트는 브론즈 1장 고정이라 고를 수량이 없다
-                            <p className="text-body-bold text-fg-primary">
-                                브론즈 응모권 1장으로 참여해요
-                            </p>
+                        !isOpen || isFree ? undefined : (
+                            // 브론즈만 받는 래플도 같은 제목·(?) 안내를 둔다 — 왜 실버·골드를 못 쓰는지 같은 자리에서 알린다
+                            <div className="flex flex-col gap-4">
+                                <TicketSelectHeader
+                                    gradeReflected={isWeighted}
+                                    remainingLimit={remainingLimit}
+                                />
+                                {isWeighted ? (
+                                    <GradeTicketSteppers
+                                        value={tickets}
+                                        onChange={setTickets}
+                                        availableByGrade={ticket?.countByGrade ?? null}
+                                        remainingLimit={remainingLimit}
+                                    />
+                                ) : (
+                                    // 등급 미반영 래플은 브론즈 1장 고정이라 고를 수량이 없다
+                                    <BronzeOnlyTicket owned={ticket?.countByGrade.BRONZE ?? null} />
+                                )}
+                            </div>
                         )
                     }
                     cta={
@@ -175,16 +181,19 @@ export function TimeRaffleDetailPage() {
                                           ? '추가 응모하기'
                                           : '응모하기'}
                             </Button>
-                        ) : // 발표가 끝난 래플은 결과가 바로 아래에 있어 따로 누를 것이 없다
-                        event.status === 'drawn' ? undefined : (
+                        ) : (
+                            // 진행 중이 아니면 상태를 비활성 버튼으로 알린다 — 발표가 끝난 래플도 시안처럼 '발표 완료'를 둔다
                             <Button disabled size="lg" className="w-full">
                                 {STATUS_LABEL[event.status]}
                             </Button>
                         )
                     }
                 />
-                {/* 발표 전에는 내 결과 카드가, 발표 후에는 결과 영역의 배너가 본인 결과를 맡는다 */}
-                {myResult?.result === 'PENDING' && <MyResultCard result={myResult} />}
+                {/* 발표 전에는 발표 대기 카드(남은 시간)가, 발표 후에는 결과 영역의 배너가 본인 결과를 맡는다 */}
+                {(myResult?.result === 'PENDING' ||
+                    (event.status === 'closed' && !results?.isPublished)) && (
+                    <MyResultCard event={event} entered={myResult?.result === 'PENDING'} />
+                )}
                 {results && (
                     <DrawResultSection event={event} results={results} myResult={myResult} />
                 )}
@@ -205,7 +214,12 @@ export function TimeRaffleDetailPage() {
                     enterEvent.mutate(requestedTickets, {
                         onSuccess: (entry) => {
                             setConfirmOpen(false);
-                            setLastDeductedCount(entry.deductedTicketCount);
+                            setLastTickets(requestedTickets);
+                            setLastBalance(
+                                dialogBalance === null
+                                    ? null
+                                    : Math.max(0, dialogBalance - entry.deductedTicketCount),
+                            );
                             setLastRemaining(
                                 // 미사용 이벤트는 장수와 무관하게 사용자당 1회라 더 낼 수 없다
                                 isFree
@@ -242,9 +256,12 @@ export function TimeRaffleDetailPage() {
             <EntryCompleteDialog
                 open={completeOpen}
                 onOpenChange={setCompleteOpen}
-                freeEntry={isFree}
-                deductedTicketCount={lastDeductedCount}
+                title={event.title}
+                tickets={lastTickets}
+                gradeReflected={isWeighted}
+                remainingBalance={lastBalance}
                 remainingAllowance={lastRemaining}
+                announceAt={event.publicationScheduledAt ?? null}
                 returnFocusTo={entryButtonRef}
             />
         </main>

@@ -50,7 +50,36 @@ describe('GradeTicketSteppers', () => {
         await user.click(screen.getByRole('button', { name: '골드 응모 수량 늘리기' }));
         await user.click(screen.getByRole('button', { name: '실버 응모 수량 늘리기' }));
 
-        expect(screen.getByText('합계 2장 · 5장까지 더 응모할 수 있어요')).toBeInTheDocument();
+        expect(screen.getByText('합계 2장')).toBeInTheDocument();
+    });
+
+    it('숫자를 직접 입력할 수 있고, 보유 장수를 넘기면 보유 장수로 맞춘다', async () => {
+        const user = userEvent.setup();
+        setup();
+
+        const bronze = screen.getByRole('textbox', { name: '브론즈 응모 수량' });
+        await user.click(bronze);
+        await user.keyboard('3');
+        expect(bronze).toHaveValue('3');
+
+        // 실버는 2장뿐 — 9를 넣어도 2가 된다
+        const silver = screen.getByRole('textbox', { name: '실버 응모 수량' });
+        await user.click(silver);
+        await user.keyboard('9');
+        expect(silver).toHaveValue('2');
+        expect(screen.getByText('합계 5장')).toBeInTheDocument();
+    });
+
+    it('입력 칸을 비우고 벗어나면 0으로 돌린다', async () => {
+        const user = userEvent.setup();
+        setup();
+
+        const bronze = screen.getByRole('textbox', { name: '브론즈 응모 수량' });
+        await user.click(bronze);
+        await user.keyboard('2');
+        await user.clear(bronze);
+        await user.tab();
+        expect(bronze).toHaveValue('0');
     });
 
     it('보유 장수 이상으로 올리지 못한다', async () => {

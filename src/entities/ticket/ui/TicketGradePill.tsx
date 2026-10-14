@@ -1,12 +1,12 @@
 import type { TicketGrade } from '../model/types';
 
-import { TICKET_GRADE_LABEL } from '../model/grade';
+import { TICKET_GRADE_DOT, TICKET_GRADE_LABEL } from '../model/grade';
 
 // 등급 알약 — 등급 soft 바탕 + 등급 진한 색 점 (DESIGN-SYSTEM "Grade — 응모권 등급")
-const GRADE_CLASS: Record<TicketGrade, { pill: string; dot: string }> = {
-    BRONZE: { pill: 'bg-grade-bronze-soft', dot: 'bg-grade-bronze' },
-    SILVER: { pill: 'bg-grade-silver-soft', dot: 'bg-grade-silver' },
-    GOLD: { pill: 'bg-grade-gold-soft', dot: 'bg-grade-gold' },
+const GRADE_PILL: Record<TicketGrade, string> = {
+    BRONZE: 'bg-grade-bronze-soft',
+    SILVER: 'bg-grade-silver-soft',
+    GOLD: 'bg-grade-gold-soft',
 };
 
 /**
@@ -23,12 +23,11 @@ export function TicketGradePill({
     /** 장수 뒤에 붙일 단위 — 예: '장' */
     unit?: string;
 }) {
-    const tone = GRADE_CLASS[grade];
     return (
         <span
-            className={`${tone.pill} text-ink inline-flex h-5.5 shrink-0 items-center gap-1.5 rounded-full px-2 text-xs leading-[1.125rem] font-medium whitespace-nowrap`}
+            className={`${GRADE_PILL[grade]} text-ink inline-flex h-5.5 shrink-0 items-center gap-1.5 rounded-full px-2 text-xs leading-[1.125rem] font-medium whitespace-nowrap`}
         >
-            <span aria-hidden className={`${tone.dot} size-1.75 rounded-full`} />
+            <span aria-hidden className={`${TICKET_GRADE_DOT[grade]} size-1.75 rounded-full`} />
             {TICKET_GRADE_LABEL[grade]}
             {count !== undefined && ` ${count}${unit}`}
         </span>

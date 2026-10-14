@@ -74,44 +74,45 @@ export function DrawResultSection({ event, results, myResult }: DrawResultSectio
                 <WinnerLookupCard prizes={byRankAsc} onLookup={setMySuffix} />
             )}
 
-            <PrizeWinnerCard prize={topPrize} mySuffix={mySuffix} highlighted />
-
-            {restPrizes.length > 0 && (
+            {byRankAsc.length === 2 ? (
+                // 등수가 둘뿐이면 1등을 한 줄 다 쓰게 두면 2등 옆이 빈다 — 나란히 둔다
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    {restPrizes.map((prize) => (
-                        <PrizeWinnerCard key={prize.prizeId} prize={prize} mySuffix={mySuffix} />
+                    {byRankAsc.map((prize) => (
+                        <PrizeWinnerCard
+                            key={prize.prizeId}
+                            prize={prize}
+                            mySuffix={mySuffix}
+                            highlighted={prize === topPrize}
+                            // 1등 칸은 명단이 짧으면 아래가 비어 보인다 — 남는 높이를 상품 사진으로 채운다
+                            imageUrl={prize === topPrize ? event.bannerImageUrl : undefined}
+                            fillWithImage={prize === topPrize}
+                        />
                     ))}
                 </div>
+            ) : (
+                <>
+                    {/* 1등이 한 줄을 다 쓸 때는 등수·경품과 명단을 좌우로 나눠 빈 공간을 줄인다 */}
+                    <PrizeWinnerCard
+                        prize={topPrize}
+                        mySuffix={mySuffix}
+                        highlighted
+                        wide
+                        imageUrl={event.bannerImageUrl}
+                    />
+
+                    {restPrizes.length > 0 && (
+                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                            {restPrizes.map((prize) => (
+                                <PrizeWinnerCard
+                                    key={prize.prizeId}
+                                    prize={prize}
+                                    mySuffix={mySuffix}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </>
             )}
-
-            <EntrySummary event={event} />
         </section>
-    );
-}
-
-/** 응모한 래플에만 내 참여 현황을 적는다 — 0회·0장은 참여했는데 아무것도 쓰지 않은 것처럼 읽힌다 */
-function EntrySummary({ event }: { event: Event }) {
-    const entryCount = event.myEntryCount ?? 0;
-    if (entryCount === 0) return null;
-
-    const usedTickets = event.myTicketCount ?? entryCount * event.requiredTickets;
-
-    return (
-        <dl className="bg-surface-page border-border-default flex flex-col gap-1 rounded-2xl border p-5">
-            <StatLine
-                label="이번 이벤트 응모 횟수"
-                value={`${entryCount.toLocaleString('ko-KR')} 회`}
-            />
-            <StatLine label="사용된 응모권" value={`${usedTickets.toLocaleString('ko-KR')} 장`} />
-        </dl>
-    );
-}
-
-function StatLine({ label, value }: { label: string; value: string }) {
-    return (
-        <div className="flex items-center justify-between gap-4">
-            <dt className="text-body text-fg-secondary">{label}</dt>
-            <dd className="text-body-bold text-fg-primary">{value}</dd>
-        </div>
     );
 }

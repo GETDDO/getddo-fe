@@ -6,6 +6,8 @@ import { StatusDot } from '@shared/ui/status-dot';
 
 import type { Event } from '../model/types';
 
+import { eventDetailPath } from '../lib/eventPath';
+
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const;
 
 // 카드 표시용 "26.09.20(일)" 형태
@@ -21,7 +23,7 @@ export function EventResultRow({ event }: { event: Event }) {
 
     return (
         <Link
-            to={`/events/${event.id}`}
+            to={eventDetailPath(event)}
             // 호버하면 연한 배경이 생기되 행 끝까지 꽉 채우지 않고 사방으로 8px 들이고 옅게(60%) 그려 구분선·썸네일과 겹쳐 답답해 보이지 않게 한다 (after — before는 목록 구분선이 쓴다)
             className="group focus-visible:ring-border-focus focus-visible:ring-offset-surface-page after:bg-surface-canvas/60 relative isolate flex items-center gap-4 rounded-2xl p-4 after:absolute after:inset-x-2 after:inset-y-2 after:-z-10 after:rounded-xl after:opacity-0 hover:after:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:after:transition-opacity motion-safe:after:duration-200"
         >
@@ -29,10 +31,10 @@ export function EventResultRow({ event }: { event: Event }) {
                 <img
                     src={event.bannerImageUrl}
                     alt=""
-                    className="h-20 w-40 shrink-0 rounded-lg object-cover"
+                    className="aspect-video h-20 shrink-0 rounded-lg object-cover"
                 />
             ) : (
-                <div className="bg-surface-canvas flex h-20 w-40 shrink-0 items-center justify-center rounded-lg">
+                <div className="bg-surface-canvas flex aspect-video h-20 shrink-0 items-center justify-center rounded-lg">
                     <Gift className="text-fg-disabled size-8" />
                 </div>
             )}

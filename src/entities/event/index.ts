@@ -1,3 +1,4 @@
+export { eventDetailPath } from './lib/eventPath';
 export { eventSchema, eventStatusSchema } from './model/types';
 export type { Event, EventStatus } from './model/types';
 export {

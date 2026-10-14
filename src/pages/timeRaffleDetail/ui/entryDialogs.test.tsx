@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
@@ -11,7 +11,7 @@ const NOOP = () => {};
 const renderDialog = (ui: React.ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>);
 
 describe('EntryConfirmDialog', () => {
-    it('등급별 사용 장수와 합계를 함께 보여준다', () => {
+    it('등급별 사용 장수·합계와 응모 후 남는 장수를 보여준다', () => {
         render(
             <EntryConfirmDialog
                 open
@@ -23,14 +23,21 @@ describe('EntryConfirmDialog', () => {
             />,
         );
 
-        expect(
-            screen.getByText('응모권 3장을 사용하여 테스트 래플에 참여합니다.'),
-        ).toBeInTheDocument();
-        expect(screen.getByText('실버 1장·골드 2장')).toBeInTheDocument();
+        expect(screen.getByText('테스트 래플에 응모할까요?')).toBeInTheDocument();
+        expect(screen.getByText('3장')).toBeInTheDocument();
+        // 쓰는 등급만 등급 칸으로 보인다
+        const tiles = within(screen.getByRole('list', { name: '이번에 쓸 응모권' }));
+        expect(tiles.getByText('실버')).toBeInTheDocument();
+        expect(tiles.getByText('1장')).toBeInTheDocument();
+        expect(tiles.getByText('골드')).toBeInTheDocument();
+        expect(tiles.getByText('2장')).toBeInTheDocument();
+        expect(screen.queryByText('브론즈')).not.toBeInTheDocument();
         expect(screen.getByText('10장')).toBeInTheDocument();
+        expect(screen.getByText('7장')).toBeInTheDocument();
+        expect(screen.getByText('응모 후에는 취소할 수 없어요.')).toBeInTheDocument();
     });
 
-    it('빈 tickets 맵이면 0장으로 표시한다', () => {
+    it('빈 tickets 맵이면 응모권을 쓰지 않는다고 안내한다', () => {
         render(
             <EntryConfirmDialog
                 open
@@ -42,7 +49,7 @@ describe('EntryConfirmDialog', () => {
             />,
         );
 
-        expect(screen.getByText('0장')).toBeInTheDocument();
+        expect(screen.getByText('응모권을 쓰지 않는 래플이에요.')).toBeInTheDocument();
     });
 });
 

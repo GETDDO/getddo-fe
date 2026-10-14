@@ -41,7 +41,7 @@ export function WinnerLookupCard({ prizes, onLookup }: WinnerLookupCardProps) {
     };
 
     return (
-        <section className="bg-surface-page border-border-default flex flex-col items-center gap-6 rounded-2xl border p-8 shadow-md">
+        <section className="bg-surface-page border-border-default flex flex-col items-center gap-6 rounded-2xl border p-8">
             {result == null ? (
                 <h3 className="text-title-3 text-fg-primary">당첨자 조회</h3>
             ) : result.matchCount > 0 ? (

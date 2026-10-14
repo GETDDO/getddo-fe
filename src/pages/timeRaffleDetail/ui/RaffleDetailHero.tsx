@@ -1,14 +1,13 @@
 import type { ReactNode } from 'react';
 
-import { Clock, Gift, Ticket, UsersRound } from 'lucide-react';
+import { Clock, Gift } from 'lucide-react';
 
 import type { Event } from '@entities/event';
 
 import { useEntryStatistics } from '@entities/entry';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
-
-import { AnnounceCountdown } from './AnnounceCountdown';
+import { useVirtualClock } from '@shared/lib/virtualClock';
 
 const CHIP = 'text-caption bg-surface-sunken flex items-center gap-2.5 rounded-full px-3 py-1';
 
@@ -35,38 +34,34 @@ interface RaffleDetailHeroProps {
 /** 상세 화면 대표 카드 — 목록 히어로와 달리 이미지가 카드에 꽉 차고, 현황은 칩으로 줄어든다 */
 export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHeroProps) {
     // 응모 현황은 E03 전용 조회로 받는다 — 진행 중일 때만 30초 폴링 (ADR-0007)
-    const { data: statistics } = useEntryStatistics(event.id, { isOpen: event.status === 'open' });
-    const hasPublicationSchedule = event.publicationScheduledAt != null;
+    const isOpen = event.status === 'open';
+    const { data: statistics, dataUpdatedAt } = useEntryStatistics(event.id, { isOpen });
+    const { override } = useVirtualClock();
+    // 진행 중에는 30초마다 바뀌는 값이라 언제 기준인지 같이 적는다 — 가상 시계로 멈춰 두면 그 시각으로 맞춘다
+    const fetchedAt = isOpen && dataUpdatedAt ? (override ?? new Date(dataUpdatedAt)) : null;
 
     return (
-        <article className="bg-surface-page border-border-brand flex flex-col items-center overflow-hidden rounded-2xl border lg:min-h-95 lg:flex-row lg:gap-5">
+        <article className="bg-surface-page flex flex-col overflow-hidden rounded-2xl lg:flex-row lg:gap-5">
             {/*
-             * 마우스를 올리거나 키보드로 포커스하면 발표까지 남은 시간이 덮인다.
-             * 발표 예정 시각이 없으면 보여 줄 게 없으므로 오버레이도, 포커스 정지도 두지 않는다.
+             * 상품 이미지는 래플마다 같은 크기의 정사각형(440)으로 위에 맞춘다. 오른쪽 높이를 따라 늘이면
+             * 응모권 선택이 긴 래플만 이미지가 세로로 길어져 상품이 작아 보였다
              */}
-            <div
-                tabIndex={hasPublicationSchedule ? 0 : undefined}
-                role={hasPublicationSchedule ? 'group' : undefined}
-                aria-label={
-                    hasPublicationSchedule ? '상품 이미지 — 당첨자 발표까지 남은 시간' : undefined
-                }
-                className="bg-surface-canvas focus-visible:ring-border-focus focus-visible:ring-offset-surface-page group relative h-48 w-full self-stretch focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none lg:h-auto lg:w-130 lg:shrink-0"
-            >
+            <div className="bg-surface-canvas relative aspect-square w-full max-w-110 shrink-0 self-center overflow-hidden rounded-2xl lg:size-110 lg:self-start">
                 {event.bannerImageUrl ? (
-                    <img src={event.bannerImageUrl} alt="" className="size-full object-cover" />
+                    <img
+                        src={event.bannerImageUrl}
+                        alt=""
+                        className="absolute inset-0 size-full object-contain p-6 mix-blend-multiply dark:mix-blend-normal"
+                    />
                 ) : (
                     <div className="flex size-full items-center justify-center">
                         <Gift className="text-fg-disabled size-12" />
                     </div>
                 )}
-                {hasPublicationSchedule && (
-                    <div className="bg-surface-overlay pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-                        <AnnounceCountdown event={event} />
-                    </div>
-                )}
             </div>
 
-            <div className="flex h-full min-w-0 flex-1 flex-col justify-between gap-5 px-4 py-5">
+            {/* 피그마 시안처럼 글은 위에서부터 쌓고, 수량·버튼은 아래쪽에 붙인다 */}
+            <div className="flex min-w-0 flex-1 flex-col gap-5 px-4 py-5">
                 <div className="flex flex-col gap-5">
                     <div className="flex flex-wrap items-center gap-2">
                         <span
@@ -78,36 +73,42 @@ export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHe
                         >
                             {STATUS_CHIP[event.status].label}
                         </span>
-                        <span className="bg-surface-sunken text-fg-secondary text-body-sm-bold flex items-center gap-1 rounded-full px-3 py-1">
-                            <Clock className="size-4.5" />
+                        {/* 시간 칩도 옆 칩들과 같은 글자(caption)·아이콘 크기를 쓴다 */}
+                        <span className={`${CHIP} text-fg-primary`}>
+                            <Clock className="size-5" />
                             {formatKst(event.startsAt, KST_HOUR_MINUTE)} ~{' '}
                             {formatKst(event.endsAt, KST_HOUR_MINUTE)}
                         </span>
-                        {statistics && (
-                            <>
-                                <span className={`${CHIP} text-fg-primary`}>
-                                    <UsersRound className="size-5" />
-                                    {formatNumber(statistics.participantCount)}명 참여 중
-                                </span>
-                                <span className={`${CHIP} text-fg-primary`}>
-                                    <Ticket className="size-5" />
-                                    {formatNumber(statistics.totalSpentTicketCount)}장 사용
-                                </span>
-                            </>
-                        )}
                     </div>
 
                     <div className="flex flex-col gap-4">
                         <h2 className="text-title-1 text-fg-primary">{event.title}</h2>
-                        <p className="text-body text-fg-primary">{event.description}</p>
+                        {/* 전문은 아래 '이벤트 상세 안내'에 있다 — 위에서는 세 줄로 잘라 응모 칸을 밀어내지 않게 한다 */}
+                        <p className="text-body text-fg-primary line-clamp-3">
+                            {event.description}
+                        </p>
+                        {/*
+                         * 참여 수·쓴 장수는 응모 판단에 꼭 필요한 값이 아니라 칩 대신 설명 아래 한 줄로 낮춘다.
+                         * 칩이 넷이면 '진행중'과 운영 시간이 묻힌다
+                         */}
+                        {statistics && (
+                            <p className="text-caption text-fg-tertiary">
+                                {formatNumber(statistics.participantCount)}명 참여 · 응모권{' '}
+                                {formatNumber(statistics.totalSpentTicketCount)}장 사용
+                                {fetchedAt && ` · ${formatKst(fetchedAt, KST_HOUR_MINUTE)} 기준`}
+                            </p>
+                        )}
                     </div>
                 </div>
 
-                <hr className="border-border-default" />
-
-                {quantityControl}
-
-                {cta}
+                {/* 구분선·수량·버튼은 카드 아래쪽에 붙인다 — 상태가 달라 위 글 길이가 달라도 버튼 위치는 늘 같다 */}
+                {(quantityControl || cta) && (
+                    <div className="mt-auto flex flex-col gap-5">
+                        <hr className="border-border-default" />
+                        {quantityControl}
+                        {cta}
+                    </div>
+                )}
             </div>
         </article>
     );
