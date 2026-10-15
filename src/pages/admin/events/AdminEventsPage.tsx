@@ -68,10 +68,8 @@ export function AdminEventsPage() {
     const [appliedStatusParam, setAppliedStatusParam] = useState(statusParam);
     if (statusParam !== appliedStatusParam) {
         setAppliedStatusParam(statusParam);
-        if (statusParam) {
-            setStatus(statusParam);
-            setPage(1);
-        }
+        setStatus(statusParam ?? 'all');
+        setPage(1);
     }
 
     // 검색 버튼으로 확정할 값을 미리 계산해 입력값과 적용값의 차이(미적용 변경)를 잡는다

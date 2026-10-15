@@ -52,11 +52,10 @@ export function JobsTab() {
     const [appliedStatusParam, setAppliedStatusParam] = useState(statusParam);
     if (statusParam !== appliedStatusParam) {
         setAppliedStatusParam(statusParam);
-        if (statusParam) {
-            setDraft((d) => ({ ...d, status: statusParam }));
-            setApplied((a) => ({ ...a, status: statusParam }));
-            setPage(1);
-        }
+        const nextStatus = statusParam ?? ALL;
+        setDraft((d) => ({ ...d, status: nextStatus }));
+        setApplied((a) => ({ ...a, status: nextStatus }));
+        setPage(1);
     }
     const [rangeError, setRangeError] = useState(false);
     const hasPendingDraft = JSON.stringify(draft) !== JSON.stringify(applied);
