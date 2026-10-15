@@ -8,6 +8,7 @@ import { EventThumbnail } from '@entities/event';
 import { formatKstDot } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { Badge } from '@shared/ui/badge';
+import { SkeletonList } from '@shared/ui/skeleton';
 
 import { SectionCard } from './SectionCard';
 
@@ -49,7 +50,7 @@ export function RecentEntriesCard({
             moreTo="/my-entries"
             moreLabel="응모 내역 전체 보기"
         >
-            {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {isPending && <SkeletonList />}
             {isError && (
                 <p className="text-destructive text-body-sm">응모 내역을 불러오지 못했습니다.</p>
             )}

@@ -1,10 +1,11 @@
 import { Clock } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import type { Event } from '@entities/event';
 
 import { useEntryStatistics } from '@entities/entry';
+import { queryPresets } from '@shared/api/queryPresets';
+import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
@@ -13,7 +14,8 @@ import { formatRunningRange } from '../lib/raffleFormat';
 import { CloseCountdownChip } from './CloseCountdownChip';
 import { RaffleThumbnail } from './RaffleThumbnail';
 
-const CHIP = 'text-caption flex items-center rounded-full px-2.5 py-1';
+/** 참여 현황을 다시 받아오는 주기(초) — 폴링 설정과 문구가 따로 놀지 않게 같은 값을 쓴다 */
+const REFRESH_SECONDS = queryPresets.realtime.refetchInterval / 1000;
 
 interface LiveRaffleCardProps {
     event: Event;
@@ -22,23 +24,14 @@ interface LiveRaffleCardProps {
 export function LiveRaffleCard({ event }: LiveRaffleCardProps) {
     // 이 카드는 현재 보이는 진행 중 래플 1건이라 이 이벤트의 E03만 폴링한다 (ADR-0007)
     const { data: statistics, dataUpdatedAt } = useEntryStatistics(event.id, { isOpen: true });
-    const { now } = useVirtualClock();
-    // 마감까지 남은 시간은 가상 시계를, 받아온 지 얼마나 됐는지는 실제 시계를 본다.
-    // updatedAt은 쿼리가 실제 시각으로 적는 값이라, 가상 시계로 시간을 옮기면
-    // 섞어 뺀 값이 몇 시간 전으로 튄다
-    const [ticks, setTicks] = useState(() => ({ virtual: now().getTime(), real: Date.now() }));
+    const { override } = useVirtualClock();
+    // 참여 현황은 폴링으로 따라가는 값이라 지금 이 순간의 수가 아니다 — 언제 기준인지 시각으로 적는다.
+    // updatedAt은 쿼리가 실제 시각으로 적는 값이다. 관리자가 가상 시계로 시간을 멈춰 두면
+    // 화면의 다른 시각과 어긋나지 않게 그 시각을 기준으로 적는다.
+    // 매초 바뀌는 'n초 전'은 눈에 걸려 분 단위 기준 시각과 갱신 주기만 적는다
+    const fetchedAt = dataUpdatedAt ? (override ?? new Date(dataUpdatedAt)) : null;
 
-    useEffect(() => {
-        const update = () => setTicks({ virtual: now().getTime(), real: Date.now() });
-        // 가상 시계를 옮기면 now가 새로 내려오므로 다음 초를 기다리지 않고 바로 맞춘다
-        update();
-        const id = setInterval(update, 1000);
-        return () => clearInterval(id);
-    }, [now]);
-
-    // 참여 현황은 폴링으로 따라가는 값이라 지금 이 순간의 수가 아니다 — 언제 기준인지 같이 적는다
-    const staleSeconds = Math.max(0, Math.floor((ticks.real - dataUpdatedAt) / 1000));
-
+    // 가운데 소개 칸 아래 현황 — 이름 위·값 아래 큰 숫자로 둬 한눈에 들어오게 한다
     const stats = [
         { label: '당첨 인원', value: `${formatNumber(event.winnerCount)}명` },
         {
@@ -52,56 +45,107 @@ export function LiveRaffleCard({ event }: LiveRaffleCardProps) {
     ];
 
     return (
-        <article className="bg-surface-elevated border-border-default flex flex-col gap-8 rounded-2xl border py-6 pr-8 pl-6 shadow-md lg:flex-row lg:items-center">
+        /*
+         * 그림 · 소개 · 응모 칸 세 덩어리. 소개 칸은 위에 래플 소개, 아래에 현황 숫자를 둬 빈 곳 없이 채우고,
+         * 응모 칸은 남은 시간·응모 조건·버튼만 둔다 — 버튼은 맨 아래에 붙인다
+         */
+        <article className="bg-surface-elevated border-border-default grid gap-6 rounded-2xl border p-6 shadow-md lg:grid-cols-[16rem_minmax(0,1fr)_17rem] lg:gap-8">
             <RaffleThumbnail
                 src={event.bannerImageUrl}
-                className="h-56 w-full rounded-xl lg:h-72 lg:w-80"
-                fallbackIconClassName="size-12"
+                className="w-full max-w-64 self-center justify-self-center rounded-xl lg:self-start"
             />
 
-            <div className="flex min-w-0 flex-1 flex-col gap-3.5">
-                <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-body-sm text-fg-primary flex items-center gap-1.5">
+            <div className="flex min-w-0 flex-col gap-3 lg:py-1">
+                <div className="text-body-sm flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="text-fg-primary flex items-center gap-1.5">
                         <span className="bg-brand-primary size-1.5 rounded-full" />
                         진행중
                     </span>
-                    <span className={`${CHIP} bg-surface-sunken text-fg-secondary gap-1`}>
+                    <span className="text-fg-secondary flex items-center gap-1 tabular-nums">
                         <Clock className="size-3.5" />
                         {formatRunningRange(event)}
                     </span>
-                    <CloseCountdownChip endsAt={event.endsAt} />
                 </div>
+                <h3 className="text-title-2 text-fg-primary">{event.title}</h3>
+                <p className="text-body text-fg-secondary line-clamp-2">{event.description}</p>
 
-                <div className="flex flex-col gap-1.5">
-                    <h3 className="text-title-2 text-fg-primary">{event.title}</h3>
-                    <p className="text-body-sm text-fg-secondary line-clamp-2">
-                        {event.description}
-                    </p>
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                    <dl className="flex flex-col gap-2 sm:flex-row">
+                <div className="mt-auto flex flex-col gap-2 pt-3">
+                    <dl className="divide-border-default grid grid-cols-3 divide-x">
                         {stats.map(({ label, value }) => (
-                            <div
-                                key={label}
-                                className="bg-surface-sunken flex flex-1 flex-col gap-0.5 rounded-xl px-4 py-3"
-                            >
-                                <dt className="text-caption text-fg-tertiary">{label}</dt>
-                                <dd className="text-body-bold text-fg-primary">{value}</dd>
+                            <div key={label} className="flex flex-col gap-1 px-5 first:pl-0">
+                                <dt className="text-body-sm text-fg-tertiary">{label}</dt>
+                                <dd className="text-title-3 text-fg-primary tabular-nums">
+                                    {value}
+                                </dd>
                             </div>
                         ))}
                     </dl>
-                    {statistics && (
+                    {statistics && fetchedAt && (
                         <p className="text-caption text-fg-tertiary">
-                            참여 수는 {staleSeconds}초 전 기준이에요.
+                            {formatKst(fetchedAt, KST_HOUR_MINUTE)} 기준 · {REFRESH_SECONDS}초마다
+                            갱신돼요
                         </p>
                     )}
                 </div>
+            </div>
 
-                <Button asChild variant="emphasis" size="lg" className="w-full">
+            <div className="border-border-default flex flex-col gap-5 border-t pt-6 lg:border-t-0 lg:border-l lg:pt-1 lg:pl-8">
+                <div className="flex flex-col gap-1">
+                    <span className="text-caption text-fg-tertiary">마감까지</span>
+                    <CloseCountdownChip endsAt={event.endsAt} size="lg" />
+                </div>
+                <EntryConditions
+                    event={event}
+                    mySpentTicketCount={statistics?.mySpentTicketCount}
+                />
+                <Button asChild size="lg" className="mt-auto w-full">
                     <Link to={`/time-raffle/${event.id}`}>응모하러 가기</Link>
                 </Button>
             </div>
         </article>
     );
+}
+
+/** 응모 칸의 응모 조건 — 무엇으로 몇 장까지 낼 수 있는지, 내가 이미 냈는지 */
+function EntryConditions({
+    event,
+    mySpentTicketCount,
+}: {
+    event: Event;
+    /** 내가 쓴 응모권 — E03의 정확한 값만 쓴다. 회차 × 장수로 어림하면 여러 장 응모를 적게 센다 */
+    mySpentTicketCount: number | undefined;
+}) {
+    const rows = [
+        { label: '응모 방식', value: entryMethodLabel(event) },
+        event.eventType === 'TICKET' && {
+            label: '1인 최대',
+            value:
+                event.maxTicketsPerUser === null
+                    ? '제한 없음'
+                    : `${formatNumber(event.maxTicketsPerUser)}장`,
+        },
+        mySpentTicketCount != null &&
+            mySpentTicketCount > 0 && {
+                label: '내 응모',
+                value: `${formatNumber(mySpentTicketCount)}장`,
+            },
+    ].filter((row) => row !== false);
+
+    return (
+        <dl className="flex flex-col gap-2">
+            {rows.map(({ label, value }) => (
+                <div key={label} className="flex items-center justify-between gap-3">
+                    <dt className="text-body-sm text-fg-tertiary">{label}</dt>
+                    <dd className="text-body-sm-bold text-fg-primary">{value}</dd>
+                </div>
+            ))}
+        </dl>
+    );
+}
+
+/** 응모권을 어떻게 내는지 — 소비자 화면이라 '가중치' 대신 '등급별 추첨 반영'이라 적는다 */
+function entryMethodLabel(event: Event): string {
+    if (event.eventType === 'NO_TICKET') return '응모권 없이';
+    if (event.weightingEnabled) return '등급별 추첨 반영';
+    return `브론즈 ${formatNumber(event.requiredTickets)}장`;
 }

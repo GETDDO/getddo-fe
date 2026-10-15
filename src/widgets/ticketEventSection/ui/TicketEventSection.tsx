@@ -10,6 +10,7 @@ import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
 import { Card } from '@shared/ui/card';
 import { Pager } from '@shared/ui/pager';
+import { Skeleton } from '@shared/ui/skeleton';
 
 /**
  * 홈 '타임 래플 · 응모권 사용' 섹션 — 좌측에 대표 진행 이벤트 카드,
@@ -35,16 +36,29 @@ export function TicketEventSection({
 
     return (
         <section className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-title-3 text-fg-primary">겟또타임 · 응모권 사용</h2>
+            {/* 다른 홈 섹션처럼 제목 옆에 작은 설명을 둔다 */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                    <h2 className="text-title-3 text-fg-primary">겟또타임</h2>
+                    <span className="text-fg-tertiary text-caption">
+                        모은 응모권으로 정해진 시간에만 응모할 수 있어요.
+                    </span>
+                </div>
                 <Button asChild variant="link" size="text">
-                    <Link to="/events">
+                    <Link to="/time-raffle">
                         더보기
                         <ChevronRight />
                     </Link>
                 </Button>
             </div>
-            {isPending && <p className="text-fg-tertiary text-body-sm">불러오는 중…</p>}
+            {/* 불러오는 동안 대표 카드·오픈 예정 두 칸 자리를 잡아 둔다 */}
+            {isPending && (
+                <div aria-hidden className="grid gap-4 lg:grid-cols-2">
+                    {Array.from({ length: 2 }, (_, index) => (
+                        <Skeleton key={index} className="h-72 rounded-2xl" />
+                    ))}
+                </div>
+            )}
             {isError && (
                 <p className="text-destructive text-body-sm">이벤트 목록을 불러오지 못했습니다.</p>
             )}
@@ -81,6 +95,7 @@ function FeaturedEvent({ event }: { event: Event }) {
             event={event}
             participantCount={statistics?.participantCount}
             totalSpentTicketCount={statistics?.totalSpentTicketCount}
+            mySpentTicketCount={statistics?.mySpentTicketCount}
         />
     );
 }

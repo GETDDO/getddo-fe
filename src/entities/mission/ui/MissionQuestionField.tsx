@@ -8,7 +8,7 @@ import type { MissionQuestion } from '../model/types';
 
 /** 선택 칸 공통 — 테두리 대신 옅은 회색으로 채워 누를 수 있는 칸으로 보이게 한다. 고른 칸은 Radix 라디오의 data-state로 판단한다 */
 const FILLED_CHOICE =
-    'bg-surface-canvas hover:bg-surface-pressed border-transparent has-[:focus-visible]:ring-border-focus cursor-pointer border-2 transition-colors has-[:focus-visible]:ring-2';
+    'bg-surface-sunken hover:bg-surface-pressed border-transparent has-[:focus-visible]:ring-border-focus cursor-pointer border-2 transition-colors has-[:focus-visible]:ring-2';
 
 /** 설문 선택지 — 고르면 흰 바탕에 검정 테두리 */
 const CHOICE_ROW = `${FILLED_CHOICE} has-[[data-state=checked]]:border-fg-primary has-[[data-state=checked]]:bg-surface-page flex items-center gap-3 rounded-xl px-4 py-3`;
@@ -137,7 +137,8 @@ export function MissionQuestionField({
                     placeholder="정답을 입력해 주세요"
                     aria-invalid={invalid || undefined}
                     aria-required={question.required}
-                    className="bg-surface-page"
+                    // 아래 제출 버튼(Large 48px)과 같은 높이 — 기본 32px은 답 칸으로 너무 얇았다
+                    className="bg-surface-page h-12 px-4"
                 />
             ) : (
                 <Textarea

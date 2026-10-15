@@ -5,6 +5,7 @@ import type { Event } from '@entities/event';
 
 import { useEventList } from '@entities/event';
 import { cn } from '@shared/lib/utils';
+import { Skeleton } from '@shared/ui/skeleton';
 
 import type { EventFilter } from './model/eventFilters';
 
@@ -41,13 +42,20 @@ export function EventListPage() {
     const pagedEvents = filteredEvents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
     const status = isPending ? (
-        <p className="text-fg-tertiary text-body-sm">불러오는 중…</p>
+        <div
+            aria-hidden
+            className="grid grid-cols-1 gap-x-4 gap-y-10 sm:grid-cols-2 lg:grid-cols-4"
+        >
+            {Array.from({ length: 4 }, (_, index) => (
+                <Skeleton key={index} className="h-70 rounded-2xl" />
+            ))}
+        </div>
     ) : isError ? (
         <p className="text-destructive text-body-sm">이벤트 목록을 불러오지 못했습니다.</p>
     ) : null;
 
     return (
-        <main className="mx-auto flex w-full max-w-312 flex-col px-6 pt-20 pb-28">
+        <main className="mx-auto flex w-full max-w-312 flex-col px-6 pb-28">
             <h1 className="text-title-1 text-fg-primary">진행 중 이벤트</h1>
 
             <section className="mt-10 flex flex-col gap-6">

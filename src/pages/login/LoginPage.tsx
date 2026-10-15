@@ -5,6 +5,7 @@ import type { VirtualUser } from '@entities/user';
 
 import { useSessionStore, useVirtualUsers } from '@entities/user';
 import { cn } from '@shared/lib/utils';
+import { Loading } from '@shared/ui/loading';
 
 export function LoginPage() {
     const navigate = useNavigate();
@@ -29,9 +30,7 @@ export function LoginPage() {
                     </p>
                 </div>
 
-                {isPending && (
-                    <p className="text-body-sm text-fg-tertiary text-center">불러오는 중…</p>
-                )}
+                {isPending && <Loading />}
                 {isError && (
                     <p className="text-destructive text-body-sm text-center">
                         가상 사용자 목록을 불러오지 못했습니다.

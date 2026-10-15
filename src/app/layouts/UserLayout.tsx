@@ -1,6 +1,6 @@
 import { ChevronDown, LayoutDashboard, Menu } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, ScrollRestoration, useLocation, useMatches } from 'react-router-dom';
 
 import { useSessionStore } from '@entities/user';
 import { VirtualClockTicker } from '@features/controlVirtualClock';
@@ -18,6 +18,10 @@ import { USER_NAV_ITEMS } from './userNavItems';
 export function UserLayout() {
     const navRef = useRef<HTMLElement>(null);
     const { pathname } = useLocation();
+    // 라우트 handle에 fullBleed를 단 화면(게임 무대)은 위 여백 없이 헤더 바로 아래에서 시작한다
+    const fullBleed = useMatches().some(
+        (match) => (match.handle as { fullBleed?: boolean } | undefined)?.fullBleed,
+    );
     // UserGuard가 미선택 상태를 먼저 걸러 주므로 여기서는 항상 있다
     const user = useSessionStore((state) => state.user)!;
     const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
@@ -198,7 +202,8 @@ export function UserLayout() {
                     </div>
                 </div>
             </header>
-            <div className="flex-1">
+            {/* 모든 화면의 위 여백(헤더 아래 64)을 여기서 한 번만 준다 — 페이지는 위 여백을 따로 두지 않는다 */}
+            <div className={fullBleed ? 'flex-1' : 'flex-1 pt-16'}>
                 {/* 화면 렌더 오류가 나도 헤더·푸터를 유지하고 라우트 전환으로 복구한다 */}
                 <RouteErrorBoundary resetKey={pathname} fallback={<RouteErrorFallback />}>
                     <Outlet />

@@ -44,7 +44,12 @@ export const userRoutes: RouteObject[] = [
             { path: '/events/:id', element: <EventDetailPage /> },
             { path: '/missions', element: <MissionListPage /> },
             { path: '/missions/:missionId', element: <MissionDetailPage /> },
-            { path: '/missions/games/:gameId', element: <GameDetailPage /> },
+            // 게임 무대는 헤더 바로 아래에 붙는 어두운 띠라 레이아웃의 위 여백을 받지 않는다
+            {
+                path: '/missions/games/:gameId',
+                element: <GameDetailPage />,
+                handle: { fullBleed: true },
+            },
             { path: '/my-tickets', element: <MyTicketsPage /> },
             { path: '/my-entries', element: <MyEntriesPage /> },
             { path: '/mypage', element: <MyPage /> },

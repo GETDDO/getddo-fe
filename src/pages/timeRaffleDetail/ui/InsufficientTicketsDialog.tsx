@@ -31,7 +31,6 @@ export function InsufficientTicketsDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
-                showCloseButton={false}
                 onCloseAutoFocus={(event) => {
                     if (!returnFocusTo?.current) return;
                     event.preventDefault();
@@ -39,7 +38,7 @@ export function InsufficientTicketsDialog({
                 }}
                 className="bg-surface-page border-border-default gap-6 rounded-2xl border p-6 shadow-md ring-0 sm:max-w-120 sm:p-8"
             >
-                <DialogHeader className="gap-2">
+                <DialogHeader className="gap-2 pr-8">
                     <DialogTitle className="text-title-3 text-fg-primary">
                         {bronzeRequired ? '브론즈 응모권이 필요해요' : '응모권이 부족해요'}
                     </DialogTitle>

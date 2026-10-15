@@ -10,7 +10,7 @@ function Skeleton({ className, ...props }: ComponentProps<'div'>) {
         <div
             aria-hidden="true"
             data-slot="skeleton"
-            className={cn('bg-surface-sunken rounded-md motion-safe:animate-pulse', className)}
+            className={cn('bg-surface-sunken rounded-lg motion-safe:animate-pulse', className)}
             {...props}
         />
     );
@@ -33,6 +33,26 @@ function LoadingBlock({
         <div role="status" className={className}>
             <span className="sr-only">{label}</span>
             {children}
+        </div>
+    );
+}
+
+/** 줄 목록 스켈레톤 — 내역·알림처럼 같은 높이의 줄이 이어지는 목록 */
+function SkeletonList({
+    count = 3,
+    rowClassName = 'h-14',
+    className,
+}: {
+    count?: number;
+    /** 한 줄의 높이·모양 — 실제 줄과 맞춘다 */
+    rowClassName?: string;
+    className?: string;
+}) {
+    return (
+        <div aria-hidden="true" className={cn('flex flex-col gap-3', className)}>
+            {Array.from({ length: count }, (_, index) => (
+                <Skeleton key={index} className={cn('w-full', rowClassName)} />
+            ))}
         </div>
     );
 }
@@ -100,4 +120,4 @@ function CardSkeleton({ rows = 6, className }: { rows?: number; className?: stri
     );
 }
 
-export { Skeleton, LoadingBlock, SkeletonRows, TableSkeleton, CardSkeleton };
+export { Skeleton, LoadingBlock, SkeletonList, SkeletonRows, TableSkeleton, CardSkeleton };

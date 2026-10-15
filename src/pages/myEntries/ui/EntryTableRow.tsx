@@ -5,7 +5,7 @@ import type { MyEntryRow } from '@widgets/myEntryRows';
 
 import { MyResultBadge } from '@entities/drawResult';
 import { EventThumbnail } from '@entities/event';
-import { TICKET_GRADES, TicketGradePill } from '@entities/ticket';
+import { TICKET_GRADE_DOT, TICKET_GRADE_LABEL, TICKET_GRADES } from '@entities/ticket';
 import { getErrorCodeMessage } from '@shared/api/errorMessage';
 import { formatKst, formatKstDot, isSameKstDate, KST_HOUR_MINUTE } from '@shared/lib/date';
 import { Badge } from '@shared/ui/badge';
@@ -73,13 +73,29 @@ export function EntryTableRow({ row, now }: { row: MyEntryRow; now: Date }) {
                     ) : usedGrades.length === 0 ? (
                         <span className="text-caption text-fg-tertiary">응모권 없이 참여</span>
                     ) : (
-                        usedGrades.map((grade) => (
-                            <TicketGradePill
-                                key={grade}
-                                grade={grade}
-                                count={entry.deductedTicketsByGrade[grade]}
-                            />
-                        ))
+                        // 등급 알약 안에 장수를 넣으면 "실버 2 골드 1"이 한 덩어리로 읽혀 헷갈린다 —
+                        // 합계를 크게 먼저 두고, 등급별 장수는 아래에 색 점과 함께 작게 푼다
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-body-sm-bold text-fg-primary tabular-nums">
+                                {usedGrades.reduce(
+                                    (sum, grade) => sum + entry.deductedTicketsByGrade[grade],
+                                    0,
+                                )}
+                                장
+                            </span>
+                            <span className="text-caption text-fg-tertiary flex flex-wrap items-center gap-x-2">
+                                {usedGrades.map((grade) => (
+                                    <span key={grade} className="inline-flex items-center gap-1">
+                                        <span
+                                            aria-hidden
+                                            className={`${TICKET_GRADE_DOT[grade]} size-1.5 rounded-full`}
+                                        />
+                                        {TICKET_GRADE_LABEL[grade]}{' '}
+                                        {entry.deductedTicketsByGrade[grade]}
+                                    </span>
+                                ))}
+                            </span>
+                        </div>
                     )}
                 </div>
 

@@ -98,7 +98,8 @@ function DialogFooter({
         <div
             data-slot="dialog-footer"
             className={cn(
-                'bg-muted/50 -mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t p-4 sm:flex-row sm:justify-end',
+                // 서비스 모달 공통 — 회색 띠·구분선 없이 버튼이 한 줄을 똑같이 나눠 채운다 (응모 확인 모달과 같은 꼴)
+                'flex gap-4 *:flex-1',
                 className,
             )}
             {...props}

@@ -16,7 +16,9 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
     const usedTickets = event.myTicketCount ?? entryCount * event.requiredTickets;
     const paragraphs = detail?.paragraphs ?? [event.description];
 
-    const specs: { label: string; value: string | null }[] = [
+    type Spec = { label: string; value: string | null };
+    // 13줄이 한 줄로 길게 이어지던 표를 '상품·일정'과 '응모 현황' 두 묶음으로 나눈다 — 넓은 화면에서는 나란히 둔다
+    const productSpecs: Spec[] = [
         { label: '상품 구성', value: detail?.prizeComposition ?? event.prizeName },
         {
             label: '추첨 인원',
@@ -35,6 +37,8 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
                     ? '응모권 없이 참여'
                     : `1회 응모 시 ${event.requiredTickets}장`,
         },
+    ];
+    const entrySpecs: Spec[] = [
         {
             label: '보유 응모권',
             value: ticket ? `${formatNumber(ticket.availableCount)}장` : null,
@@ -54,7 +58,7 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
     ];
 
     return (
-        <section className="bg-surface-page border-border-default flex flex-col gap-6 rounded-2xl border p-5 sm:p-8">
+        <section className="bg-surface-page border-border-default flex flex-col gap-6 rounded-2xl border p-5">
             <h2 className="text-subhead text-fg-primary">이벤트 상세 안내</h2>
 
             <div className="flex flex-col gap-3">
@@ -67,21 +71,38 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
 
             <hr className="border-border-default" />
 
+            <div className="grid gap-8 lg:grid-cols-2">
+                <SpecGroup title="상품·일정" specs={productSpecs} />
+                <SpecGroup title="응모 현황" specs={entrySpecs} />
+            </div>
+        </section>
+    );
+}
+
+function SpecGroup({
+    title,
+    specs,
+}: {
+    title: string;
+    specs: { label: string; value: string | null }[];
+}) {
+    return (
+        <div className="flex flex-col gap-3">
+            <h3 className="text-body-sm-bold text-fg-tertiary">{title}</h3>
             <dl className="flex flex-col gap-3">
                 {specs
                     .filter((spec) => spec.value != null)
                     .map(({ label, value }) => (
-                        // 좁은 화면에서는 위아래로 쌓는다 — 라벨을 160px로 잡으면 값 칸이 90px대로 남는다
+                        // 좁은 화면에서는 위아래로 쌓는다 — 라벨 칸을 넓게 잡으면 값 칸이 너무 좁아진다
                         <div key={label} className="flex flex-col sm:flex-row sm:items-start">
-                            <dt className="text-body-bold text-fg-primary sm:w-40 sm:shrink-0">
+                            {/* 굵은 값이 줄줄이 이어지면 표 전체가 무거워 보여, 굵기 대신 색(라벨 연하게·값 진하게)으로만 나눈다 */}
+                            <dt className="text-body text-fg-tertiary sm:w-32 sm:shrink-0">
                                 {label}
                             </dt>
-                            <dd className="text-body-bold text-fg-primary min-w-0 sm:flex-1">
-                                {value}
-                            </dd>
+                            <dd className="text-body text-fg-primary min-w-0 sm:flex-1">{value}</dd>
                         </div>
                     ))}
             </dl>
-        </section>
+        </div>
     );
 }

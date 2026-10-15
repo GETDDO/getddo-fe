@@ -129,8 +129,8 @@ export function AdminEventDetailPage() {
                     {formatKst(event.startsAt, KST_YMD_HM)} ~ {formatKst(event.endsAt, KST_YMD_HM)}{' '}
                     (KST)
                 </InfoRow>
-                <InfoRow label="발표 예정">
-                    {formatKst(event.publicationScheduledAt, KST_YMD_HM)} (KST)
+                <InfoRow label="자동 추첨 기준">
+                    {formatKst(event.drawScheduledAt, KST_YMD_HM)} (KST)
                 </InfoRow>
                 {event.canceledAt && (
                     <InfoRow label="취소 이력">{formatKst(event.canceledAt, KST_YMD_HM)}</InfoRow>

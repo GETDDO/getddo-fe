@@ -1,18 +1,28 @@
-import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import { useEventList } from '@entities/event';
 import { useVirtualClock } from '@shared/lib/virtualClock';
+import { Badge } from '@shared/ui/badge';
+import { Loading } from '@shared/ui/loading';
 
+import { RAFFLE_SECTION_IDS } from './model/sectionIds';
 import { ClosedRaffleList } from './ui/ClosedRaffleList';
 import { LiveRaffleSection } from './ui/LiveRaffleSection';
 import { TimeRaffleHero } from './ui/TimeRaffleHero';
 import { TimeRaffleTrustNotice } from './ui/TimeRaffleTrustNotice';
 import { UpcomingRaffleCard } from './ui/UpcomingRaffleCard';
 
-const CONTAINER = 'mx-auto w-full max-w-312 px-6 pt-20 pb-54';
+const CONTAINER = 'mx-auto w-full max-w-312 px-6 pb-28';
 
 /** ADR-010 — 가중치 적용 이벤트는 사용자·이벤트별 누적 5장까지만 쓸 수 있다 */
 const ENTRY_TICKET_LIMIT = 5;
+
+type RaffleView = 'now' | 'closed';
+
+/** 주소의 ?view= 값 — 마감한 래플 화면은 'closed', 그 밖은 기본 화면 */
+const VIEW_PARAM = 'view';
 
 export function TimeRafflePage() {
     const { data: events, isPending, isError } = useEventList();
@@ -20,10 +30,44 @@ export function TimeRafflePage() {
     // 날짜 머리말('오늘/어제') 표기 전용이라 마운트 시각으로 충분하다 — 마감 판정에는 쓰지 않는다
     const [now] = useState(() => clock.now());
 
+    // 마감한 래플은 페이지를 옮기지 않고 아래 내용 칸만 바꿔 보여 준다. 상태를 주소에 담아
+    // 뒤로가기로 기본 화면에 돌아오고, 링크로 바로 마감 화면을 열 수 있게 한다
+    const [searchParams, setSearchParams] = useSearchParams();
+    const view: RaffleView = searchParams.get(VIEW_PARAM) === 'closed' ? 'closed' : 'now';
+    // 칸을 바꾼 뒤 내려갈 곳 — 바꾸기 전에는 그 섹션이 화면에 없어 렌더가 끝난 뒤 스크롤한다
+    const pendingScroll = useRef<string | null>(null);
+    // 처음 들어왔을 때는 움직이지 않는다 — 진행 중 카드가 밀려 들어오면 정보가 늦게 읽힌다. 전체보기·뒤로로 바꿀 때만 민다
+    const [slideOnSwitch, setSlideOnSwitch] = useState(false);
+
+    const scrollTo = (target: string) => {
+        document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    useEffect(() => {
+        if (!pendingScroll.current) return;
+        scrollTo(pendingScroll.current);
+        pendingScroll.current = null;
+    }, [view]);
+
+    const changeView = (next: RaffleView, target: string) => {
+        if (next === view) {
+            scrollTo(target);
+            return;
+        }
+        pendingScroll.current = target;
+        setSlideOnSwitch(true);
+        setSearchParams(next === 'closed' ? { [VIEW_PARAM]: 'closed' } : {});
+    };
+
+    // 머리의 진행 칸 — 진행 중·오픈 예정은 기본 화면에만 있어 마감 화면이면 먼저 칸을 바꾼다.
+    // 오늘 발표(마감 목록)는 두 화면 모두에 있어 지금 화면에서 내려간다
+    const selectSection = (targetId: string) =>
+        changeView(targetId === RAFFLE_SECTION_IDS.closed ? view : 'now', targetId);
+
     if (isPending) {
         return (
             <main className={CONTAINER}>
-                <p className="text-fg-tertiary text-body-sm">불러오는 중…</p>
+                <Loading size="lg" />
             </main>
         );
     }
@@ -65,38 +109,79 @@ export function TimeRafflePage() {
                     upcoming={byOpensAtAsc}
                     closed={byEndsAtDesc}
                     now={now}
+                    onSelectSection={selectSection}
                 />
 
-                <LiveRaffleSection events={byEndsAtAsc} />
-
-                <section className="flex flex-col gap-5">
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-title-3 text-fg-primary">오픈 예정</h2>
-                        {byOpensAtAsc.length > 0 && (
-                            <span className="bg-surface-sunken text-label-sm text-fg-secondary rounded-full px-2.5 py-1">
-                                {byOpensAtAsc.length}
-                            </span>
-                        )}
-                    </div>
-                    {byOpensAtAsc.length === 0 ? (
-                        <p className="text-body-sm text-fg-tertiary">오픈 예정인 래플이 없어요.</p>
+                {/*
+                 * 머리 아래 내용 칸만 갈아 끼운다 — 마감 화면은 옆에서 밀려 들어오고, 돌아가면 반대쪽에서 들어온다.
+                 * 거르기 탭이 아니라 '전체보기'로 들어갔다 '뒤로'로 나오는 한 겹 아래 화면이다
+                 */}
+                <motion.div
+                    key={view}
+                    initial={
+                        slideOnSwitch ? { opacity: 0, x: view === 'closed' ? 24 : -24 } : false
+                    }
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                    // 섹션 사이는 홈·미션과 같은 80 (머리와 첫 섹션은 미션처럼 56)
+                    className="flex flex-col gap-20"
+                >
+                    {view === 'closed' ? (
+                        <ClosedRaffleList
+                            id={RAFFLE_SECTION_IDS.closed}
+                            events={byEndsAtDesc}
+                            now={now}
+                            mode="full"
+                            onBack={() => changeView('now', RAFFLE_SECTION_IDS.closed)}
+                        />
                     ) : (
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                            {byOpensAtAsc.map((event) => (
-                                <UpcomingRaffleCard
-                                    key={event.id}
-                                    event={event}
-                                    now={now}
-                                    ticketLimit={ENTRY_TICKET_LIMIT}
-                                />
-                            ))}
-                        </div>
+                        <>
+                            <LiveRaffleSection id={RAFFLE_SECTION_IDS.live} events={byEndsAtAsc} />
+
+                            <section
+                                id={RAFFLE_SECTION_IDS.upcoming}
+                                className="flex scroll-mt-24 flex-col gap-6"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-title-3 text-fg-primary">오픈 예정</h2>
+                                    {byOpensAtAsc.length > 0 && (
+                                        <Badge variant="neutral" size="sm">
+                                            {byOpensAtAsc.length}
+                                        </Badge>
+                                    )}
+                                </div>
+                                {byOpensAtAsc.length === 0 ? (
+                                    <p className="text-body-sm text-fg-tertiary">
+                                        오픈 예정인 래플이 없어요.
+                                    </p>
+                                ) : (
+                                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                        {byOpensAtAsc.map((event) => (
+                                            <UpcomingRaffleCard
+                                                key={event.id}
+                                                event={event}
+                                                now={now}
+                                                ticketLimit={ENTRY_TICKET_LIMIT}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
+
+                            <ClosedRaffleList
+                                id={RAFFLE_SECTION_IDS.closed}
+                                events={byEndsAtDesc}
+                                now={now}
+                                mode="preview"
+                                onShowAll={() => changeView('closed', RAFFLE_SECTION_IDS.closed)}
+                            />
+                        </>
                     )}
-                </section>
+                </motion.div>
 
-                <ClosedRaffleList events={byEndsAtDesc} now={now} />
-
-                <TimeRaffleTrustNotice />
+                <div className="mt-6">
+                    <TimeRaffleTrustNotice />
+                </div>
             </div>
         </main>
     );

@@ -16,8 +16,11 @@ const URGENT_MS = 10 * 60 * 1000;
  */
 interface CloseCountdownChipProps {
     endsAt: string;
-    /** 대표 카드는 한 단계 크게, 작은 카드는 캡션 크기로 둔다 (시안 live-card / live-card · compact) */
-    size?: 'md' | 'sm';
+    /**
+     * 대표 카드는 한 단계 크게, 작은 카드는 캡션 크기로 둔다 (시안 live-card / live-card · compact).
+     * lg는 대표 카드 오른쪽 응모 칸의 큰 숫자 — 칩 대신 글자색으로 급함을 알린다
+     */
+    size?: 'lg' | 'md' | 'sm';
 }
 
 export function CloseCountdownChip({ endsAt, size = 'md' }: CloseCountdownChipProps) {
@@ -36,6 +39,18 @@ export function CloseCountdownChip({ endsAt, size = 'md' }: CloseCountdownChipPr
     if (remainingMs <= 0) return null;
 
     const urgent = remainingMs <= URGENT_MS;
+
+    if (size === 'lg') {
+        return (
+            <span
+                aria-hidden
+                className={`text-title-2 tabular-nums ${urgent ? 'text-fg-brand' : 'text-fg-primary'}`}
+            >
+                {formatCloseCountdown(remainingMs)}
+            </span>
+        );
+    }
+
     const text = size === 'md' ? 'text-body-sm' : 'text-caption';
 
     return (

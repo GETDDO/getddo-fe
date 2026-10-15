@@ -29,6 +29,7 @@ export {
 } from './api/queries';
 export type { MissionSubmissionOutcome } from './api/queries';
 export { buildMissionAnswers, findMissingRequired } from './lib/missionAnswers';
+export { missionThumbnail } from './lib/missionThumbnail';
 export type { MissionAnswerDraft } from './lib/missionAnswers';
 export { MissionQuestionField } from './ui/MissionQuestionField';
 export { MissionResultPanel } from './ui/MissionResultPanel';

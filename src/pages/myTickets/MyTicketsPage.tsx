@@ -5,6 +5,7 @@ import { formatKst, KST_HOUR_MINUTE, kstDayDiff, toKst } from '@shared/lib/date'
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
 import { PageHeader } from '@shared/ui/page-header';
+import { Skeleton } from '@shared/ui/skeleton';
 
 import type { ExpiringSoon } from './ui/TicketWalletHero';
 
@@ -55,7 +56,7 @@ export function MyTicketsPage() {
         : null;
 
     return (
-        <main className="mx-auto flex w-full max-w-312 flex-col gap-6 px-6 pt-12 pb-28">
+        <main className="mx-auto flex w-full max-w-312 flex-col gap-6 px-6 pb-28">
             <PageHeader
                 backTo="/mypage"
                 backLabel="마이페이지"
@@ -68,7 +69,8 @@ export function MyTicketsPage() {
                 }
             />
 
-            {ticketsPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {/* 지갑 머리 자리를 잡아 둔다 */}
+            {ticketsPending && <Skeleton className="h-56 rounded-2xl" />}
             {ticketsError && (
                 <p className="text-destructive text-body-sm">응모권 잔액을 불러오지 못했습니다.</p>
             )}

@@ -223,7 +223,7 @@ function effectiveStatus(item: MockAdminEvent, now: number): AdminEventStatus {
     return item.status;
 }
 
-/** 응답 직렬화 — 내부 카운터를 빼고 계산된 상태·서버 시각·발표 예정을 싣는다 */
+/** 응답 직렬화 — 내부 카운터를 빼고 계산된 상태·서버 시각·자동 추첨 기준을 싣는다 */
 function toAdminResponse(item: MockAdminEvent, now: number) {
     const rest: Partial<MockAdminEvent> = { ...item };
     delete rest.entryCount;
@@ -231,7 +231,7 @@ function toAdminResponse(item: MockAdminEvent, now: number) {
     return {
         ...rest,
         status: effectiveStatus(item, now),
-        publicationScheduledAt: new Date(
+        drawScheduledAt: new Date(
             new Date(item.endsAt).getTime() + ANNOUNCE_DELAY_MS,
         ).toISOString(),
         serverTime: new Date(now).toISOString(),

@@ -42,7 +42,7 @@ export function DrawEventPanel({ eventId }: { eventId: string }) {
     const status = event ? ADMIN_STATUS_META[event.status] : null;
     const awaitingFirstPublication = event?.status === 'DRAW_CONFIRMED';
     // ADR-022 — 발표 예정 시각·카운트다운은 계약에서 제외됐다. 표시 시각은 최초 자동 추첨 기준이다
-    const drawScheduledAt = event?.publicationScheduledAt;
+    const drawScheduledAt = event?.drawScheduledAt;
 
     // 비선택 탭은 tabIndex=-1이라 방향키로 이동한다 — APG 탭 패턴의 roving tabindex
     const handleTabKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {

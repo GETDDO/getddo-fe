@@ -1,4 +1,3 @@
-import { Gift } from 'lucide-react';
 import { useState } from 'react';
 
 import { toKst } from '@shared/lib/date';
@@ -33,19 +32,18 @@ export function EventCard({ event }: { event: Event }) {
     const dDay = event.status === 'open' ? kstDayDiff(event.endsAt, now) : null;
 
     return (
-        // 피그마 홈 이벤트 카드 — 테두리 없이 그림자, 이미지 높이 150, 본문 여백 16
-        <Card variant="elevated" className="h-full gap-0 py-0">
+        // 홈 이벤트 카드 — 테두리 + 그림자, 이미지 16:9, 본문 여백 16.
+        // 피그마는 테두리 없이 그림자만이지만, 흰 배경 사진이면 카드 윤곽이 흐려지고 같은 홈의 겟또타임·응모권 카드와 꼴이 달라 테두리를 준다
+        <Card className="h-full gap-0 py-0">
             {event.bannerImageUrl ? (
-                // 이벤트마다 배너 그림 스타일이 달라도 같은 틀로 보이게 높이·자르기 기준을 고정하고, 밝은 그림이 본문과 붙어 보이지 않게 아래 구분선을 둔다
+                // 이벤트 배너는 16:9로 채운다(DESIGN-SYSTEM '이미지 비율') — 그림 스타일이 달라도 같은 틀로 보이게 비율·자르기 기준을 고정하고, 밝은 그림이 본문과 붙어 보이지 않게 아래 구분선을 둔다
                 <img
                     src={event.bannerImageUrl}
                     alt=""
-                    className="border-border-default h-37.5 w-full shrink-0 border-b object-cover object-center"
+                    className="border-border-default aspect-video w-full shrink-0 border-b object-cover object-center"
                 />
             ) : (
-                <div className="bg-surface-sunken flex h-37.5 items-center justify-center">
-                    <Gift className="text-fg-disabled size-8" />
-                </div>
+                <div className="bg-surface-sunken aspect-video" />
             )}
             <div className="flex flex-col gap-3 p-4">
                 {((event.tags?.length ?? 0) > 0 || (dDay != null && dDay >= 0)) && (

@@ -10,6 +10,7 @@ import {
     preloadGamePlayer,
     useSubmitGamePlay,
 } from '@features/playGame';
+import { Loading } from '@shared/ui/loading';
 import { GameRail } from '@widgets/gameRail';
 
 import { GameHero } from './ui/GameHero';
@@ -49,7 +50,9 @@ export function GameDetailPage() {
 
     if (isPending) {
         return (
-            <main className={`${CONTAINER} text-body-sm text-fg-tertiary py-20`}>불러오는 중…</main>
+            <main className={`${CONTAINER} py-20`}>
+                <Loading size="lg" />
+            </main>
         );
     }
     if (isError || !game) {

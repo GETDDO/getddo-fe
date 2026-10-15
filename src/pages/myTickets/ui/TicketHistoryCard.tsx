@@ -11,6 +11,7 @@ import { formatNumber } from '@shared/lib/format';
 import { Button } from '@shared/ui/button';
 import { Segmented } from '@shared/ui/segmented';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
+import { SkeletonList } from '@shared/ui/skeleton';
 
 type Kind = 'ALL' | 'IN' | 'OUT' | 'EXPIRE_REFUND';
 type Period = '7D' | '30D' | '90D' | 'ALL';
@@ -135,7 +136,7 @@ export function TicketHistoryCard({
                 <span className="text-right">만료 일시</span>
             </div>
 
-            {isPending && <p className="text-body-sm text-fg-tertiary py-6">불러오는 중…</p>}
+            {isPending && <SkeletonList count={5} className="py-3" />}
             {isError && (
                 <p className="text-destructive text-body-sm py-6">
                     응모권 내역을 불러오지 못했습니다.

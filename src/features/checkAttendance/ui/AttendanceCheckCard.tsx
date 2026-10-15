@@ -7,6 +7,7 @@ import { useAttendanceMonth, useAttendanceToday } from '@entities/attendance';
 import { cn } from '@shared/lib/utils';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
+import { SkeletonList } from '@shared/ui/skeleton';
 
 import { useCheckAttendance } from '../api/queries';
 import {
@@ -276,11 +277,7 @@ export function AttendanceCheckCard({
                             </Rise>
                         )}
 
-                        {isPending && (
-                            <p className="text-body-sm text-fg-tertiary self-center">
-                                불러오는 중…
-                            </p>
-                        )}
+                        {isPending && <SkeletonList count={2} rowClassName="h-16" />}
                         {isError && (
                             <p className="text-body-sm text-destructive self-center">
                                 출석 정보를 불러오지 못했습니다.

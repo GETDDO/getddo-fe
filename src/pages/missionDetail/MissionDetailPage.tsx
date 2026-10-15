@@ -9,6 +9,7 @@ import { QuizForm, SurveyForm } from '@features/submitMission';
 import { formatKst } from '@shared/lib/date';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
+import { Loading } from '@shared/ui/loading';
 import { StatusDot } from '@shared/ui/status-dot';
 
 const CONTAINER = 'mx-auto w-full max-w-312 px-6';
@@ -36,12 +37,14 @@ export function MissionDetailPage() {
 
     if (isPending) {
         return (
-            <main className={`${CONTAINER} text-body-sm text-fg-tertiary py-20`}>불러오는 중…</main>
+            <main className={`${CONTAINER} pb-20`}>
+                <Loading size="lg" />
+            </main>
         );
     }
     if (isError || !mission) {
         return (
-            <main className={`${CONTAINER} flex flex-col items-start gap-3 py-20`}>
+            <main className={`${CONTAINER} flex flex-col items-start gap-3 pb-20`}>
                 <p className="text-body text-fg-primary">
                     {isError ? '미션 정보를 불러오지 못했습니다.' : '미션을 찾을 수 없어요.'}
                 </p>
@@ -66,7 +69,7 @@ export function MissionDetailPage() {
     };
 
     return (
-        <main className={`${CONTAINER} flex flex-col gap-8 pt-20 pb-28`}>
+        <main className={`${CONTAINER} flex flex-col gap-8 pb-28`}>
             <header className="flex flex-col gap-3">
                 <StatusDot tone={mission.completed ? 'muted' : 'brand'}>
                     {mission.completed ? '참여 완료' : '참여 가능'}

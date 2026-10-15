@@ -19,15 +19,18 @@ const RESULT_LIMIT = 4;
 export function HomePage() {
     const { data: events, isPending, isError } = useEventList();
 
-    const ticketEvents = (events ?? []).filter((event) => event.requiredTickets > 0);
-    const freeEvents = (events ?? []).filter((event) => event.requiredTickets === 0);
+    // 겟또타임 섹션에는 겟또타임만, 이벤트 섹션에는 겟또타임이 아닌 응모권 미사용 이벤트만 둔다
+    const timeRaffles = (events ?? []).filter((event) => event.isTimeRaffle);
+    const freeEvents = (events ?? []).filter(
+        (event) => !event.isTimeRaffle && event.requiredTickets === 0,
+    );
     const resultEvents = (events ?? []).filter(
         (event) => event.status === 'closed' || event.status === 'drawn',
     );
 
     return (
-        // 피그마 홈 간격 — 헤더 아래 80, 섹션 사이 80, 섹션 제목과 내용 24, 마지막 섹션과 푸터도 섹션 사이와 같은 80
-        <main className="flex w-full flex-col gap-20 pt-20 pb-20">
+        // 피그마 홈 간격 — 헤더 아래 64(UserLayout이 준다), 섹션 사이 80, 섹션 제목과 내용 24. 마지막 섹션과 푸터는 다른 화면과 같은 112(pb-28)
+        <main className="flex w-full flex-col gap-20 pb-28">
             <div className={`${CONTAINER} flex flex-col gap-20`}>
                 <BannerSlider
                     renderStatus={(event, isActive) => (
@@ -35,23 +38,25 @@ export function HomePage() {
                             eventId={event.id}
                             isOpen={event.status === 'open'}
                             enabled={isActive}
+                            winnerCount={event.winnerCount}
                         />
                     )}
                 />
-                <TicketEventSection events={ticketEvents} isPending={isPending} isError={isError} />
+                <TicketEventSection events={timeRaffles} isPending={isPending} isError={isError} />
             </div>
             <div className={CONTAINER}>
                 <TicketBalanceWidget />
             </div>
             <div className={`${CONTAINER} flex flex-col gap-20`}>
                 <EventCardList
-                    title="응모권 없이 참여할 수 있는 이벤트"
+                    title="이벤트"
+                    description="응모권 없이도 참여할 수 있어요."
                     moreHref="/events"
                     moreLabel="더보기"
                     events={freeEvents.slice(0, FREE_EVENT_LIMIT)}
                     isPending={isPending}
                     isError={isError}
-                    emptyMessage="현재 응모권 없이 참여할 수 있는 이벤트가 없습니다."
+                    emptyMessage="지금 참여할 수 있는 이벤트가 없어요."
                 />
                 {resultEvents.length > 0 && (
                     <section className="flex flex-col gap-6">
