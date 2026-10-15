@@ -16,6 +16,9 @@ const TakkoTimingGame = lazy(() =>
 const ColorWordGame = lazy(() =>
     import('./ColorWordGame').then((m) => ({ default: m.ColorWordGame })),
 );
+const TakkoOrderGame = lazy(() =>
+    import('./TakkoOrderGame').then((m) => ({ default: m.TakkoOrderGame })),
+);
 
 /** 게임 코드를 내려받는 동안의 화면 — 게임 영역과 나가기 버튼을 유지해 느린 네트워크에서도 화면이 비거나 갇히지 않게 한다 (모든 게임 공통) */
 function GameLoading({ onExit }: { onExit: () => void }) {
@@ -59,6 +62,13 @@ export function GamePlayer({
         return (
             <Suspense fallback={<GameLoading onExit={onExit} />}>
                 <TakkoTimingGame bestScore={bestScore} onExit={onExit} onGameOver={onGameOver} />
+            </Suspense>
+        );
+    }
+    if (gameId === 'game-order') {
+        return (
+            <Suspense fallback={<GameLoading onExit={onExit} />}>
+                <TakkoOrderGame bestScore={bestScore} onExit={onExit} onGameOver={onGameOver} />
             </Suspense>
         );
     }

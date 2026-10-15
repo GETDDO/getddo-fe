@@ -103,6 +103,28 @@ const CONTENTS: Record<string, GameContent> = {
             image: '/images/games/takko-timing.jpg',
         },
     },
+    'game-order': {
+        tagline: '손님 주문을 잘 외웠다가 순서대로 내주세요.',
+        // 대표·게임 방법 이미지는 아직 없다 — 나오기 전까지 공통 안내 그림을 쓴다
+        heroImage: null,
+        guide: {
+            title: '게임 방법',
+            subtitle: '보고, 외우고, 순서대로!',
+            steps: [
+                {
+                    icon: Gamepad2,
+                    keys: ['1', '2', '3', '4'],
+                    text: '또는 메뉴 버튼을 눌러 주문한 순서대로 내줘요.',
+                },
+                {
+                    icon: Target,
+                    text: '목숨은 3개, 맞힐수록 주문이 하나씩 길어져요.\n시간 제한은 없어요.',
+                },
+                REWARD_STEP,
+            ],
+            image: guideBanner,
+        },
+    },
     'game-takoyaki': {
         tagline: '60초 안에 타코야끼를 구워내세요.',
         heroImage: takoyakiHero,
