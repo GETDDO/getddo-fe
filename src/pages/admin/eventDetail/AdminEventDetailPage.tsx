@@ -72,7 +72,7 @@ export function AdminEventDetailPage() {
 
     return (
         <div className="flex max-w-280 flex-col gap-6 pb-10 md:pr-10">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
                 <Button variant="secondary" size="sm" asChild>
                     <Link to="/admin/events">← 목록</Link>
                 </Button>
@@ -85,7 +85,7 @@ export function AdminEventDetailPage() {
                 >
                     {status.label}
                 </span>
-                <div className="ml-auto flex gap-2">
+                <div className="ml-auto flex flex-wrap gap-2">
                     {hasDraw && (
                         <Button variant="secondary" asChild>
                             <Link to={`/admin/draw?eventId=${event.id}`}>추첨 관리</Link>

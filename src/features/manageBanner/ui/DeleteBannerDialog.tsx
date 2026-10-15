@@ -20,10 +20,17 @@ interface DeleteBannerDialogProps {
     /** 확인 문구에 보일 연결 이벤트 제목 */
     eventTitle: string;
     onOpenChange: (open: boolean) => void;
+    /** 삭제 완료 후 호출 — 삭제한 행의 버튼이 사라져 포커스 복귀 대상을 잃으므로 안정된 요소로 옮긴다 */
+    onDeleted?: () => void;
 }
 
 /** 배너 삭제 확인 — banner가 있을 때만 열린다 */
-export function DeleteBannerDialog({ banner, eventTitle, onOpenChange }: DeleteBannerDialogProps) {
+export function DeleteBannerDialog({
+    banner,
+    eventTitle,
+    onOpenChange,
+    onDeleted,
+}: DeleteBannerDialogProps) {
     const deleteBanner = useDeleteBanner();
 
     const submit = () => {
@@ -32,6 +39,8 @@ export function DeleteBannerDialog({ banner, eventTitle, onOpenChange }: DeleteB
             onSuccess: () => {
                 toast.success('배너를 삭제했습니다');
                 onOpenChange(false);
+                // 다이얼로그가 닫힌 뒤 실행해야 포커스 복귀와 겹치지 않는다
+                setTimeout(() => onDeleted?.(), 0);
             },
         });
     };

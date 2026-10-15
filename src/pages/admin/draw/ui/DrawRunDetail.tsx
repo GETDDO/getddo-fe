@@ -62,12 +62,19 @@ function ResultChips({ result }: { result: DrawResult }) {
 interface DrawRunDetailProps {
     drawId: string;
     eventCanceled: boolean;
+    /** 이벤트 상세 조회가 끝나 상태를 확인했을 때만 true — 확인 전엔 운영 행동을 막는다 */
+    eventReady: boolean;
     /** 당첨 취소로 재추첨 실행이 생기면 그 실행으로 선택을 옮긴다 */
     onRunCreated: (drawId: string) => void;
 }
 
 // AD02 실행 상세 — 실행 요약, 실패 정보, 취소 근거, 결과(당첨 취소 진입), 재추첨 시작·재개와 공개 반영
-export function DrawRunDetail({ drawId, eventCanceled, onRunCreated }: DrawRunDetailProps) {
+export function DrawRunDetail({
+    drawId,
+    eventCanceled,
+    eventReady,
+    onRunCreated,
+}: DrawRunDetailProps) {
     const { data: run, isPending, isError, refetch, isFetching } = useDrawRun(drawId);
 
     if (isPending) {
@@ -94,6 +101,7 @@ export function DrawRunDetail({ drawId, eventCanceled, onRunCreated }: DrawRunDe
         <RunDetailBody
             run={run}
             eventCanceled={eventCanceled}
+            eventReady={eventReady}
             onRunCreated={onRunCreated}
             refreshing={isFetching}
             onRefresh={() => void refetch()}
@@ -104,6 +112,7 @@ export function DrawRunDetail({ drawId, eventCanceled, onRunCreated }: DrawRunDe
 interface RunDetailBodyProps {
     run: DrawRunDetailData;
     eventCanceled: boolean;
+    eventReady: boolean;
     onRunCreated: (drawId: string) => void;
     refreshing: boolean;
     onRefresh: () => void;
@@ -112,6 +121,7 @@ interface RunDetailBodyProps {
 function RunDetailBody({
     run,
     eventCanceled,
+    eventReady,
     onRunCreated,
     refreshing,
     onRefresh,
@@ -133,10 +143,12 @@ function RunDetailBody({
     // 재추첨이 취소한 결과가 최초 발표 이후 공개된 적이 있는지 — AD06 사용 가능 여부를 가른다
     const canceledRunIds = [...new Set(run.cancellations.map((c) => c.canceledDrawRunId))];
     const canceledRuns = useDrawRuns(canceledRunIds);
+    // 공개 이력 조회 결과를 로딩·실패·발표 전·후로 구분한다 — 실패는 공개 반영을 막는다
     const publicationOf = (canceledResultId: string, canceledRunId: string) => {
-        const detail = canceledRuns[canceledRunIds.indexOf(canceledRunId)]?.data;
-        if (!detail) return 'loading' as const;
-        const result = detail.results.find((r) => r.id === canceledResultId);
+        const query = canceledRuns[canceledRunIds.indexOf(canceledRunId)];
+        if (query?.isError) return 'error' as const;
+        if (!query?.data) return 'loading' as const;
+        const result = query.data.results.find((r) => r.id === canceledResultId);
         return result?.wasPublished ? ('after' as const) : ('before' as const);
     };
     const publicationStates = run.cancellations.map((c) =>
@@ -144,6 +156,7 @@ function RunDetailBody({
     );
     const anyBeforeFirstPublication = publicationStates.includes('before');
     const stillLoading = publicationStates.includes('loading');
+    const publicationCheckFailed = publicationStates.includes('error');
 
     const selectedResults = run.results.filter((r) => r.resultType === 'SELECTED');
     const alreadyPublished =
@@ -157,14 +170,17 @@ function RunDetailBody({
         isRedraw &&
         confirmed &&
         !eventCanceled &&
+        eventReady &&
         !stillLoading &&
+        !publicationCheckFailed &&
         !anyBeforeFirstPublication &&
         !hasUnpublishedCanceledResult &&
         !alreadyPublished;
-    const canResume = isRedraw && !confirmed && run.cancellations.length > 0 && !eventCanceled;
+    const canResume =
+        isRedraw && !confirmed && run.cancellations.length > 0 && !eventCanceled && eventReady;
     // 실패한 최초 실행은 새로 만들지 않고 같은 실행을 재개한다 (GD-87) — 재추첨은 AD09로 재개한다
-    const canResumeInitial = !isRedraw && run.status === 'FAILED' && !eventCanceled;
-    const cancelable = confirmed && !eventCanceled;
+    const canResumeInitial = !isRedraw && run.status === 'FAILED' && !eventCanceled && eventReady;
+    const cancelable = confirmed && !eventCanceled && eventReady;
 
     const resume = () => {
         const cancellation = run.cancellations[0];
@@ -258,6 +274,11 @@ function RunDetailBody({
                         취소된 이벤트라 당첨 취소·재추첨·공개 반영을 할 수 없습니다.
                     </p>
                 )}
+                {!eventReady && (
+                    <p className="text-body-sm text-fg-secondary">
+                        이벤트 정보를 확인하지 못해 당첨 취소·재추첨·공개 반영을 사용할 수 없습니다.
+                    </p>
+                )}
             </section>
 
             {run.lastFailureCode && (
@@ -306,7 +327,22 @@ function RunDetailBody({
                                         {state === 'loading' && '공개 이력 확인 중…'}
                                         {state === 'after' && '최초 발표 후 취소한 당첨입니다.'}
                                         {state === 'before' && '최초 공개 전에 취소한 당첨입니다.'}
+                                        {state === 'error' && '공개 이력을 불러오지 못했습니다.'}
                                     </p>
+                                    {state === 'error' && (
+                                        <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            className="self-start"
+                                            onClick={() =>
+                                                void canceledRuns[
+                                                    canceledRunIds.indexOf(c.canceledDrawRunId)
+                                                ]?.refetch()
+                                            }
+                                        >
+                                            공개 이력 다시 확인
+                                        </Button>
+                                    )}
                                 </li>
                             );
                         })}
@@ -341,11 +377,16 @@ function RunDetailBody({
                             재추첨이 확정되면 공개 명단에 반영할 수 있습니다.
                         </p>
                     )}
+                    {confirmed && publicationCheckFailed && (
+                        <p className="text-body-sm text-fg-secondary">
+                            취소한 원본 실행의 공개 이력을 불러오지 못했습니다. 확인이 끝날 때까지
+                            공개 명단에 반영할 수 없습니다.
+                        </p>
+                    )}
                     {confirmed && anyBeforeFirstPublication && (
                         <p className="text-body-sm text-fg-secondary">
                             최초 공개 전 취소가 포함돼 이 API(AD06)로 반영할 수 없습니다. 최초 공개
-                            전 재추첨의 관리자 확인은 <PolicyPendingChip /> 이며, 확인이 늦으면
-                            서버가 최초 발표를 지연합니다.
+                            전 재추첨은 관리자 확인 후 수동 공개로 함께 공개됩니다.
                         </p>
                     )}
                     {confirmed && !anyBeforeFirstPublication && !alreadyPublished && (

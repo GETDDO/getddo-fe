@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 import type { AdminNotification, MockDeliveryStatus } from '../model/types';
 
+import { deliveryRetryBlockReason } from '../model/deliveryRetryReason';
 import { MOCK_DELIVERY_STATUS_LABEL } from '../model/types';
 
 const CHIP = 'text-caption rounded-md px-2 py-0.5 font-medium whitespace-nowrap';
@@ -29,9 +30,11 @@ const helper = createColumnHelper<typeof features, AdminNotification>();
 export function AdminNotificationTable({
     notifications,
     onRetry,
+    onRowClick,
 }: {
     notifications: AdminNotification[];
     onRetry?: (notification: AdminNotification) => void;
+    onRowClick?: (notification: AdminNotification) => void;
 }) {
     const columns = useMemo(
         () =>
@@ -116,20 +119,53 @@ export function AdminNotificationTable({
                 helper.display({
                     id: 'retry',
                     header: '복구',
+                    cell: ({ row }) => {
+                        const blockReason = deliveryRetryBlockReason(row.original);
+                        const reasonId = `delivery-retry-block-${row.original.id}`;
+                        return (
+                            <div className="flex max-w-40 flex-col gap-1">
+                                <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    disabled={!row.original.retryable}
+                                    aria-describedby={blockReason ? reasonId : undefined}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onRetry?.(row.original);
+                                    }}
+                                >
+                                    발송 복구
+                                </Button>
+                                {blockReason && (
+                                    <span id={reasonId} className="text-caption text-fg-tertiary">
+                                        {blockReason}
+                                    </span>
+                                )}
+                            </div>
+                        );
+                    },
+                }),
+                // 행 onClick만으로는 키보드가 상세를 열 수 없다 — 이름 있는 버튼으로 동일 경로를 제공한다
+                helper.display({
+                    id: 'detail',
+                    header: '상세',
                     cell: ({ row }) => (
                         <Button
                             size="sm"
-                            variant="secondary"
-                            disabled={!row.original.retryable}
-                            title={row.original.retryable ? undefined : '복구할 수 없는 상태입니다'}
-                            onClick={() => onRetry?.(row.original)}
+                            variant="ghost"
+                            className="hover:bg-surface-pressed"
+                            aria-label={`${row.original.userId} 발송 상세`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onRowClick?.(row.original);
+                            }}
                         >
-                            발송 복구
+                            상세
                         </Button>
                     ),
                 }),
             ]),
-        [onRetry],
+        [onRetry, onRowClick],
     );
 
     const table = useTable({ features, columns, data: notifications });
@@ -158,7 +194,11 @@ export function AdminNotificationTable({
                     {table.getRowModel().rows.map((row) => (
                         <TableRow
                             key={row.id}
-                            className="hover:bg-surface-sunken focus-within:bg-surface-sunken"
+                            className={cn(
+                                'hover:bg-surface-sunken focus-within:bg-surface-sunken',
+                                onRowClick && 'cursor-pointer',
+                            )}
+                            onClick={() => onRowClick?.(row.original)}
                         >
                             {row.getAllCells().map((cell) => (
                                 <TableCell key={cell.id} className="px-4 py-3 align-top">

@@ -75,7 +75,14 @@ export function TicketInconsistencyTable({
 }) {
     return (
         <Frame
-            headers={['사용자', '응모권', '등급', '응모권 상태·버전', '마지막 이력 상태·버전', '']}
+            headers={[
+                '사용자',
+                '응모권',
+                '등급',
+                '응모권 상태·버전',
+                '마지막 이력 상태·버전',
+                '상세',
+            ]}
         >
             {rows.map((row) => (
                 <TableRow
@@ -115,6 +122,7 @@ export function TicketInconsistencyTable({
                             size="sm"
                             variant="ghost"
                             className="hover:bg-surface-pressed"
+                            aria-label={`${row.userId} 정합성 상세`}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onRowClick?.(row);

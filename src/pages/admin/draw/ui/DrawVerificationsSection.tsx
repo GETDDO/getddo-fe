@@ -23,7 +23,10 @@ interface DrawVerificationsSectionProps {
 // AD04 정합성 검증 실행 + AD08 검증 이력. 검증은 저장된 결과를 대조할 뿐 난수를 다시 돌리지 않는다
 export function DrawVerificationsSection({ drawId, canVerify }: DrawVerificationsSectionProps) {
     const [page, setPage] = useState(1);
-    const { data, isPending, isError } = useDrawVerifications(drawId, { page, size: PAGE_SIZE });
+    const { data, isPending, isError, refetch } = useDrawVerifications(drawId, {
+        page,
+        size: PAGE_SIZE,
+    });
     const verify = useVerifyDraw();
 
     return (
@@ -75,9 +78,14 @@ export function DrawVerificationsSection({ drawId, canVerify }: DrawVerification
                 </LoadingBlock>
             )}
             {isError && (
-                <p role="alert" className="text-semantic-error-strong text-body-sm">
-                    검증 이력을 불러오지 못했습니다.
-                </p>
+                <div className="flex items-center gap-3" role="alert">
+                    <p className="text-semantic-error-strong text-body-sm">
+                        검증 이력을 불러오지 못했습니다.
+                    </p>
+                    <Button size="sm" variant="secondary" onClick={() => void refetch()}>
+                        다시 시도
+                    </Button>
+                </div>
             )}
             {data && data.items.length === 0 && (
                 <p className="text-body-sm text-fg-tertiary">검증 이력이 없습니다.</p>

@@ -109,6 +109,7 @@ export function NotificationJobTable({
                             size="sm"
                             variant="ghost"
                             className="hover:bg-surface-pressed"
+                            aria-label={`${NOTIFICATION_TYPE_LABEL[row.original.notificationType]} 작업 상세`}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onRowClick?.(row.original);

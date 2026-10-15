@@ -46,6 +46,10 @@ interface BannerFormDialogProps {
     /** 수정 대상 — 없으면 등록이다 */
     banner: AdminBanner | null;
     events: BannerEventOption[];
+    /** 연결 이벤트 선택지 조회 상태 — 실패·로딩은 빈 목록과 구분해 안내한다 */
+    eventsPending?: boolean;
+    eventsError?: boolean;
+    onEventsRetry?: () => void;
     /** 등록 시 보낼 노출 순서 — 목록 맨 뒤에 붙이고, 이후 순서는 목록에서 바꾼다 */
     nextDisplayOrder: number;
 }
@@ -53,6 +57,9 @@ interface BannerFormDialogProps {
 function BannerForm({
     banner,
     events,
+    eventsPending,
+    eventsError,
+    onEventsRetry,
     nextDisplayOrder,
     onDone,
 }: Omit<BannerFormDialogProps, 'open' | 'onOpenChange'> & { onDone: () => void }) {
@@ -101,9 +108,14 @@ function BannerForm({
                     render={({ field }) => (
                         <Select value={field.value} onValueChange={field.onChange}>
                             <SelectTrigger
+                                ref={field.ref}
+                                onBlur={field.onBlur}
                                 id="banner-event"
                                 className="w-full"
                                 aria-invalid={Boolean(errors.eventId)}
+                                aria-describedby={
+                                    errors.eventId ? 'banner-event-error' : 'banner-event-status'
+                                }
                             >
                                 <SelectValue placeholder="이벤트를 선택하세요" />
                             </SelectTrigger>
@@ -118,8 +130,36 @@ function BannerForm({
                     )}
                 />
                 {errors.eventId && (
-                    <p className="text-semantic-error-strong text-caption">
+                    <p id="banner-event-error" className="text-semantic-error-strong text-caption">
                         {errors.eventId.message}
+                    </p>
+                )}
+                {eventsPending && (
+                    <p id="banner-event-status" className="text-fg-tertiary text-caption">
+                        이벤트 목록을 불러오는 중…
+                    </p>
+                )}
+                {eventsError && (
+                    <p
+                        id="banner-event-status"
+                        role="alert"
+                        className="text-semantic-error-strong text-caption"
+                    >
+                        이벤트 목록을 불러오지 못했습니다.
+                        {onEventsRetry && (
+                            <button
+                                type="button"
+                                className="text-fg-primary ml-2 underline"
+                                onClick={onEventsRetry}
+                            >
+                                다시 시도
+                            </button>
+                        )}
+                    </p>
+                )}
+                {!eventsPending && !eventsError && events.length === 0 && (
+                    <p id="banner-event-status" className="text-fg-tertiary text-caption">
+                        연결할 수 있는 이벤트가 없습니다. 이벤트를 먼저 등록하세요.
                     </p>
                 )}
             </div>
@@ -132,10 +172,14 @@ function BannerForm({
                     id="banner-image-key"
                     placeholder="이미지 업로드 계약 확정 전까지 키를 직접 입력"
                     aria-invalid={Boolean(errors.imageKey)}
+                    aria-describedby={errors.imageKey ? 'banner-image-key-error' : undefined}
                     {...register('imageKey')}
                 />
                 {errors.imageKey && (
-                    <p className="text-semantic-error-strong text-caption">
+                    <p
+                        id="banner-image-key-error"
+                        className="text-semantic-error-strong text-caption"
+                    >
                         {errors.imageKey.message}
                     </p>
                 )}
@@ -175,6 +219,9 @@ export function BannerFormDialog({
     onOpenChange,
     banner,
     events,
+    eventsPending,
+    eventsError,
+    onEventsRetry,
     nextDisplayOrder,
 }: BannerFormDialogProps) {
     return (
@@ -194,6 +241,9 @@ export function BannerFormDialog({
                 <BannerForm
                     banner={banner}
                     events={events}
+                    eventsPending={eventsPending}
+                    eventsError={eventsError}
+                    onEventsRetry={onEventsRetry}
                     nextDisplayOrder={nextDisplayOrder}
                     onDone={() => onOpenChange(false)}
                 />

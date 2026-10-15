@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { useResultChanges } from '@entities/winner';
 import { formatKst } from '@shared/lib/date';
+import { Button } from '@shared/ui/button';
 import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
@@ -12,7 +13,10 @@ const PAGE_SIZE = 10;
 // AD07 — 공개 버전 간 변경 대상·전후 정보·확인자·시각·사유
 export function ResultChangesSection({ eventId }: { eventId: string }) {
     const [page, setPage] = useState(1);
-    const { data, isPending, isError } = useResultChanges(eventId, { page, size: PAGE_SIZE });
+    const { data, isPending, isError, refetch } = useResultChanges(eventId, {
+        page,
+        size: PAGE_SIZE,
+    });
 
     return (
         <section
@@ -29,9 +33,14 @@ export function ResultChangesSection({ eventId }: { eventId: string }) {
                 </LoadingBlock>
             )}
             {isError && (
-                <p role="alert" className="text-semantic-error-strong text-body-sm">
-                    변경 이력을 불러오지 못했습니다.
-                </p>
+                <div className="flex items-center gap-3" role="alert">
+                    <p className="text-semantic-error-strong text-body-sm">
+                        변경 이력을 불러오지 못했습니다.
+                    </p>
+                    <Button size="sm" variant="secondary" onClick={() => void refetch()}>
+                        다시 시도
+                    </Button>
+                </div>
             )}
             {data && data.items.length === 0 && (
                 <p className="text-body-sm text-fg-tertiary">

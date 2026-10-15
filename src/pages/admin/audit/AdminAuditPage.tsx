@@ -10,7 +10,9 @@ import {
     useAuditLogs,
 } from '@entities/audit';
 import { kstInputToUtcIso } from '@shared/lib/date';
+import { isDateRangeOrdered } from '@shared/lib/filterConstants';
 import { Button } from '@shared/ui/button';
+import { DateRangeFilter } from '@shared/ui/filter-fields';
 import { Input } from '@shared/ui/input';
 import { Pager } from '@shared/ui/pager';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
@@ -47,9 +49,17 @@ export function AdminAuditPage() {
     const [to, setTo] = useState('');
     const [action, setAction] = useState('all');
     const [targetType, setTargetType] = useState('all');
+    const [rangeError, setRangeError] = useState(false);
     const [selected, setSelected] = useState<AuditLogSummary | null>(null);
 
-    const { data, isPending, isError } = useAuditLogs({
+    // 검색 버튼으로 확정할 값을 미리 계산해 입력값과 적용값의 차이(미적용 변경)를 잡는다
+    const draftFrom = fromInput ? kstInputToUtcIso(`${fromInput}T00:00`) : '';
+    const draftTo = toInput ? nextDay(toInput) : '';
+    const hasPendingDraft = actorIdInput.trim() !== actorId || draftFrom !== from || draftTo !== to;
+    const hasAppliedFilters =
+        actorId !== '' || from !== '' || to !== '' || action !== 'all' || targetType !== 'all';
+
+    const { data, isPending, isError, isFetching, refetch } = useAuditLogs({
         page,
         size: PAGE_SIZE,
         actorId: actorId || undefined,
@@ -61,17 +71,34 @@ export function AdminAuditPage() {
 
     const totalPages = data ? Math.max(1, Math.ceil(data.totalElements / data.size)) : 0;
     const resetPage = () => setPage(1);
+    const resetFilters = () => {
+        setActorIdInput('');
+        setActorId('');
+        setFromInput('');
+        setToInput('');
+        setFrom('');
+        setTo('');
+        setAction('all');
+        setTargetType('all');
+        setRangeError(false);
+        setPage(1);
+    };
 
     return (
         <div className="flex max-w-280 flex-col gap-6 pr-10 pb-10">
             <div className="flex flex-wrap items-center gap-3">
                 <form
-                    className="flex gap-2"
+                    className="flex flex-wrap items-center gap-2"
                     onSubmit={(e) => {
                         e.preventDefault();
+                        if (!isDateRangeOrdered(fromInput, toInput)) {
+                            setRangeError(true);
+                            return;
+                        }
+                        setRangeError(false);
                         setActorId(actorIdInput.trim());
-                        setFrom(fromInput ? kstInputToUtcIso(`${fromInput}T00:00`) : '');
-                        setTo(toInput ? nextDay(toInput) : '');
+                        setFrom(draftFrom);
+                        setTo(draftTo);
                         resetPage();
                     }}
                 >
@@ -82,23 +109,19 @@ export function AdminAuditPage() {
                         className="w-64"
                         aria-label="처리자 검색"
                     />
-                    <Input
-                        type="date"
-                        value={fromInput}
-                        onChange={(e) => setFromInput(e.target.value)}
-                        className="w-40"
-                        aria-label="시작일 필터"
-                    />
-                    <span className="text-fg-secondary self-center">~</span>
-                    <Input
-                        type="date"
-                        value={toInput}
-                        onChange={(e) => setToInput(e.target.value)}
-                        className="w-40"
-                        aria-label="종료일 필터"
+                    <DateRangeFilter
+                        from={fromInput}
+                        to={toInput}
+                        onFromChange={setFromInput}
+                        onToChange={setToInput}
+                        basis="처리일"
+                        error={rangeError ? '시작일이 종료일보다 늦습니다.' : null}
                     />
                     <Button type="submit" variant="secondary">
                         검색
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={resetFilters}>
+                        초기화
                     </Button>
                 </form>
 
@@ -141,19 +164,45 @@ export function AdminAuditPage() {
                 </Select>
             </div>
 
+            {hasPendingDraft && (
+                <p className="text-fg-tertiary text-caption -mt-4">
+                    변경한 조건은 검색을 눌러야 적용됩니다.
+                </p>
+            )}
+
             {isPending && (
                 <LoadingBlock>
                     <TableSkeleton />
                 </LoadingBlock>
             )}
             {isError && (
-                <p className="text-semantic-error-strong text-body-sm">
-                    감사 로그를 불러오지 못했습니다.
-                </p>
+                <div className="flex items-center gap-3" role="alert">
+                    <p className="text-semantic-error-strong text-body-sm">
+                        감사 로그를 불러오지 못했습니다.
+                    </p>
+                    <Button size="sm" variant="secondary" onClick={() => void refetch()}>
+                        다시 시도
+                    </Button>
+                </div>
             )}
             {!isPending && !isError && data && data.items.length === 0 && (
-                <p className="text-fg-secondary text-body-sm py-6">
-                    해당하는 감사 로그가 없습니다.
+                <div className="flex flex-col gap-2 py-6">
+                    <p className="text-fg-secondary text-body-sm">해당하는 감사 로그가 없습니다.</p>
+                    {hasAppliedFilters && (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="self-start"
+                            onClick={resetFilters}
+                        >
+                            검색 조건 초기화
+                        </Button>
+                    )}
+                </div>
+            )}
+            {!isPending && !isError && isFetching && (
+                <p role="status" className="text-fg-tertiary text-caption -mt-4">
+                    목록을 새로 확인하는 중…
                 </p>
             )}
             {data && data.items.length > 0 && (

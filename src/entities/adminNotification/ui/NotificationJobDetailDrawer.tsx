@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { formatKst } from '@shared/lib/date';
+import { Button } from '@shared/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@shared/ui/sheet';
 import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 
@@ -36,12 +37,19 @@ export function NotificationJobDetailDrawer({
     job: NotificationJob | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    /** 복구 재시도 버튼 등 행동 슬롯 — 현재 상세 대상을 인자로 받는다 */
-    action?: (job: NotificationJob) => ReactNode;
+    /** 복구 재시도 버튼 등 행동 슬롯 — 현재 상세 대상과 상세 조회 완료 여부를 인자로 받는다 */
+    action?: (job: NotificationJob, detailReady: boolean) => ReactNode;
 }) {
-    const { data: detail, isPending } = useAdminNotificationJob(open ? (job?.id ?? null) : null);
+    const {
+        data: detail,
+        isPending,
+        isError,
+        refetch,
+    } = useAdminNotificationJob(open ? (job?.id ?? null) : null);
     // 요약 필드는 목록 값으로 먼저 채우고, 상세 응답이 오면 최신 상태로 갈아 끼운다
     const shown = detail ?? job;
+    // 상세 조회가 실패·진행 중이면 복구 같은 운영 행동은 목록 값만으로 판단할 수 없어 막는다
+    const detailReady = detail != null && !isError;
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -78,14 +86,28 @@ export function NotificationJobDetailDrawer({
                                 </Field>
                                 <Field label="선점 유효 시각">{kstOrDash(detail.leaseUntil)}</Field>
                             </>
+                        ) : isPending ? (
+                            <LoadingBlock label="상세 정보를 불러오는 중…">
+                                <SkeletonRows rows={2} />
+                            </LoadingBlock>
                         ) : (
-                            isPending && (
-                                <LoadingBlock label="상세 정보를 불러오는 중…">
-                                    <SkeletonRows rows={2} />
-                                </LoadingBlock>
+                            isError && (
+                                <div className="flex flex-col gap-2" role="alert">
+                                    <p className="text-semantic-error-strong text-body-sm">
+                                        상세 정보를 불러오지 못했습니다. 아래는 목록에서 확인한
+                                        정보입니다.
+                                    </p>
+                                    <Button
+                                        variant="secondary"
+                                        className="self-start"
+                                        onClick={() => void refetch()}
+                                    >
+                                        다시 시도
+                                    </Button>
+                                </div>
                             )
                         )}
-                        {action?.(shown)}
+                        {action?.(shown, detailReady)}
                     </div>
                 )}
             </SheetContent>

@@ -39,7 +39,7 @@ export function AdminEventFormPage() {
         register,
         control,
         handleSubmit,
-        formState: { errors },
+        formState: { errors, isDirty },
     } = useForm<EventFormInput, undefined, EventFormValues>({
         resolver: zodResolver(eventFormSchema),
         values: event ? eventToFormValues(event) : undefined,
@@ -100,6 +100,18 @@ export function AdminEventFormPage() {
         );
     }
 
+    // 취소·뒤로의 목적지를 명시한다 — 직접 진입 시 navigate(-1)의 행선지가 불명확하다
+    const cancelTo = isEdit ? `/admin/events/${eventId}` : '/admin/events';
+    const leaveForm = () => {
+        if (
+            isDirty &&
+            !window.confirm('저장하지 않은 입력이 사라집니다. 페이지를 나가시겠습니까?')
+        ) {
+            return;
+        }
+        void navigate(cancelTo);
+    };
+
     const submit = (e: React.FormEvent) => {
         void handleSubmit((values) => {
             const body = eventFormToRequest(values);
@@ -118,12 +130,7 @@ export function AdminEventFormPage() {
     return (
         <form onSubmit={submit} className="flex max-w-200 flex-col gap-6 pr-10 pb-10">
             <div className="flex items-center gap-3">
-                <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => void navigate(-1)}
-                >
+                <Button type="button" variant="secondary" size="sm" onClick={leaveForm}>
                     ← 뒤로
                 </Button>
                 <h2 className="text-title-3 text-fg-primary">
@@ -138,8 +145,17 @@ export function AdminEventFormPage() {
                     <label htmlFor="event-title" className={FIELD_LABEL}>
                         이벤트 이름
                     </label>
-                    <Input id="event-title" {...register('title')} />
-                    {errors.title && <p className={FIELD_ERROR}>{errors.title.message}</p>}
+                    <Input
+                        id="event-title"
+                        aria-invalid={Boolean(errors.title)}
+                        aria-describedby={errors.title ? 'event-title-error' : undefined}
+                        {...register('title')}
+                    />
+                    {errors.title && (
+                        <p id="event-title-error" className={FIELD_ERROR}>
+                            {errors.title.message}
+                        </p>
+                    )}
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -150,10 +166,16 @@ export function AdminEventFormPage() {
                         id="event-description"
                         rows={3}
                         className={INPUT_LIKE}
+                        aria-invalid={Boolean(errors.description)}
+                        aria-describedby={
+                            errors.description ? 'event-description-error' : undefined
+                        }
                         {...register('description')}
                     />
                     {errors.description && (
-                        <p className={FIELD_ERROR}>{errors.description.message}</p>
+                        <p id="event-description-error" className={FIELD_ERROR}>
+                            {errors.description.message}
+                        </p>
                     )}
                 </div>
 
@@ -180,7 +202,12 @@ export function AdminEventFormPage() {
                             name="eventType"
                             render={({ field }) => (
                                 <Select value={field.value} onValueChange={field.onChange}>
-                                    <SelectTrigger className="w-40" aria-label="이벤트 유형">
+                                    <SelectTrigger
+                                        ref={field.ref}
+                                        onBlur={field.onBlur}
+                                        className="w-40"
+                                        aria-label="이벤트 유형"
+                                    >
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -202,7 +229,12 @@ export function AdminEventFormPage() {
                             name="membershipRule"
                             render={({ field }) => (
                                 <Select value={field.value} onValueChange={field.onChange}>
-                                    <SelectTrigger className="w-36" aria-label="최소 멤버십 등급">
+                                    <SelectTrigger
+                                        ref={field.ref}
+                                        onBlur={field.onBlur}
+                                        className="w-36"
+                                        aria-label="최소 멤버십 등급"
+                                    >
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -246,10 +278,16 @@ export function AdminEventFormPage() {
                                     max={5}
                                     className="w-36"
                                     placeholder="비우면 상한 없음"
+                                    aria-invalid={Boolean(errors.maxTicketsPerUser)}
+                                    aria-describedby={
+                                        errors.maxTicketsPerUser
+                                            ? 'event-max-tickets-error'
+                                            : undefined
+                                    }
                                     {...register('maxTicketsPerUser')}
                                 />
                                 {errors.maxTicketsPerUser && (
-                                    <p className={FIELD_ERROR}>
+                                    <p id="event-max-tickets-error" className={FIELD_ERROR}>
                                         {errors.maxTicketsPerUser.message}
                                     </p>
                                 )}
@@ -269,10 +307,14 @@ export function AdminEventFormPage() {
                             className="w-56"
                             // spec: 등록된 이벤트의 시작 시각은 현재 설정보다 앞당길 수 없다
                             min={isEdit && event ? utcIsoToKstInput(event.startsAt) : undefined}
+                            aria-invalid={Boolean(errors.startsAt)}
+                            aria-describedby={errors.startsAt ? 'event-starts-at-error' : undefined}
                             {...register('startsAt')}
                         />
                         {errors.startsAt && (
-                            <p className={FIELD_ERROR}>{errors.startsAt.message}</p>
+                            <p id="event-starts-at-error" className={FIELD_ERROR}>
+                                {errors.startsAt.message}
+                            </p>
                         )}
                     </div>
                     <div className="flex flex-col gap-2">
@@ -283,9 +325,15 @@ export function AdminEventFormPage() {
                             id="event-ends-at"
                             type="datetime-local"
                             className="w-56"
+                            aria-invalid={Boolean(errors.endsAt)}
+                            aria-describedby={errors.endsAt ? 'event-ends-at-error' : undefined}
                             {...register('endsAt')}
                         />
-                        {errors.endsAt && <p className={FIELD_ERROR}>{errors.endsAt.message}</p>}
+                        {errors.endsAt && (
+                            <p id="event-ends-at-error" className={FIELD_ERROR}>
+                                {errors.endsAt.message}
+                            </p>
+                        )}
                     </div>
                 </div>
             </section>
@@ -344,8 +392,22 @@ export function AdminEventFormPage() {
                                     id={`prize-${field.fieldKey}-rank`}
                                     type="number"
                                     min={1}
+                                    aria-invalid={Boolean(errors.prizes?.[index]?.rank)}
+                                    aria-describedby={
+                                        errors.prizes?.[index]?.rank
+                                            ? `prize-${field.fieldKey}-rank-error`
+                                            : undefined
+                                    }
                                     {...register(`prizes.${index}.rank`)}
                                 />
+                                {errors.prizes?.[index]?.rank && (
+                                    <p
+                                        id={`prize-${field.fieldKey}-rank-error`}
+                                        className={FIELD_ERROR}
+                                    >
+                                        {errors.prizes[index]?.rank?.message}
+                                    </p>
+                                )}
                             </div>
                             <div className="flex min-w-48 flex-1 flex-col gap-1">
                                 <label
@@ -356,8 +418,22 @@ export function AdminEventFormPage() {
                                 </label>
                                 <Input
                                     id={`prize-${field.fieldKey}-name`}
+                                    aria-invalid={Boolean(errors.prizes?.[index]?.name)}
+                                    aria-describedby={
+                                        errors.prizes?.[index]?.name
+                                            ? `prize-${field.fieldKey}-name-error`
+                                            : undefined
+                                    }
                                     {...register(`prizes.${index}.name`)}
                                 />
+                                {errors.prizes?.[index]?.name && (
+                                    <p
+                                        id={`prize-${field.fieldKey}-name-error`}
+                                        className={FIELD_ERROR}
+                                    >
+                                        {errors.prizes[index]?.name?.message}
+                                    </p>
+                                )}
                             </div>
                             <div className="flex w-28 flex-col gap-1">
                                 <label
@@ -370,8 +446,22 @@ export function AdminEventFormPage() {
                                     id={`prize-${field.fieldKey}-winner-count`}
                                     type="number"
                                     min={1}
+                                    aria-invalid={Boolean(errors.prizes?.[index]?.winnerCount)}
+                                    aria-describedby={
+                                        errors.prizes?.[index]?.winnerCount
+                                            ? `prize-${field.fieldKey}-winner-count-error`
+                                            : undefined
+                                    }
                                     {...register(`prizes.${index}.winnerCount`)}
                                 />
+                                {errors.prizes?.[index]?.winnerCount && (
+                                    <p
+                                        id={`prize-${field.fieldKey}-winner-count-error`}
+                                        className={FIELD_ERROR}
+                                    >
+                                        {errors.prizes[index]?.winnerCount?.message}
+                                    </p>
+                                )}
                             </div>
                         </div>
                         <div className="flex flex-wrap gap-3">
@@ -400,15 +490,6 @@ export function AdminEventFormPage() {
                                 />
                             </div>
                         </div>
-                        {(errors.prizes?.[index]?.rank ||
-                            errors.prizes?.[index]?.name ||
-                            errors.prizes?.[index]?.winnerCount) && (
-                            <p className={FIELD_ERROR}>
-                                {errors.prizes[index]?.rank?.message ??
-                                    errors.prizes[index]?.name?.message ??
-                                    errors.prizes[index]?.winnerCount?.message}
-                            </p>
-                        )}
                     </div>
                 ))}
                 {errors.prizes?.root && <p className={FIELD_ERROR}>{errors.prizes.root.message}</p>}
@@ -431,7 +512,7 @@ export function AdminEventFormPage() {
                     type="button"
                     variant="secondary"
                     className="h-10 flex-1"
-                    onClick={() => void navigate(-1)}
+                    onClick={leaveForm}
                 >
                     취소
                 </Button>

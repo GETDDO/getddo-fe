@@ -99,12 +99,13 @@ export function AbuseCaseTable({
                 }),
                 helper.display({
                     id: 'detail',
-                    header: '',
+                    header: '상세',
                     cell: ({ row }) => (
                         <Button
                             size="sm"
                             variant="ghost"
                             className="hover:bg-surface-pressed"
+                            aria-label={`${row.original.userNickname} 차단 상세`}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onRowClick?.(row.original);

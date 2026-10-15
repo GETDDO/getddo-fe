@@ -7,7 +7,6 @@ import { useEventDraws } from '@entities/drawResult';
 import { ADMIN_STATUS_META, useAdminEvent } from '@entities/event';
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
-import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
 import { CardSkeleton, LoadingBlock } from '@shared/ui/skeleton';
 
@@ -25,8 +24,12 @@ const TABS: { value: PanelTab; label: string }[] = [
 
 // 이벤트 하나의 추첨 관리 — 실행 목록(AD01)·상세(AD02)·변경 이력(AD07)
 export function DrawEventPanel({ eventId }: { eventId: string }) {
-    const { now } = useVirtualClock();
-    const { data: event, isPending: eventPending } = useAdminEvent(eventId);
+    const {
+        data: event,
+        isPending: eventPending,
+        isError: eventError,
+        refetch: refetchEvent,
+    } = useAdminEvent(eventId);
     // 사용자가 고르지 않으면 가장 최근 실행을 본다 — AD01 첫 페이지 캐시를 목록과 공유한다
     const latest = useEventDraws(eventId, { page: 1, size: DRAW_RUN_PAGE_SIZE });
     const [chosenId, setChosenId] = useState<string | null>(null);
@@ -38,7 +41,8 @@ export function DrawEventPanel({ eventId }: { eventId: string }) {
 
     const status = event ? ADMIN_STATUS_META[event.status] : null;
     const awaitingFirstPublication = event?.status === 'DRAW_CONFIRMED';
-    const scheduledPassed = event ? now() >= new Date(event.publicationScheduledAt) : false;
+    // ADR-022 — 발표 예정 시각·카운트다운은 계약에서 제외됐다. 표시 시각은 최초 자동 추첨 기준이다
+    const drawScheduledAt = event?.publicationScheduledAt;
 
     // 비선택 탭은 tabIndex=-1이라 방향키로 이동한다 — APG 탭 패턴의 roving tabindex
     const handleTabKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -62,6 +66,17 @@ export function DrawEventPanel({ eventId }: { eventId: string }) {
                     <CardSkeleton rows={2} />
                 </LoadingBlock>
             )}
+            {eventError && (
+                <div className="flex items-center gap-3">
+                    <p role="alert" className="text-semantic-error-strong text-body-sm">
+                        이벤트 정보를 불러오지 못했습니다. 이벤트 상태를 확인할 때까지 당첨
+                        취소·재추첨·공개 반영을 사용할 수 없습니다.
+                    </p>
+                    <Button size="sm" variant="secondary" onClick={() => void refetchEvent()}>
+                        다시 시도
+                    </Button>
+                </div>
+            )}
             {event && status && (
                 <section className="bg-surface-page border-border-default flex flex-col gap-3 rounded-2xl border p-6">
                     <div className="flex flex-wrap items-center gap-3">
@@ -79,14 +94,14 @@ export function DrawEventPanel({ eventId }: { eventId: string }) {
                         </Button>
                     </div>
                     <p className="text-body-sm text-fg-secondary">
-                        최초 발표 예정 {formatKst(event.publicationScheduledAt)} (KST) · 마감 +
-                        5분에 자동 발표하며 수동 승인은 없습니다.
+                        최초 추첨 기준{' '}
+                        {drawScheduledAt ? `${formatKst(drawScheduledAt)} (KST) · ` : ''}
+                        마감 + 5분에 자동 추첨하고, 최초 공개는 명단 확인 후 수동 공개 요청으로
+                        진행합니다.
                     </p>
                     {awaitingFirstPublication && (
                         <p className="text-body-sm text-fg-secondary">
-                            {scheduledPassed
-                                ? '예정 시각이 지났지만 아직 공개되지 않았습니다. 지연 안내 문구와 새 예정 시각의 제공 여부는 '
-                                : '준비·확인이 늦어 발표가 지연될 때의 안내 문구와 새 예정 시각의 제공 여부는 '}
+                            결과 확정·확인 저장만으로는 공개되지 않으며, 공개 호출의 세부 계약은{' '}
                             <PolicyPendingChip /> 입니다. 서버가 공개하기 전에는 결과가 공개되지
                             않습니다.
                         </p>
@@ -135,6 +150,7 @@ export function DrawEventPanel({ eventId }: { eventId: string }) {
                             key={selectedId}
                             drawId={selectedId}
                             eventCanceled={event?.status === 'CANCELED'}
+                            eventReady={event != null && !eventError}
                             onRunCreated={select}
                         />
                     )}

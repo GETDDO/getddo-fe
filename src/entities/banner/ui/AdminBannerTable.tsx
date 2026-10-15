@@ -110,9 +110,9 @@ export function AdminBannerTable({
                         const title = eventTitleOf(row.original.eventId);
                         const last = table.getRowModel().rows.length - 1;
                         return (
-                            <div className="flex gap-1">
+                            <div className="flex gap-2">
                                 <Button
-                                    size="icon-sm"
+                                    size="icon"
                                     variant="ghost"
                                     className="hover:bg-surface-pressed"
                                     aria-label={`${title} 배너 순서 올리기`}
@@ -122,7 +122,7 @@ export function AdminBannerTable({
                                     <ArrowUp aria-hidden />
                                 </Button>
                                 <Button
-                                    size="icon-sm"
+                                    size="icon"
                                     variant="ghost"
                                     className="hover:bg-surface-pressed"
                                     aria-label={`${title} 배너 순서 내리기`}

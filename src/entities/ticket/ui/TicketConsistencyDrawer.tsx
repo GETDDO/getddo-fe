@@ -2,6 +2,7 @@ import { ApiError } from '@shared/api/client';
 import { getErrorMessage } from '@shared/api/errorMessage';
 import { formatKst } from '@shared/lib/date';
 import { Badge } from '@shared/ui/badge';
+import { Button } from '@shared/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@shared/ui/sheet';
 import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 
@@ -54,9 +55,21 @@ export function TicketConsistencyDrawer({
                         </p>
                     )}
                     {consistency.isError && !notFound && (
-                        <p className="text-semantic-error-strong text-body-sm">
-                            {getErrorMessage(consistency.error, '정합성을 불러오지 못했습니다.')}
-                        </p>
+                        <div className="flex items-center gap-3" role="alert">
+                            <p className="text-semantic-error-strong text-body-sm">
+                                {getErrorMessage(
+                                    consistency.error,
+                                    '정합성을 불러오지 못했습니다.',
+                                )}
+                            </p>
+                            <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => void consistency.refetch()}
+                            >
+                                다시 시도
+                            </Button>
+                        </div>
                     )}
                     {consistency.data && (
                         <>
@@ -119,9 +132,18 @@ export function TicketConsistencyDrawer({
                                     </LoadingBlock>
                                 )}
                                 {histories.isError && (
-                                    <p className="text-semantic-error-strong text-body-sm">
-                                        이력을 불러오지 못했습니다.
-                                    </p>
+                                    <div className="flex items-center gap-3" role="alert">
+                                        <p className="text-semantic-error-strong text-body-sm">
+                                            이력을 불러오지 못했습니다.
+                                        </p>
+                                        <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            onClick={() => void histories.refetch()}
+                                        >
+                                            다시 시도
+                                        </Button>
+                                    </div>
                                 )}
                                 {histories.data && histories.data.items.length === 0 && (
                                     <p className="text-body-sm text-fg-tertiary">

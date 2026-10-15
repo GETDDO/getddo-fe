@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import type { AdminEventStatus, EventType } from '@entities/event';
 
@@ -10,7 +10,9 @@ import {
     useAdminEvents,
 } from '@entities/event';
 import { kstInputToUtcIso } from '@shared/lib/date';
+import { isDateRangeOrdered } from '@shared/lib/filterConstants';
 import { Button } from '@shared/ui/button';
+import { DateRangeFilter } from '@shared/ui/filter-fields';
 import { Input } from '@shared/ui/input';
 import { Pager } from '@shared/ui/pager';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
@@ -41,8 +43,14 @@ const nextDay = (ymd: string) => {
     return d.toISOString();
 };
 
+// 대시보드 카드가 /admin/events?status=…로 들어오는 값 — ADMIN_STATUS_META 키만 받아들인다
+const asAdminStatus = (value: string | null): AdminEventStatus | null =>
+    value !== null && value in ADMIN_STATUS_META ? (value as AdminEventStatus) : null;
+
 export function AdminEventsPage() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const statusParam = asAdminStatus(searchParams.get('status'));
     const [page, setPage] = useState(1);
     const [keywordInput, setKeywordInput] = useState('');
     // 검색어는 엔터·버튼으로 확정된 값만 쿼리에 넘긴다 — 입력마다 요청하지 않는다
@@ -52,10 +60,28 @@ export function AdminEventsPage() {
     // 기간도 Select와 달리 즉시 적용되지 않고 검색 버튼으로 함께 적용된다 (응모 시작 시각 기준 [from, to))
     const [from, setFrom] = useState('');
     const [to, setTo] = useState('');
-    const [status, setStatus] = useState<'all' | AdminEventStatus>('all');
+    const [status, setStatus] = useState<'all' | AdminEventStatus>(statusParam ?? 'all');
     const [eventType, setEventType] = useState<'all' | EventType>('all');
+    const [rangeError, setRangeError] = useState(false);
 
-    const { data, isPending, isError } = useAdminEvents({
+    // 같은 페이지에 머문 채 URL의 status가 바뀌면(대시보드 카드 재진입 등) 필터에 반영한다 — 렌더 중 비교 패턴
+    const [appliedStatusParam, setAppliedStatusParam] = useState(statusParam);
+    if (statusParam !== appliedStatusParam) {
+        setAppliedStatusParam(statusParam);
+        if (statusParam) {
+            setStatus(statusParam);
+            setPage(1);
+        }
+    }
+
+    // 검색 버튼으로 확정할 값을 미리 계산해 입력값과 적용값의 차이(미적용 변경)를 잡는다
+    const draftFrom = fromInput ? kstInputToUtcIso(`${fromInput}T00:00`) : '';
+    const draftTo = toInput ? nextDay(toInput) : '';
+    const hasPendingDraft = keywordInput.trim() !== keyword || draftFrom !== from || draftTo !== to;
+    const hasAppliedFilters =
+        keyword !== '' || from !== '' || to !== '' || status !== 'all' || eventType !== 'all';
+
+    const { data, isPending, isError, isFetching, refetch } = useAdminEvents({
         page,
         size: PAGE_SIZE,
         keyword: keyword || undefined,
@@ -67,17 +93,35 @@ export function AdminEventsPage() {
 
     const totalPages = data ? Math.max(1, Math.ceil(data.totalElements / data.size)) : 0;
     const resetPage = () => setPage(1);
+    const resetFilters = () => {
+        setKeywordInput('');
+        setKeyword('');
+        setFromInput('');
+        setToInput('');
+        setFrom('');
+        setTo('');
+        setStatus('all');
+        setEventType('all');
+        setRangeError(false);
+        setPage(1);
+        if (statusParam) void navigate('/admin/events', { replace: true });
+    };
 
     return (
         <div className="flex max-w-280 flex-col gap-6 pr-10 pb-10">
             <div className="flex flex-wrap items-center gap-3">
                 <form
-                    className="flex gap-2"
+                    className="flex flex-wrap items-center gap-2"
                     onSubmit={(e) => {
                         e.preventDefault();
+                        if (!isDateRangeOrdered(fromInput, toInput)) {
+                            setRangeError(true);
+                            return;
+                        }
+                        setRangeError(false);
                         setKeyword(keywordInput.trim());
-                        setFrom(fromInput ? kstInputToUtcIso(`${fromInput}T00:00`) : '');
-                        setTo(toInput ? nextDay(toInput) : '');
+                        setFrom(draftFrom);
+                        setTo(draftTo);
                         resetPage();
                     }}
                 >
@@ -88,23 +132,19 @@ export function AdminEventsPage() {
                         className="w-64"
                         aria-label="이벤트 검색"
                     />
-                    <Input
-                        type="date"
-                        value={fromInput}
-                        onChange={(e) => setFromInput(e.target.value)}
-                        className="w-40"
-                        aria-label="시작일 필터"
-                    />
-                    <span className="text-fg-secondary self-center">~</span>
-                    <Input
-                        type="date"
-                        value={toInput}
-                        onChange={(e) => setToInput(e.target.value)}
-                        className="w-40"
-                        aria-label="종료일 필터"
+                    <DateRangeFilter
+                        from={fromInput}
+                        to={toInput}
+                        onFromChange={setFromInput}
+                        onToChange={setToInput}
+                        basis="응모 시작일"
+                        error={rangeError ? '시작일이 종료일보다 늦습니다.' : null}
                     />
                     <Button type="submit" variant="secondary">
                         검색
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={resetFilters}>
+                        초기화
                     </Button>
                 </form>
 
@@ -151,18 +191,46 @@ export function AdminEventsPage() {
                 </Button>
             </div>
 
+            {hasPendingDraft && (
+                <p className="text-fg-tertiary text-caption -mt-4">
+                    변경한 조건은 검색을 눌러야 적용됩니다.
+                </p>
+            )}
+
             {isPending && (
                 <LoadingBlock>
                     <TableSkeleton />
                 </LoadingBlock>
             )}
             {isError && (
-                <p className="text-semantic-error-strong text-body-sm">
-                    이벤트 목록을 불러오지 못했습니다.
-                </p>
+                <div className="flex items-center gap-3" role="alert">
+                    <p className="text-semantic-error-strong text-body-sm">
+                        이벤트 목록을 불러오지 못했습니다.
+                    </p>
+                    <Button size="sm" variant="secondary" onClick={() => void refetch()}>
+                        다시 시도
+                    </Button>
+                </div>
             )}
             {!isPending && !isError && data && data.items.length === 0 && (
-                <p className="text-fg-secondary text-body-sm py-6">해당하는 이벤트가 없습니다.</p>
+                <div className="flex flex-col gap-2 py-6">
+                    <p className="text-fg-secondary text-body-sm">해당하는 이벤트가 없습니다.</p>
+                    {hasAppliedFilters && (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="self-start"
+                            onClick={resetFilters}
+                        >
+                            검색 조건 초기화
+                        </Button>
+                    )}
+                </div>
+            )}
+            {!isPending && !isError && isFetching && (
+                <p role="status" className="text-fg-tertiary text-caption -mt-4">
+                    목록을 새로 확인하는 중…
+                </p>
             )}
             {data && data.items.length > 0 && (
                 <>

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import type { AdminBanner } from '@entities/banner';
 
@@ -19,22 +19,34 @@ const EVENT_LOOKUP_SIZE = 100;
 
 export function AdminBannersPage() {
     const { data: banners, isPending, isError } = useAdminBanners();
-    const { data: eventPage } = useAdminEvents({ page: 1, size: EVENT_LOOKUP_SIZE });
+    const {
+        data: eventPage,
+        isPending: eventsPending,
+        isError: eventsError,
+        refetch: refetchEvents,
+    } = useAdminEvents({ page: 1, size: EVENT_LOOKUP_SIZE });
     const reorder = useReorderBanners();
 
     // 등록은 'new', 수정은 대상 배너, 닫힘은 null
     const [formTarget, setFormTarget] = useState<AdminBanner | 'new' | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<AdminBanner | null>(null);
+    // 삭제로 행 버튼이 사라진 뒤 포커스가 갈 안정된 대상
+    const addButtonRef = useRef<HTMLButtonElement>(null);
 
     const events = useMemo(
         () => (eventPage?.items ?? []).map(({ id, title }) => ({ id, title })),
         [eventPage],
     );
+    // 조회 중·실패는 실제 미확인(삭제)과 구분한다 — 조회 실패는 이벤트 ID를 그대로 보여준다
     const eventTitleOf = useCallback(
-        (eventId: string) =>
-            events.find((event) => event.id === eventId)?.title ??
-            '(삭제되었거나 알 수 없는 이벤트)',
-        [events],
+        (eventId: string) => {
+            const title = events.find((event) => event.id === eventId)?.title;
+            if (title) return title;
+            if (eventsPending) return '이벤트 확인 중…';
+            if (eventsError) return `(${eventId})`;
+            return '(삭제되었거나 알 수 없는 이벤트)';
+        },
+        [events, eventsPending, eventsError],
     );
 
     const handleMove = useCallback(
@@ -66,6 +78,7 @@ export function AdminBannersPage() {
                     등록할 수 있습니다{banners ? ` (현재 ${count}개)` : ''}.
                 </p>
                 <Button
+                    ref={addButtonRef}
                     className="ml-auto"
                     disabled={isPending || isError || full}
                     onClick={() => setFormTarget('new')}
@@ -101,6 +114,16 @@ export function AdminBannersPage() {
                     )}
                 </p>
             )}
+            {eventsError && (
+                <div className="flex items-center gap-3">
+                    <p role="alert" className="text-semantic-error-strong text-body-sm">
+                        연결할 이벤트 목록을 불러오지 못했습니다.
+                    </p>
+                    <Button size="sm" variant="secondary" onClick={() => void refetchEvents()}>
+                        다시 시도
+                    </Button>
+                </div>
+            )}
             {banners && banners.length > 0 && (
                 <AdminBannerTable
                     banners={banners}
@@ -119,6 +142,9 @@ export function AdminBannersPage() {
                 }}
                 banner={editing}
                 events={events}
+                eventsPending={eventsPending}
+                eventsError={eventsError}
+                onEventsRetry={() => void refetchEvents()}
                 nextDisplayOrder={nextDisplayOrder}
             />
             <DeleteBannerDialog
@@ -127,6 +153,7 @@ export function AdminBannersPage() {
                 onOpenChange={(open) => {
                     if (!open) setDeleteTarget(null);
                 }}
+                onDeleted={() => addButtonRef.current?.focus()}
             />
         </div>
     );

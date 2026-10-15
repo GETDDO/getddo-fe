@@ -97,6 +97,7 @@ export function AuditLogTable({
                             size="sm"
                             variant="ghost"
                             className="hover:bg-surface-pressed"
+                            aria-label={`${formatKst(row.original.createdAt)} 기록 상세`}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onRowClick?.(row.original);
