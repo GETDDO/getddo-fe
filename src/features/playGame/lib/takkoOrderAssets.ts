@@ -26,6 +26,7 @@ import steamA from '../assets/takkoOrder/steam-a.webp';
 import steamB from '../assets/takkoOrder/steam-b.webp';
 import steamC from '../assets/takkoOrder/steam-c.webp';
 import wall from '../assets/takkoOrder/wall.webp';
+import windowFrame from '../assets/takkoOrder/window.webp';
 import { COLOR_WORD_BGM, COLOR_WORD_SOUNDS } from './colorWordAssets';
 
 /** 메뉴 그림 — 피그마 image 237(토핑 타코야끼 모음)에서 잘라 정사각형으로 맞췄다 */
@@ -56,7 +57,7 @@ export const TAKKO_ORDER_CUSTOMERS = [
 /** 가게 그림 — 노렌·선반(image 245에서 따로 잘라 노렌은 가운데, 선반은 왼쪽에 작게)·접시(image 239)·나무 카운터(image 246) */
 export const TAKKO_ORDER_SCENE = { noren, shelf, plate, counter } as const;
 
-/** 카운터 위 소품 (image 250) — 꼬치 통·소스 받침·포장 상자 */
+/** 카운터 위 소품 — 꼬치 통·소스 받침·포장 상자(image 250) */
 export const TAKKO_ORDER_PROPS = {
     sticks: propSticks,
     sauces: propSauces,
@@ -74,8 +75,8 @@ export const TAKKO_ORDER_SOUNDS = {
     gameOver: COLOR_WORD_SOUNDS.gameOver,
 };
 
-/** 벽 — 타꼬 타이밍 맞추기 배경의 들보·미색 벽만 잘라 판 비율로 늘렸다 (타일은 뺐다) */
-export const TAKKO_ORDER_WALL = { wall, octopus } as const;
+/** 벽 — 타꼬 타이밍 맞추기 배경의 들보·미색 벽만 잘라 판 비율로 늘렸다 (타일은 뺐다). 문어 장식(image 248)·창문(image 251) */
+export const TAKKO_ORDER_WALL = { wall, octopus, window: windowFrame } as const;
 
 /** 김 (image 248) — 접시에 타코야끼가 담길 때마다 하나씩 돌아가며 쓴다 */
 export const TAKKO_ORDER_STEAM = [steamA, steamB, steamC] as const;

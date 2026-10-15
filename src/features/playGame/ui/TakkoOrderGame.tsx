@@ -276,6 +276,15 @@ export function TakkoOrderGame({
                 className="pointer-events-none absolute top-[28%] right-[3%] w-[24%] [image-rendering:pixelated]"
             />
 
+            {/* 창문(image 251) — 손님 뒤 벽. 말풍선에 가려지지 않게 손님 오른쪽 어깨 뒤로 비켜 둔다 */}
+            <img
+                src={TAKKO_ORDER_WALL.window}
+                alt=""
+                aria-hidden
+                draggable={false}
+                className="pointer-events-none absolute top-[28%] left-[23%] w-[19%] [image-rendering:pixelated]"
+            />
+
             {/* 손님 — 왼쪽, 카운터 뒤. 모든 손님을 같은 키로 맞춰 발이 늘 카운터에 가린다 (키가 작아도 떠 보이지 않게).
                 게임이 끝나도 마지막 손님은 그대로 남긴다 */}
             {(playing || phase === 'over') && (
@@ -301,27 +310,28 @@ export function TakkoOrderGame({
                 className="pointer-events-none absolute -bottom-[1%] left-[-12%] w-[124%] max-w-none [image-rendering:pixelated]"
             />
 
-            {/* 카운터 위 소품(image 250) — 판 가장자리에서 띄우고, 아래 끝을 카운터 윗면에 맞춰 올려 둔 것처럼. 손님·접시는 피한다 */}
+            {/* 카운터 위 소품 — 꼬치 통(image 250)은 손님 앞 왼쪽 끝, 소스 받침과 포장 상자는 오른쪽 끝에 겹쳐 모은다.
+                윗면 안쪽(뒤)은 조금 위에, 바깥쪽(앞)은 조금 아래에 두어 깊이를 준다. 접시는 피한다 */}
             <img
                 src={TAKKO_ORDER_PROPS.sticks}
                 alt=""
                 aria-hidden
                 draggable={false}
-                className="pointer-events-none absolute bottom-[23%] left-[4%] h-[9%] w-auto [image-rendering:pixelated]"
+                className="pointer-events-none absolute bottom-[21%] left-[3.5%] h-[10%] w-auto [image-rendering:pixelated]"
             />
             <img
                 src={TAKKO_ORDER_PROPS.sauces}
                 alt=""
                 aria-hidden
                 draggable={false}
-                className="pointer-events-none absolute right-[16%] bottom-[23%] h-[9.5%] w-auto [image-rendering:pixelated]"
+                className="pointer-events-none absolute right-[9%] bottom-[23.5%] h-[8.5%] w-auto [image-rendering:pixelated]"
             />
             <img
                 src={TAKKO_ORDER_PROPS.boxes}
                 alt=""
                 aria-hidden
                 draggable={false}
-                className="pointer-events-none absolute right-[4%] bottom-[23%] h-[9%] w-auto [image-rendering:pixelated]"
+                className="pointer-events-none absolute right-[3%] bottom-[21%] h-[9.5%] w-auto [image-rendering:pixelated]"
             />
 
             {/* 주문 말풍선 — 손님 머리 위, 다른 게임 말풍선과 같은 도트 그림체(바탕은 가게 나무색과 어울리는 연한 브론즈). 틀리면 흔들리며 정답 주문을 보여 준다 */}
