@@ -5,7 +5,6 @@ import type { AdminEvent } from '@entities/event';
 
 import { getErrorMessage } from '@shared/api/errorMessage';
 import { formatKst } from '@shared/lib/date';
-import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
 import {
     Dialog,
@@ -131,7 +130,7 @@ export function EventActionDialog({
                 )}
 
                 {mutation.isError && (
-                    <p className="text-destructive text-body-sm">
+                    <p className="text-semantic-error-strong text-body-sm">
                         {getErrorMessage(
                             mutation.error,
                             `${meta.title}에 실패했습니다. 상태를 확인한 뒤 다시 시도해주세요.`,
@@ -149,10 +148,8 @@ export function EventActionDialog({
                         </Button>
                     </DialogClose>
                     <Button
-                        className={cn(
-                            'text-body-bold h-10 flex-1',
-                            DESTRUCTIVE.has(action) && 'bg-destructive hover:bg-destructive/80',
-                        )}
+                        variant={DESTRUCTIVE.has(action) ? 'destructive' : 'primary'}
+                        className="text-body-bold h-10 flex-1"
                         disabled={!canSubmit}
                         onClick={submit}
                     >

@@ -29,6 +29,7 @@ export type {
     NotificationJobStatus,
     NotificationType,
 } from './model/types';
+export { AdminNotificationDetailDrawer } from './ui/AdminNotificationDetailDrawer';
 export { AdminNotificationTable } from './ui/AdminNotificationTable';
 export { NotificationJobDetailDrawer } from './ui/NotificationJobDetailDrawer';
 export { NotificationJobTable } from './ui/NotificationJobTable';

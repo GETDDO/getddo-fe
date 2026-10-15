@@ -6,7 +6,7 @@ import {
     useAdminTicketHistories,
 } from '@entities/ticket';
 import { kstDateStartUtcIso, kstNextDateStartUtcIso } from '@shared/lib/date';
-import { ALL, orUndefined, PAGE_SIZE } from '@shared/lib/filterConstants';
+import { ALL, isDateRangeOrdered, orUndefined, PAGE_SIZE } from '@shared/lib/filterConstants';
 import { Button } from '@shared/ui/button';
 import { DateRangeFilter, OptionFilter, TextFilter } from '@shared/ui/filter-fields';
 import { PagedResult } from '@shared/ui/paged-result';
@@ -23,6 +23,15 @@ export function HistoriesTab() {
     const [page, setPage] = useState(1);
     const [draft, setDraft] = useState(EMPTY);
     const [applied, setApplied] = useState(EMPTY);
+    const [rangeError, setRangeError] = useState(false);
+    const hasPendingDraft = JSON.stringify(draft) !== JSON.stringify(applied);
+    const hasAppliedFilters = JSON.stringify(applied) !== JSON.stringify(EMPTY);
+    const resetFilters = () => {
+        setDraft(EMPTY);
+        setApplied(EMPTY);
+        setRangeError(false);
+        setPage(1);
+    };
     const patch = (value: Partial<typeof EMPTY>) => setDraft((d) => ({ ...d, ...value }));
 
     const query = useAdminTicketHistories({
@@ -42,6 +51,11 @@ export function HistoriesTab() {
                 className="flex flex-wrap items-center gap-2"
                 onSubmit={(e) => {
                     e.preventDefault();
+                    if (!isDateRangeOrdered(draft.from, draft.to)) {
+                        setRangeError(true);
+                        return;
+                    }
+                    setRangeError(false);
                     setApplied({
                         ...draft,
                         userId: draft.userId.trim(),
@@ -80,20 +94,44 @@ export function HistoriesTab() {
                     to={draft.to}
                     onFromChange={(from) => patch({ from })}
                     onToChange={(to) => patch({ to })}
+                    basis="처리일"
+                    error={rangeError ? '시작일이 종료일보다 늦습니다.' : null}
                 />
                 <Button type="submit" variant="secondary">
                     검색
                 </Button>
+                <Button type="button" variant="ghost" onClick={resetFilters}>
+                    초기화
+                </Button>
+                {hasPendingDraft && (
+                    <p className="text-fg-tertiary text-caption basis-full">
+                        변경한 조건은 검색을 눌러야 적용됩니다.
+                    </p>
+                )}
             </form>
 
             <PagedResult
                 data={query.data}
                 isPending={query.isPending}
                 isError={query.isError}
+                isFetching={query.isFetching}
                 page={page}
                 onPageChange={setPage}
                 emptyText="해당하는 이력이 없습니다."
                 errorText="이력을 불러오지 못했습니다."
+                onRetry={() => void query.refetch()}
+                emptyAction={
+                    hasAppliedFilters ? (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="self-start"
+                            onClick={resetFilters}
+                        >
+                            검색 조건 초기화
+                        </Button>
+                    ) : undefined
+                }
             >
                 {(rows) => <AdminTicketHistoryTable rows={rows} />}
             </PagedResult>

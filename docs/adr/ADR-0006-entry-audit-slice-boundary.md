@@ -10,7 +10,7 @@
 공용 API 초안(`../getddo-spec/05-api/entry.md`, `audit.md`)을 확인한 결과:
 
 - 응모 기록은 `EntryReceipt` 하나로 표현된다. 접수(`ACCEPTED`)뿐 아니라 업무 거절(`REJECTED`, `rejectionCode`·`rejectionReason`)도 같은 모델로 E05/E06에서 조회한다 — "참여 시도 로그"가 별도 리소스로 존재하지 않는다
-- 감사 로그는 AU01/AU02의 별도 리소스다 (`actorId`, `action`, `targetType`, `beforeData`/`afterData`)
+- 감사 로그는 AU01/AU02의 별도 리소스다 (`actorId`, `action`, `targetType`, `beforeData`/`afterData`) — (후속: ADR-024로 공통 감사 조회 API와 전용 화면은 이번 버전에서 제외됐다. 감사 기록 저장 자체는 유지된다, 2026-10-15)
 - spec 어디에도 participation-log라는 리소스·용어가 없다
 
 ## 결정

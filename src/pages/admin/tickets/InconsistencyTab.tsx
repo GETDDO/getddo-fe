@@ -28,7 +28,7 @@ export function InconsistencyTab() {
         <div className="flex flex-col gap-6">
             <div className="flex flex-wrap items-center gap-3">
                 <form
-                    className="flex gap-2"
+                    className="flex flex-wrap items-center gap-2"
                     onSubmit={(e) => {
                         e.preventDefault();
                         setUserId(userIdInput.trim());
@@ -44,9 +44,20 @@ export function InconsistencyTab() {
                     <Button type="submit" variant="secondary">
                         검색
                     </Button>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                            setUserIdInput('');
+                            setUserId('');
+                            setPage(1);
+                        }}
+                    >
+                        초기화
+                    </Button>
                 </form>
                 <form
-                    className="flex gap-2"
+                    className="flex flex-wrap items-center gap-2"
                     onSubmit={(e) => {
                         e.preventDefault();
                         const id = lookupInput.trim();
@@ -69,10 +80,28 @@ export function InconsistencyTab() {
                 data={query.data}
                 isPending={query.isPending}
                 isError={query.isError}
+                isFetching={query.isFetching}
                 page={page}
                 onPageChange={setPage}
                 emptyText="불일치한 응모권이 없습니다."
                 errorText="불일치 목록을 불러오지 못했습니다."
+                onRetry={() => void query.refetch()}
+                emptyAction={
+                    userId ? (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="self-start"
+                            onClick={() => {
+                                setUserIdInput('');
+                                setUserId('');
+                                setPage(1);
+                            }}
+                        >
+                            검색 조건 초기화
+                        </Button>
+                    ) : undefined
+                }
             >
                 {(rows) => (
                     <TicketInconsistencyTable

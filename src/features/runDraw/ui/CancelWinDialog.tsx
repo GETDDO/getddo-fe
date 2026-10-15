@@ -115,7 +115,7 @@ export function CancelWinDialog({ result, open, onOpenChange, onCanceled }: Canc
                     <p
                         className={
                             tooLong
-                                ? 'text-destructive text-body-sm'
+                                ? 'text-semantic-error-strong text-body-sm'
                                 : 'text-fg-secondary text-body-sm'
                         }
                     >
@@ -124,7 +124,11 @@ export function CancelWinDialog({ result, open, onOpenChange, onCanceled }: Canc
                 </div>
 
                 {cancel.isError && (
-                    <p id="cancel-win-error" role="alert" className="text-destructive text-body-sm">
+                    <p
+                        id="cancel-win-error"
+                        role="alert"
+                        className="text-semantic-error-strong text-body-sm"
+                    >
                         {getErrorMessage(
                             cancel.error,
                             '당첨 취소에 실패했습니다. 상태를 확인한 뒤 다시 시도해주세요.',

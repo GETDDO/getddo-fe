@@ -43,7 +43,7 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                 <div className="flex max-h-80 flex-col gap-1 overflow-y-auto">
                     {isPending && <Loading size="sm" />}
                     {isError && (
-                        <p className="text-destructive text-body-sm py-4 text-center">
+                        <p className="text-semantic-error-strong text-body-sm py-4 text-center">
                             사용자 목록을 불러오지 못했습니다.
                         </p>
                     )}
@@ -60,7 +60,7 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                                     // 관리자 전환도 현재 화면에 머문다 — 관리자 화면 이동은 헤더 버튼으로만 한다
                                 }}
                                 className={cn(
-                                    'hover:bg-surface-sunken focus-visible:bg-surface-sunken focus-visible:ring-border-focus flex items-center gap-3 rounded-lg p-2.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
+                                    'hover:bg-surface-pressed focus-visible:bg-surface-pressed focus-visible:ring-border-focus flex items-center gap-3 rounded-lg p-2.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
                                     isCurrent && 'cursor-default',
                                 )}
                             >
@@ -86,7 +86,7 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                                             </span>
                                         )}
                                     </span>
-                                    <span className="text-fg-tertiary text-caption">
+                                    <span className="text-fg-secondary text-caption">
                                         {user.personaLabel ?? '시스템 관리 계정'}
                                     </span>
                                 </div>

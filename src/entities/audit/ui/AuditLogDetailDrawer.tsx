@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
 
 import { formatKst } from '@shared/lib/date';
+import { Button } from '@shared/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@shared/ui/sheet';
+import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 
 import type { AuditLogSummary } from '../model/types';
 
@@ -46,7 +48,12 @@ export function AuditLogDetailDrawer({
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
-    const { data: detail, isPending } = useAuditLog(open ? (summary?.id ?? null) : null);
+    const {
+        data: detail,
+        isPending,
+        isError,
+        refetch,
+    } = useAuditLog(open ? (summary?.id ?? null) : null);
     // 요약 필드는 목록 값으로 먼저 채우고, 변경 전·후 데이터는 상세 응답이 와야 붙는다
     const shown: AuditLogSummary | null = detail ?? summary;
 
@@ -77,11 +84,25 @@ export function AuditLogDetailDrawer({
                                 <DataBlock title="변경 전" data={detail.beforeData} />
                                 <DataBlock title="변경 후" data={detail.afterData} />
                             </>
+                        ) : isPending ? (
+                            <LoadingBlock label="상세 정보를 불러오는 중…">
+                                <SkeletonRows rows={2} />
+                            </LoadingBlock>
                         ) : (
-                            isPending && (
-                                <p className="text-body-sm text-fg-tertiary">
-                                    상세 정보를 불러오는 중…
-                                </p>
+                            isError && (
+                                <div className="flex flex-col gap-2" role="alert">
+                                    <p className="text-semantic-error-strong text-body-sm">
+                                        상세 정보를 불러오지 못했습니다. 아래는 목록에서 확인한
+                                        정보입니다.
+                                    </p>
+                                    <Button
+                                        variant="secondary"
+                                        className="self-start"
+                                        onClick={() => void refetch()}
+                                    >
+                                        다시 시도
+                                    </Button>
+                                </div>
                             )
                         )}
                     </div>

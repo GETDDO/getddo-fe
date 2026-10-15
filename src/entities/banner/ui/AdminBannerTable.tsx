@@ -18,7 +18,7 @@ function BannerThumbnail({ src, label }: { src: string; label: string }) {
 
     if (failedSrc === src) {
         return (
-            <div className="bg-surface-sunken text-caption text-fg-tertiary flex h-12 w-24 items-center justify-center rounded-md">
+            <div className="bg-surface-sunken text-caption text-fg-secondary flex h-12 w-24 items-center justify-center rounded-md">
                 이미지 없음
             </div>
         );
@@ -94,7 +94,7 @@ export function AdminBannerTable({
                 helper.accessor('updatedAt', {
                     header: '수정일',
                     cell: ({ getValue }) => (
-                        <span className="text-body-sm text-fg-tertiary whitespace-nowrap">
+                        <span className="text-body-sm text-fg-secondary whitespace-nowrap">
                             {formatKst(getValue(), {
                                 year: 'numeric',
                                 month: '2-digit',
@@ -110,10 +110,11 @@ export function AdminBannerTable({
                         const title = eventTitleOf(row.original.eventId);
                         const last = table.getRowModel().rows.length - 1;
                         return (
-                            <div className="flex gap-1">
+                            <div className="flex gap-2">
                                 <Button
-                                    size="icon-sm"
+                                    size="icon"
                                     variant="ghost"
+                                    className="hover:bg-surface-pressed"
                                     aria-label={`${title} 배너 순서 올리기`}
                                     disabled={disabled || row.index === 0}
                                     onClick={() => onMove(row.original, 'up')}
@@ -121,8 +122,9 @@ export function AdminBannerTable({
                                     <ArrowUp aria-hidden />
                                 </Button>
                                 <Button
-                                    size="icon-sm"
+                                    size="icon"
                                     variant="ghost"
+                                    className="hover:bg-surface-pressed"
                                     aria-label={`${title} 배너 순서 내리기`}
                                     disabled={disabled || row.index === last}
                                     onClick={() => onMove(row.original, 'down')}
@@ -143,6 +145,7 @@ export function AdminBannerTable({
                                 <Button
                                     size="sm"
                                     variant="ghost"
+                                    className="hover:bg-surface-pressed"
                                     aria-label={`${title} 배너 수정`}
                                     onClick={() => onEdit(row.original)}
                                 >
@@ -150,7 +153,7 @@ export function AdminBannerTable({
                                 </Button>
                                 <Button
                                     size="sm"
-                                    variant="ghost"
+                                    variant="destructive"
                                     aria-label={`${title} 배너 삭제`}
                                     onClick={() => onDelete(row.original)}
                                 >
@@ -188,7 +191,10 @@ export function AdminBannerTable({
                 </TableHeader>
                 <TableBody>
                     {table.getRowModel().rows.map((row) => (
-                        <TableRow key={row.id} className="hover:bg-surface-canvas">
+                        <TableRow
+                            key={row.id}
+                            className="hover:bg-surface-sunken focus-within:bg-surface-sunken"
+                        >
                             {row.getAllCells().map((cell) => (
                                 <TableCell key={cell.id} className="px-4 py-3 align-middle">
                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

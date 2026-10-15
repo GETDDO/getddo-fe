@@ -117,27 +117,31 @@ _(Figma 원본 섹션 라벨은 "2. Button — 버튼"이며, 토큰 이름은 `
 
 ### 8) Semantic
 
-| Token                   | Hex       | 용도                                   |
-| ----------------------- | --------- | -------------------------------------- |
-| `semantic/success`      | `#14A378` | 성공 아이콘, 완료 표시                 |
-| `semantic/success-soft` | `#E8FAF3` | 성공 뱃지·배너 배경                    |
-| `semantic/error`        | `#F04438` | 에러 아이콘, 삭제 버튼                 |
-| `semantic/error-strong` | `#D92D20` | `error-soft` 배경 위에 올라가는 텍스트 |
+| Token                    | Hex       | 용도                                     |
+| ------------------------ | --------- | ---------------------------------------- |
+| `semantic/success`       | `#14A378` | 성공 아이콘, 완료 표시                   |
+| `semantic/success-soft`  | `#E8FAF3` | 성공 뱃지·배너 배경                      |
+| `semantic/error`         | `#F04438` | 에러 아이콘                              |
+| `semantic/error-strong`  | `#D92D20` | 밝은 배경 위 에러 텍스트, 삭제 버튼 바탕 |
+| `semantic/error-pressed` | `#B42318` | 삭제 버튼 호버·누름, 상태 뱃지 텍스트    |
 
 ### 9) Status — 관리자 전용
 
-| Token                  | Hex       | 용도                                              |
-| ---------------------- | --------- | ------------------------------------------------- |
-| `status/pending`       | `#F1F3F5` | 검토 대기 뱃지 배경                               |
-| `status/active`        | `#E7F0FE` | 진행 중 뱃지 배경                                 |
-| `status/revision`      | `#FBF0D9` | 보완 요청 뱃지 배경                               |
-| `status/approved`      | `#E6F5EE` | 승인 뱃지 배경                                    |
-| `status/rejected`      | `#FBEBEE` | 반려 뱃지 배경                                    |
-| `status/pending-text`  | `#4B525C` | 검토 대기 뱃지 텍스트                             |
-| `status/active-text`   | `#1D4ED8` | 진행 중 뱃지 텍스트                               |
-| `status/revision-text` | `#B45309` | 보완 요청 뱃지 텍스트                             |
-| `status/approved-text` | `#0B6549` | 승인 뱃지 텍스트                                  |
-| `status/rejected-text` | `#D92D20` | 반려 뱃지 텍스트 (`semantic/error-strong` 재사용) |
+| Token                  | Hex       | 용도                                               |
+| ---------------------- | --------- | -------------------------------------------------- |
+| `status/pending`       | `#F1F3F5` | 검토 대기 뱃지 배경                                |
+| `status/active`        | `#E7F0FE` | 진행 중 뱃지 배경                                  |
+| `status/revision`      | `#FBF0D9` | 보완 요청 뱃지 배경                                |
+| `status/approved`      | `#E6F5EE` | 승인 뱃지 배경                                     |
+| `status/rejected`      | `#FBEBEE` | 반려 뱃지 배경                                     |
+| `status/pending-text`  | `#4B525C` | 검토 대기 뱃지 텍스트                              |
+| `status/active-text`   | `#1D4ED8` | 진행 중 뱃지 텍스트                                |
+| `status/revision-text` | `#92400E` | 보완 요청 뱃지 텍스트                              |
+| `status/approved-text` | `#0B6549` | 승인 뱃지 텍스트                                   |
+| `status/rejected-text` | `#B42318` | 반려 뱃지 텍스트 (`semantic/error-pressed` 재사용) |
+
+- 상태 칩 색은 라이프사이클로 묶는다 — `pending` 시작 전·준비 대기, `active` 진행 중·다음 단계 대기, `revision` 재처리 중, `approved` 완료·성공, `rejected` 취소·실패. 종료·결과 없음은 `surface/sunken` + `fg/secondary`의 중립 칩.
+- 분류(이벤트 유형 등)는 상태가 아니므로 라이프사이클 색을 쓰지 않는다 — 응모권 사용은 `ticket/accent`, 그 외는 중립 칩.
 
 ### 10) Chart — 관리자 전용
 
@@ -192,6 +196,8 @@ _(Figma 원본 섹션 라벨은 "2. Button — 버튼"이며, 토큰 이름은 `
 - 쓰는 곳: 로고(U+의 +), 현재 메뉴 밑줄, 새 알림 점, 진행 중·실시간 참여 수·오픈 임박 표시.
 - 크기: 점, 2px 선, 글자, 작은 칩까지만. **넓은 면이나 버튼 채움에 쓰지 않는다.** 진행 중 표시는 꽉 찬 칩보다 "● 진행중"(마젠타 점 + `fg/primary` 글자)을 권장한다.
 - 쓰지 않는 곳: 일반 안내 문구의 목록 점(회색), 선택된 거르기 칩(검정 테두리), 오류(`semantic/error`).
+
+**관리자 hover 규약** — 옅은 hover(`surface/canvas`, `surface/sunken`)가 피드백으로 부족한 관리자 컨트롤에는 `surface/pressed` + `fg/primary`를 쓴다 (관리자 한정으로 `pressed`를 hover에 재사용한다). 표 행은 `surface/sunken`까지만 진하게 하고, 행 안 보조 텍스트는 `fg/secondary`로 두어 hover 상태에서도 대비 4.5:1을 지킨다.
 
 **노랑 (`ticket/*`) — 응모권과 보상**
 

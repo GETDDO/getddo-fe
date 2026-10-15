@@ -13,6 +13,7 @@ import { EventActionDialog } from '@features/manageEvent';
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
+import { CardSkeleton, LoadingBlock } from '@shared/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
 const KST_YMD_HM: Intl.DateTimeFormatOptions = {
@@ -40,12 +41,18 @@ export function AdminEventDetailPage() {
     const [action, setAction] = useState<EventActionKind | null>(null);
 
     if (isPending) {
-        return <p className="text-body-sm text-fg-tertiary pb-10">불러오는 중…</p>;
+        return (
+            <LoadingBlock className="pb-10">
+                <CardSkeleton rows={8} />
+            </LoadingBlock>
+        );
     }
     if (isError || !event) {
         return (
             <div className="flex flex-col gap-4 pb-10">
-                <p className="text-destructive text-body-sm">이벤트를 불러오지 못했습니다.</p>
+                <p className="text-semantic-error-strong text-body-sm">
+                    이벤트를 불러오지 못했습니다.
+                </p>
                 <Button variant="secondary" className="w-fit" asChild>
                     <Link to="/admin/events">목록으로</Link>
                 </Button>
@@ -65,7 +72,7 @@ export function AdminEventDetailPage() {
 
     return (
         <div className="flex max-w-280 flex-col gap-6 pb-10 md:pr-10">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
                 <Button variant="secondary" size="sm" asChild>
                     <Link to="/admin/events">← 목록</Link>
                 </Button>
@@ -78,7 +85,7 @@ export function AdminEventDetailPage() {
                 >
                     {status.label}
                 </span>
-                <div className="ml-auto flex gap-2">
+                <div className="ml-auto flex flex-wrap gap-2">
                     {hasDraw && (
                         <Button variant="secondary" asChild>
                             <Link to={`/admin/draw?eventId=${event.id}`}>추첨 관리</Link>
@@ -122,8 +129,8 @@ export function AdminEventDetailPage() {
                     {formatKst(event.startsAt, KST_YMD_HM)} ~ {formatKst(event.endsAt, KST_YMD_HM)}{' '}
                     (KST)
                 </InfoRow>
-                <InfoRow label="발표 예정">
-                    {formatKst(event.publicationScheduledAt, KST_YMD_HM)} (KST)
+                <InfoRow label="자동 추첨 기준">
+                    {formatKst(event.drawScheduledAt, KST_YMD_HM)} (KST)
                 </InfoRow>
                 {event.canceledAt && (
                     <InfoRow label="취소 이력">{formatKst(event.canceledAt, KST_YMD_HM)}</InfoRow>
