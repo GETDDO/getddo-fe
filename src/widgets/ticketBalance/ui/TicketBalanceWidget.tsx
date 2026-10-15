@@ -51,8 +51,9 @@ export function TicketBalanceWidget({
     const { data: attendance, isPending: attendancePending } = useAttendanceToday();
     const { data: missions, isPending: missionsPending } = useMissionList();
     const { data: games, isPending: gamesPending } = useGameList();
-    // 셋 다 아직이면 카드 자리를 잡아 둔다 — 비어 있다가 갑자기 섹션이 생기면 아래 내용이 밀린다
-    const loading = attendancePending && missionsPending && gamesPending;
+    // 셋이 모두 올 때까지 카드 자리만 잡아 둔다 — 비어 있다가 갑자기 섹션이 생기면 아래 내용이 밀리고,
+    // 하나씩 도착할 때마다 그리면 순서(orderEarnCards)가 바뀌며 카드가 뒤섞여 보인다
+    const loading = attendancePending || missionsPending || gamesPending;
     // 마우스 드래그 + 관성 스크롤은 공용 훅을 쓴다 (터치는 브라우저 네이티브 스크롤)
     const dragScroll = useDragScroll<HTMLDivElement>();
 
@@ -129,45 +130,47 @@ export function TicketBalanceWidget({
                 )}
             </div>
             {/* 한 화면에 N.5장 — 반 장이 잘려 보이며 옆으로 더 있다는 암시를 준다. 마우스는 드래그로, 터치는 브라우저 네이티브 스크롤로 움직인다 */}
-            {loading && (
-                <div aria-hidden className="flex gap-4 overflow-hidden">
+            {loading ? (
+                <div role="status" className="flex gap-4 overflow-hidden">
+                    <span className="sr-only">응모권 카드를 불러오는 중이에요</span>
                     {Array.from({ length: 4 }, (_, index) => (
                         <Skeleton key={index} className="h-90 w-66.25 shrink-0 rounded-2xl" />
                     ))}
                 </div>
+            ) : (
+                <div
+                    {...dragScroll}
+                    className={cn(
+                        // 카드 그림자가 잘리지 않게 사방에 12px 여백을 두고 같은 만큼 당긴다
+                        '-m-3 flex cursor-grab scroll-px-3 [scrollbar-width:none] gap-4 overflow-x-auto p-3 select-none active:cursor-grabbing [&::-webkit-scrollbar]:hidden',
+                        railClassName,
+                    )}
+                >
+                    {orderedCards.map((card) => (
+                        // 자리 이동 애니메이션은 두지 않는다 — 새로고침 때 출석·미션·게임이 따로 불러와지며 순서가 바뀌어 카드가 미끄러져 보였다
+                        <div
+                            key={card.id}
+                            className={cn(
+                                // 게임 페이지 티켓 카드와 같은 크기 (너비 265, 높이 360)
+                                'flex w-66.25 shrink-0',
+                                cardClassName,
+                            )}
+                        >
+                            {card.game ? (
+                                // 미션 페이지 게임 목록과 같은 카드 — 카드 어디를 눌러도 게임으로 들어가고, 준비 중인 게임은 막는다
+                                <GameTicketCard
+                                    game={card.game}
+                                    href={card.href}
+                                    ready={hasGamePlayer(card.game.id)}
+                                    className="w-full"
+                                />
+                            ) : (
+                                <EarnTicketCard card={card} />
+                            )}
+                        </div>
+                    ))}
+                </div>
             )}
-            <div
-                {...dragScroll}
-                className={cn(
-                    // 카드 그림자가 잘리지 않게 사방에 12px 여백을 두고 같은 만큼 당긴다
-                    '-m-3 flex cursor-grab scroll-px-3 [scrollbar-width:none] gap-4 overflow-x-auto p-3 select-none active:cursor-grabbing [&::-webkit-scrollbar]:hidden',
-                    railClassName,
-                )}
-            >
-                {orderedCards.map((card) => (
-                    // 자리 이동 애니메이션은 두지 않는다 — 새로고침 때 출석·미션·게임이 따로 불러와지며 순서가 바뀌어 카드가 미끄러져 보였다
-                    <div
-                        key={card.id}
-                        className={cn(
-                            // 게임 페이지 티켓 카드와 같은 크기 (너비 265, 높이 360)
-                            'flex w-66.25 shrink-0',
-                            cardClassName,
-                        )}
-                    >
-                        {card.game ? (
-                            // 미션 페이지 게임 목록과 같은 카드 — 카드 어디를 눌러도 게임으로 들어가고, 준비 중인 게임은 막는다
-                            <GameTicketCard
-                                game={card.game}
-                                href={card.href}
-                                ready={hasGamePlayer(card.game.id)}
-                                className="w-full"
-                            />
-                        ) : (
-                            <EarnTicketCard card={card} />
-                        )}
-                    </div>
-                ))}
-            </div>
         </section>
     );
 }

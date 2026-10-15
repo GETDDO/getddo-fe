@@ -34,7 +34,13 @@ function PagedResult<T>({
 
     return (
         <div className="flex flex-col gap-4">
-            {isPending && <SkeletonList count={5} rowClassName="h-12" />}
+            {isPending && (
+                // 스켈레톤은 낭독기에서 감추므로 불러오는 중임을 글로 알린다 (알림 목록과 같은 꼴)
+                <div role="status">
+                    <span className="sr-only">불러오는 중이에요</span>
+                    <SkeletonList count={5} rowClassName="h-12" />
+                </div>
+            )}
             {isError && <p className="text-destructive text-body-sm">{errorText}</p>}
             {!isPending && !isError && data && data.items.length === 0 && (
                 <p className="text-fg-tertiary text-body-sm py-6">{emptyText}</p>
