@@ -11,7 +11,7 @@ import {
 } from '@entities/audit';
 import { formatKst } from '@shared/lib/date';
 import { Button } from '@shared/ui/button';
-import { SkeletonRows } from '@shared/ui/skeleton';
+import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 
 const PREVIEW_SIZE = 5;
 
@@ -52,7 +52,11 @@ export function RecentAuditLogsPanel() {
                 </div>
             </div>
 
-            {query.isPending && <SkeletonRows rows={3} />}
+            {query.isPending && (
+                <LoadingBlock>
+                    <SkeletonRows rows={3} />
+                </LoadingBlock>
+            )}
             {query.isError && (
                 <div className="flex items-center gap-3" role="alert">
                     <p className="text-semantic-error-strong text-body-sm">

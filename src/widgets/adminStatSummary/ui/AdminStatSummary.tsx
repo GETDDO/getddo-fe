@@ -47,7 +47,7 @@ function StatCard({
                 )}
             />
             <span className="text-body-sm text-fg-tertiary">{label}</span>
-            <strong className="text-title-1 text-fg-primary">
+            <div className="text-title-1 text-fg-primary">
                 {pending ? (
                     <>
                         <Skeleton className="h-8 w-20" />
@@ -62,7 +62,7 @@ function StatCard({
                 ) : (
                     `${formatNumber(value)}건`
                 )}
-            </strong>
+            </div>
             <span className="text-caption text-fg-tertiary">{description}</span>
             {error && onRetry && (
                 <Button size="sm" variant="ghost" className="relative self-start" onClick={onRetry}>

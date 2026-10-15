@@ -41,7 +41,7 @@ const asJobStatus = (value: string | null) =>
 
 // AN01~AN03 — 알림 생성 작업 목록·상세·복구 접수. 기간은 생성 시각(createdAt) 기준 [from, to)
 export function JobsTab() {
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const statusParam = asJobStatus(searchParams.get('status'));
     const [page, setPage] = useState(1);
     const [draft, setDraft] = useState(() => ({ ...EMPTY, status: statusParam ?? ALL }));
@@ -66,6 +66,9 @@ export function JobsTab() {
         setApplied(EMPTY);
         setRangeError(false);
         setPage(1);
+        const next = new URLSearchParams(searchParams);
+        next.delete('status');
+        setSearchParams(next, { replace: true });
     };
     const [selectedJob, setSelectedJob] = useState<NotificationJob | null>(null);
     const [retryJob, setRetryJob] = useState<NotificationJob | null>(null);

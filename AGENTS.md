@@ -17,7 +17,7 @@
 - 기능 요구사항·구현 범위: `../getddo-spec/00-requirements/` — 새 화면·기능을 만들거나 구현/보류/제외 여부를 판단할 때 `functional-requirements.md`와 `scope.md`를 읽는다
 - 도메인 용어·정책: `../getddo-spec/02-domain/` — 용어는 `glossary.md`, 이벤트·응모권·응모·추첨·출석·미션·게임·알림 정책은 도메인별 파일. 상태 전이, 보상·차감 조건, 추첨·발표 규칙을 구현할 때 읽는다
 - 공용 결정(ADR): `../getddo-spec/03-decisions/` — 프론트·백엔드 공통으로 적용되는 결정과 그 이유. 정책 해석이 필요하거나 공용 결정을 바꾸려 할 때 읽는다
-- API 계약: `../getddo-spec/05-api/` — 도메인별 HTTP 경로·메서드·DTO·업무 오류 코드. 확정(채택)된 범위는 알림 N01~N03·AN01~AN05, 추첨 GD-87·GD-138·GD-169 선택 범위·E08/E09, 배너 B01·AB01~AB05, 관리자 사용자 AO01·AO02·응모권 AO03~AO09, 미션 M01~M04, 게임 G01·G02·G05·글자색깔 G03/G04이며, 응모·출석·미션·게임 제출의 현행 구현 범위(거절 이력·429 `COMMON-006` 등)도 명세에 반영됐다. 공통 감사 조회(AU01·AU02)는 제외다. 나머지는 검토 대기 단계의 제안이며 도메인별 상세는 `docs/CONTEXT.md`의 '백엔드 연동 전 임시 상태'가 기준이다. `common.md`에 응답 봉투·페이징·멱등키·시연용 `X-User-ID`/`X-User-Role`/`X-User-Membership` 헤더 등 공통 계약이 있다. API 연동 코드를 작성할 때 먼저 읽는다
+- API 계약: `../getddo-spec/05-api/` — 도메인별 HTTP 경로·메서드·DTO·업무 오류 코드. 확정(채택)된 범위는 알림 N01~N03·AN01~AN05, 추첨 GD-87·GD-138·GD-169 선택 범위·E08/E09, 배너 B01·AB01~AB05, 관리자 사용자 AO01·AO02·응모권 AO03·AO04·AO05·AO08·AO09, 미션 M01~M04, 게임 G01·G02·G05·글자색깔 G03/G04이며, 응모·출석·미션·게임 제출의 현행 구현 범위(거절 이력·429 `COMMON-006` 등)도 명세에 반영됐다. 공통 감사 조회(AU01·AU02)는 제외다. 나머지는 검토 대기 단계의 제안이며 도메인별 상세는 `docs/CONTEXT.md`의 '백엔드 연동 전 임시 상태'가 기준이다. `common.md`에 응답 봉투·페이징·멱등키·시연용 `X-User-ID`/`X-User-Role`/`X-User-Membership` 헤더 등 공통 계약이 있다. API 연동 코드를 작성할 때 먼저 읽는다
 - 미결정 정책: `../getddo-spec/00-requirements/pending-decisions.md` — 여기 있는 항목과 각 문서의 미확정 표시는 임의로 확정해 코드에 반영하지 않는다
 - 공통 협업 규칙 원본: `../getddo-spec/01-conventions/` — 이 파일의 브랜치·커밋·PR 요약과 충돌하면 원본을 따른다. Jira 에픽·태스크 작성 양식은 `../getddo-spec/templates/jira-*.md`를 사용한다
 

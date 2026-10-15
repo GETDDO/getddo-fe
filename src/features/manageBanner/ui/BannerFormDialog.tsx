@@ -95,6 +95,13 @@ function BannerForm({
     });
 
     const { formats, maxMegabytes } = BANNER_IMAGE_TEMP_POLICY;
+    const showEventStatus =
+        eventsPending || eventsError || (!eventsPending && !eventsError && events.length === 0);
+    const eventDescribedBy = errors.eventId
+        ? 'banner-event-error'
+        : showEventStatus
+          ? 'banner-event-status'
+          : undefined;
 
     return (
         <form onSubmit={(e) => void onSubmit(e)} className="flex flex-col gap-6" noValidate>
@@ -113,9 +120,7 @@ function BannerForm({
                                 id="banner-event"
                                 className="w-full"
                                 aria-invalid={Boolean(errors.eventId)}
-                                aria-describedby={
-                                    errors.eventId ? 'banner-event-error' : 'banner-event-status'
-                                }
+                                aria-describedby={eventDescribedBy}
                             >
                                 <SelectValue placeholder="이벤트를 선택하세요" />
                             </SelectTrigger>

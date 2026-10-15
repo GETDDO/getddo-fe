@@ -11,7 +11,7 @@ import {
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
-import { SkeletonRows } from '@shared/ui/skeleton';
+import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 
 const PREVIEW_SIZE = 5;
 const CHIP = 'text-caption rounded-md px-2 py-0.5 font-medium whitespace-nowrap';
@@ -35,6 +35,7 @@ function FailedJobRow({ job, onClick }: { job: NotificationJob; onClick: () => v
                     size="sm"
                     variant="ghost"
                     className="hover:bg-surface-pressed ml-auto"
+                    aria-label={`${NOTIFICATION_TYPE_LABEL[job.notificationType]} 실패 알림 작업 상세`}
                     onClick={onClick}
                 >
                     상세
@@ -85,7 +86,11 @@ export function FailedNotificationJobsPanel() {
                 </div>
             </div>
 
-            {query.isPending && <SkeletonRows rows={3} />}
+            {query.isPending && (
+                <LoadingBlock>
+                    <SkeletonRows rows={3} />
+                </LoadingBlock>
+            )}
             {query.isError && (
                 <div className="flex items-center gap-3" role="alert">
                     <p className="text-semantic-error-strong text-body-sm">
