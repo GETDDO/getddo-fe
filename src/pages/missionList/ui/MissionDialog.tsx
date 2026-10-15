@@ -18,7 +18,7 @@ import {
     DialogDescription,
     DialogTitle,
 } from '@shared/ui/dialog';
-import { Loading } from '@shared/ui/loading';
+import { Skeleton, SkeletonText } from '@shared/ui/skeleton';
 
 import { MISSION_KIND_LABEL, missionUrgentDeadline } from '../lib/missionBoard';
 import { MissionReward } from './MissionReward';
@@ -110,10 +110,19 @@ function MissionDialogBody({
     if (isPending) {
         return (
             <div className="bg-surface-elevated rounded-2xl p-6">
-                {/* 모달 제목은 화면 낭독기용으로만 남기고, 화면에는 도는 타코야키를 둔다 */}
+                {/* 모달 제목은 화면 낭독기용으로만 남기고, 화면에는 모달 꼴 스켈레톤(머리 글줄 + 문항 두 덩이)을 둔다 */}
                 <DialogTitle className="sr-only">미션을 불러오는 중이에요</DialogTitle>
                 <DialogDescription className="sr-only">잠시만 기다려 주세요.</DialogDescription>
-                <Loading label="미션을 불러오는 중이에요" />
+                <div aria-hidden className="flex flex-col gap-3">
+                    <SkeletonText className="h-6 w-14" />
+                    <SkeletonText className="h-7 w-3/5" />
+                    <SkeletonText className="h-5 w-4/5" />
+                    <SkeletonText className="w-1/2" />
+                    <div className="border-border-strong my-3 border-t border-dashed" />
+                    <Skeleton className="h-24 w-full rounded-xl" />
+                    <Skeleton className="h-24 w-full rounded-xl" />
+                    <Skeleton className="mt-2 h-12 w-full rounded-xl" />
+                </div>
             </div>
         );
     }

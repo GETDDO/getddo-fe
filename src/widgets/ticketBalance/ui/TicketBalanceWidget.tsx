@@ -12,7 +12,7 @@ import { hasGamePlayer } from '@features/playGame';
 import { useDragScroll } from '@shared/lib/useDragScroll';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
-import { Skeleton } from '@shared/ui/skeleton';
+import { SkeletonCard } from '@shared/ui/skeleton';
 import { TicketCard } from '@shared/ui/ticket-card';
 
 import type { OrderableEarnCard } from '../lib/orderEarnCards';
@@ -134,7 +134,7 @@ export function TicketBalanceWidget({
                 <div role="status" className="flex gap-4 overflow-hidden">
                     <span className="sr-only">응모권 카드를 불러오는 중이에요</span>
                     {Array.from({ length: 4 }, (_, index) => (
-                        <Skeleton key={index} className="h-90 w-66.25 shrink-0 rounded-2xl" />
+                        <SkeletonCard key={index} className="h-90 w-66.25 shrink-0" />
                     ))}
                 </div>
             ) : (

@@ -46,6 +46,8 @@ export function MyPage() {
                         wonCount: won.length,
                         lastWonLabel: lastWonAt ? formatKstDot(lastWonAt) : null,
                         todayGranted,
+                        entriesLoading: entries.isPending,
+                        historiesLoading: historiesQuery.isPending,
                     }}
                 />
             )}

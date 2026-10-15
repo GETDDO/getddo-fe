@@ -7,6 +7,7 @@ import { hasGamePlayer } from '@features/playGame';
 import shopCounter from '@shared/assets/shop/shop-counter.jpg';
 import shopWall from '@shared/assets/shop/shop-wall.jpg';
 import { useVirtualClock } from '@shared/lib/virtualClock';
+import { SkeletonText } from '@shared/ui/skeleton';
 import { StepTile } from '@shared/ui/step-tile';
 import { TicketWallet } from '@widgets/ticketWallet';
 
@@ -62,6 +63,9 @@ function ProgressDots({
  * 왼쪽: 오늘 날짜와 오늘 더 받을 수 있는 응모권 수, 출석·게임·설문퀴즈 진행 세 칸(누르면 해당 섹션으로)
  * 오른쪽: 내 응모권 지갑(widgets/ticketWallet) — 바로가기는 응모권 내역
  */
+/** 칸 값을 불러오기 전 자리 — '-' 대신 다른 화면과 같은 둥근 글줄 */
+const VALUE_PLACEHOLDER = <SkeletonText className="h-4 w-14" />;
+
 export function TodayRewardsBanner() {
     const { data: today } = useAttendanceToday();
     const { data: games } = useGameList();
@@ -82,7 +86,7 @@ export function TodayRewardsBanner() {
         // 지금 참여할 수 있는 미션만 센다 — 목록 카드는 기간이 지난 미션도 그대로 보여 준다
         missions: missions?.filter((mission) => isMissionOpen(mission, now)),
     });
-    // 출석·게임·미션을 다 불러오기 전에는 남은 장수가 0으로 잡혀 틀린 숫자가 보이니 '-'로 둔다
+    // 출석·게임·미션을 다 불러오기 전에는 남은 장수가 0으로 잡혀 틀린 숫자가 보이니 글줄 스켈레톤으로 둔다
     const ready =
         progress.attendance !== undefined &&
         progress.games !== undefined &&
@@ -153,7 +157,12 @@ export function TodayRewardsBanner() {
                             <>
                                 오늘 응모권{' '}
                                 <span className="text-display text-fg-primary tabular-nums">
-                                    {ready ? remaining : '-'}장
+                                    {ready ? (
+                                        remaining
+                                    ) : (
+                                        <SkeletonText className="h-[0.8em] w-12" />
+                                    )}
+                                    장
                                 </span>{' '}
                                 더 받을 수 있어요
                             </>
@@ -177,7 +186,7 @@ export function TodayRewardsBanner() {
                                     ? progress.attendance.done
                                         ? '완료'
                                         : '출석하기'
-                                    : '-'
+                                    : VALUE_PLACEHOLDER
                             }
                             done={attendanceDone}
                             targetId={MISSION_SECTION_IDS.attendance}
@@ -188,7 +197,7 @@ export function TodayRewardsBanner() {
                             value={
                                 progress.games
                                     ? `${progress.games.done} / ${progress.games.total}`
-                                    : '-'
+                                    : VALUE_PLACEHOLDER
                             }
                             valueSuffix={<ProgressDots count={progress.games} done={gamesDone} />}
                             done={gamesDone}
@@ -200,7 +209,7 @@ export function TodayRewardsBanner() {
                             value={
                                 progress.missions
                                     ? `${progress.missions.done} / ${progress.missions.total}`
-                                    : '-'
+                                    : VALUE_PLACEHOLDER
                             }
                             valueSuffix={
                                 <ProgressDots count={progress.missions} done={missionsDone} />

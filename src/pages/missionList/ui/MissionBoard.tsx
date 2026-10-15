@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useMissionList } from '@entities/mission';
 import emptyMascot from '@shared/assets/ui/reward-mascot.png';
 import { useVirtualClock } from '@shared/lib/virtualClock';
-import { Skeleton } from '@shared/ui/skeleton';
+import { SkeletonCard } from '@shared/ui/skeleton';
 
 import {
     filterMissions,
@@ -71,7 +71,7 @@ export function MissionBoard({
             {isPending && (
                 <div aria-hidden className="grid gap-4 md:grid-cols-2">
                     {Array.from({ length: 4 }, (_, index) => (
-                        <Skeleton key={index} className="h-28 rounded-2xl" />
+                        <SkeletonCard key={index} className="h-28" />
                     ))}
                 </div>
             )}

@@ -5,7 +5,7 @@ import { formatKst, KST_HOUR_MINUTE, kstDayDiff, toKst } from '@shared/lib/date'
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
 import { PageHeader } from '@shared/ui/page-header';
-import { Skeleton } from '@shared/ui/skeleton';
+import { SkeletonCard } from '@shared/ui/skeleton';
 
 import type { ExpiringSoon } from './ui/TicketWalletHero';
 
@@ -70,7 +70,7 @@ export function MyTicketsPage() {
             />
 
             {/* 지갑 머리 자리를 잡아 둔다 */}
-            {ticketsPending && <Skeleton className="h-56 rounded-2xl" />}
+            {ticketsPending && <SkeletonCard className="h-56" />}
             {ticketsError && (
                 <p className="text-destructive text-body-sm">응모권 잔액을 불러오지 못했습니다.</p>
             )}

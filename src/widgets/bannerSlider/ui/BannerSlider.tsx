@@ -99,6 +99,7 @@ export function BannerSlider({
     };
 
     if (isPending) {
+        // 겟또타임·미션 머리처럼 배너 자리를 통으로 잡는다
         return <Skeleton className="min-h-91.25 w-full rounded-2xl" />;
     }
 

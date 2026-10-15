@@ -4,8 +4,8 @@ import { useState, type ReactNode } from 'react';
 import { useSessionStore, useVirtualUsers } from '@entities/user';
 import profileAvatar from '@shared/assets/ui/profile-avatar-head.png';
 import { cn } from '@shared/lib/utils';
-import { Loading } from '@shared/ui/loading';
 import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
+import { SkeletonList } from '@shared/ui/skeleton';
 
 interface VirtualUserSwitcherProps {
     /** 트리거를 바꾸고 싶을 때 넘긴다 (기본: 프로필 아이콘 버튼) */
@@ -41,7 +41,16 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                 </div>
                 <div className="border-border-default border-t" />
                 <div className="flex max-h-80 flex-col gap-1 overflow-y-auto">
-                    {isPending && <Loading size="sm" />}
+                    {isPending && (
+                        <div role="status">
+                            <span className="sr-only">사용자 목록을 불러오는 중이에요</span>
+                            <SkeletonList
+                                count={5}
+                                rowClassName="h-12 px-2.5"
+                                thumbnailClassName="size-7 rounded-full"
+                            />
+                        </div>
+                    )}
                     {isError && (
                         <p className="text-destructive text-body-sm py-4 text-center">
                             사용자 목록을 불러오지 못했습니다.

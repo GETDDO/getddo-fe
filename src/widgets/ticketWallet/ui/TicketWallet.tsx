@@ -12,6 +12,7 @@ import {
 } from '@entities/ticket';
 import { formatNumber } from '@shared/lib/format';
 import { useCountUp } from '@shared/lib/useCountUp';
+import { SkeletonText } from '@shared/ui/skeleton';
 
 import ticketCharacter from '../assets/ticket-character.png';
 import { summarizeMonthlyTickets } from '../lib/monthlyTicketSummary';
@@ -41,7 +42,9 @@ export function TicketWallet({ now, action }: TicketWalletProps) {
     const { data: history } = useTicketHistories();
     const monthly = history ? summarizeMonthlyTickets(history, now) : undefined;
     const balance = useCountUp(tickets?.availableCount);
-    const format = (n: number | undefined) => (n == null ? '-' : formatNumber(n));
+    // 불러오기 전에는 '-' 대신 둥근 글줄로 숫자 자리를 잡는다
+    const format = (n: number | undefined) =>
+        n == null ? <SkeletonText className="w-6" /> : formatNumber(n);
 
     return (
         <div className="relative mt-8 lg:mt-0">

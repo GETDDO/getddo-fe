@@ -27,6 +27,7 @@ const RECOVER_MS = 700;
  * - 연속 출석 보상일(관리자 정책)은 보상 캐릭터 (출석 전 회색 → 출석하면 원본)
  * - 판 오른쪽 위에 작은 태그를 단다: '오늘'(응모권 노랑), 보상일 '+N'(옅은 회색). 둘 다면 한 알약으로 이어 붙인다
  * - 출석한 타코야끼를 누르면 뒤집히고, 너무 많이 누르면 잠깐 어지러워했다가 스르르 돌아온다
+ * - 아직 출석하지 않은 오늘 판은 누르면 출석한다 (onCheckToday)
  */
 export function AttendanceMonthGrid({
     days,
@@ -34,6 +35,7 @@ export function AttendanceMonthGrid({
     bonusRewards,
     revealDate,
     onRevealEnd,
+    onCheckToday,
 }: {
     days: AttendanceMonthDay[];
     bonusDays: ReadonlySet<number>;
@@ -43,6 +45,8 @@ export function AttendanceMonthGrid({
     revealDate?: string | null;
     /** 오늘 칸 연출이 끝났을 때 — 다시 펼쳐도 연출이 반복되지 않도록 부모가 revealDate를 지운다 */
     onRevealEnd?: () => void;
+    /** 아직 출석하지 않은 오늘 칸을 눌렀을 때 — 넘기면 오늘 판이 출석 버튼이 된다 */
+    onCheckToday?: () => void;
 }) {
     // 오늘 칸 연출 단계: 굽기 → 떨어져 찍힘 → 끝 (판 흔들림은 없앴다)
     const [revealStage, setRevealStage] = useState<TodayRevealStage | 'done'>(() =>
@@ -142,6 +146,29 @@ export function AttendanceMonthGrid({
                                 day={day.day}
                                 mascotSrc={mascot.src}
                             />
+                        ) : day.isToday && !day.checked && onCheckToday ? (
+                            // 아직 출석하지 않은 오늘 판 — 눌러서 바로 출석한다. 다른 날보다 진하게 두고 누를 수 있다는 걸 테두리로 알린다
+                            <button
+                                type="button"
+                                aria-label="오늘 출석하기"
+                                onClick={onCheckToday}
+                                className="ring-ticket-primary focus-visible:ring-border-focus relative flex size-[86%] cursor-pointer items-center justify-center rounded-full ring-2 transition-transform hover:scale-105 focus-visible:outline-none active:scale-95"
+                            >
+                                {/* 다른 날과 같은 모양 — 보상일은 캐릭터만, 보통 날은 흐린 반죽 위에 날짜 (그림과 숫자가 겹쳐 보이지 않게) */}
+                                <img
+                                    src={isBonus ? mascot.src : BATTER_MASCOT.src}
+                                    alt=""
+                                    className={cn(
+                                        'absolute inset-0 size-full object-contain grayscale',
+                                        isBonus ? 'opacity-50' : 'opacity-45',
+                                    )}
+                                />
+                                {!isBonus && (
+                                    <span className="text-body-bold text-fg-primary relative leading-4.5">
+                                        {day.day}
+                                    </span>
+                                )}
+                            </button>
                         ) : day.checked || isBonus ? (
                             <button
                                 type="button"

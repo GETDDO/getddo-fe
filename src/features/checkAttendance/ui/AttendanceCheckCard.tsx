@@ -16,6 +16,7 @@ import {
     countMonthlyAttendance,
     toAttendanceDate,
 } from '../lib/attendanceWeek';
+import { nextStreakMilestone } from '../lib/nextStreakMilestone';
 import { AttendanceBakingStage, BAKING_SPRITE_SRC } from './AttendanceBakingStage';
 import { AttendanceMonthGrid } from './AttendanceMonthGrid';
 import { AttendanceWeekStrip } from './AttendanceWeekStrip';
@@ -27,9 +28,6 @@ const BAKING_MIN_MS = 1600;
 
 /** 접힌 카드 높이(px) — h-75 */
 const COLLAPSED_HEIGHT = 300;
-
-/** 펼친 출석판 머리의 출석 버튼·완료 표시·굽는 중 표시가 모두 같은 너비를 쓰도록 고정한다 */
-const COMPACT_CHECK_WIDTH = 'w-32';
 
 /** AT01을 아직 못 받았거나 실패했을 때 쓰는 보상 단계(일 → 추가 응모권) — getddo-spec 출석 규칙의 초기 설정 */
 const DEFAULT_BONUS_REWARDS: ReadonlyMap<number, number> = new Map([
@@ -70,10 +68,13 @@ function Rise({
 function AttendanceStat({
     label,
     value,
+    hint,
     compact,
 }: {
     label: string;
     value: string;
+    /** 값 아래 작은 안내 — 예: 다음 연속 출석 보상까지 남은 날 */
+    hint?: string;
     compact: boolean;
 }) {
     return (
@@ -84,6 +85,7 @@ function AttendanceStat({
             <span className={`text-fg-primary ${compact ? 'text-body-sm-bold' : 'text-body-bold'}`}>
                 {value}
             </span>
+            {hint && <span className="text-caption text-fg-tertiary -mt-1">{hint}</span>}
         </div>
     );
 }
@@ -195,20 +197,6 @@ export function AttendanceCheckCard({
         }
     };
 
-    // 펼친 출석판 머리의 작은 출석 버튼 — 이번 달 출석일수 옆에 둔다.
-    // 굽는 동안에는 아래 굽기 장면이 같은 내용을 보여주므로 자리만 비워 둔다
-    const compactCheckButton = baking ? (
-        <div aria-hidden className={`h-10 ${COMPACT_CHECK_WIDTH}`} />
-    ) : status?.attended ? (
-        <Button disabled className={COMPACT_CHECK_WIDTH}>
-            오늘 출석 완료
-        </Button>
-    ) : (
-        <Button className={COMPACT_CHECK_WIDTH} onClick={() => void handleCheck()}>
-            출석하기
-        </Button>
-    );
-
     // 굽는 동안에는 결과를 미리 보여주지 않도록 오늘을 출석 전으로 둔다
     const shownDates = baking ? checkedDates.filter((date) => date !== today) : checkedDates;
     const shownCheckedToday = !!status?.attended && !baking;
@@ -219,14 +207,35 @@ export function AttendanceCheckCard({
         </Button>
     ) : (
         <Button size="lg" className="w-full" onClick={() => void handleCheck()}>
-            출석하기
+            출석하고 응모권 {status?.dailyRewardTicketCount ?? 1}장 받기
         </Button>
     );
+
+    // 다음 연속 출석 보상 — 아직 받지 않았고 이번 달 안에 닿을 수 있는 가장 가까운 단계
+    const dayOfMonth = Number(today.slice(8, 10));
+    // Date.UTC의 달은 0부터라 '다음 달 0일' = 이번 달 마지막 날
+    const lastDay = new Date(
+        Date.UTC(Number(today.slice(0, 4)), Number(today.slice(5, 7)), 0),
+    ).getUTCDate();
+    const nextMilestone =
+        status &&
+        nextStreakMilestone(
+            status.milestones,
+            status.consecutiveDays,
+            lastDay - dayOfMonth + (status.attended ? 0 : 1),
+        );
 
     const stats = status && (
         <AttendanceStatPair
             streak={status.consecutiveDays}
             monthly={countMonthlyAttendance(checkedDates, status.attended, now)}
+            // 다음 연속 출석 보너스 — 매일 출석 1장과 별도로 주는 단계 보상이라 '보너스'로 적는다 (getddo-spec attendance.md).
+            // 따로 줄을 두지 않고 연속 일수 바로 아래에 붙인다 (접힌 카드에서만)
+            streakHint={
+                nextMilestone && !showExpanded
+                    ? `연속 ${nextMilestone.milestoneDays}일 달성 시 보너스 +${nextMilestone.rewardTicketCount}장`
+                    : undefined
+            }
             compact={showExpanded}
         />
     );
@@ -238,13 +247,17 @@ export function AttendanceCheckCard({
                 // 접힌 카드는 옆 응모권 내역 카드와 높이를 맞추고, 펼친 카드는 출석판만큼 자란다
                 style={{ height: showExpanded && !stageFull ? 'auto' : COLLAPSED_HEIGHT }}
                 className={cn(
-                    'bg-surface-page border-border-default flex flex-col rounded-2xl border p-4 shadow-md',
+                    'bg-surface-page border-border-default relative flex flex-col rounded-2xl border p-4 shadow-md',
                     className,
                 )}
             >
                 {stageFull ? (
                     // 접힌 카드에서 출석하기 — 굽는 동안 굽기 장면이 카드 전체를 채운다
-                    <AttendanceBakingStage durationMs={BAKING_MIN_MS} className="flex-1" />
+                    <AttendanceBakingStage
+                        durationMs={BAKING_MIN_MS}
+                        rewardTicketCount={status?.dailyRewardTicketCount}
+                        className="flex-1"
+                    />
                 ) : (
                     // 펼친 내용과 접힌 내용은 key로 갈아 끼워 바뀐 쪽만 떠오르게 한다
                     <div
@@ -263,7 +276,6 @@ export function AttendanceCheckCard({
                             >
                                 <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                                     {stats}
-                                    {status && compactCheckButton}
                                 </div>
                                 <button
                                     type="button"
@@ -290,26 +302,38 @@ export function AttendanceCheckCard({
                                     // 펼친 출석판에서 출석하기 — 출석판 자리만 굽기 장면으로 바뀐다
                                     <AttendanceBakingStage
                                         durationMs={BAKING_MIN_MS}
+                                        rewardTicketCount={status.dailyRewardTicketCount}
                                         className="min-h-80"
                                     />
                                 ) : (
-                                    <Rise order={1} enter={contentEnter}>
-                                        <AttendanceMonthGrid
-                                            days={buildAttendanceMonth(
-                                                shownDates,
-                                                shownCheckedToday,
-                                                now,
-                                            )}
-                                            bonusDays={bonusDays}
-                                            bonusRewards={bonusRewards}
-                                            revealDate={revealDate}
-                                            onRevealEnd={handleRevealEnd}
-                                        />
-                                    </Rise>
+                                    <>
+                                        <Rise order={1} enter={contentEnter}>
+                                            <AttendanceMonthGrid
+                                                days={buildAttendanceMonth(
+                                                    shownDates,
+                                                    shownCheckedToday,
+                                                    now,
+                                                )}
+                                                bonusDays={bonusDays}
+                                                bonusRewards={bonusRewards}
+                                                revealDate={revealDate}
+                                                onRevealEnd={handleRevealEnd}
+                                                onCheckToday={
+                                                    status.attended
+                                                        ? undefined
+                                                        : () => void handleCheck()
+                                                }
+                                            />
+                                        </Rise>
+                                        {/* 접힌 카드와 같은 버튼을 출석판 아래에 둔다 — 오늘 판을 눌러도 출석된다 */}
+                                        <Rise order={2} enter={contentEnter}>
+                                            {checkButton}
+                                        </Rise>
+                                    </>
                                 )
                             ) : (
                                 <>
-                                    <Rise order={1} enter={contentEnter} className="px-4 pt-2">
+                                    <Rise order={1} enter={contentEnter} className="px-1 pt-2">
                                         {stats}
                                     </Rise>
                                     {/* 최근 7일과 출석하기는 한 묶음으로 아래에 붙인다 — 남는 높이는 출석일수와 이 묶음 사이로 간다 */}
@@ -359,15 +383,22 @@ export function AttendanceCheckCard({
 function AttendanceStatPair({
     streak,
     monthly,
+    streakHint,
     compact,
 }: {
     streak: number;
     monthly: number;
+    streakHint?: string;
     compact: boolean;
 }) {
     return (
         <div className={cn('grid grid-cols-2', compact ? 'gap-4' : 'w-full')}>
-            <AttendanceStat label="연속 출석일수" value={`연속 ${streak}일`} compact={compact} />
+            <AttendanceStat
+                label="연속 출석일수"
+                value={`연속 ${streak}일`}
+                hint={streakHint}
+                compact={compact}
+            />
             <div className="border-border-strong border-l pl-4">
                 <AttendanceStat label="이번 달 출석일수" value={`${monthly}일`} compact={compact} />
             </div>

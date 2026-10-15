@@ -10,7 +10,7 @@ import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
 import { Card } from '@shared/ui/card';
 import { Pager } from '@shared/ui/pager';
-import { Skeleton } from '@shared/ui/skeleton';
+import { SkeletonCard } from '@shared/ui/skeleton';
 
 /**
  * 홈 '타임 래플 · 응모권 사용' 섹션 — 좌측에 대표 진행 이벤트 카드,
@@ -55,7 +55,7 @@ export function TicketEventSection({
             {isPending && (
                 <div aria-hidden className="grid gap-4 lg:grid-cols-2">
                     {Array.from({ length: 2 }, (_, index) => (
-                        <Skeleton key={index} className="h-72 rounded-2xl" />
+                        <SkeletonCard key={index} className="h-72" />
                     ))}
                 </div>
             )}

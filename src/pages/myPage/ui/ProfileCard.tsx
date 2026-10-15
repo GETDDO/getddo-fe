@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { ChevronRight, Repeat } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -10,6 +12,7 @@ import profileAvatar from '@shared/assets/ui/profile-avatar.png';
 import { formatNumber } from '@shared/lib/format';
 import { Badge } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
+import { SkeletonText } from '@shared/ui/skeleton';
 import { TICKET_OUTLINE_FILTER } from '@shared/ui/ticket-card';
 
 export interface ProfileStats {
@@ -20,7 +23,15 @@ export interface ProfileStats {
     lastWonLabel: string | null;
     /** 오늘 받은 응모권 장수 */
     todayGranted: number;
+    /** 응모 내역(응모 중·당첨)을 불러오는 중 — 0건으로 잘못 보이지 않게 글줄 스켈레톤을 둔다 */
+    entriesLoading: boolean;
+    /** 응모권 내역(오늘 적립)을 불러오는 중 */
+    historiesLoading: boolean;
 }
+
+/** 칸 값·설명 자리 — 불러오는 동안 다른 화면과 같은 둥근 글줄로 둔다 */
+const VALUE_SKELETON = <SkeletonText className="h-7 w-16" />;
+const CAPTION_SKELETON = <SkeletonText className="w-32" />;
 
 const TILE =
     'focus-visible:ring-border-focus relative flex min-h-30 flex-col gap-1 rounded-xl p-4 transition-colors focus-visible:ring-2 focus-visible:outline-none';
@@ -42,7 +53,7 @@ function StatTile({
 }: {
     to: string;
     label: string;
-    value: string;
+    value: ReactNode;
     children: React.ReactNode;
 }) {
     return (
@@ -112,7 +123,7 @@ export function ProfileCard({
                 <StatTile
                     to="/my-tickets"
                     label="응모권"
-                    value={tickets ? `${formatNumber(tickets.availableCount)}장` : '–'}
+                    value={tickets ? `${formatNumber(tickets.availableCount)}장` : VALUE_SKELETON}
                 >
                     {tickets && (
                         <span className="flex flex-wrap gap-1">
@@ -130,29 +141,47 @@ export function ProfileCard({
                 <StatTile
                     to="/my-entries?status=PENDING"
                     label="응모 중"
-                    value={`${formatNumber(stats.pendingCount)}건`}
+                    value={
+                        stats.entriesLoading
+                            ? VALUE_SKELETON
+                            : `${formatNumber(stats.pendingCount)}건`
+                    }
                 >
-                    <span className="text-caption text-fg-tertiary">
-                        {stats.pendingCount > 0
-                            ? '결과 발표를 기다리고 있어요'
-                            : '발표를 기다리는 응모가 없어요'}
-                    </span>
+                    {stats.entriesLoading ? (
+                        CAPTION_SKELETON
+                    ) : (
+                        <span className="text-caption text-fg-tertiary">
+                            {stats.pendingCount > 0
+                                ? '결과 발표를 기다리고 있어요'
+                                : '발표를 기다리는 응모가 없어요'}
+                        </span>
+                    )}
                 </StatTile>
                 <StatTile
                     to="/my-entries?status=WON"
                     label="당첨"
-                    value={`${formatNumber(stats.wonCount)}건`}
+                    value={
+                        stats.entriesLoading ? VALUE_SKELETON : `${formatNumber(stats.wonCount)}건`
+                    }
                 >
-                    <span className="text-caption text-fg-tertiary">
-                        {stats.lastWonLabel
-                            ? `최근 당첨 ${stats.lastWonLabel}`
-                            : '아직 당첨이 없어요'}
-                    </span>
+                    {stats.entriesLoading ? (
+                        CAPTION_SKELETON
+                    ) : (
+                        <span className="text-caption text-fg-tertiary">
+                            {stats.lastWonLabel
+                                ? `최근 당첨 ${stats.lastWonLabel}`
+                                : '아직 당첨이 없어요'}
+                        </span>
+                    )}
                 </StatTile>
                 <StatTile
                     to="/missions"
                     label="오늘 적립"
-                    value={`+${formatNumber(stats.todayGranted)}장`}
+                    value={
+                        stats.historiesLoading
+                            ? VALUE_SKELETON
+                            : `+${formatNumber(stats.todayGranted)}장`
+                    }
                 >
                     <span className="text-caption text-fg-tertiary">
                         출석·게임·미션으로 더 받을 수 있어요
