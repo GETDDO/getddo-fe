@@ -10,6 +10,7 @@ import { Button } from '@shared/ui/button';
 import { PageHeader } from '@shared/ui/page-header';
 import { Segmented } from '@shared/ui/segmented';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
+import { SkeletonList } from '@shared/ui/skeleton';
 import { latestWonAt, useMyEntryRows } from '@widgets/myEntryRows';
 
 import type { StatusTile } from './ui/EntryStatusTiles';
@@ -200,7 +201,7 @@ export function MyEntriesPage() {
                     <span />
                 </div>
 
-                {isPending && <p className="text-body-sm text-fg-tertiary py-6">불러오는 중…</p>}
+                {isPending && <SkeletonList count={5} rowClassName="h-16" className="py-3" />}
                 {isError && (
                     <p className="text-destructive text-body-sm py-6">
                         응모 내역을 불러오지 못했습니다.

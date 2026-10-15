@@ -43,7 +43,7 @@ export function UpcomingEventCard({ event }: { event: Event }) {
             className="focus-visible:ring-border-focus after:bg-surface-canvas/60 relative isolate flex min-h-0 items-center gap-4 rounded-2xl p-4 after:absolute after:inset-2 after:-z-10 after:rounded-xl after:opacity-0 hover:after:opacity-100 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset motion-safe:after:transition-opacity motion-safe:after:duration-200"
         >
             {/* 겟또타임 래플이라 상품 그림 — 1:1로 잘리지 않게 맞춘다 */}
-            <EventThumbnail src={event.bannerImageUrl} className="size-16" iconClassName="size-6" />
+            <EventThumbnail src={event.bannerImageUrl} className="size-16" />
             <div className="flex min-w-0 flex-col gap-1">
                 <StatusDot tone={soon ? 'info' : 'muted'}>
                     오늘 {formatKst(event.startsAt, TIME_ONLY)} 오픈 예정

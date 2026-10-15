@@ -12,6 +12,7 @@ import { ticketGradeSchema, useMyTickets } from '@entities/ticket';
 import { useEnterEvent } from '@features/enterEvent';
 import { getErrorMessage } from '@shared/api/errorMessage';
 import { Button } from '@shared/ui/button';
+import { Loading } from '@shared/ui/loading';
 
 import { BronzeOnlyTicket } from './ui/BronzeOnlyTicket';
 import { DrawResultSection } from './ui/DrawResultSection';
@@ -26,7 +27,7 @@ import { RaffleDetailsCard } from './ui/RaffleDetailsCard';
 import { RaffleRulesCard } from './ui/RaffleRulesCard';
 import { TicketSelectHeader } from './ui/TicketSelectHeader';
 
-const CONTAINER = 'mx-auto w-full max-w-312 px-6 pb-24';
+const CONTAINER = 'mx-auto w-full max-w-312 px-6 pb-28';
 
 /** 응모도 결과 확인도 할 수 없는 상태에서 버튼에 대신 표시하는 문구 */
 const STATUS_LABEL: Record<Event['status'], string> = {
@@ -65,7 +66,7 @@ export function TimeRaffleDetailPage() {
     if (isPending) {
         return (
             <main className={CONTAINER}>
-                <p className="text-fg-tertiary text-body-sm">불러오는 중…</p>
+                <Loading size="lg" />
             </main>
         );
     }

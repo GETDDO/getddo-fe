@@ -17,6 +17,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@shared/ui/sheet';
+import { SkeletonList } from '@shared/ui/skeleton';
 
 import { groupNotifications } from '../lib/groupNotifications';
 import { toInternalPath } from '../lib/toInternalPath';
@@ -75,9 +76,10 @@ function DrawerBody({ onClose }: { onClose: () => void }) {
 
     if (isPending) {
         return (
-            <p role="status" className="text-body-sm text-fg-tertiary px-5 py-10 text-center">
-                알림을 불러오는 중…
-            </p>
+            <div role="status" className="px-5 py-4">
+                <span className="sr-only">알림을 불러오는 중이에요</span>
+                <SkeletonList count={4} rowClassName="h-16" />
+            </div>
         );
     }
     // 첫 페이지 실패만 전체 오류로 본다 — 이미 받은 목록은 더보기 실패에도 유지한다

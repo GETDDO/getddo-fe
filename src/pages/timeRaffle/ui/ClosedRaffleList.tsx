@@ -7,6 +7,7 @@ import type { Event } from '@entities/event';
 import { useEntryStatistics } from '@entities/entry';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
+import { Badge } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 import { StatusDot } from '@shared/ui/status-dot';
 
@@ -57,7 +58,7 @@ export function ClosedRaffleList({
     }
 
     return (
-        <section id={id} className="flex scroll-mt-24 flex-col gap-5">
+        <section id={id} className="flex scroll-mt-24 flex-col gap-6">
             {mode === 'full' && (
                 <div className="flex flex-col items-start gap-3">
                     <Button variant="link" size="text" onClick={onBack}>
@@ -66,9 +67,9 @@ export function ClosedRaffleList({
                     </Button>
                     <div className="flex items-center gap-2">
                         <h2 className="text-title-3 text-fg-primary">마감한 래플</h2>
-                        <span className="bg-surface-sunken text-label-sm text-fg-secondary rounded-full px-2.5 py-1">
+                        <Badge variant="neutral" size="sm">
                             {formatNumber(events.length)}
-                        </span>
+                        </Badge>
                     </div>
                 </div>
             )}
@@ -152,7 +153,6 @@ function ClosedRaffleRow({ event, now }: { event: Event; now: Date }) {
                 <RaffleThumbnail
                     src={event.bannerImageUrl}
                     className="aspect-video h-20 rounded-lg"
-                    fallbackIconClassName="size-8"
                 />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                     {/* 내 당첨 여부는 결과 화면에서 본다 — 목록에는 발표 상태만 둔다. 발표 전만 "지금" 신호 점을 찍는다 */}

@@ -1,4 +1,3 @@
-import { Gift } from 'lucide-react';
 import { useState } from 'react';
 
 import { toKst } from '@shared/lib/date';
@@ -44,9 +43,7 @@ export function EventCard({ event }: { event: Event }) {
                     className="border-border-default aspect-video w-full shrink-0 border-b object-cover object-center"
                 />
             ) : (
-                <div className="bg-surface-sunken flex aspect-video items-center justify-center">
-                    <Gift className="text-fg-disabled size-8" />
-                </div>
+                <div className="bg-surface-sunken aspect-video" />
             )}
             <div className="flex flex-col gap-3 p-4">
                 {((event.tags?.length ?? 0) > 0 || (dDay != null && dDay >= 0)) && (

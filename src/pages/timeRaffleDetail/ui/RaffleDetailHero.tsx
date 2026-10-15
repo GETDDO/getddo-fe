@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { Clock, Gift } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 import type { Event } from '@entities/event';
 
@@ -54,9 +54,7 @@ export function RaffleDetailHero({ event, quantityControl, cta }: RaffleDetailHe
                         className="absolute inset-0 size-full object-contain p-6 mix-blend-multiply dark:mix-blend-normal"
                     />
                 ) : (
-                    <div className="flex size-full items-center justify-center">
-                        <Gift className="text-fg-disabled size-12" />
-                    </div>
+                    <div className="size-full" />
                 )}
             </div>
 

@@ -54,7 +54,7 @@
     --color-surface-disabled: #e9ebee;
     --color-surface-overlay: rgb(from var(--color-ink) r g b / 0.5);
 
-    /* Inverse — 라이트·다크 공통으로 어두운 크롬(푸터·관리자 사이드바)에 쓰는 고정값. 테마에 따라 뒤집히지 않는다 */
+    /* Inverse — 어두운 크롬(푸터·관리자 사이드바). 테마에 따라 밝게 뒤집히지 않고, 다크에서는 한 단계 더 어두워진다 */
     --color-surface-inverse: #1f242b;
     --color-surface-inverse-muted: #343a42;
     --color-fg-inverse: #f4f5f7;
@@ -196,9 +196,9 @@
     --color-action-neutral-hover: #4b525c;
     --color-action-neutral-pressed: #262b33;
 
-    /* Ticket — soft 배경만 다크용 */
-    --color-ticket-accent: #453815;
-    --color-ticket-accent-pressed: #5a4a1c;
+    /* Ticket — soft 배경만 다크용. 너무 어두우면 노란 칩이 갈색 덩어리로 묻혀 한 단계 밝고 진한 금색으로 둔다 (글자는 fg-primary) */
+    --color-ticket-accent: #5c4813;
+    --color-ticket-accent-pressed: #735b1a;
 
     /* Play — soft 파스텔 배경만 다크용 (일러스트 본체 색은 유지) */
     --color-play-yellow-soft: #453815;
@@ -213,6 +213,8 @@
     --color-surface-pressed: #343a42;
     --color-surface-disabled: #262b33;
     --color-surface-overlay: #000000b3;
+    /* 푸터·관리자 사이드바 — 라이트 값(#1f242b)이 다크 페이지 배경과 같아 경계가 사라지므로 한 단계 더 어둡게 */
+    --color-surface-inverse: #121519;
 
     /* Border */
     --color-border-default: #343a42;
@@ -264,4 +266,69 @@
     --shadow-xl:
         0 4px 25px rgb(from var(--color-ink) r g b / 0.5),
         0 8px 10px rgb(from var(--color-ink) r g b / 0.3);
+}
+
+/*
+ * 다크 모드 안에서도 라이트 색을 그대로 쓰는 구역 — 노란 가게·배너 그림처럼 바탕 그림이 밝은 곳.
+ * 그림은 다크에서도 그대로라, 글자·칩·카드만 어두워지면 노란 그림 위에 흰 글자가 묻힌다.
+ * .dark 블록이 바꾸는 변수를 라이트 값으로 되돌린다 — .dark에 변수를 더하면 여기에도 더한다
+ */
+.dark .force-light {
+    color-scheme: light;
+    --color-brand-soft: #fdebf4;
+    --color-action-neutral: #1f242b;
+    --color-action-neutral-hover: #343a42;
+    --color-action-neutral-pressed: #111417;
+    --color-ticket-accent: #fff4d1;
+    --color-ticket-accent-pressed: #ffe9a6;
+    --color-play-yellow-soft: #fff4d1;
+    --color-play-pink-soft: #fdebf4;
+    --color-play-lavender-soft: #f0ebff;
+    --color-surface-page: #ffffff;
+    --color-surface-canvas: #f4f5f7;
+    --color-surface-elevated: #ffffff;
+    --color-surface-sunken: #f1f3f5;
+    --color-surface-pressed: #e4e7ea;
+    --color-surface-disabled: #e9ebee;
+    --color-surface-overlay: rgb(from var(--color-ink) r g b / 0.5);
+    --color-surface-inverse: #1f242b;
+    --color-border-default: #e4e7ea;
+    --color-border-strong: #cdd2d8;
+    --color-border-brand-subtle: #f5a3cb;
+    --color-fg-primary: #1f242b;
+    --color-fg-secondary: #4b525c;
+    --color-fg-tertiary: #6b727c;
+    --color-fg-disabled: #9aa1ab;
+    --color-fg-brand: #e6007e;
+    --color-semantic-success: #14a378;
+    --color-semantic-success-soft: #e8faf3;
+    --color-semantic-error: #f04438;
+    --color-semantic-error-strong: #d92d20;
+    --color-status-pending: #f1f3f5;
+    --color-status-active: #e7f0fe;
+    --color-status-revision: #fbf0d9;
+    --color-status-approved: #e6f5ee;
+    --color-status-rejected: #fbebee;
+    --color-status-pending-text: #4b525c;
+    --color-status-active-text: #1d4ed8;
+    --color-status-revision-text: #b45309;
+    --color-status-approved-text: #0b6549;
+    --color-status-rejected-text: #d92d20;
+    --color-chart-compare: #cdd2d8;
+    --color-chart-grid: #f1f3f5;
+    --color-chart-axis: #9aa1ab;
+    --background-image-chart-area: linear-gradient(
+        180deg,
+        rgb(230 0 126 / 0) 0%,
+        rgb(230 0 126 / 0.22) 100%
+    );
+    --shadow-md:
+        0 4px 6px rgb(from var(--color-ink) r g b / 0.08),
+        0 2px 4px rgb(from var(--color-ink) r g b / 0.06);
+    --shadow-lg:
+        0 10px 15px rgb(from var(--color-ink) r g b / 0.08),
+        0 4px 6px rgb(from var(--color-ink) r g b / 0.06);
+    --shadow-xl:
+        0 4px 25px rgb(from var(--color-ink) r g b / 0.1),
+        0 8px 10px rgb(from var(--color-ink) r g b / 0.06);
 }

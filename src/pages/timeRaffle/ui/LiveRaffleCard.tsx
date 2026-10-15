@@ -53,7 +53,6 @@ export function LiveRaffleCard({ event }: LiveRaffleCardProps) {
             <RaffleThumbnail
                 src={event.bannerImageUrl}
                 className="w-full max-w-64 self-center justify-self-center rounded-xl lg:self-start"
-                fallbackIconClassName="size-12"
             />
 
             <div className="flex min-w-0 flex-col gap-3 lg:py-1">

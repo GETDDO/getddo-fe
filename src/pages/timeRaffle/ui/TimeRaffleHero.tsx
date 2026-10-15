@@ -44,7 +44,7 @@ export function TimeRaffleHero({
         <section
             aria-labelledby="time-raffle-title"
             // 미션 페이지 "오늘의 적립"과 같은 가게 — 벽(image 197)을 깔고 아래에 카운터 띠(image 211)를 둔다. --counter는 카운터 띠 높이
-            className="bg-play-yellow-soft relative overflow-hidden rounded-3xl bg-cover bg-top [--counter:clamp(4.5rem,8vw,6rem)]"
+            className="force-light bg-play-yellow-soft relative overflow-hidden rounded-3xl bg-cover bg-top [--counter:clamp(4.5rem,8vw,6rem)]"
             style={{ backgroundImage: `url(${shopWall})` }}
         >
             {/* 벽 그림이 어두운 웜톤이라 흰 막을 얇게 덮어 페이지 바탕과 어울리게 밝힌다 */}

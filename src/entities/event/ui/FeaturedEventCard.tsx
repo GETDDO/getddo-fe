@@ -106,7 +106,7 @@ export function FeaturedEventCard({
                         ))}
                     </dl>
                     {mySpentTicketCount != null && mySpentTicketCount > 0 && (
-                        <span className="bg-ticket-accent text-ticket-on text-caption flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1">
+                        <span className="bg-ticket-accent text-fg-primary text-caption flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1">
                             <Ticket aria-hidden className="size-3.5" />
                             응모권 {formatNumber(mySpentTicketCount)}장으로 응모했어요
                         </span>
@@ -116,7 +116,6 @@ export function FeaturedEventCard({
                 <EventThumbnail
                     src={event.bannerImageUrl}
                     className="size-24 rounded-xl sm:size-36"
-                    iconClassName="size-8"
                 />
             </div>
             {/* 상세로 이동하는 버튼은 주 행동(검정) — 카드 아래에 붙여 글 길이가 달라도 같은 자리에 둔다 */}

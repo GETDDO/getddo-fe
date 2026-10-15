@@ -284,7 +284,7 @@ export const mockEvents: MockEvent[] = [
         id: 'evt-007',
         title: '아메리카노 쿠폰 데일리 응모',
         description: '응모권 없이 매일 참여할 수 있는 커피 쿠폰 추첨 이벤트',
-        bannerImageUrl: '/images/events/daiso-attendance.webp', // 임시 — 피그마 홈 이벤트 카드 이미지
+        bannerImageUrl: null,
         startsAt: '2026-09-01T00:00:00Z',
         endsAt: '2026-10-31T14:59:59Z',
         status: 'open',
@@ -357,7 +357,7 @@ export const mockEvents: MockEvent[] = [
         id: 'evt-011',
         title: '9월 멤버십 위크',
         description: '멤버십 등급별 포인트 혜택 이벤트. 응모권 없이 참여할 수 있어요.',
-        bannerImageUrl: '/images/events/membership-welcome.webp', // 임시 — 피그마 홈 이벤트 카드 이미지
+        bannerImageUrl: null,
         startsAt: '2026-09-08T00:00:00Z',
         endsAt: '2026-10-21T14:59:59Z',
         status: 'open',
@@ -375,7 +375,7 @@ export const mockEvents: MockEvent[] = [
         isRecommended: true,
         title: '갤럭시 버즈3 오픈 응모',
         description: '응모권 없이 참여하는 갤럭시 버즈3 추첨 이벤트',
-        bannerImageUrl: '/images/events/membership-welcome.webp', // 임시 — 피그마 홈 이벤트 카드 이미지
+        bannerImageUrl: null,
         startsAt: '2026-09-15T00:00:00Z',
         endsAt: '2026-10-05T14:59:59Z',
         status: 'open',

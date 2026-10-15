@@ -2,7 +2,9 @@ import { Check, CircleUserRound, ShieldCheck } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
 import { useSessionStore, useVirtualUsers } from '@entities/user';
+import profileAvatar from '@shared/assets/ui/profile-avatar-head.png';
 import { cn } from '@shared/lib/utils';
+import { Loading } from '@shared/ui/loading';
 import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
 
 interface VirtualUserSwitcherProps {
@@ -39,11 +41,7 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                 </div>
                 <div className="border-border-default border-t" />
                 <div className="flex max-h-80 flex-col gap-1 overflow-y-auto">
-                    {isPending && (
-                        <p className="text-fg-tertiary text-body-sm py-4 text-center">
-                            불러오는 중…
-                        </p>
-                    )}
+                    {isPending && <Loading size="sm" />}
                     {isError && (
                         <p className="text-destructive text-body-sm py-4 text-center">
                             사용자 목록을 불러오지 못했습니다.
@@ -67,9 +65,17 @@ export function VirtualUserSwitcher({ trigger }: VirtualUserSwitcherProps) {
                                 )}
                             >
                                 {user.role === 'ADMIN' ? (
-                                    <ShieldCheck className="text-fg-brand size-5 shrink-0" />
+                                    // 타코야키 얼굴(28)과 이름 줄이 맞도록 같은 칸에 가운데 둔다
+                                    <span className="flex size-7 shrink-0 items-center justify-center">
+                                        <ShieldCheck className="text-fg-brand size-5" />
+                                    </span>
                                 ) : (
-                                    <CircleUserRound className="text-fg-primary size-5 shrink-0" />
+                                    // 일반 사용자는 헤더 프로필과 같은 타코야키 얼굴 — 관리자만 방패 아이콘으로 구분한다
+                                    <img
+                                        src={profileAvatar}
+                                        alt=""
+                                        className="size-7 shrink-0 rounded-full"
+                                    />
                                 )}
                                 <div className="flex flex-1 flex-col">
                                     <span className="text-body-sm-bold text-fg-primary flex items-center gap-1.5">

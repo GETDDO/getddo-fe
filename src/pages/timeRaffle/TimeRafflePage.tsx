@@ -4,6 +4,8 @@ import { useSearchParams } from 'react-router-dom';
 
 import { useEventList } from '@entities/event';
 import { useVirtualClock } from '@shared/lib/virtualClock';
+import { Badge } from '@shared/ui/badge';
+import { Loading } from '@shared/ui/loading';
 
 import { RAFFLE_SECTION_IDS } from './model/sectionIds';
 import { ClosedRaffleList } from './ui/ClosedRaffleList';
@@ -12,7 +14,7 @@ import { TimeRaffleHero } from './ui/TimeRaffleHero';
 import { TimeRaffleTrustNotice } from './ui/TimeRaffleTrustNotice';
 import { UpcomingRaffleCard } from './ui/UpcomingRaffleCard';
 
-const CONTAINER = 'mx-auto w-full max-w-312 px-6 pb-54';
+const CONTAINER = 'mx-auto w-full max-w-312 px-6 pb-28';
 
 /** ADR-010 — 가중치 적용 이벤트는 사용자·이벤트별 누적 5장까지만 쓸 수 있다 */
 const ENTRY_TICKET_LIMIT = 5;
@@ -65,7 +67,7 @@ export function TimeRafflePage() {
     if (isPending) {
         return (
             <main className={CONTAINER}>
-                <p className="text-fg-tertiary text-body-sm">불러오는 중…</p>
+                <Loading size="lg" />
             </main>
         );
     }
@@ -121,7 +123,8 @@ export function TimeRafflePage() {
                     }
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.25, ease: 'easeOut' }}
-                    className="flex flex-col gap-14"
+                    // 섹션 사이는 홈·미션과 같은 80 (머리와 첫 섹션은 미션처럼 56)
+                    className="flex flex-col gap-20"
                 >
                     {view === 'closed' ? (
                         <ClosedRaffleList
@@ -137,14 +140,14 @@ export function TimeRafflePage() {
 
                             <section
                                 id={RAFFLE_SECTION_IDS.upcoming}
-                                className="flex scroll-mt-24 flex-col gap-5"
+                                className="flex scroll-mt-24 flex-col gap-6"
                             >
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-title-3 text-fg-primary">오픈 예정</h2>
                                     {byOpensAtAsc.length > 0 && (
-                                        <span className="bg-surface-sunken text-label-sm text-fg-secondary rounded-full px-2.5 py-1">
+                                        <Badge variant="neutral" size="sm">
                                             {byOpensAtAsc.length}
-                                        </span>
+                                        </Badge>
                                     )}
                                 </div>
                                 {byOpensAtAsc.length === 0 ? (
@@ -176,7 +179,9 @@ export function TimeRafflePage() {
                     )}
                 </motion.div>
 
-                <TimeRaffleTrustNotice />
+                <div className="mt-6">
+                    <TimeRaffleTrustNotice />
+                </div>
             </div>
         </main>
     );

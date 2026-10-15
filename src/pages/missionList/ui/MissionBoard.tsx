@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useMissionList } from '@entities/mission';
 import emptyMascot from '@shared/assets/ui/reward-mascot.png';
 import { useVirtualClock } from '@shared/lib/virtualClock';
+import { Skeleton } from '@shared/ui/skeleton';
 
 import {
     filterMissions,
@@ -67,7 +68,13 @@ export function MissionBoard({
                 </div>
             )}
 
-            {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {isPending && (
+                <div aria-hidden className="grid gap-4 md:grid-cols-2">
+                    {Array.from({ length: 4 }, (_, index) => (
+                        <Skeleton key={index} className="h-28 rounded-2xl" />
+                    ))}
+                </div>
+            )}
             {isError && (
                 <p className="text-body-sm text-destructive">미션 목록을 불러오지 못했습니다.</p>
             )}

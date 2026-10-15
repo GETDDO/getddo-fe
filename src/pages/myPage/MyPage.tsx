@@ -64,7 +64,8 @@ export function MyPage() {
                         isError={historiesQuery.isError}
                     />
                 </div>
-                <div className="flex flex-col gap-6">
+                {/* 화면 설정·계정 정보는 스크롤해도 헤더(76) 아래 20 자리에 붙어 따라온다 — 넓은 화면(두 칸)에서만 */}
+                <div className="flex flex-col gap-6 lg:sticky lg:top-24">
                     <AppearanceSettings />
                     {user && <AccountInfoCard user={user} />}
                 </div>

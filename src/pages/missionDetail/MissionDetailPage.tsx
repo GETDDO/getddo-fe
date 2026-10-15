@@ -9,6 +9,7 @@ import { QuizForm, SurveyForm } from '@features/submitMission';
 import { formatKst } from '@shared/lib/date';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
+import { Loading } from '@shared/ui/loading';
 import { StatusDot } from '@shared/ui/status-dot';
 
 const CONTAINER = 'mx-auto w-full max-w-312 px-6';
@@ -36,7 +37,9 @@ export function MissionDetailPage() {
 
     if (isPending) {
         return (
-            <main className={`${CONTAINER} text-body-sm text-fg-tertiary pb-20`}>불러오는 중…</main>
+            <main className={`${CONTAINER} pb-20`}>
+                <Loading size="lg" />
+            </main>
         );
     }
     if (isError || !mission) {
