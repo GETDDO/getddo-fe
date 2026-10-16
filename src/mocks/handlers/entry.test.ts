@@ -52,13 +52,13 @@ const uniqueKey = (label: string) => `test-${label}-${Date.now()}`;
 async function ticketCounts(userId?: string) {
     const { data } = await apiClient.get<{
         data: { availableCount: number; countByGrade: GradeMap };
-    }>('/tickets/me', { headers: userId ? { 'X-User-ID': userId } : {} });
+    }>('/v1/tickets/me', { headers: userId ? { 'X-User-ID': userId } : {} });
     return data.data;
 }
 
 function enter(key: string, tickets: unknown, eventId: string, userId?: string) {
     return apiClient.post(
-        `/events/${eventId}/entries`,
+        `/v1/events/${eventId}/entries`,
         { tickets },
         {
             headers: {
@@ -81,23 +81,26 @@ async function eligibility(eventId: string, userId?: string) {
             availableTicketBalance: number;
             serverTime: string;
         }>
-    >(`/events/${eventId}/eligibility`, {
+    >(`/v1/events/${eventId}/eligibility`, {
         headers: userId ? { 'X-User-ID': userId } : {},
     });
     return data.data;
 }
 
 async function myEntries(userId?: string) {
-    const { data } = await apiClient.get<Envelope<{ items: EntryReceipt[] }>>('/users/me/entries', {
-        headers: userId ? { 'X-User-ID': userId } : {},
-    });
+    const { data } = await apiClient.get<Envelope<{ items: EntryReceipt[] }>>(
+        '/v1/users/me/entries',
+        {
+            headers: userId ? { 'X-User-ID': userId } : {},
+        },
+    );
     return data.data.items;
 }
 
 // E05 — 이벤트별 내 응모 내역
 async function myEventEntries(eventId: string, userId?: string) {
     const { data } = await apiClient.get<Envelope<{ items: EntryReceipt[] }>>(
-        `/events/${eventId}/entries/me`,
+        `/v1/events/${eventId}/entries/me`,
         { headers: userId ? { 'X-User-ID': userId } : {} },
     );
     return data.data.items;
@@ -106,7 +109,7 @@ async function myEventEntries(eventId: string, userId?: string) {
 /** 관리자 목업으로 진행 중 이벤트를 만들어 조건을 직접 지정한다 — 시드에 없는 조합(월말 소진용 등)용 */
 async function createOpenEvent(over: Record<string, unknown> = {}) {
     const res = await apiClient.post(
-        '/admin/events',
+        '/v1/admin/events',
         {
             title: '응모 테스트 이벤트',
             description: '테스트용 이벤트입니다',
@@ -168,7 +171,7 @@ describe('응모 목업 핸들러', () => {
 
         // 재전송 본문이 깨져 있어도 멱등키 재생이 페이로드 규칙보다 먼저다
         const retried = await apiClient.post(
-            `/events/${BRONZE_ONLY_EVENT_ID_2}/entries`,
+            `/v1/events/${BRONZE_ONLY_EVENT_ID_2}/entries`,
             { tickets: '깨진-맵' },
             {
                 headers: { [IDEMPOTENCY_HEADER]: key, 'X-User-ID': userId },
@@ -199,7 +202,7 @@ describe('응모 목업 핸들러', () => {
 
     it('멱등키가 없으면 400으로 거절한다', async () => {
         const response = await apiClient.post(
-            `/events/${WEIGHTED_EVENT_ID}/entries`,
+            `/v1/events/${WEIGHTED_EVENT_ID}/entries`,
             { tickets: { BRONZE: 1 } },
             { validateStatus: () => true },
         );
@@ -425,7 +428,7 @@ describe('응모 목업 핸들러', () => {
 
     it('헤더 멤버십이 사용자 멤버십과 다르면 409로 거절한다', async () => {
         const response = await apiClient.post(
-            `/events/${BRONZE_ONLY_EVENT_ID_2}/entries`,
+            `/v1/events/${BRONZE_ONLY_EVENT_ID_2}/entries`,
             { tickets: { BRONZE: 1 } },
             {
                 headers: {
@@ -634,7 +637,7 @@ describe('응모 목업 핸들러', () => {
 
         const statistics = async (eventId: string) => {
             const { data } = await apiClient.get<Envelope<Statistics>>(
-                `/events/${eventId}/statistics`,
+                `/v1/events/${eventId}/statistics`,
             );
             return data;
         };
@@ -676,7 +679,7 @@ describe('응모 목업 핸들러', () => {
 
             const read = async (userId: string) => {
                 const { data } = await apiClient.get<Envelope<Statistics>>(
-                    `/events/${WEIGHTED_EVENT_ID}/statistics`,
+                    `/v1/events/${WEIGHTED_EVENT_ID}/statistics`,
                     { headers: { 'X-User-ID': userId } },
                 );
                 return data.data.mySpentTicketCount;
@@ -686,7 +689,7 @@ describe('응모 목업 핸들러', () => {
         });
 
         it('없는 이벤트는 404 봉투로 거절한다', async () => {
-            const res = await apiClient.get('/events/evt-none/statistics', {
+            const res = await apiClient.get('/v1/events/evt-none/statistics', {
                 validateStatus: () => true,
             });
             expect(res.status).toBe(404);
@@ -767,7 +770,7 @@ describe('응모 목업 핸들러', () => {
         });
 
         it('없는 이벤트는 404 봉투로 거절한다', async () => {
-            const res = await apiClient.get('/events/evt-none/eligibility', {
+            const res = await apiClient.get('/v1/events/evt-none/eligibility', {
                 validateStatus: () => true,
             });
             expect(res.status).toBe(404);

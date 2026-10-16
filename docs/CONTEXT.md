@@ -135,6 +135,7 @@
 - 어뷰징 목업·화면 — `mocks/handlers/abuse.ts`는 spec 요약 필드 대신 시연 표시 필드(userNickname·eventTitle·requestSummary)를 싣는다. 참여 허용·추첨 제외 결정 계약(AR03의 `ALLOW/CONFIRM`·`excludeFromEvent`·`userNoticeReason`과 `eligibilityStatus`, AO07의 제외 필터·필드)은 2026-10-11 ADR-018로 폐지됐다 — `features/reviewAbuseCase`의 결정 다이얼로그는 제거 대상이고, 화면은 차단 내역 조회(AR01~AR02: 차단 사유·발생 시각·관련 요청·검증 근거) 중심으로 재구성한다. 신규 차단 기록의 필터·필드 계약은 GD-141 설계에서 확인한다 (GD-102 잔여 + ADR-018)
 - 관리자 알림 운영(AN01~AN05, 2026-10-12 확정) — 작업(`NotificationJob`)·알림(`AdminNotification`) 조회와 최종 실패 복구(AN03 생성·AN05 모의 발송)다. 자동 재시도는 최초 1회 + 최대 3회이고 입력·형식 오류는 즉시 최종 실패다. 복구는 202 접수(최종 성공이 아님)이며 정상 알림의 재생성·재발송은 없다. `retryable`이 false이거나 `generationStoppedBy`가 있으면 복구 버튼을 만들지 않는다. 사용자 알림 N01~N03 외 코드·목업은 아직 이 계약으로 전환하지 않았다
 - `/virtual-users` — spec에 없는 시연 전용 경로로 로그인·가상 사용자 전환 UI가 쓴다. 봉투만 공통 계약을 따르고 정식 계약은 BE 협의 대상이다 (GD-102)
+- 실연동 하이브리드(GD-213) — 모든 업무 API 경로가 `/api/v1/**`로 정합화됐고, 배포 빌드(`env.isDev=false`)는 `mocks/handlers/index.ts`의 `hybridHandlers`만 등록한다: 배포 BE에 없는 가상 사용자·배너·게임·감사·어뷰즈·관리자 응모권·사용자 결과 조회만 목업이고 나머지는 Vercel의 `/api/* → CloudFront` 프록시로 실서버에 붙는다(서버 목록은 배포 OpenAPI 기준). BE가 해당 도메인을 배포하면 `hybridHandlers`에서 빼는 것이 전환 절차다. `/virtual-users` 목업이 돌려주는 사용자 목록은 `VITE_VIRTUAL_USERS_JSON`으로 주입하며 id는 DB 등록 UUID여야 한다
 - `index` 번들 ~618kB — 관리자 라우트는 페이지별 lazy로 분리돼 있고 사용자 번들은 vendor가 대부분이다. `manualChunks` 벤더 분리는 빌드 설정 변경이라 별도 이슈로 미뤘다 (GD-102 잔여)
 
 MSW 목업(`src/mocks/handlers/`)은 계약의 임시 구현이다. Zod 스키마(`entities/*/model/`)가 검증 기준이며, 도메인 정책의 원본은 `../getddo-spec/02-domain/`에 있다.

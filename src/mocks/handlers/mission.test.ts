@@ -33,7 +33,7 @@ const SURVEY_ANSWERS = [
 
 function submit(missionId: string, answers: unknown, key: string, userId: string) {
     return apiClient.post(
-        `/missions/${missionId}/submissions`,
+        `/v1/missions/${missionId}/submissions`,
         { answers },
         {
             headers: { [IDEMPOTENCY_HEADER]: key, 'X-User-ID': userId },
@@ -44,14 +44,14 @@ function submit(missionId: string, answers: unknown, key: string, userId: string
 
 async function missionCompleted(missionId: string, userId: string) {
     const { data } = await apiClient.get<Envelope<{ completed: boolean }>>(
-        `/missions/${missionId}`,
+        `/v1/missions/${missionId}`,
         { headers: { 'X-User-ID': userId } },
     );
     return data.data.completed;
 }
 
 async function balance(userId: string) {
-    const { data } = await apiClient.get<Envelope<{ availableCount: number }>>('/tickets/me', {
+    const { data } = await apiClient.get<Envelope<{ availableCount: number }>>('/v1/tickets/me', {
         headers: { 'X-User-ID': userId },
     });
     return data.data.availableCount;
@@ -207,7 +207,7 @@ describe('미션 목업 핸들러', () => {
         const userId = nextUser();
         const { data } = await apiClient.get<
             Envelope<{ items: { id: string; completed: boolean }[] }>
-        >('/missions', { headers: { 'X-User-ID': userId } });
+        >('/v1/missions', { headers: { 'X-User-ID': userId } });
         const done = data.data.items.find((m) => m.id === DONE_ID);
         expect(done?.completed).toBe(true);
         const active = data.data.items.find((m) => m.id === QUIZ_OX_ID);
@@ -217,7 +217,7 @@ describe('미션 목업 핸들러', () => {
     it('상세 응답의 문항에는 정답 필드가 없다', async () => {
         const userId = nextUser();
         const { data } = await apiClient.get<Envelope<{ questions: Record<string, unknown>[] }>>(
-            `/missions/${QUIZ_OX_ID}`,
+            `/v1/missions/${QUIZ_OX_ID}`,
             { headers: { 'X-User-ID': userId } },
         );
         for (const question of data.data.questions) {

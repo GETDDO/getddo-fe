@@ -15,12 +15,12 @@ import {
 export const ADMIN_TICKETS_KEY = ['admin', 'tickets'] as const;
 
 // 관리자 응모권 조회 엔드포인트 — 2026-10-12 백엔드 답변 기준(스펙 미반영). 경로가 바뀌면 여기만 고친다
-export const ADMIN_TICKET_GRANTS_API_PATH = '/admin/ticket-grants';
-export const ADMIN_TICKET_HISTORIES_API_PATH = '/admin/ticket-histories';
-export const ADMIN_TICKET_REFUNDS_API_PATH = '/admin/ticket-refunds';
-export const ADMIN_TICKET_INCONSISTENCIES_API_PATH = '/admin/tickets/inconsistencies';
+export const ADMIN_TICKET_GRANTS_API_PATH = '/v1/admin/ticket-grants';
+export const ADMIN_TICKET_HISTORIES_API_PATH = '/v1/admin/ticket-histories';
+export const ADMIN_TICKET_REFUNDS_API_PATH = '/v1/admin/ticket-refunds';
+export const ADMIN_TICKET_INCONSISTENCIES_API_PATH = '/v1/admin/tickets/inconsistencies';
 export const ticketConsistencyApiPath = (userId: string) =>
-    `/admin/users/${encodeURIComponent(userId)}/tickets/consistency`;
+    `/v1/admin/users/${encodeURIComponent(userId)}/tickets/consistency`;
 
 interface PageParams {
     page: number;

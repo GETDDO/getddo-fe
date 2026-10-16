@@ -11,7 +11,7 @@ export const ATTENDANCE_TODAY_KEY = [...ATTENDANCES_KEY, 'today'] as const;
 export const ATTENDANCE_MONTHS_KEY = [...ATTENDANCES_KEY, 'months'] as const;
 
 // 출석 도메인의 엔드포인트 — 출석 처리(POST)를 하는 feature/checkAttendance도 이 상수를 재사용한다
-export const ATTENDANCES_API_PATH = '/attendances';
+export const ATTENDANCES_API_PATH = '/v1/attendances';
 export const ATTENDANCE_TODAY_API_PATH = `${ATTENDANCES_API_PATH}/today`;
 
 /** AT01 — 오늘 출석 여부·연속 일수·일일 보상량·이번 달 단계 */

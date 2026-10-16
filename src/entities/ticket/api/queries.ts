@@ -8,7 +8,7 @@ import { myTicketsSchema } from '../model/types';
 export const TICKETS_KEY = ['tickets'] as const;
 
 // 응모권 도메인의 엔드포인트 — 경로가 바뀌면 여기만 고친다
-export const TICKETS_API_PATH = '/tickets';
+export const TICKETS_API_PATH = '/v1/tickets';
 export const MY_TICKETS_API_PATH = `${TICKETS_API_PATH}/me`;
 export const TICKET_HISTORIES_API_PATH = `${TICKETS_API_PATH}/histories/me`;
 

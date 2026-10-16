@@ -17,7 +17,9 @@ interface EventResponse {
 
 // 목업 이벤트가 페이지 기본값(20)보다 많다 — 시연 플로우용 래플까지 모두 받도록 한 번에 넉넉히 요청한다
 async function events() {
-    const { data } = await apiClient.get<{ data: { items: EventResponse[] } }>('/events?size=100');
+    const { data } = await apiClient.get<{ data: { items: EventResponse[] } }>(
+        '/v1/events?size=100',
+    );
     return data.data.items;
 }
 

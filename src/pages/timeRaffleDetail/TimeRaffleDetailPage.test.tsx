@@ -45,7 +45,7 @@ async function settle(client: QueryClient) {
 
 /** 관리자 목업으로 진행 중 이벤트를 만든다 — 사용자의 브론즈를 소진할 상한 없는 이벤트용 */
 async function createOpenWeightedEvent() {
-    const res = await apiClient.post('/admin/events', {
+    const res = await apiClient.post('/v1/admin/events', {
         title: '브론즈 소진용 이벤트',
         description: '테스트용 이벤트입니다',
         imageKey: null,
@@ -74,7 +74,7 @@ describe('TimeRaffleDetailPage의 E07 사유별 버튼', () => {
 
     it('이미 응모한 이벤트는 "응모 완료"로 잠긴다', async () => {
         await apiClient.post(
-            `/events/${FREE_EVENT_ID}/entries`,
+            `/v1/events/${FREE_EVENT_ID}/entries`,
             { tickets: {} },
             { headers: { [IDEMPOTENCY_HEADER]: createIdempotencyKey() } },
         );
@@ -90,7 +90,7 @@ describe('TimeRaffleDetailPage의 E07 사유별 버튼', () => {
         // 익명 사용자의 브론즈 7장을 상한 없는 이벤트로 전부 소진한다
         const drainId = await createOpenWeightedEvent();
         await apiClient.post(
-            `/events/${drainId}/entries`,
+            `/v1/events/${drainId}/entries`,
             { tickets: { BRONZE: 7 } },
             { headers: { [IDEMPOTENCY_HEADER]: createIdempotencyKey() } },
         );

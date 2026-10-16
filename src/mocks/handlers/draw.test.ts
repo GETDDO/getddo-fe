@@ -84,10 +84,10 @@ const FAILED_EVENT = 'adm-904';
 const FAILED_INITIAL_EVENT = 'adm-906';
 
 async function firstRun(eventId: string) {
-    const list = await call<Page<RunBody>>('get', `/admin/events/${eventId}/draws`);
+    const list = await call<Page<RunBody>>('get', `/v1/admin/events/${eventId}/draws`);
     expect(list.status).toBe(200);
     const original = list.data.data.items.find((r) => r.runNumber === 1)!;
-    const detail = await call<DetailBody>('get', `/admin/draws/${original.id}`);
+    const detail = await call<DetailBody>('get', `/v1/admin/draws/${original.id}`);
     return detail.data.data;
 }
 
@@ -99,7 +99,7 @@ async function cancelFirstWinner(eventId: string, key = keyOf(0), reason = '본�
         canceledDrawResultId: string;
         replacementDrawRunId: string;
         status: string;
-    }>('post', `/admin/wins/${win.id}/cancellations`, { body: { reason }, key });
+    }>('post', `/v1/admin/wins/${win.id}/cancellations`, { body: { reason }, key });
     return { original, win, res };
 }
 
@@ -118,7 +118,7 @@ describe('추첨 목업', () => {
     it('AD01은 최신 실행부터 Page 봉투로 돌려주고, 후보는 33건이다', async () => {
         const list = await call<Page<RunBody>>(
             'get',
-            `/admin/events/${EVENT}/draws?page=1&size=20`,
+            `/v1/admin/events/${EVENT}/draws?page=1&size=20`,
         );
         expect(list.status).toBe(200);
         expect(list.data.success).toBe(true);
@@ -128,7 +128,7 @@ describe('추첨 목업', () => {
         const original = await firstRun(EVENT);
         const candidates = await call<
             Page<{ userId: string; ticketCount: number; weight: number }>
-        >('get', `/admin/draws/${original.id}/participants?page=1&size=10`);
+        >('get', `/v1/admin/draws/${original.id}/participants?page=1&size=10`);
         expect(candidates.data.data.totalElements).toBe(33);
         expect(candidates.data.data.items).toHaveLength(10);
         // 가중치는 등급별 실제 차감 장수와 별개 값이다
@@ -136,17 +136,17 @@ describe('추첨 목업', () => {
     });
 
     it('없는 이벤트와 실행은 404 봉투를 돌려준다', async () => {
-        const noEvent = await call('get', '/admin/events/nope/draws');
+        const noEvent = await call('get', '/v1/admin/events/nope/draws');
         expect(noEvent.status).toBe(404);
         expect(noEvent.data.success).toBe(false);
-        expect((await call('get', '/admin/draws/drw-nope-r1')).status).toBe(404);
+        expect((await call('get', '/v1/admin/draws/drw-nope-r1')).status).toBe(404);
     });
 
     it('AD04는 확정 실행을 검증해 201로 기록하고 AD08에서 최신순으로 조회된다', async () => {
         const original = await firstRun(EVENT);
         const check = await call<{ passed: boolean; checks: { passed: boolean }[] }>(
             'post',
-            `/admin/draws/${original.id}/checks`,
+            `/v1/admin/draws/${original.id}/checks`,
         );
         expect(check.status).toBe(201);
         expect(check.data.data.passed).toBe(true);
@@ -154,7 +154,7 @@ describe('추첨 목업', () => {
 
         const history = await call<Page<{ drawRunId: string }>>(
             'get',
-            `/admin/draws/${original.id}/checks`,
+            `/v1/admin/draws/${original.id}/checks`,
         );
         expect(history.data.data.totalElements).toBe(1);
         expect(history.data.data.items[0]?.drawRunId).toBe(original.id);
@@ -164,7 +164,7 @@ describe('추첨 목업', () => {
         const { res } = await cancelFirstWinner(EVENT);
         const check = await call(
             'post',
-            `/admin/draws/${res.data.data.replacementDrawRunId}/checks`,
+            `/v1/admin/draws/${res.data.data.replacementDrawRunId}/checks`,
         );
         expect(check.status).toBe(409);
     });
@@ -172,11 +172,11 @@ describe('추첨 목업', () => {
     it('AD05는 UUID 멱등키가 없거나 형식이 틀리면 400이다', async () => {
         const original = await firstRun(EVENT);
         const win = original.results[0]!;
-        const noKey = await call('post', `/admin/wins/${win.id}/cancellations`, {
+        const noKey = await call('post', `/v1/admin/wins/${win.id}/cancellations`, {
             body: { reason: '사유' },
         });
         expect(noKey.status).toBe(400);
-        const notUuid = await call('post', `/admin/wins/${win.id}/cancellations`, {
+        const notUuid = await call('post', `/v1/admin/wins/${win.id}/cancellations`, {
             body: { reason: '사유' },
             key: 'cancel-1',
         });
@@ -187,7 +187,7 @@ describe('추첨 목업', () => {
         const original = await firstRun(EVENT);
         const win = original.results.find((r) => r.resultType === 'SELECTED')!;
         const post = (reason: unknown, key: string) =>
-            call('post', `/admin/wins/${win.id}/cancellations`, { body: { reason }, key });
+            call('post', `/v1/admin/wins/${win.id}/cancellations`, { body: { reason }, key });
 
         expect((await post('  ', keyOf(8))).status).toBe(400);
         expect((await post(undefined, keyOf(8))).status).toBe(400);
@@ -207,27 +207,27 @@ describe('추첨 목업', () => {
 
         const retry = await call<typeof res.data.data>(
             'post',
-            `/admin/wins/${win.id}/cancellations`,
+            `/v1/admin/wins/${win.id}/cancellations`,
             { body: { reason: '본인 확인 실패' }, key: keyOf(1) },
         );
         expect(retry.status).toBe(200);
         expect(retry.data.data.cancellationId).toBe(res.data.data.cancellationId);
 
         // 재시도로 재추첨 실행이 중복 생성되지 않는다
-        const list = await call<Page<RunBody>>('get', `/admin/events/${EVENT}/draws`);
+        const list = await call<Page<RunBody>>('get', `/v1/admin/events/${EVENT}/draws`);
         expect(list.data.data.totalElements).toBe(2);
     });
 
     it('AD05는 같은 키에 다른 본문이면 IDEMPOTENCY_CONFLICT, 다른 키로 이미 취소된 당첨이면 STATE_CONFLICT 409다', async () => {
         const { win } = await cancelFirstWinner(EVENT, keyOf(2));
-        const reused = await call('post', `/admin/wins/${win.id}/cancellations`, {
+        const reused = await call('post', `/v1/admin/wins/${win.id}/cancellations`, {
             body: { reason: '다른 사유' },
             key: keyOf(2),
         });
         expect(reused.status).toBe(409);
         expect(reused.data.code).toBe('IDEMPOTENCY_CONFLICT');
 
-        const again = await call('post', `/admin/wins/${win.id}/cancellations`, {
+        const again = await call('post', `/v1/admin/wins/${win.id}/cancellations`, {
             body: { reason: '본인 확인 실패' },
             key: keyOf(3),
         });
@@ -239,7 +239,7 @@ describe('추첨 목업', () => {
         const { original } = await cancelFirstWinner(EVENT, keyOf(11));
         const other = original.results.filter((r) => r.resultType === 'SELECTED')[1]!;
         const post = () =>
-            call('post', `/admin/wins/${other.id}/cancellations`, {
+            call('post', `/v1/admin/wins/${other.id}/cancellations`, {
                 body: { reason: '추가 취소' },
                 key: keyOf(12),
             });
@@ -255,7 +255,7 @@ describe('추첨 목업', () => {
         const other = (await firstRun(EVENT)).results.find(
             (r) => r.resultType === 'SELECTED' && r.id !== win.id,
         )!;
-        const cancel = await call('post', `/admin/wins/${other.id}/cancellations`, {
+        const cancel = await call('post', `/v1/admin/wins/${other.id}/cancellations`, {
             body: { reason: '사유' },
             key: keyOf(14),
             userId: 'vu-doyoon',
@@ -263,7 +263,7 @@ describe('추첨 목업', () => {
         expect(cancel.status).toBe(403);
         const redraw = await call(
             'post',
-            `/admin/cancellations/${res.data.data.cancellationId}/redraws`,
+            `/v1/admin/cancellations/${res.data.data.cancellationId}/redraws`,
             { userId: 'vu-doyoon' },
         );
         expect(redraw.status).toBe(403);
@@ -272,7 +272,7 @@ describe('추첨 목업', () => {
     it('AD05는 취소된 이벤트의 당첨이면 409다', async () => {
         const original = await firstRun(CANCELED_EVENT);
         const win = original.results.find((r) => r.resultType === 'SELECTED')!;
-        const res = await call('post', `/admin/wins/${win.id}/cancellations`, {
+        const res = await call('post', `/v1/admin/wins/${win.id}/cancellations`, {
             body: { reason: '사유' },
             key: keyOf(7),
         });
@@ -286,7 +286,7 @@ describe('추첨 목업', () => {
         settleRedraw();
         const detail = await call<DetailBody>(
             'get',
-            `/admin/draws/${res.data.data.replacementDrawRunId}`,
+            `/v1/admin/draws/${res.data.data.replacementDrawRunId}`,
         );
         expect(detail.data.data.status).toBe('CONFIRMED');
         expect(detail.data.data.originalDrawId).toBe(original.id);
@@ -309,7 +309,7 @@ describe('추첨 목업', () => {
 
         const running = await call<ExecutionBody>(
             'post',
-            `/admin/cancellations/${cancellationId}/redraws`,
+            `/v1/admin/cancellations/${cancellationId}/redraws`,
         );
         expect(running.status).toBe(202);
         // DrawExecutionResponse — 미확정이면 confirmation이 null이다
@@ -322,7 +322,7 @@ describe('추첨 목업', () => {
         settleRedraw();
         const done = await call<ExecutionBody>(
             'post',
-            `/admin/cancellations/${cancellationId}/redraws`,
+            `/v1/admin/cancellations/${cancellationId}/redraws`,
         );
         expect(done.status).toBe(200);
         expect(done.data.data.status).toBe('CONFIRMED');
@@ -335,42 +335,42 @@ describe('추첨 목업', () => {
         // 확정 뒤 재요청은 같은 저장 결과를 돌려주고 다시 선정하지 않는다
         const again = await call<ExecutionBody>(
             'post',
-            `/admin/cancellations/${cancellationId}/redraws`,
+            `/v1/admin/cancellations/${cancellationId}/redraws`,
         );
         expect(again.status).toBe(200);
         expect(again.data.data).toEqual(done.data.data);
 
-        const list = await call<Page<RunBody>>('get', `/admin/events/${EVENT}/draws`);
+        const list = await call<Page<RunBody>>('get', `/v1/admin/events/${EVENT}/draws`);
         expect(list.data.data.totalElements).toBe(2);
-        expect((await call('post', '/admin/cancellations/can-nope-1/redraws')).status).toBe(404);
+        expect((await call('post', '/v1/admin/cancellations/can-nope-1/redraws')).status).toBe(404);
     });
 
     it('AD09는 실패한 실행을 재개해 확정까지 진행시킨다', async () => {
-        const list = await call<Page<RunBody>>('get', `/admin/events/${FAILED_EVENT}/draws`);
+        const list = await call<Page<RunBody>>('get', `/v1/admin/events/${FAILED_EVENT}/draws`);
         const failed = list.data.data.items.find((r) => r.status === 'FAILED')!;
-        const detail = await call<DetailBody>('get', `/admin/draws/${failed.id}`);
+        const detail = await call<DetailBody>('get', `/v1/admin/draws/${failed.id}`);
         expect(detail.data.data.lastFailureCode).toBeTruthy();
 
         const resume = await call<RunBody>(
             'post',
-            `/admin/cancellations/${detail.data.data.cancellations[0]!.id}/redraws`,
+            `/v1/admin/cancellations/${detail.data.data.cancellations[0]!.id}/redraws`,
         );
         expect(resume.status).toBe(202);
         expect(resume.data.data.status).toBe('PREPARING');
 
         settleRedraw();
-        const after = await call<DetailBody>('get', `/admin/draws/${failed.id}`);
+        const after = await call<DetailBody>('get', `/v1/admin/draws/${failed.id}`);
         expect(after.data.data.status).toBe('CONFIRMED');
     });
 
     describe('최초 추첨 재개 (POST /admin/draws/{runId}/resume)', () => {
         const initialRunId = async (eventId: string) => (await firstRun(eventId)).id;
         const resume = (runId: string, userId?: string) =>
-            call<ExecutionBody>('post', `/admin/draws/${runId}/resume`, { userId });
+            call<ExecutionBody>('post', `/v1/admin/draws/${runId}/resume`, { userId });
 
         it('실패한 최초 실행은 202로 재개하고 확정되면 200으로 저장 결과를 돌려준다', async () => {
             const runId = await initialRunId(FAILED_INITIAL_EVENT);
-            const before = await call<DetailBody>('get', `/admin/draws/${runId}`);
+            const before = await call<DetailBody>('get', `/v1/admin/draws/${runId}`);
             expect(before.data.data.status).toBe('FAILED');
             expect(before.data.data.results).toHaveLength(0);
 
@@ -394,7 +394,7 @@ describe('추첨 목업', () => {
             expect(again.data.data).toEqual(done.data.data);
             const list = await call<Page<RunBody>>(
                 'get',
-                `/admin/events/${FAILED_INITIAL_EVENT}/draws`,
+                `/v1/admin/events/${FAILED_INITIAL_EVENT}/draws`,
             );
             expect(list.data.data.totalElements).toBe(1);
         });
@@ -409,11 +409,13 @@ describe('추첨 목업', () => {
 
         it('비관리자는 403이다', async () => {
             const runId = await initialRunId(FAILED_INITIAL_EVENT);
-            const res = await call('post', `/admin/draws/${runId}/resume`, { userId: 'vu-doyoon' });
+            const res = await call('post', `/v1/admin/draws/${runId}/resume`, {
+                userId: 'vu-doyoon',
+            });
             expect(res.status).toBe(403);
-            expect((await call<DetailBody>('get', `/admin/draws/${runId}`)).data.data.status).toBe(
-                'FAILED',
-            );
+            expect(
+                (await call<DetailBody>('get', `/v1/admin/draws/${runId}`)).data.data.status,
+            ).toBe('FAILED');
         });
 
         it('없는 실행은 404, 재추첨(REPLACEMENT) 실행과 취소된 이벤트는 409다', async () => {
@@ -431,20 +433,20 @@ describe('추첨 목업', () => {
         const redrawId = res.data.data.replacementDrawRunId;
 
         // 확정 전에는 반영할 수 없다
-        const early = await call('post', `/admin/draws/${redrawId}/publication`, {
+        const early = await call('post', `/v1/admin/draws/${redrawId}/publication`, {
             body: { reason: '재추첨 확인' },
         });
         expect(early.status).toBe(409);
 
         settleRedraw();
-        const noReason = await call('post', `/admin/draws/${redrawId}/publication`, {
+        const noReason = await call('post', `/v1/admin/draws/${redrawId}/publication`, {
             body: { reason: '' },
         });
         expect(noReason.status).toBe(400);
 
         const applied = await call<{ revision: number; drawRunId: string }>(
             'post',
-            `/admin/draws/${redrawId}/publication`,
+            `/v1/admin/draws/${redrawId}/publication`,
             { body: { reason: '재추첨 결과 확인' } },
         );
         expect(applied.status).toBe(200);
@@ -452,7 +454,7 @@ describe('추첨 목업', () => {
 
         const again = await call<{ revision: number }>(
             'post',
-            `/admin/draws/${redrawId}/publication`,
+            `/v1/admin/draws/${redrawId}/publication`,
             {
                 body: { reason: '재추첨 결과 확인' },
             },
@@ -466,7 +468,7 @@ describe('추첨 목업', () => {
                 reason: string;
                 changes: { beforeUserId: string | null; afterUserId: string | null }[];
             }>
-        >('get', `/admin/events/${EVENT}/result-changes`);
+        >('get', `/v1/admin/events/${EVENT}/result-changes`);
         expect(changes.data.data.totalElements).toBe(1);
         const change = changes.data.data.items[0]!;
         expect(change.revision).toBe(2);
@@ -484,7 +486,7 @@ describe('추첨 목업', () => {
         settleRedraw();
         const beforeFirst = await call(
             'post',
-            `/admin/draws/${res.data.data.replacementDrawRunId}/publication`,
+            `/v1/admin/draws/${res.data.data.replacementDrawRunId}/publication`,
             {
                 body: { reason: '확인' },
             },
@@ -493,7 +495,7 @@ describe('추첨 목업', () => {
 
         // 최초 실행은 재추첨이 아니다
         const original = await firstRun(EVENT);
-        const notRedraw = await call('post', `/admin/draws/${original.id}/publication`, {
+        const notRedraw = await call('post', `/v1/admin/draws/${original.id}/publication`, {
             body: { reason: '확인' },
         });
         expect(notRedraw.status).toBe(409);
