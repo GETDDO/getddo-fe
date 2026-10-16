@@ -13,12 +13,14 @@ import { useCheckAttendance } from '../api/queries';
 import {
     buildAttendanceMonth,
     buildAttendanceWeek,
+    claimedStreakBonuses,
     countMonthlyAttendance,
     toAttendanceDate,
 } from '../lib/attendanceWeek';
 import { nextStreakMilestone } from '../lib/nextStreakMilestone';
 import { AttendanceBakingStage, BAKING_SPRITE_SRC } from './AttendanceBakingStage';
 import { AttendanceMonthGrid } from './AttendanceMonthGrid';
+import { AttendanceStreakTrack } from './AttendanceStreakTrack';
 import { AttendanceWeekStrip } from './AttendanceWeekStrip';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -26,15 +28,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /** 굽기 스프라이트 재생 시간 — 응답이 빨라도 이만큼은 보여주고 끝나면 출석판을 펼친다 */
 const BAKING_MIN_MS = 1600;
 
-/** 접힌 카드 높이(px) — h-75 */
-const COLLAPSED_HEIGHT = 300;
-
-/** AT01을 아직 못 받았거나 실패했을 때 쓰는 보상 단계(일 → 추가 응모권) — getddo-spec 출석 규칙의 초기 설정 */
-const DEFAULT_BONUS_REWARDS: ReadonlyMap<number, number> = new Map([
-    [7, 1],
-    [14, 3],
-    [28, 7],
-]);
+/** 접힌 카드 높이(px) — 안쪽 여백 24(DESIGN-SYSTEM 5절)에 맞춰 내용 높이를 예전(여백 16, 300px)만큼 남긴다 */
+const COLLAPSED_HEIGHT = 316;
 
 /**
  * 펼치거나 접은 직후 카드 안 요소가 짧게 떠오르며 나타난다 (order가 클수록 아주 조금 늦게).
@@ -64,27 +59,21 @@ function Rise({
     );
 }
 
-// 공용 cn은 커스텀 글자 토큰(text-caption 등)과 색 토큰(text-fg-*)을 같은 그룹으로 보고 앞의 것을 지우므로 cn 없이 이어 붙인다
+// 접힌 카드와 펼친 카드가 같은 글자 크기를 쓴다
 function AttendanceStat({
     label,
     value,
     hint,
-    compact,
 }: {
     label: string;
     value: string;
     /** 값 아래 작은 안내 — 예: 다음 연속 출석 보상까지 남은 날 */
     hint?: string;
-    compact: boolean;
 }) {
     return (
         <div className="flex flex-col gap-2">
-            <span className={`text-fg-tertiary ${compact ? 'text-caption' : 'text-body-sm'}`}>
-                {label}
-            </span>
-            <span className={`text-fg-primary ${compact ? 'text-body-sm-bold' : 'text-body-bold'}`}>
-                {value}
-            </span>
+            <span className="text-fg-tertiary text-body-sm">{label}</span>
+            <span className="text-fg-primary text-body-bold">{value}</span>
             {hint && <span className="text-caption text-fg-tertiary -mt-1">{hint}</span>}
         </div>
     );
@@ -126,11 +115,12 @@ export function AttendanceCheckCard({
         ...(prevMonthData?.attendanceDates ?? []),
         ...(monthData?.attendanceDates ?? []),
     ];
-    // 연속 출석 보상일과 추가 응모권 수는 이번 달 단계 묶음(AT01 milestones)에서 받는다
-    const bonusRewards: ReadonlyMap<number, number> = status
-        ? new Map(status.milestones.map((m) => [m.milestoneDays, m.rewardTicketCount]))
-        : DEFAULT_BONUS_REWARDS;
-    const bonusDays: ReadonlySet<number> = new Set(bonusRewards.keys());
+    // 연속 출석 보상을 받은 날 — 이번 달(AT01)과, 최근 7일이 지난달에 걸치면 지난달(AT03) 단계 묶음의 받은 시각에서 구한다
+    const bonusClaims = claimedStreakBonuses([
+        ...(prevMonthData?.milestones ?? []),
+        ...(status?.milestones ?? []),
+    ]);
+    const bonusDates: ReadonlySet<string> = new Set(bonusClaims.keys());
 
     // 화면을 열어 둔 채 출석 기준일(00:00 KST)이 지나도 오늘 표시가 따라오도록 주기적으로 확인한다.
     // 기준일이 바뀌지 않았으면 이전 Date를 돌려줘 리렌더를 일으키지 않는다
@@ -247,7 +237,7 @@ export function AttendanceCheckCard({
                 // 접힌 카드는 옆 응모권 내역 카드와 높이를 맞추고, 펼친 카드는 출석판만큼 자란다
                 style={{ height: showExpanded && !stageFull ? 'auto' : COLLAPSED_HEIGHT }}
                 className={cn(
-                    'bg-surface-page border-border-default relative flex flex-col rounded-2xl border p-4 shadow-md',
+                    'bg-surface-page border-border-default relative flex flex-col rounded-2xl border p-6 shadow-md',
                     className,
                 )}
             >
@@ -269,23 +259,27 @@ export function AttendanceCheckCard({
                     >
                         {/* 접힌 카드의 펼치기 버튼은 최근 7일 스트립 머리에 둔다 */}
                         {showExpanded && (
-                            <Rise
-                                order={0}
-                                enter={contentEnter}
-                                className="flex items-start justify-between gap-4"
-                            >
-                                <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-                                    {stats}
+                            <Rise order={0} enter={contentEnter} className="flex flex-col gap-4">
+                                {/* 첫 줄: 연속 출석일수·이번 달 출석일수 2열과 접기. 둘째 줄: 보너스 진행 막대 (달력과 같은 폭) */}
+                                <div className="flex items-start justify-between gap-4">
+                                    {stats ?? <div />}
+                                    <button
+                                        type="button"
+                                        aria-expanded="true"
+                                        onClick={collapse}
+                                        className="text-body-sm text-fg-primary focus-visible:ring-border-focus focus-visible:ring-offset-surface-page flex shrink-0 cursor-pointer items-center rounded-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                                    >
+                                        접기
+                                        <ChevronUp className="size-5" />
+                                    </button>
                                 </div>
-                                <button
-                                    type="button"
-                                    aria-expanded="true"
-                                    onClick={collapse}
-                                    className="text-body-sm text-fg-primary focus-visible:ring-border-focus focus-visible:ring-offset-surface-page flex shrink-0 cursor-pointer items-center rounded-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                                >
-                                    접기
-                                    <ChevronUp className="size-5" />
-                                </button>
+                                {status && (
+                                    <AttendanceStreakTrack
+                                        streak={status.consecutiveDays}
+                                        milestones={status.milestones}
+                                        next={nextMilestone ?? null}
+                                    />
+                                )}
                             </Rise>
                         )}
 
@@ -303,7 +297,8 @@ export function AttendanceCheckCard({
                                     <AttendanceBakingStage
                                         durationMs={BAKING_MIN_MS}
                                         rewardTicketCount={status.dailyRewardTicketCount}
-                                        className="min-h-80"
+                                        // 펼친 판 자리는 넓어서 글자를 틀 위쪽에서 조금 더 띄운다
+                                        className="min-h-80 pt-10"
                                     />
                                 ) : (
                                     <>
@@ -314,8 +309,7 @@ export function AttendanceCheckCard({
                                                     shownCheckedToday,
                                                     now,
                                                 )}
-                                                bonusDays={bonusDays}
-                                                bonusRewards={bonusRewards}
+                                                bonusClaims={bonusClaims}
                                                 revealDate={revealDate}
                                                 onRevealEnd={handleRevealEnd}
                                                 onCheckToday={
@@ -364,7 +358,7 @@ export function AttendanceCheckCard({
                                                     shownCheckedToday,
                                                     now,
                                                 )}
-                                                bonusDays={bonusDays}
+                                                bonusDates={bonusDates}
                                             />
                                         </Rise>
                                         <Rise order={3} enter={contentEnter}>
@@ -392,15 +386,10 @@ function AttendanceStatPair({
     compact: boolean;
 }) {
     return (
-        <div className={cn('grid grid-cols-2', compact ? 'gap-4' : 'w-full')}>
-            <AttendanceStat
-                label="연속 출석일수"
-                value={`연속 ${streak}일`}
-                hint={streakHint}
-                compact={compact}
-            />
+        <div className={cn('grid grid-cols-2', compact ? 'w-fit gap-x-6' : 'w-full')}>
+            <AttendanceStat label="연속 출석일수" value={`연속 ${streak}일`} hint={streakHint} />
             <div className="border-border-strong border-l pl-4">
-                <AttendanceStat label="이번 달 출석일수" value={`${monthly}일`} compact={compact} />
+                <AttendanceStat label="이번 달 출석일수" value={`${monthly}일`} />
             </div>
         </div>
     );

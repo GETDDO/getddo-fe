@@ -1,3 +1,5 @@
+import type { AttendanceMilestone } from '@entities/attendance';
+
 import { formatYmd, toKst } from '@shared/lib/date';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -89,9 +91,25 @@ export function buildAttendanceMonth(
     });
 }
 
-/** 출석 기준일(YYYY-MM-DD)이 연속 출석 보상일인지 — 보상 단계 일수는 관리자 정책에서 받는다 */
-export function isStreakBonusDate(date: string, bonusDays: ReadonlySet<number>): boolean {
-    return bonusDays.has(Number(date.slice(8, 10)));
+/**
+ * 연속 출석 보상을 받은 출석 기준일 → 그날 받은 추가 응모권 수.
+ * 보상은 날짜(7·14·28일)가 아니라 연속 일수로 주어 사람마다 받는 날이 달라, 실제로 받은 날만 판에 표시한다
+ */
+export function claimedStreakBonuses(
+    milestones: readonly AttendanceMilestone[],
+): Map<string, number> {
+    const bonuses = new Map<string, number>();
+    for (const milestone of milestones) {
+        if (!milestone.claimed || !milestone.claimedAt) continue;
+        const date = toAttendanceDate(new Date(milestone.claimedAt));
+        bonuses.set(date, (bonuses.get(date) ?? 0) + milestone.rewardTicketCount);
+    }
+    return bonuses;
+}
+
+/** 출석 기준일(YYYY-MM-DD)이 연속 출석 보상을 받은 날인지 */
+export function isStreakBonusDate(date: string, bonusDates: ReadonlySet<string>): boolean {
+    return bonusDates.has(date);
 }
 
 /**
@@ -100,11 +118,15 @@ export function isStreakBonusDate(date: string, bonusDays: ReadonlySet<number>):
  */
 export function pickBonusMascotIndex(
     date: string,
-    bonusDays: ReadonlySet<number>,
+    bonusDates: ReadonlySet<string>,
     count: number,
 ): number {
     const month = date.slice(0, 7);
     const seed = [...month].reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) % 9973, 7);
-    const order = [...bonusDays].sort((a, b) => a - b).indexOf(Number(date.slice(8, 10)));
+    // YYYY-MM-DD 문자열은 사전순이 곧 날짜순이다
+    const order = [...bonusDates]
+        .filter((bonusDate) => bonusDate.startsWith(month))
+        .sort()
+        .indexOf(date);
     return (seed + Math.max(order, 0)) % count;
 }

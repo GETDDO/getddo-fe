@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 
 import shopCounter from '@shared/assets/shop/shop-counter.jpg';
 import shopWall from '@shared/assets/shop/shop-wall.jpg';
+import { cn } from '@shared/lib/utils';
 
 import bakingSprite from '../assets/baking-sprite.webp';
 import bakingSteam from '../assets/baking-steam.webp';
@@ -59,7 +60,10 @@ export function AttendanceBakingStage({
             role="status"
             aria-label={BAKING_LABEL}
             // 작은 타코야끼 가게 — 미션 배너와 같은 벽 그림 위에서 굽고, 아래에 나무 카운터 띠를 깐다 (그림이라 다크에서도 라이트 색)
-            className={`force-light relative flex flex-col items-center justify-between gap-2 overflow-hidden rounded-xl bg-cover bg-top px-4 pt-4 ${className ?? ''}`}
+            className={cn(
+                'force-light relative flex flex-col items-center justify-between gap-2 overflow-hidden rounded-xl bg-cover bg-top px-4 pt-4',
+                className,
+            )}
             style={{ backgroundImage: `url(${shopWall})` }}
         >
             {/* 벽 그림이 어두운 웜톤이라 배너처럼 흰 막을 얇게 덮어 글자가 잘 읽히게 한다 */}
