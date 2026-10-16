@@ -102,6 +102,16 @@ describe('toEvent', () => {
         expect(toEvent(unlimited).maxTicketsPerUser).toBeNull();
     });
 
+    it('isTimeRaffle이 없으면 응모권 사용 이벤트를 타임래플로 근사한다', () => {
+        // 실서버 응답에는 분류 필드가 없다 — CONTEXT.md "타임래플 = 응모권 차감 이벤트"
+        expect(toEvent(SUMMARY).isTimeRaffle).toBe(true);
+        expect(
+            toEvent({ ...SUMMARY, eventType: 'NO_TICKET', weightingEnabled: false }).isTimeRaffle,
+        ).toBe(false);
+        // 명시된 값이 오면 그대로 쓴다
+        expect(toEvent({ ...SUMMARY, isTimeRaffle: false }).isTimeRaffle).toBe(false);
+    });
+
     it('시연 전용 필드와 응모 수치는 있는 그대로 통과한다', () => {
         const raw: EventSummaryResponse = {
             ...SUMMARY,

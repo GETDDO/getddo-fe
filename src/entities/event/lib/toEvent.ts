@@ -17,8 +17,10 @@ const SCREEN_STATUS: Record<AdminEventStatus, EventStatus> = {
     CANCELED: 'closed',
 };
 
-// EventSummary에는 maxTicketsPerUser가 없다 — 상세(E02)만 실값을 쓰고 목록은
-// 목업의 entryRuleOf와 같은 규칙으로 근사한다 (미사용→없음, 가중치→5, 미적용→1)
+/**
+ * EventSummary에는 maxTicketsPerUser가 없다 — 상세(E02)만 실값을 쓰고 목록은
+ * 목업의 entryRuleOf와 같은 규칙으로 근사한다 (미사용→없음, 가중치→5, 미적용→1)
+ */
 const fallbackMaxTickets = (raw: EventSummaryResponse) =>
     raw.eventType === 'NO_TICKET' ? null : raw.weightingEnabled ? 5 : 1;
 
@@ -40,8 +42,11 @@ export function toEvent(raw: EventSummaryResponse | EventDetailResponse): Event 
         startsAt: raw.startsAt,
         endsAt: raw.endsAt,
         status: SCREEN_STATUS[raw.status],
+        // 추천 선정은 운영자 지정 값이라 파생할 근거가 없다 — 계약이 생기기 전까지 비워 둔다
         isRecommended: raw.isRecommended,
-        isTimeRaffle: raw.isTimeRaffle,
+        // 타임래플 분류는 spec 필드가 없어 계약 확인 중이다 — 없으면 CONTEXT.md 용어 정의
+        // ("타임래플 = 응모권 차감 이벤트")에 따라 응모권 사용 이벤트로 근사한다
+        isTimeRaffle: raw.isTimeRaffle ?? raw.eventType === 'TICKET',
         raffleDetail: raw.raffleDetail,
         eventType: raw.eventType,
         weightingEnabled: raw.weightingEnabled,
