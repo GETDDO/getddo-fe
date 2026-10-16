@@ -1,5 +1,4 @@
 import { createColumnHelper, flexRender, tableFeatures, useTable } from '@tanstack/react-table';
-import { Ticket } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { formatKst } from '@shared/lib/date';
@@ -20,7 +19,7 @@ import {
 // 상태·분류 칩 — 사용자 화면과 같은 공용 배지 모양(둥근 알약, 높이 26·글자 12)에 색만 칩마다 입힌다
 const CHIP = badgeVariants({ variant: null });
 // 칩만 담는 열 — 칩 너비가 제각각이라 왼쪽 정렬이면 들쭉날쭉해 보여 머리글과 함께 가운데로 맞춘다
-const CENTER_COLUMNS = new Set<string>(['status']);
+const CENTER_COLUMNS = new Set<string>(['eventType', 'status']);
 
 const KST_YMD_HM: Intl.DateTimeFormatOptions = {
     year: 'numeric',
@@ -66,17 +65,8 @@ export function AdminEventTable({
                 helper.accessor('eventType', {
                     header: '유형',
                     cell: ({ row, getValue }) => (
-                        <div className="flex flex-col gap-1">
-                            <span
-                                className={cn(
-                                    CHIP,
-                                    'w-fit items-center gap-1',
-                                    EVENT_TYPE_CHIP[getValue()],
-                                )}
-                            >
-                                {getValue() === 'TICKET' && (
-                                    <Ticket className="size-3" aria-hidden />
-                                )}
+                        <div className="flex flex-col items-center gap-1">
+                            <span className={cn(CHIP, EVENT_TYPE_CHIP[getValue()])}>
                                 {EVENT_TYPE_LABEL[getValue()]}
                             </span>
                             {getValue() === 'TICKET' && (

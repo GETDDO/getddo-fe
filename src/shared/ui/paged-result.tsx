@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { Button } from '@shared/ui/button';
-import { Pager } from '@shared/ui/pager';
+import { Pagination } from '@shared/ui/pagination';
 import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
 
 interface PageData<T> {
@@ -79,14 +79,7 @@ function PagedResult<T>({
                     <span className="text-body-sm text-fg-secondary" aria-live="polite">
                         총 {data.totalElements}건
                     </span>
-                    <Pager
-                        current={page - 1}
-                        total={totalPages}
-                        onPrev={() => onPageChange(page - 1)}
-                        onNext={() => onPageChange(page + 1)}
-                        prevDisabled={page <= 1}
-                        nextDisabled={page >= totalPages}
-                    />
+                    <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
                 </div>
             )}
         </div>

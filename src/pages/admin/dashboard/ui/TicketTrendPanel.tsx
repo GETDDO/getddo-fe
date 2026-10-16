@@ -11,6 +11,7 @@ import {
     XAxis,
     YAxis,
     useChartWidth,
+    usePlotArea,
 } from 'recharts';
 
 import { TICKET_SOURCE_TYPE_LABEL } from '@entities/ticket';
@@ -23,9 +24,10 @@ import { TREND_SOURCES } from '../model/useTicketTrend';
 import { DashboardPanel } from './DashboardPanel';
 import { ViewAllLink } from './ViewAllLink';
 
-// 디자인 시스템 차트 규칙 — 현재 값은 chart/line 실선 + 아래로 옅어지는 영역, 비교 값은 점선
+// 디자인 시스템 차트 규칙 — 현재 값은 chart/line 실선 + 아래로 옅어지는 영역.
+// 비교 값(응모 사용)은 마젠타 옆에서 가라앉는 짙은 회남색 동그란 점선 — 오늘 구간의 마젠타 긴 점선과도 구분된다
 const LINE = 'var(--color-chart-line)';
-const COMPARE = 'var(--color-chart-axis)';
+const COMPARE = 'var(--color-fg-secondary)';
 const AXIS_TICK = { fill: 'var(--color-chart-axis)', fontSize: 12 };
 /** 값 점 — 평소에는 흰 속에 마젠타 테두리, 올리면 조금 큰 마젠타 점(테두리 없음) */
 const POINT = { r: 4.5, fill: 'var(--color-surface-page)', stroke: LINE, strokeWidth: 2.5 };
@@ -90,6 +92,29 @@ function PointBubble({ cx, cy, payload }: { cx?: number; cy?: number; payload?: 
     );
 }
 
+/**
+ * 올린 날짜 칸 — 점 위아래로 옅은 브랜드색 사각형을 세워 어느 날을 보는지 분명히 한다.
+ * 점 간격의 절반 너비로, 위는 진하고 아래로 옅어진다
+ */
+function HoverBand({ count, points }: { count: number; points?: { x: number; y: number }[] }) {
+    const plot = usePlotArea();
+    const x = points?.[0]?.x;
+    if (!plot || x == null) return null;
+    const width = (plot.width / Math.max(count - 1, 1)) * 0.5;
+    return (
+        <rect
+            x={x - width / 2}
+            y={plot.y}
+            width={width}
+            height={plot.height}
+            rx={6}
+            fill={LINE}
+            fillOpacity={0.1}
+            className="pointer-events-none"
+        />
+    );
+}
+
 /** 오늘 구간(어제→오늘)은 하루가 끝나지 않았으므로 점선으로 따로 그린다 — 줄어든 게 아니라 집계 중임을 보인다 */
 type ChartRow = TrendRow & { past: number | null; today: number | null };
 
@@ -122,7 +147,7 @@ export function TicketTrendPanel({
         },
         {
             label: '응모에 사용',
-            legend: <span className="border-chart-axis w-3 border-t-2 border-dashed" />,
+            legend: <span className="border-fg-secondary w-3 border-t-2 border-dotted" />,
             value: `${formatNumber(totalUsed)}장`,
         },
         { label: '사용률', legend: null, value: `${useRate}%` },
@@ -204,17 +229,15 @@ export function TicketTrendPanel({
                             {/* 말풍선은 점 위에 직접 그리므로 툴팁 상자는 숨기고 세로 안내선만 둔다 */}
                             <Tooltip
                                 content={() => null}
-                                cursor={{
-                                    stroke: 'var(--color-border-default)',
-                                    strokeDasharray: '4 4',
-                                }}
+                                cursor={<HoverBand count={rows.length} />}
                             />
                             <Line
                                 dataKey="used"
                                 type="linear"
                                 stroke={COMPARE}
-                                strokeWidth={1.5}
-                                strokeDasharray="5 5"
+                                strokeWidth={2}
+                                strokeDasharray="0 5"
+                                strokeLinecap="round"
                                 dot={false}
                                 activeDot={false}
                                 isAnimationActive={!reduceMotion}

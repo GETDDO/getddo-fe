@@ -16,21 +16,25 @@ import { useEventStageCounts } from '../model/useEventStageCounts';
 import { DashboardPanel } from './DashboardPanel';
 import { ViewAllLink } from './ViewAllLink';
 
-/** 단계 색 — 손이 가야 하는 단계(추첨 필요·발표 대기)를 진하게, 시작 전·종료는 회색으로 물린다 */
+/**
+ * 단계 색 — 무채색 한 계열로 손이 가야 하는 단계일수록 진하게(발표 대기 > 추첨 필요 > 진행 중 > 예정 > 종료).
+ * 색은 올린 칸에만 프라이머리로 입혀 지금 보는 칸이 바로 읽히게 한다
+ */
 const STAGE_FILL: Record<EventStageKey, string> = {
-    scheduled: 'var(--color-chart-compare)',
-    open: 'var(--color-chart-line)',
-    draw: 'var(--color-chart-highlight)',
-    publish: 'var(--color-status-active-text)',
-    done: 'var(--color-chart-axis)',
+    publish: 'var(--color-fg-primary)',
+    draw: 'var(--color-fg-secondary)',
+    open: 'var(--color-chart-axis)',
+    scheduled: 'var(--color-border-strong)',
+    done: 'var(--color-surface-pressed)',
 };
 const STAGE_DOT: Record<EventStageKey, string> = {
-    scheduled: 'bg-chart-compare',
-    open: 'bg-chart-line',
-    draw: 'bg-chart-highlight',
-    publish: 'bg-status-active-text',
-    done: 'bg-chart-axis',
+    publish: 'bg-fg-primary',
+    draw: 'bg-fg-secondary',
+    open: 'bg-chart-axis',
+    scheduled: 'bg-border-strong',
+    done: 'bg-surface-pressed',
 };
+const ACTIVE_FILL = 'var(--color-brand-primary)';
 /** 올린 칸이 바깥으로 튀어나오는 길이 */
 const POP_OUT = 8;
 
@@ -46,10 +50,16 @@ export function EventStagePanel() {
     const total = stages.reduce((sum, stage) => sum + stage.count, 0);
     const active = hovered == null ? undefined : stages[hovered];
 
+    // recharts가 넘기는 props에는 key가 섞여 있어 펼치지 않고 모양에 필요한 값만 넘긴다
     const renderActive = (props: PieSectorDataItem) => (
         <Sector
-            {...props}
+            cx={props.cx}
+            cy={props.cy}
+            innerRadius={props.innerRadius}
             outerRadius={(props.outerRadius ?? 0) + POP_OUT}
+            startAngle={props.startAngle}
+            endAngle={props.endAngle}
+            fill={ACTIVE_FILL}
             stroke="var(--color-surface-page)"
             strokeWidth={2}
         />
@@ -108,8 +118,12 @@ export function EventStagePanel() {
                                     className="cursor-pointer"
                                     isAnimationActive={!reduceMotion}
                                 >
-                                    {stages.map(({ key }) => (
-                                        <Cell key={key} fill={STAGE_FILL[key]} />
+                                    {/* 범례에 올려도 같은 칸이 프라이머리로 바뀐다 */}
+                                    {stages.map(({ key }, index) => (
+                                        <Cell
+                                            key={key}
+                                            fill={index === hovered ? ACTIVE_FILL : STAGE_FILL[key]}
+                                        />
                                     ))}
                                 </Pie>
                             </PieChart>
@@ -138,8 +152,10 @@ export function EventStagePanel() {
                                 >
                                     <span
                                         className={cn(
-                                            'size-2.5 shrink-0 rounded-full',
-                                            STAGE_DOT[stage.key],
+                                            'size-2.5 shrink-0 rounded-full transition-colors',
+                                            index === hovered
+                                                ? 'bg-brand-primary'
+                                                : STAGE_DOT[stage.key],
                                         )}
                                     />
                                     <span className="text-body-sm text-fg-primary">

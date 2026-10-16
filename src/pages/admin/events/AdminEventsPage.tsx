@@ -14,7 +14,7 @@ import { isDateRangeOrdered } from '@shared/lib/filterConstants';
 import { Button } from '@shared/ui/button';
 import { DateRangeFilter } from '@shared/ui/filter-fields';
 import { Input } from '@shared/ui/input';
-import { Pager } from '@shared/ui/pager';
+import { Pagination } from '@shared/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
 import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
 
@@ -240,14 +240,7 @@ export function AdminEventsPage() {
                         <span className="text-body-sm text-fg-secondary">
                             총 {data.totalElements}건
                         </span>
-                        <Pager
-                            current={page - 1}
-                            total={totalPages}
-                            onPrev={() => setPage((p) => p - 1)}
-                            onNext={() => setPage((p) => p + 1)}
-                            prevDisabled={page <= 1}
-                            nextDisabled={page >= totalPages}
-                        />
+                        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
                     </div>
                 </>
             )}
