@@ -28,6 +28,12 @@ describe('공개 추첨 결과 목업 (E08)', () => {
         expect(data.revision).toBeNull();
     });
 
+    // 계약 가드 — 스키마 파싱은 미지 필드를 버리므로 원본 응답으로 확인한다 (ADR-022)
+    it('공개 결과 응답에 발표 예정 시각(publicationScheduledAt)을 싣지 않는다', async () => {
+        const { data } = await apiClient.get<unknown>(`/events/${DRAWN_EVENT_ID}/results`);
+        expect((data as { data: unknown }).data).not.toHaveProperty('publicationScheduledAt');
+    });
+
     it('발표 뒤에는 등수 내림차순으로 명단을 준다', async () => {
         const data = await results(DRAWN_EVENT_ID);
 

@@ -37,7 +37,7 @@ export function EventResultRow({ event }: { event: Event }) {
                 <div className="bg-surface-canvas aspect-video h-20 shrink-0 rounded-lg" />
             )}
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <StatusDot tone="muted">{drawn ? '종료' : '응모 마감 · 발표 예정'}</StatusDot>
+                <StatusDot tone="muted">{drawn ? '종료' : '응모 마감 · 결과 발표 대기'}</StatusDot>
                 <p className="text-body-bold text-fg-primary truncate">{event.title}</p>
                 <p className="text-caption text-fg-tertiary">
                     {formatYmdWeekday(event.startsAt)} ~ {formatYmdWeekday(event.endsAt)}

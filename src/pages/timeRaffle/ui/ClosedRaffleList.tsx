@@ -123,16 +123,8 @@ function ClosedRaffleRow({ event, now }: { event: Event; now: Date }) {
     // TODO: 행마다 E03을 부르는 구조는 최적화 대상이다 (Obsidian 20261008-progress-roadmap 참조)
     const { data: statistics } = useEntryStatistics(event.id);
     const isDrawn = event.status === 'drawn';
-    // 예정 시각은 '원래 예정'이고 실제 공개는 늦어질 수 있다 (getddo-spec 05-api/drawing.md).
-    // 그 시각이 지났는데 아직 발표 전이면 '19:10 발표 예정'은 이미 틀린 말이다 —
-    // 상세 화면이 같은 상태를 '아직 발표되지 않았습니다'로 적는 것과도 어긋난다
-    const scheduledAt = event.publicationScheduledAt;
-    // 발표 여부는 status로만 판단한다. 시각이 지났다고 발표된 것으로 적지 않는다
-    const statusLabel = isDrawn
-        ? '발표 완료'
-        : scheduledAt == null || new Date(scheduledAt).getTime() <= now.getTime()
-          ? '발표 대기'
-          : `${formatKst(scheduledAt, KST_HOUR_MINUTE)} 발표 예정`;
+    // 발표 여부는 status로만 판단한다 — 예정 시각은 계약에 없고 실제 공개 전까지는 발표 대기다 (ADR-022)
+    const statusLabel = isDrawn ? '발표 완료' : '발표 대기';
 
     const meta = [
         `${kstDayLabel(event.endsAt, now)} ${formatKst(event.endsAt, KST_HOUR_MINUTE)} 마감`,

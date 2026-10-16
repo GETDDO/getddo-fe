@@ -35,13 +35,12 @@ export const publishedPrizeSchema = z.object({
 /**
  * 이벤트의 공개 추첨 결과.
  *
- * 발표 전에는 isPublished=false, prizes=[]다. 예정 시각이 지났다는 사실만으로 공개하지 않으며,
- * publicationScheduledAt은 원래 예정 시각이라 실제 공개 시각(publishedAt)과 다를 수 있다.
+ * 발표 전에는 isPublished=false, prizes=[]다. 발표 예정 시각은 계약에 없다(ADR-022 수동 공개) —
+ * 공개 여부는 isPublished·displayStatus로만 판단하고, 실제 공개 시각은 publishedAt이다.
  */
 export const publicResultsSchema = z.object({
     eventId: z.string(),
     isPublished: z.boolean(),
-    publicationScheduledAt: z.iso.datetime(),
     publishedAt: z.iso.datetime().nullable(),
     revision: z.number().int().nullable(),
     updatedAt: z.iso.datetime().nullable(),
