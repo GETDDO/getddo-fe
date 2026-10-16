@@ -171,3 +171,21 @@ export function formatKstDot(date: Date | string, withTime = false): string {
     const day = `${pad(k.getUTCMonth() + 1)}.${pad(k.getUTCDate())}`;
     return withTime ? `${day} ${pad(k.getUTCHours())}:${pad(k.getUTCMinutes())}` : day;
 }
+
+/** KST 하루 구간 — 날짜("YYYY-MM-DD")와 그날 00:00~다음 날 00:00의 `[from, to)` UTC ISO */
+export interface KstDayRange {
+    ymd: string;
+    from: string;
+    to: string;
+}
+
+/** now가 속한 KST 날짜까지 최근 days일의 하루 구간 — 오래된 날부터 (관리자 대시보드 일별 집계) */
+export function recentKstDays(now: Date, days: number): KstDayRange[] {
+    const todayStart = new Date(kstDateStartUtcIso(formatYmd(now.toISOString())));
+    return Array.from({ length: days }, (_, index) => {
+        const from = new Date(todayStart);
+        from.setUTCDate(from.getUTCDate() - (days - 1 - index));
+        const ymd = formatYmd(from.toISOString());
+        return { ymd, from: from.toISOString(), to: kstNextDateStartUtcIso(ymd) };
+    });
+}

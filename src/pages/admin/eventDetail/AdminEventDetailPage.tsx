@@ -12,6 +12,7 @@ import {
 import { EventActionDialog } from '@features/manageEvent';
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
+import { badgeVariants } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 import { CardSkeleton, LoadingBlock } from '@shared/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
@@ -71,18 +72,13 @@ export function AdminEventDetailPage() {
     const status = ADMIN_STATUS_META[event.status];
 
     return (
-        <div className="flex max-w-280 flex-col gap-6 pb-10 md:pr-10">
+        <div className="flex flex-col gap-6 pb-10 md:pr-10">
             <div className="flex flex-wrap items-center gap-3">
                 <Button variant="secondary" size="sm" asChild>
                     <Link to="/admin/events">← 목록</Link>
                 </Button>
                 <h2 className="text-title-3 text-fg-primary truncate">{event.title}</h2>
-                <span
-                    className={cn(
-                        'text-caption rounded-md px-2 py-0.5 font-medium',
-                        status.chipClass,
-                    )}
-                >
+                <span className={cn(badgeVariants({ variant: null }), status.chipClass)}>
                     {status.label}
                 </span>
                 <div className="ml-auto flex flex-wrap gap-2">

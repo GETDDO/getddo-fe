@@ -39,7 +39,13 @@ export default defineConfig({
                         { name: 'router', test: /node_modules[\\/]react-router/, priority: 2 },
                         { name: 'tanstack', test: /node_modules[\\/]@tanstack[\\/]/, priority: 2 },
                         { name: 'zod', test: /node_modules[\\/]zod[\\/]/, priority: 2 },
-                        { name: 'vendor', test: /node_modules/, priority: 1 },
+                        // 차트(recharts와 그 의존성)는 관리자 대시보드에서만 쓴다 — 사용자 화면이 함께 받는 vendor에서 빼
+                        // 대시보드 지연 로딩 청크로 가게 한다. 별도 그룹으로 묶으면 공용 런타임 함수가 그쪽에 들어가 첫 화면이 끌어온다
+                        {
+                            name: 'vendor',
+                            test: /node_modules[\\/](?!(recharts|victory-vendor|d3-[a-z-]+|internmap|decimal\.js-light|@reduxjs|redux|redux-thunk|react-redux|reselect|immer|es-toolkit|eventemitter3|tiny-invariant)[\\/])/,
+                            priority: 1,
+                        },
                     ],
                 },
             },

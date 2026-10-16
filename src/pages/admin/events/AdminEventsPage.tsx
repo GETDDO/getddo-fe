@@ -106,7 +106,7 @@ export function AdminEventsPage() {
     };
 
     return (
-        <div className="flex max-w-280 flex-col gap-6 pr-10 pb-10">
+        <div className="flex flex-col gap-6 pr-10 pb-10">
             <div className="flex flex-wrap items-center gap-3">
                 <form
                     className="flex flex-wrap items-center gap-2"

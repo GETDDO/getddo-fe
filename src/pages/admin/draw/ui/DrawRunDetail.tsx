@@ -17,6 +17,7 @@ import { PublishRedrawDialog, useStartRedraw } from '@features/runRedraw';
 import { getErrorMessage } from '@shared/api/errorMessage';
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
+import { badgeVariants } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 import { CardSkeleton, LoadingBlock } from '@shared/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
@@ -25,7 +26,8 @@ import { DrawCandidatesSection } from './DrawCandidatesSection';
 import { DrawVerificationsSection } from './DrawVerificationsSection';
 import { PolicyPendingChip } from './PolicyPendingNotice';
 
-const CHIP = 'text-caption rounded-md px-2 py-0.5 font-medium whitespace-nowrap';
+// 상태·분류 칩 — 사용자 화면과 같은 공용 배지 모양(둥근 알약, 높이 26·글자 12)에 색만 칩마다 입힌다
+const CHIP = badgeVariants({ variant: null });
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
     return (

@@ -28,7 +28,7 @@ export function AdminDrawPage() {
     const selectedInList = events.some((e) => e.id === eventId);
 
     return (
-        <div className="flex max-w-280 flex-col gap-6 pb-10 md:pr-10">
+        <div className="flex flex-col gap-6 pb-10 md:pr-10">
             <PolicyPendingNotice />
 
             <div className="flex flex-wrap items-center gap-3">

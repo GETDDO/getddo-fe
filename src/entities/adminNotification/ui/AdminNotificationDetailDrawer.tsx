@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
+import { badgeVariants } from '@shared/ui/badge';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@shared/ui/sheet';
 
 import type { AdminNotification, MockDeliveryStatus } from '../model/types';
@@ -11,7 +12,8 @@ import { MOCK_DELIVERY_STATUS_LABEL } from '../model/types';
 
 const FIELD = 'text-caption text-fg-tertiary';
 const VALUE = 'text-body-sm text-fg-primary break-all';
-const CHIP = 'text-caption rounded-md px-2 py-0.5 font-medium whitespace-nowrap';
+// 상태·분류 칩 — 사용자 화면과 같은 공용 배지 모양(둥근 알약, 높이 26·글자 12)에 색만 칩마다 입힌다
+const CHIP = badgeVariants({ variant: null });
 
 const STATUS_CHIP: Record<MockDeliveryStatus, string> = {
     PENDING: 'bg-status-revision text-status-revision-text',

@@ -7,6 +7,7 @@ import {
     utcIsoToKstInput,
     formatKstTimeRange,
     formatRemaining,
+    recentKstDays,
 } from './date';
 
 describe('kstNextMonthStart', () => {
@@ -97,5 +98,22 @@ describe('formatKstTimeRange', () => {
         expect(formatKstTimeRange('2026-10-14T05:42:00Z', '2026-11-03T05:42:00Z')).toBe(
             '11월 3일 14:42 마감',
         );
+    });
+});
+
+describe('recentKstDays', () => {
+    it('KST 오늘까지 오래된 날부터 하루 구간을 만든다', () => {
+        // 10/16 00:30 KST — UTC로는 아직 10/15라도 KST 날짜 기준으로 자른다
+        const days = recentKstDays(new Date('2026-10-15T15:30:00Z'), 3);
+        expect(days.map((d) => d.ymd)).toEqual(['2026-10-14', '2026-10-15', '2026-10-16']);
+        expect(days[2]).toEqual({
+            ymd: '2026-10-16',
+            from: '2026-10-15T15:00:00.000Z',
+            to: '2026-10-16T15:00:00.000Z',
+        });
+    });
+    it('달이 바뀌어도 이어진다', () => {
+        const days = recentKstDays(new Date('2026-11-01T03:00:00Z'), 2);
+        expect(days.map((d) => d.ymd)).toEqual(['2026-10-31', '2026-11-01']);
     });
 });

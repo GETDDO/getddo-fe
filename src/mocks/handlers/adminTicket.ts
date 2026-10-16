@@ -14,6 +14,7 @@ import type {
 
 import { adminTicketHistorySchema } from '@entities/ticket';
 import { env } from '@shared/config/env';
+import { recentKstDays } from '@shared/lib/date';
 
 import { mockNow } from '../now';
 import { fail, ok } from './response';
@@ -202,10 +203,114 @@ function seedStore() {
     });
 }
 
-seedStore();
+// 대시보드 추이용 일별 지급 — 위 고정 시드(10/1~10/4) 뒤로 최근 14일에 날마다 출석·미션·게임 지급을 깐다.
+// 날짜로 정한 난수라 같은 날은 늘 같은 값이다. 불일치·반환은 만들지 않아 정합성 시드에 영향이 없다
+const TREND_DAYS = 14;
+const TREND_START = BASE_TIME + 4 * 24 * STEP_MS;
+const TREND_DAILY: Record<TicketSourceType, [min: number, max: number]> = {
+    ATTENDANCE: [9, 16],
+    MISSION: [3, 8],
+    GAME: [4, 10],
+};
+// 출석은 브론즈만(ADR-016), 미션·게임은 등급 추첨 확률(TICKET_GRADE_ODDS 80 : 18 : 2)대로
+const trendGrade = (source: TicketSourceType, r: number): TicketGrade =>
+    source === 'ATTENDANCE' || r < 0.8 ? 'BRONZE' : r < 0.98 ? 'SILVER' : 'GOLD';
+
+function dayRandom(ymd: string) {
+    let x = Number(ymd.replaceAll('-', '')) >>> 0 || 1;
+    return () => {
+        x ^= x << 13;
+        x ^= x >>> 17;
+        x ^= x << 5;
+        return (x >>> 0) / 2 ** 32;
+    };
+}
+
+function seedTrend() {
+    const { tickets, histories } = adminTicketStore;
+    const now = mockNow().getTime();
+    let serial = 0;
+    for (const day of recentKstDays(mockNow(), TREND_DAYS)) {
+        if (Date.parse(day.from) < TREND_START) continue;
+        const random = dayRandom(day.ymd);
+        for (const source of Object.keys(TREND_DAILY) as TicketSourceType[]) {
+            const [min, max] = TREND_DAILY[source];
+            const count = min + Math.floor(random() * (max - min + 1));
+            for (let n = 0; n < count; n += 1) {
+                // 09~22시(KST) 사이에 흩어 지급하고, 아직 오지 않은 시각은 만들지 않는다
+                const grantedAt = Date.parse(day.from) + (9 + random() * 13) * STEP_MS;
+                const grade = trendGrade(source, random());
+                // 절반쯤은 2시간 뒤 이벤트 응모에 쓴다 — 응모 추이 선의 재료
+                const usedAt = random() < 0.5 ? grantedAt + 2 * STEP_MS : null;
+                if (grantedAt > now) continue;
+                serial += 1;
+                const user = MOCK_ADMIN_USERS[serial % MOCK_ADMIN_USERS.length];
+                const event = EVENTS[serial % EVENTS.length];
+                if (!user || !event) continue;
+                const ticketId = `tk-t${String(serial).padStart(4, '0')}`;
+                const missionId: keyof typeof MISSIONS | null =
+                    source === 'MISSION' ? (serial % 2 ? 'ms-quiz' : 'ms-survey') : null;
+                const used = usedAt !== null && usedAt <= now;
+                const base = {
+                    ticketId,
+                    userId: user.id,
+                    userName: user.name,
+                    grade,
+                    expiresAt: GRANT_EXPIRES_AT,
+                    originalUseHistoryId: null,
+                };
+                histories.push({
+                    ...base,
+                    id: `${ticketId}-h1`,
+                    operationType: 'GRANT',
+                    status: 'AVAILABLE',
+                    reason: `${source} 지급`,
+                    createdAt: new Date(grantedAt).toISOString(),
+                    version: 1,
+                    eventId: null,
+                    eventTitle: null,
+                    missionId,
+                    missionTitle: missionId ? MISSIONS[missionId] : null,
+                    sourceType: source,
+                    sourceId: `src-${ticketId}`,
+                });
+                if (used) {
+                    histories.push({
+                        ...base,
+                        id: `${ticketId}-h2`,
+                        operationType: 'USE',
+                        status: 'SPENT',
+                        reason: 'USE',
+                        createdAt: new Date(usedAt).toISOString(),
+                        version: 2,
+                        eventId: event.id,
+                        eventTitle: event.title,
+                        missionId: null,
+                        missionTitle: null,
+                    });
+                }
+                tickets.push({
+                    id: ticketId,
+                    userId: user.id,
+                    grade,
+                    version: used ? 2 : 1,
+                    status: used ? 'SPENT' : 'AVAILABLE',
+                    expiresAt: GRANT_EXPIRES_AT,
+                });
+            }
+        }
+    }
+}
+
+function seedAll() {
+    seedStore();
+    seedTrend();
+}
+
+seedAll();
 
 // 목업 상태를 처음으로 되돌린다 — 테스트가 데이터를 바꾼 뒤 정리할 때 쓴다
-export const resetAdminTicketStore = seedStore;
+export const resetAdminTicketStore = seedAll;
 
 const userName = (userId: string) => MOCK_ADMIN_USERS.find((u) => u.id === userId)?.name ?? userId;
 

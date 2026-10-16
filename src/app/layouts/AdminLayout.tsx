@@ -1,3 +1,4 @@
+import { House } from 'lucide-react';
 import { NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
 
 import { VirtualClockTicker } from '@features/controlVirtualClock';
@@ -24,7 +25,8 @@ export function AdminLayout() {
                         U <span className="text-fg-brand">+</span> GETDDO
                     </span>
                 </div>
-                <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-3">
+                {/* 메뉴는 사이드바 폭을 꽉 채운 네모 줄 — 고른 메뉴는 줄 전체가 밝아진다 */}
+                <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto py-3">
                     {ADMIN_NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
                         <NavLink
                             key={to}
@@ -32,7 +34,7 @@ export function AdminLayout() {
                             end={end}
                             className={({ isActive }) =>
                                 cn(
-                                    'text-subhead focus-visible:ring-fg-inverse flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors focus-visible:ring-2 focus-visible:outline-none',
+                                    'text-subhead focus-visible:ring-fg-inverse flex items-center gap-2.5 px-6 py-3 transition-colors focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
                                     isActive
                                         ? 'bg-surface-inverse-muted text-fg-inverse'
                                         : 'text-fg-inverse/75 hover:bg-surface-inverse-muted hover:text-fg-inverse',
@@ -44,11 +46,13 @@ export function AdminLayout() {
                         </NavLink>
                     ))}
                 </nav>
-                <div className="shrink-0 p-3">
+                {/* 사용자 화면으로 — 메뉴와 구분되는 테두리 버튼으로 가운데에 둔다 */}
+                <div className="shrink-0 px-4 pt-2 pb-5">
                     <NavLink
                         to="/"
-                        className="text-body-sm text-fg-inverse/60 hover:bg-surface-inverse-muted hover:text-fg-inverse focus-visible:ring-fg-inverse flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                        className="text-body-sm-bold text-fg-inverse border-fg-inverse/25 hover:bg-surface-inverse-muted focus-visible:ring-fg-inverse flex h-10 items-center justify-center gap-2 rounded-lg border transition-colors focus-visible:ring-2 focus-visible:outline-none"
                     >
+                        <House aria-hidden className="size-4" />
                         사용자 화면으로
                     </NavLink>
                 </div>

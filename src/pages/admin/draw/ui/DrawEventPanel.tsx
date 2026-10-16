@@ -7,6 +7,7 @@ import { useEventDraws } from '@entities/drawResult';
 import { ADMIN_STATUS_META, useAdminEvent } from '@entities/event';
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
+import { badgeVariants } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 import { CardSkeleton, LoadingBlock } from '@shared/ui/skeleton';
 
@@ -81,12 +82,7 @@ export function DrawEventPanel({ eventId }: { eventId: string }) {
                 <section className="bg-surface-page border-border-default flex flex-col gap-3 rounded-2xl border p-6">
                     <div className="flex flex-wrap items-center gap-3">
                         <h2 className="text-title-3 text-fg-primary truncate">{event.title}</h2>
-                        <span
-                            className={cn(
-                                'text-caption rounded-md px-2 py-0.5 font-medium',
-                                status.chipClass,
-                            )}
-                        >
+                        <span className={cn(badgeVariants({ variant: null }), status.chipClass)}>
                             {status.label}
                         </span>
                         <Button size="sm" variant="secondary" className="ml-auto" asChild>

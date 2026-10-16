@@ -1,15 +1,38 @@
+import type { LucideIcon } from 'lucide-react';
+
+import {
+    ArrowDownRight,
+    ArrowUpRight,
+    CalendarCheck,
+    Minus,
+    ShieldAlert,
+    TicketCheck,
+    TicketPlus,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { useAbuseCases } from '@entities/abuseCase';
-import { useAuditLogs } from '@entities/audit';
 import { useAdminEvents } from '@entities/event';
+import { useAdminTicketGrantCounts, useAdminTicketHistoryCounts } from '@entities/ticket';
+import { recentKstDays } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { cn } from '@shared/lib/utils';
+import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
 import { Skeleton } from '@shared/ui/skeleton';
 
+/** 카드마다 구분색 — 왼쪽 세로 막대와 오른쪽 아이콘에 같은 색을 쓴다 */
+const TONES = {
+    brand: { bar: 'bg-chart-line', icon: 'bg-brand-soft text-fg-brand' },
+    blue: { bar: 'bg-status-active-text', icon: 'bg-status-active text-status-active-text' },
+    green: { bar: 'bg-semantic-success', icon: 'bg-semantic-success-soft text-semantic-success' },
+    amber: { bar: 'bg-chart-highlight', icon: 'bg-status-pending text-status-pending-text' },
+} as const;
+
 interface StatCardProps {
     label: string;
+    icon: LucideIcon;
+    tone: keyof typeof TONES;
     /** 아직 안 오면 —, 조회 실패는 error로 구분해 짧게 표시한다 */
     value?: number;
     /** 초기 조회 중이면 값 자리에 스켈레톤 — 카드 껍데기(제목·설명·링크)는 그대로 둔다 */
@@ -19,21 +42,47 @@ interface StatCardProps {
     onRetry?: () => void;
     description: string;
     to: string;
+    /** 값 뒤 단위 — 이벤트·차단은 건, 응모권은 장 */
+    unit?: string;
+    /** 어제 같은 지표 — 있으면 설명 대신 어제보다 늘었는지·줄었는지 적는다 */
+    previous?: number;
+}
+
+/** 어제와 비교 — 늘고 준 것이 좋고 나쁨을 뜻하지 않으므로 색 대신 화살표로만 구분한다 */
+function Delta({ value, previous, unit }: { value: number; previous: number; unit: string }) {
+    const diff = value - previous;
+    const Icon = diff > 0 ? ArrowUpRight : diff < 0 ? ArrowDownRight : Minus;
+    return (
+        <span className="text-caption text-fg-tertiary flex items-center gap-1 tabular-nums">
+            <span className="text-fg-primary flex items-center gap-0.5 font-semibold">
+                <Icon aria-hidden className="size-3.5" />
+                {diff === 0
+                    ? '변화 없음'
+                    : `${diff > 0 ? '+' : '−'}${formatNumber(Math.abs(diff))}${unit}`}
+            </span>
+            어제 대비
+        </span>
+    );
 }
 
 function StatCard({
     label,
+    icon: Icon,
+    tone,
     value,
     pending = false,
     error,
     onRetry,
     description,
     to,
+    unit = '건',
+    previous,
 }: StatCardProps) {
+    const colors = TONES[tone];
     return (
         <div
             className={cn(
-                'bg-surface-page border-border-default relative flex flex-col gap-1 rounded-2xl border p-5 transition-colors',
+                'bg-surface-page border-border-default relative flex items-start gap-3 rounded-2xl border p-5 transition-colors',
                 'hover:border-fg-brand',
             )}
         >
@@ -46,47 +95,81 @@ function StatCard({
                     'focus-visible:ring-border-focus focus-visible:ring-offset-surface-page focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
                 )}
             />
-            <span className="text-body-sm text-fg-tertiary">{label}</span>
-            <div className="text-title-1 text-fg-primary">
-                {pending ? (
-                    <>
-                        <Skeleton className="h-8 w-20" />
-                        <span className="sr-only">불러오는 중…</span>
-                    </>
-                ) : error ? (
-                    <span className="text-semantic-error-strong text-body-sm font-medium">
-                        조회 실패
-                    </span>
-                ) : value == null ? (
-                    '—'
+            {/* 왼쪽 세로 막대 — 라벨·숫자 묶음 높이만큼 */}
+            <span aria-hidden className={cn('w-1 self-stretch rounded-full', colors.bar)} />
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <span className="text-body-sm text-fg-tertiary">{label}</span>
+                <div className="text-title-1 text-fg-primary tabular-nums">
+                    {pending ? (
+                        <>
+                            <Skeleton className="h-8 w-20" />
+                            <span className="sr-only">불러오는 중…</span>
+                        </>
+                    ) : error ? (
+                        <span className="text-semantic-error-strong text-body-sm font-medium">
+                            조회 실패
+                        </span>
+                    ) : value == null ? (
+                        '—'
+                    ) : (
+                        `${formatNumber(value)}${unit}`
+                    )}
+                </div>
+                {!pending && !error && value != null && previous != null ? (
+                    <Delta value={value} previous={previous} unit={unit} />
                 ) : (
-                    `${formatNumber(value)}건`
+                    <span className="text-caption text-fg-tertiary">{description}</span>
+                )}
+                {error && onRetry && (
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        className="relative self-start"
+                        onClick={onRetry}
+                    >
+                        다시 시도
+                    </Button>
                 )}
             </div>
-            <span className="text-caption text-fg-tertiary">{description}</span>
-            {error && onRetry && (
-                <Button size="sm" variant="ghost" className="relative self-start" onClick={onRetry}>
-                    다시 시도
-                </Button>
-            )}
+            <span
+                aria-hidden
+                className={cn(
+                    'flex size-10 shrink-0 items-center justify-center rounded-xl',
+                    colors.icon,
+                )}
+            >
+                <Icon className="size-5" />
+            </span>
         </div>
     );
 }
 
 /**
  * 관리자 대시보드 지표 요약 — 운영 중 확인이 잦은 값을 모아 각 관리 화면으로 이어준다.
- * 건수는 Page.totalElements를 재사용한다(size=1로 본문을 가볍게)
+ * 건수는 Page.totalElements를 재사용한다(size=1로 본문을 가볍게). 오늘·어제는 가상 시계 기준 KST 날짜다
  */
 export function AdminStatSummary() {
+    const [yesterday, today] = recentKstDays(useVirtualClock().now(), 2).map(({ from, to }) => ({
+        from,
+        to,
+    }));
+
     const openEvents = useAdminEvents({ page: 1, size: 1, status: 'OPEN' });
-    const scheduledEvents = useAdminEvents({ page: 1, size: 1, status: 'SCHEDULED' });
-    const abuseCases = useAbuseCases({ page: 1, size: 1 });
-    const auditLogs = useAuditLogs({ page: 1, size: 1 });
+    // 응모권 건수는 [어제, 오늘] 순서로 받는다
+    const granted = useAdminTicketGrantCounts([{ ...yesterday }, { ...today }]);
+    const used = useAdminTicketHistoryCounts([
+        { ...yesterday, operationType: 'USE' },
+        { ...today, operationType: 'USE' },
+    ]);
+    const abuseToday = useAbuseCases({ page: 1, size: 1, ...today });
+    const abuseYesterday = useAbuseCases({ page: 1, size: 1, ...yesterday });
 
     return (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
                 label="진행 중 이벤트"
+                icon={CalendarCheck}
+                tone="brand"
                 value={openEvents.data?.totalElements}
                 pending={openEvents.isPending}
                 error={openEvents.isError}
@@ -95,31 +178,42 @@ export function AdminStatSummary() {
                 to="/admin/events?status=OPEN"
             />
             <StatCard
-                label="진행 예정 이벤트"
-                value={scheduledEvents.data?.totalElements}
-                pending={scheduledEvents.isPending}
-                error={scheduledEvents.isError}
-                onRetry={() => void scheduledEvents.refetch()}
-                description="오픈을 기다리는 이벤트"
-                to="/admin/events?status=SCHEDULED"
+                label="오늘 지급한 응모권"
+                icon={TicketPlus}
+                tone="green"
+                value={granted.counts[1]}
+                previous={granted.counts[0]}
+                unit="장"
+                pending={granted.isPending}
+                error={granted.isError}
+                onRetry={granted.refetch}
+                description="출석·미션·게임 보상"
+                to="/admin/tickets?tab=grants"
             />
             <StatCard
-                label="어뷰징 차단 내역"
-                value={abuseCases.data?.totalElements}
-                pending={abuseCases.isPending}
-                error={abuseCases.isError}
-                onRetry={() => void abuseCases.refetch()}
+                label="오늘 응모에 쓴 응모권"
+                icon={TicketCheck}
+                tone="blue"
+                value={used.counts[1]}
+                previous={used.counts[0]}
+                unit="장"
+                pending={used.isPending}
+                error={used.isError}
+                onRetry={used.refetch}
+                description="이벤트 응모로 차감된 응모권"
+                to="/admin/tickets?tab=histories"
+            />
+            <StatCard
+                label="오늘 어뷰징 차단"
+                icon={ShieldAlert}
+                tone="amber"
+                value={abuseToday.data?.totalElements}
+                previous={abuseYesterday.data?.totalElements}
+                pending={abuseToday.isPending}
+                error={abuseToday.isError}
+                onRetry={() => void abuseToday.refetch()}
                 description="지급 전 차단된 요청"
                 to="/admin/abuse-cases"
-            />
-            <StatCard
-                label="감사 로그"
-                value={auditLogs.data?.totalElements}
-                pending={auditLogs.isPending}
-                error={auditLogs.isError}
-                onRetry={() => void auditLogs.refetch()}
-                description="기록된 운영 액션 전체"
-                to="/admin/audit"
             />
         </div>
     );

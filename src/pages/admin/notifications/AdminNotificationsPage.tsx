@@ -34,7 +34,7 @@ export function AdminNotificationsPage() {
     };
 
     return (
-        <div className="flex max-w-280 flex-col gap-6 pr-10 pb-10">
+        <div className="flex flex-col gap-6 pr-10 pb-10">
             <div
                 role="tablist"
                 aria-label="알림 운영"
