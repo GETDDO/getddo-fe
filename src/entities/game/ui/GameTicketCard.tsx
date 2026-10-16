@@ -2,7 +2,7 @@ import { Gamepad2, Ticket } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { Button } from '@shared/ui/button';
-import { TicketCard } from '@shared/ui/ticket-card';
+import { TicketCard, TicketCardMedia } from '@shared/ui/ticket-card';
 
 import type { Game } from '../model/types';
 
@@ -11,7 +11,7 @@ const DAILY_GAME_REWARD = 1;
 
 /**
  * 게임 티켓 카드 — 썸네일, 설명, 오늘 받을 응모권, 플레이 버튼 (공용 TicketCard, 피그마 Group 633903).
- * 카드 어디를 눌러도 게임 화면으로 들어간다. 카드에 마우스를 올려도 움직이지 않는다 (다른 카드와 통일).
+ * 카드 어디를 눌러도 게임 화면으로 들어간다. 카드는 움직이지 않고(다른 카드와 통일), 마우스를 올리면 썸네일만 살짝 확대된다 (공용 TicketCardMedia).
  * 게임은 횟수 제한 없이 플레이할 수 있어서, 오늘 보상을 받은 뒤에도 버튼은 계속 누를 수 있다
  */
 export function GameTicketCard({
@@ -74,13 +74,10 @@ export function GameTicketCard({
                     className="absolute inset-0 z-1 rounded-2xl"
                 />
             )}
-            <div className="bg-surface-canvas flex h-30 shrink-0 items-center justify-center overflow-hidden rounded-lg">
-                {game.thumbnailUrl ? (
-                    <img src={game.thumbnailUrl} alt="" className="size-full object-cover" />
-                ) : (
-                    <Gamepad2 aria-hidden className="text-fg-disabled size-8" />
-                )}
-            </div>
+            <TicketCardMedia
+                src={game.thumbnailUrl}
+                fallback={<Gamepad2 aria-hidden className="text-fg-disabled size-8" />}
+            />
 
             <div className="mt-3 flex flex-col gap-2">
                 <div className="flex flex-col">
