@@ -33,7 +33,7 @@ const CONTAINER = 'mx-auto w-full max-w-312 px-6 pb-28';
 const STATUS_LABEL: Record<Event['status'], string> = {
     open: '응모하기',
     upcoming: '오픈 예정',
-    closed: '추첨 진행 중',
+    closed: '결과 발표 대기',
     drawn: '발표 완료',
 };
 
@@ -190,10 +190,10 @@ export function TimeRaffleDetailPage() {
                         )
                     }
                 />
-                {/* 발표 전에는 발표 대기 카드(남은 시간)가, 발표 후에는 결과 영역의 배너가 본인 결과를 맡는다 */}
+                {/* 발표 전에는 발표 대기 카드가, 발표 후에는 결과 영역의 배너가 본인 결과를 맡는다 */}
                 {(myResult?.result === 'PENDING' ||
                     (event.status === 'closed' && !results?.isPublished)) && (
-                    <MyResultCard event={event} entered={myResult?.result === 'PENDING'} />
+                    <MyResultCard entered={myResult?.result === 'PENDING'} />
                 )}
                 {results && (
                     <DrawResultSection event={event} results={results} myResult={myResult} />
@@ -262,7 +262,6 @@ export function TimeRaffleDetailPage() {
                 gradeReflected={isWeighted}
                 remainingBalance={lastBalance}
                 remainingAllowance={lastRemaining}
-                announceAt={event.publicationScheduledAt ?? null}
                 returnFocusTo={entryButtonRef}
             />
         </main>

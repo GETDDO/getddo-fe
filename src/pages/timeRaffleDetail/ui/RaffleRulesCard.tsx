@@ -36,16 +36,14 @@ function entryLimitRule(event: Event): string {
 export function RaffleRulesCard({ event }: { event: Event }) {
     const usesTickets = event.eventType === 'TICKET';
     const gradeReflected = usesTickets && event.weightingEnabled;
-    const announceAt = event.publicationScheduledAt;
 
     const rules = [
         `${formatKst(event.startsAt, KST_HOUR_MINUTE)}에 시작해 ${formatKst(event.endsAt, KST_HOUR_MINUTE)}에 마감해요. 마감 뒤에는 응모할 수 없어요.`,
         entryLimitRule(event),
         // 사용자의 응모 취소는 제공하지 않는다 (getddo-spec 02-domain/entry.md)
         usesTickets ? '쓴 응모권은 되돌릴 수 없어요.' : '응모한 뒤에는 취소할 수 없어요.',
-        announceAt
-            ? `마감 뒤 자동으로 추첨하고 ${formatKst(announceAt, KST_HOUR_MINUTE)}에 발표해요.`
-            : '마감 뒤 자동으로 추첨하고 발표해요.',
+        // 발표 시각은 계약에 없다 — 자동 추첨 뒤 관리자 확인을 거쳐 공개한다 (ADR-022)
+        '마감 뒤 자동으로 추첨하고 발표해요.',
         '당첨 확률은 응모자 수에 따라 달라져 따로 알려 드리지 않아요.',
     ];
 
