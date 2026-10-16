@@ -110,7 +110,6 @@ function buildResults(event: MockEvent, now: number): PublicResults {
     return {
         eventId: event.id,
         isPublished,
-        publicationScheduledAt: new Date(scheduledAt).toISOString(),
         // 발표 전에는 공개 정보를 하나도 싣지 않는다 (05-api/drawing.md)
         publishedAt: isPublished ? new Date(scheduledAt).toISOString() : null,
         revision: isPublished ? 1 : null,
