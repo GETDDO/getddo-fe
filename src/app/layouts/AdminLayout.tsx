@@ -17,14 +17,14 @@ export function AdminLayout() {
     return (
         <div className="bg-surface-canvas flex min-h-screen">
             <ScrollRestoration />
-            <aside className="border-border bg-surface-inverse hidden w-60 shrink-0 flex-col border-r md:flex">
-                <div className="border-border flex h-16 items-center gap-2 border-b px-5">
-                    <img src="/favicon.svg" alt="" className="size-[46px]" />
+            {/* 화면 높이에 고정해 긴 페이지에서도 아래 '사용자 화면으로'가 항상 보이게 한다 — 메뉴가 넘치면 메뉴만 스크롤 */}
+            <aside className="border-border bg-surface-inverse sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r md:flex">
+                <div className="flex h-16 shrink-0 items-center px-5">
                     <span className="text-title-3 text-fg-inverse">
                         U <span className="text-fg-brand">+</span> GETDDO
                     </span>
                 </div>
-                <nav className="flex flex-1 flex-col gap-1 p-3">
+                <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-3">
                     {ADMIN_NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
                         <NavLink
                             key={to}
@@ -44,7 +44,7 @@ export function AdminLayout() {
                         </NavLink>
                     ))}
                 </nav>
-                <div className="border-border border-t p-3">
+                <div className="shrink-0 p-3">
                     <NavLink
                         to="/"
                         className="text-body-sm text-fg-inverse/60 hover:bg-surface-inverse-muted hover:text-fg-inverse focus-visible:ring-fg-inverse flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
