@@ -4,7 +4,9 @@ import { Gamepad2, Target, Ticket } from 'lucide-react';
 
 import colorWordGuide from '../assets/color-word-guide.jpg';
 import guideBanner from '../assets/guide-banner.jpg';
+import takkoOrderGuide from '../assets/takko-order-guide.jpg';
 import takkoRunGuide from '../assets/takko-run-guide.jpg';
+import takkoTimingGuide from '../assets/takko-timing-guide.jpg';
 import takoyakiHero from '../assets/takoyaki-hero.jpg';
 
 export interface GameGuideStep {
@@ -99,14 +101,14 @@ const CONTENTS: Record<string, GameContent> = {
                 },
                 REWARD_STEP,
             ],
-            // 게임 방법 모달 이미지 — 전용 장면 이미지가 나오기 전까지 대표 이미지(image 184)를 같이 쓴다
-            image: '/images/games/takko-timing.jpg',
+            // 게임 방법 모달 이미지 — 피그마 image 256 (게임 장면)
+            image: takkoTimingGuide,
         },
     },
     'game-order': {
         tagline: '손님 주문을 잘 외웠다가 순서대로 내주세요.',
-        // 대표·게임 방법 이미지는 아직 없다 — 나오기 전까지 공통 안내 그림을 쓴다
-        heroImage: null,
+        // 대표 이미지 — 피그마 image 255
+        heroImage: '/images/games/takko-order.jpg',
         guide: {
             title: '게임 방법',
             subtitle: '보고, 외우고, 순서대로!',
@@ -122,7 +124,8 @@ const CONTENTS: Record<string, GameContent> = {
                 },
                 REWARD_STEP,
             ],
-            image: guideBanner,
+            // 게임 방법 모달 이미지 — 피그마 image 257 (게임 장면)
+            image: takkoOrderGuide,
         },
     },
     'game-takoyaki': {

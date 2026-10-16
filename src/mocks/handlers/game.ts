@@ -55,7 +55,8 @@ const mockGames: GameMeta[] = [
         id: 'game-order',
         title: '타꼬 주문',
         description: '손님 주문을 외워 순서대로 내줘요',
-        thumbnailUrl: null,
+        // 피그마 image 255
+        thumbnailUrl: '/images/games/takko-order.jpg',
         dailyLimit: 1,
     },
 ];
