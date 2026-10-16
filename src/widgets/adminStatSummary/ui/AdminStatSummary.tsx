@@ -1,14 +1,4 @@
-import type { LucideIcon } from 'lucide-react';
-
-import {
-    ArrowDownRight,
-    ArrowUpRight,
-    CalendarCheck,
-    Minus,
-    ShieldAlert,
-    TicketCheck,
-    TicketPlus,
-} from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Minus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { useAbuseCases } from '@entities/abuseCase';
@@ -21,18 +11,8 @@ import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
 import { Skeleton } from '@shared/ui/skeleton';
 
-/** 카드마다 구분색 — 왼쪽 세로 막대와 오른쪽 아이콘에 같은 색을 쓴다 */
-const TONES = {
-    brand: { bar: 'bg-chart-line', icon: 'bg-brand-soft text-fg-brand' },
-    blue: { bar: 'bg-status-active-text', icon: 'bg-status-active text-status-active-text' },
-    green: { bar: 'bg-semantic-success', icon: 'bg-semantic-success-soft text-semantic-success' },
-    amber: { bar: 'bg-chart-highlight', icon: 'bg-status-pending text-status-pending-text' },
-} as const;
-
 interface StatCardProps {
     label: string;
-    icon: LucideIcon;
-    tone: keyof typeof TONES;
     /** 아직 안 오면 —, 조회 실패는 error로 구분해 짧게 표시한다 */
     value?: number;
     /** 초기 조회 중이면 값 자리에 스켈레톤 — 카드 껍데기(제목·설명·링크)는 그대로 둔다 */
@@ -65,10 +45,9 @@ function Delta({ value, previous, unit }: { value: number; previous: number; uni
     );
 }
 
+/** 숫자 카드 — 흰 카드에 이름·큰 숫자·어제 대비만. 색 막대·아이콘 없이 숫자가 먼저 읽히게 한다 */
 function StatCard({
     label,
-    icon: Icon,
-    tone,
     value,
     pending = false,
     error,
@@ -78,11 +57,10 @@ function StatCard({
     unit = '건',
     previous,
 }: StatCardProps) {
-    const colors = TONES[tone];
     return (
         <div
             className={cn(
-                'bg-surface-page border-border-default relative flex items-start gap-3 rounded-2xl border p-5 transition-colors',
+                'bg-surface-page border-border-default relative flex flex-col gap-1 rounded-2xl border p-5 transition-colors',
                 'hover:border-fg-brand',
             )}
         >
@@ -95,51 +73,33 @@ function StatCard({
                     'focus-visible:ring-border-focus focus-visible:ring-offset-surface-page focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
                 )}
             />
-            {/* 왼쪽 세로 막대 — 라벨·숫자 묶음 높이만큼 */}
-            <span aria-hidden className={cn('w-1 self-stretch rounded-full', colors.bar)} />
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="text-body-sm text-fg-tertiary">{label}</span>
-                <div className="text-title-1 text-fg-primary tabular-nums">
-                    {pending ? (
-                        <>
-                            <Skeleton className="h-8 w-20" />
-                            <span className="sr-only">불러오는 중…</span>
-                        </>
-                    ) : error ? (
-                        <span className="text-semantic-error-strong text-body-sm font-medium">
-                            조회 실패
-                        </span>
-                    ) : value == null ? (
-                        '—'
-                    ) : (
-                        `${formatNumber(value)}${unit}`
-                    )}
-                </div>
-                {!pending && !error && value != null && previous != null ? (
-                    <Delta value={value} previous={previous} unit={unit} />
+            <span className="text-body-sm text-fg-tertiary">{label}</span>
+            <div className="text-title-1 text-fg-primary tabular-nums">
+                {pending ? (
+                    <>
+                        <Skeleton className="h-8 w-20" />
+                        <span className="sr-only">불러오는 중…</span>
+                    </>
+                ) : error ? (
+                    <span className="text-semantic-error-strong text-body-sm font-medium">
+                        조회 실패
+                    </span>
+                ) : value == null ? (
+                    '—'
                 ) : (
-                    <span className="text-caption text-fg-tertiary">{description}</span>
-                )}
-                {error && onRetry && (
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        className="relative self-start"
-                        onClick={onRetry}
-                    >
-                        다시 시도
-                    </Button>
+                    `${formatNumber(value)}${unit}`
                 )}
             </div>
-            <span
-                aria-hidden
-                className={cn(
-                    'flex size-10 shrink-0 items-center justify-center rounded-xl',
-                    colors.icon,
-                )}
-            >
-                <Icon className="size-5" />
-            </span>
+            {!pending && !error && value != null && previous != null ? (
+                <Delta value={value} previous={previous} unit={unit} />
+            ) : (
+                <span className="text-caption text-fg-tertiary">{description}</span>
+            )}
+            {error && onRetry && (
+                <Button size="sm" variant="ghost" className="relative self-start" onClick={onRetry}>
+                    다시 시도
+                </Button>
+            )}
         </div>
     );
 }
@@ -168,8 +128,6 @@ export function AdminStatSummary() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
                 label="진행 중 이벤트"
-                icon={CalendarCheck}
-                tone="brand"
                 value={openEvents.data?.totalElements}
                 pending={openEvents.isPending}
                 error={openEvents.isError}
@@ -179,8 +137,6 @@ export function AdminStatSummary() {
             />
             <StatCard
                 label="오늘 지급한 응모권"
-                icon={TicketPlus}
-                tone="green"
                 value={granted.counts[1]}
                 previous={granted.counts[0]}
                 unit="장"
@@ -192,8 +148,6 @@ export function AdminStatSummary() {
             />
             <StatCard
                 label="오늘 응모에 쓴 응모권"
-                icon={TicketCheck}
-                tone="blue"
                 value={used.counts[1]}
                 previous={used.counts[0]}
                 unit="장"
@@ -205,8 +159,6 @@ export function AdminStatSummary() {
             />
             <StatCard
                 label="오늘 어뷰징 차단"
-                icon={ShieldAlert}
-                tone="amber"
                 value={abuseToday.data?.totalElements}
                 previous={abuseYesterday.data?.totalElements}
                 pending={abuseToday.isPending}
