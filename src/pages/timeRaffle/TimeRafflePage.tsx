@@ -60,9 +60,9 @@ export function TimeRafflePage() {
     };
 
     // 머리의 진행 칸 — 진행 중·오픈 예정은 기본 화면에만 있어 마감 화면이면 먼저 칸을 바꾼다.
-    // 발표 대기(마감 목록)는 두 화면 모두에 있어 지금 화면에서 내려간다
+    // 발표 대기 칸은 개수가 미리보기에 없는 오래된 대기 건을 가리킬 수 있어 항상 전체 목록으로 연다
     const selectSection = (targetId: string) =>
-        changeView(targetId === RAFFLE_SECTION_IDS.closed ? view : 'now', targetId);
+        changeView(targetId === RAFFLE_SECTION_IDS.closed ? 'closed' : 'now', targetId);
 
     if (isPending) {
         return (
