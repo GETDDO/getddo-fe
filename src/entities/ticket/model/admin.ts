@@ -19,8 +19,8 @@ export const ticketGrantSchema = z.object({
     sourceType: ticketSourceTypeSchema,
     sourceId: z.string(),
     missionId: z.string().nullish(),
-    grantedAt: z.iso.datetime(),
-    expiresAt: z.iso.datetime(),
+    grantedAt: z.iso.datetime({ offset: true }),
+    expiresAt: z.iso.datetime({ offset: true }),
 });
 
 // AO05 — TicketHistory 전체 + 사용자·이벤트·미션 표시 이름 (해당 없으면 null)
@@ -46,7 +46,7 @@ export const ticketConsistencySchema = z.object({
     availableCount: z.number().int().nonnegative(),
     isConsistent: z.boolean(),
     inconsistencies: z.array(ticketMismatchSchema),
-    checkedAt: z.iso.datetime(),
+    checkedAt: z.iso.datetime({ offset: true }),
 });
 
 // AO09 — 전체 불일치 목록의 한 행 (불일치한 응모권만 담긴다)
@@ -54,7 +54,7 @@ export const ticketInconsistencySchema = ticketMismatchSchema.extend({
     userId: z.string(),
     userName: z.string(),
     grade: ticketGradeSchema,
-    checkedAt: z.iso.datetime(),
+    checkedAt: z.iso.datetime({ offset: true }),
 });
 
 // AO08 — 반환은 이벤트 취소와 같은 트랜잭션에서 즉시 끝나므로 처리 상태·재시도 횟수가 없다
@@ -70,9 +70,9 @@ export const ticketRefundSchema = z.object({
     userId: z.string(),
     userName: z.string(),
     reasonType: ticketRefundReasonSchema,
-    refundedAt: z.iso.datetime(),
+    refundedAt: z.iso.datetime({ offset: true }),
     // 반환 대상 이력에 만료 시각이 없으면 null이다 (spec AO08)
-    targetExpiresAt: z.iso.datetime().nullable(),
+    targetExpiresAt: z.iso.datetime({ offset: true }).nullable(),
 });
 
 export type TicketSourceType = z.infer<typeof ticketSourceTypeSchema>;

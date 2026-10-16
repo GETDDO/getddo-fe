@@ -45,7 +45,8 @@ export function toEvent(raw: EventSummaryResponse | EventDetailResponse): Event 
         // 추천 선정은 운영자 지정 값이라 파생할 근거가 없다 — 계약이 생기기 전까지 비워 둔다
         isRecommended: raw.isRecommended,
         // 타임래플 분류는 spec 필드가 없어 계약 확인 중이다 — 없으면 CONTEXT.md 용어 정의
-        // ("타임래플 = 응모권 차감 이벤트")에 따라 응모권 사용 이벤트로 근사한다
+        // ("타임래플 = 응모권 차감 이벤트")에 따라 응모권 사용 이벤트로 근사한다. 이 통칭보다
+        // 좁은 "시간 한정" 래플이 별도로 생기면 계약 확정 시 기준을 좁힌다
         isTimeRaffle: raw.isTimeRaffle ?? raw.eventType === 'TICKET',
         raffleDetail: raw.raffleDetail,
         eventType: raw.eventType,

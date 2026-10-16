@@ -57,6 +57,7 @@ describe('이벤트 목업 핸들러', () => {
         for (const event of items) {
             expect(event, event.id).not.toHaveProperty('description');
             expect(event, event.id).not.toHaveProperty('prizes');
+            expect(event, event.id).not.toHaveProperty('maxTicketsPerUser');
             expect(event, event.id).toHaveProperty('imageUrl');
             expect(event, event.id).toHaveProperty('serverTime');
         }

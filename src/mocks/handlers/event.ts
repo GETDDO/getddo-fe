@@ -1034,11 +1034,17 @@ function toResponse(event: MockEvent, now: number) {
     };
 }
 
-/** E01 목록 항목은 spec의 EventSummary — description·prizes는 상세(E02)에만 있다 */
+/** E01 목록 항목은 spec의 EventSummary — description·prizes·maxTicketsPerUser는 상세(E02)에만 있다 */
 function toSummary(event: MockEvent, now: number) {
-    const { description: _description, prizes: _prizes, ...summary } = toResponse(event, now);
+    const {
+        description: _description,
+        prizes: _prizes,
+        maxTicketsPerUser: _maxTicketsPerUser,
+        ...summary
+    } = toResponse(event, now);
     void _description;
     void _prizes;
+    void _maxTicketsPerUser;
     return summary;
 }
 

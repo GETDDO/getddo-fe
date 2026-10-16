@@ -864,6 +864,9 @@ export const drawHandlers = [
         if (store.canceled) return conflict('취소된 이벤트의 추첨은 재개할 수 없습니다.');
 
         if (detail.status === 'CONFIRMED') return ok(toExecution(detail), 200);
+        // NO_ENTRIES·NO_CANDIDATES는 확정 종료라 재개하지 않는다
+        if (detail.status === 'NO_ENTRIES' || detail.status === 'NO_CANDIDATES')
+            return conflict('종료된 추첨 실행은 재개할 수 없습니다.');
         if (detail.status === 'FAILED') {
             detail.status = 'PREPARING';
             run.progressFrom = Date.now();
@@ -881,6 +884,9 @@ export const drawHandlers = [
 
         const { detail } = run;
         if (detail.status === 'CONFIRMED') return ok(toExecution(detail), 200);
+        // NO_ENTRIES·NO_CANDIDATES는 확정 종료라 재개하지 않는다
+        if (detail.status === 'NO_ENTRIES' || detail.status === 'NO_CANDIDATES')
+            return conflict('종료된 추첨 실행은 재개할 수 없습니다.');
         if (detail.status === 'FAILED') {
             detail.status = 'PREPARING';
             run.progressFrom = Date.now();

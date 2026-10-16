@@ -41,10 +41,10 @@ export const publishedPrizeSchema = z.object({
 export const publicResultsSchema = z.object({
     eventId: z.string(),
     isPublished: z.boolean(),
-    publishedAt: z.iso.datetime().nullable(),
+    publishedAt: z.iso.datetime({ offset: true }).nullable(),
     revision: z.number().int().nullable(),
-    updatedAt: z.iso.datetime().nullable(),
-    serverTime: z.iso.datetime(),
+    updatedAt: z.iso.datetime({ offset: true }).nullable(),
+    serverTime: z.iso.datetime({ offset: true }),
     displayStatus: drawDisplayStatusSchema,
     prizes: z.array(publishedPrizeSchema),
 });
@@ -79,7 +79,7 @@ export const myResultSchema = z.object({
     isPublished: z.boolean(),
     // 공개 명단이 수정된 횟수 — 공개 전에는 null이다
     revision: z.number().int().nullable(),
-    serverTime: z.iso.datetime(),
+    serverTime: z.iso.datetime({ offset: true }),
 });
 
 export type DrawDisplayStatus = z.infer<typeof drawDisplayStatusSchema>;
@@ -112,9 +112,9 @@ export const drawRunSchema = z.object({
     status: drawRunStatusSchema,
     // 이벤트의 최초 실행 ID — 시간상 직전 실행이나 취소 원본 실행이 아니다
     originalDrawId: z.string().nullable(),
-    startedAt: z.iso.datetime().nullable(),
-    confirmedAt: z.iso.datetime().nullable(),
-    createdAt: z.iso.datetime(),
+    startedAt: z.iso.datetime({ offset: true }).nullable(),
+    confirmedAt: z.iso.datetime({ offset: true }).nullable(),
+    createdAt: z.iso.datetime({ offset: true }),
 });
 
 export const cancellationSummarySchema = z.object({
@@ -123,7 +123,7 @@ export const cancellationSummarySchema = z.object({
     canceledDrawRunId: z.string(),
     canceledBy: z.string(),
     reason: z.string(),
-    canceledAt: z.iso.datetime(),
+    canceledAt: z.iso.datetime({ offset: true }),
 });
 
 export const drawResultSchema = z.object({
@@ -143,13 +143,13 @@ export const drawResultSchema = z.object({
 export const drawRunDetailSchema = drawRunSchema.extend({
     algorithmVersion: z.string().nullable(),
     rulesSnapshot: z.record(z.string(), z.unknown()).nullable(),
-    snapshotFixedAt: z.iso.datetime().nullable(),
+    snapshotFixedAt: z.iso.datetime({ offset: true }).nullable(),
     cancellations: z.array(cancellationSummarySchema),
     results: z.array(drawResultSchema),
     failureCount: z.number().int(),
     lastFailureCode: z.string().nullable(),
     lastFailureMessage: z.string().nullable(),
-    lastFailedAt: z.iso.datetime().nullable(),
+    lastFailedAt: z.iso.datetime({ offset: true }).nullable(),
     lastFailureTraceId: z.string().nullable(),
 });
 
@@ -169,7 +169,7 @@ export const drawVerificationSchema = z.object({
     drawRunId: z.string(),
     passed: z.boolean(),
     checks: z.array(z.object({ code: z.string(), passed: z.boolean(), message: z.string() })),
-    verifiedAt: z.iso.datetime(),
+    verifiedAt: z.iso.datetime({ offset: true }),
     verifiedBy: z.string(),
 });
 
@@ -186,7 +186,7 @@ export const drawConfirmationResultSchema = z.object({
 });
 
 export const drawConfirmationSchema = z.object({
-    confirmedAt: z.iso.datetime(),
+    confirmedAt: z.iso.datetime({ offset: true }),
     results: z.array(drawConfirmationResultSchema),
 });
 

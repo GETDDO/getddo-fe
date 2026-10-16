@@ -23,10 +23,10 @@ export const eventSummaryResponseSchema = z.object({
     eventType: eventTypeSchema,
     weightingEnabled: z.boolean(),
     membershipRule: membershipRuleSchema,
-    startsAt: z.iso.datetime(),
-    endsAt: z.iso.datetime(),
+    startsAt: z.iso.datetime({ offset: true }),
+    endsAt: z.iso.datetime({ offset: true }),
     status: adminEventStatusSchema,
-    serverTime: z.iso.datetime(),
+    serverTime: z.iso.datetime({ offset: true }),
 
     // 아래는 spec에 없는 시연 전용 필드 — 계약 확정 전까지 목업만 채우고 실서버 응답에는 없다
     detailImageUrl: z.string().nullable().optional(),
