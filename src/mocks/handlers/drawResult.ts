@@ -110,7 +110,6 @@ function buildResults(event: MockEvent, now: number): PublicResults {
     return {
         eventId: event.id,
         isPublished,
-        publicationScheduledAt: new Date(scheduledAt).toISOString(),
         // 발표 전에는 공개 정보를 하나도 싣지 않는다 (05-api/drawing.md)
         publishedAt: isPublished ? new Date(scheduledAt).toISOString() : null,
         revision: isPublished ? 1 : null,
@@ -196,7 +195,7 @@ function buildMyResult(event: MockEvent, userId: string, now: number): MyResult 
 
 export const drawResultHandlers = [
     // E08 — 공개 결과 조회
-    http.get(api('/events/:eventId/results'), ({ params }) => {
+    http.get(api('/v1/events/:eventId/results'), ({ params }) => {
         const eventId = String(params.eventId);
         const event = findMockEvent(eventId);
         if (!event) return fail(404, 'EVENT_NOT_FOUND', '이벤트를 찾을 수 없습니다');
@@ -204,7 +203,7 @@ export const drawResultHandlers = [
         return ok(buildResults(event, mockNow().getTime()));
     }),
     // E09 — 본인 결과 조회
-    http.get(api('/events/:eventId/my-result'), ({ params, request }) => {
+    http.get(api('/v1/events/:eventId/my-result'), ({ params, request }) => {
         const eventId = String(params.eventId);
         const event = findMockEvent(eventId);
         if (!event) return fail(404, 'EVENT_NOT_FOUND', '이벤트를 찾을 수 없습니다');

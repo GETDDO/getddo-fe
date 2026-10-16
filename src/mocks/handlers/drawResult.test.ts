@@ -8,7 +8,7 @@ import { IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
 import { VIRTUAL_CLOCK_STORAGE_KEY } from '@shared/lib/virtualClock';
 
 async function results(eventId: string): Promise<PublicResults> {
-    const { data } = await apiClient.get<unknown>(`/events/${eventId}/results`);
+    const { data } = await apiClient.get<unknown>(`/v1/events/${eventId}/results`);
     return publicResultsSchema.parse((data as { data: unknown }).data);
 }
 
@@ -26,6 +26,12 @@ describe('공개 추첨 결과 목업 (E08)', () => {
         expect(data.prizes).toEqual([]);
         expect(data.publishedAt).toBeNull();
         expect(data.revision).toBeNull();
+    });
+
+    // 계약 가드 — 스키마 파싱은 미지 필드를 버리므로 원본 응답으로 확인한다 (ADR-022)
+    it('공개 결과 응답에 발표 예정 시각(publicationScheduledAt)을 싣지 않는다', async () => {
+        const { data } = await apiClient.get<unknown>(`/v1/events/${DRAWN_EVENT_ID}/results`);
+        expect((data as { data: unknown }).data).not.toHaveProperty('publicationScheduledAt');
     });
 
     it('발표 뒤에는 등수 내림차순으로 명단을 준다', async () => {
@@ -84,18 +90,18 @@ const setClock = (at: Date | null) => {
 };
 
 async function myResult(eventId: string): Promise<MyResult> {
-    const { data } = await apiClient.get<unknown>(`/events/${eventId}/my-result`);
+    const { data } = await apiClient.get<unknown>(`/v1/events/${eventId}/my-result`);
     return myResultSchema.parse((data as { data: unknown }).data);
 }
 
 async function endsAtOf(eventId: string): Promise<number> {
-    const { data } = await apiClient.get<unknown>(`/events/${eventId}`);
+    const { data } = await apiClient.get<unknown>(`/v1/events/${eventId}`);
     return new Date((data as { data: { endsAt: string } }).data.endsAt).getTime();
 }
 
 async function enter(eventId: string) {
     await apiClient.post(
-        `/events/${eventId}/entries`,
+        `/v1/events/${eventId}/entries`,
         { tickets: { BRONZE: 1 } },
         { headers: { [IDEMPOTENCY_HEADER]: crypto.randomUUID() } },
     );

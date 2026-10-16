@@ -389,7 +389,7 @@ const isCorrect = (question: MockQuestion, answer: MissionAnswer) => {
 
 export const missionHandlers = [
     // M01 초안 — Page<MissionSummary> 봉투, page·size는 1부터
-    http.get(api('/missions'), ({ request }) => {
+    http.get(api('/v1/missions'), ({ request }) => {
         const url = new URL(request.url);
         const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
         const size = Math.max(1, Number(url.searchParams.get('size')) || 20);
@@ -402,7 +402,7 @@ export const missionHandlers = [
     }),
 
     // M02 초안 — 문항·선택지를 포함한 상세. 정답은 응답하지 않는다
-    http.get(api('/missions/:missionId'), ({ params, request }) => {
+    http.get(api('/v1/missions/:missionId'), ({ params, request }) => {
         const mission = mockMissions.find((m) => m.id === String(params.missionId));
         if (!mission) {
             return fail(404, 'MISSION_NOT_FOUND', '미션을 찾을 수 없습니다');
@@ -411,7 +411,7 @@ export const missionHandlers = [
     }),
 
     // M03 초안 — 멱등키 필수. 같은 키·같은 본문은 처음 결과를 돌려준다
-    http.post(api('/missions/:missionId/submissions'), async ({ params, request }) => {
+    http.post(api('/v1/missions/:missionId/submissions'), async ({ params, request }) => {
         const idempotencyKey = request.headers.get(IDEMPOTENCY_HEADER);
         if (!idempotencyKey) {
             return fail(400, 'COMMON-002', '멱등키가 필요합니다');

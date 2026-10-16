@@ -38,18 +38,18 @@ const headers = (userId: string) => ({ 'X-User-ID': userId });
 const uniqueUser = () => `user-att-${crypto.randomUUID()}`;
 
 const check = (userId: string) =>
-    apiClient.post<{ data: AttendanceReceipt }>('/attendances', undefined, {
+    apiClient.post<{ data: AttendanceReceipt }>('/v1/attendances', undefined, {
         headers: headers(userId),
         validateStatus: () => true,
     });
 
 const today = (userId: string) =>
-    apiClient.get<{ data: AttendanceToday }>('/attendances/today', {
+    apiClient.get<{ data: AttendanceToday }>('/v1/attendances/today', {
         headers: headers(userId),
     });
 
 const month = (userId: string, value?: string) =>
-    apiClient.get<{ data: { month: string; attendanceDates: string[] } }>('/attendances', {
+    apiClient.get<{ data: { month: string; attendanceDates: string[] } }>('/v1/attendances', {
         headers: headers(userId),
         params: value === undefined ? {} : { month: value },
         validateStatus: () => true,
@@ -199,7 +199,7 @@ describe('출석 목업 핸들러', () => {
 
         const { data: beforeB } = await apiClient.get<{
             data: { availableCount: number };
-        }>('/tickets/me', { headers: headers(userB) });
+        }>('/v1/tickets/me', { headers: headers(userB) });
 
         const first = await check(userA);
         expect(first.status).toBe(201);
@@ -207,7 +207,7 @@ describe('출석 목업 핸들러', () => {
         // A의 출석 보상이 B의 보유량을 바꾸지 않는다
         const { data: afterB } = await apiClient.get<{
             data: { availableCount: number };
-        }>('/tickets/me', { headers: headers(userB) });
+        }>('/v1/tickets/me', { headers: headers(userB) });
         expect(afterB.data.availableCount).toBe(beforeB.data.availableCount);
 
         // B도 첫 출석으로 새 보상을 받는다 — A의 출석이 B를 막지 않는다
@@ -215,7 +215,7 @@ describe('출석 목업 핸들러', () => {
         expect(second.status).toBe(201);
         const { data: afterA } = await apiClient.get<{
             data: { availableCount: number };
-        }>('/tickets/me', { headers: headers(userA) });
+        }>('/v1/tickets/me', { headers: headers(userA) });
         expect(afterA.data.availableCount).toBe(beforeB.data.availableCount + 1);
     });
 });

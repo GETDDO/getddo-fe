@@ -223,7 +223,7 @@ function effectiveStatus(item: MockAdminEvent, now: number): AdminEventStatus {
     return item.status;
 }
 
-/** 응답 직렬화 — 내부 카운터를 빼고 계산된 상태·서버 시각·발표 예정을 싣는다 */
+/** 응답 직렬화 — 내부 카운터를 빼고 계산된 상태·서버 시각·자동 추첨 기준을 싣는다 */
 function toAdminResponse(item: MockAdminEvent, now: number) {
     const rest: Partial<MockAdminEvent> = { ...item };
     delete rest.entryCount;
@@ -231,7 +231,7 @@ function toAdminResponse(item: MockAdminEvent, now: number) {
     return {
         ...rest,
         status: effectiveStatus(item, now),
-        publicationScheduledAt: new Date(
+        drawScheduledAt: new Date(
             new Date(item.endsAt).getTime() + ANNOUNCE_DELAY_MS,
         ).toISOString(),
         serverTime: new Date(now).toISOString(),
@@ -442,7 +442,7 @@ const readReason = async (request: Request) => {
 
 export const adminEventHandlers = [
     // AE01 — 목록: keyword/status/eventType/from/to 필터 + Page<AdminEvent> 봉투 (페이지는 1부터)
-    http.get(api('/admin/events'), ({ request }) => {
+    http.get(api('/v1/admin/events'), ({ request }) => {
         const url = new URL(request.url);
         const now = mockNow().getTime();
         const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
@@ -481,14 +481,14 @@ export const adminEventHandlers = [
     }),
 
     // AE02 — 상세
-    http.get(api('/admin/events/:eventId'), ({ params }) => {
+    http.get(api('/v1/admin/events/:eventId'), ({ params }) => {
         const item = findItem(params.eventId);
         if (!item) return fail(404, 'RESOURCE_NOT_FOUND', '이벤트를 찾을 수 없습니다');
         return ok(toAdminResponse(item, mockNow().getTime()));
     }),
 
     // AE03 — 등록: 이벤트와 경품이 함께 성공하거나 함께 실패한다
-    http.post(api('/admin/events'), async ({ request }) => {
+    http.post(api('/v1/admin/events'), async ({ request }) => {
         const body = (await request.json().catch(() => null)) as EventWriteBody | null;
         if (!body) return fail(400, 'COMMON-002', '요청 본문이 올바르지 않습니다');
         const error = validateWriteBody(body);
@@ -503,7 +503,7 @@ export const adminEventHandlers = [
     // AE04 — 수정은 실서버로 전환됐다 (GD-188). 핸들러를 두지 않아 bypass로 실제 API에 닿는다
 
     // AE05 — 삭제: 시작 전이며 응모 이력이 없을 때만 가능하다
-    http.delete(api('/admin/events/:eventId'), ({ params }) => {
+    http.delete(api('/v1/admin/events/:eventId'), ({ params }) => {
         const item = findItem(params.eventId);
         if (!item) return fail(404, 'RESOURCE_NOT_FOUND', '이벤트를 찾을 수 없습니다');
         if (effectiveStatus(item, mockNow().getTime()) !== 'SCHEDULED') {
@@ -521,7 +521,7 @@ export const adminEventHandlers = [
     }),
 
     // AE08 — 취소: 상태와 관계없이 허용. 취소와 대상 차감분 반환이 함께 완료되어야 성공이다
-    http.post(api('/admin/events/:eventId/cancel'), async ({ params, request }) => {
+    http.post(api('/v1/admin/events/:eventId/cancel'), async ({ params, request }) => {
         const item = findItem(params.eventId);
         if (!item) return fail(404, 'RESOURCE_NOT_FOUND', '이벤트를 찾을 수 없습니다');
         const reason = await readReason(request);

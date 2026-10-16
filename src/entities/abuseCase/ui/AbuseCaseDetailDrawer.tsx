@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { formatKst } from '@shared/lib/date';
 import { Button } from '@shared/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@shared/ui/sheet';
+import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 
 import type { AbuseCase } from '../model/types';
 
@@ -82,13 +83,13 @@ export function AbuseCaseDetailDrawer({
                                   </div>
                               )
                             : isPending && (
-                                  <p className="text-body-sm text-fg-tertiary">
-                                      상세 정보를 불러오는 중…
-                                  </p>
+                                  <LoadingBlock label="상세 정보를 불러오는 중…">
+                                      <SkeletonRows rows={2} />
+                                  </LoadingBlock>
                               )}
                         {isError && (
                             <div className="flex items-center gap-3">
-                                <p className="text-destructive text-body-sm">
+                                <p className="text-semantic-error-strong text-body-sm">
                                     상세 정보를 불러오지 못했습니다.
                                 </p>
                                 <Button

@@ -15,8 +15,8 @@ import { SectionCard } from './SectionCard';
 /** 미리보기 줄 수 — 나머지는 "전체 보기"(/my-entries)에서 본다 */
 const PREVIEW_COUNT = 4;
 
-/** 줄 보조 문구 — "09.17 · 겟또타임 · 응모권 1장 · 09.17 20:05 발표" (발표 시각은 발표 대기일 때만) */
-function metaOf({ entry, event, isTimeRaffle, result }: MyEntryRow) {
+/** 줄 보조 문구 — "09.17 · 겟또타임 · 응모권 1장 · 결과 발표 대기" (대기 표시는 결과 공개 전만) */
+function metaOf({ entry, isTimeRaffle, result }: MyEntryRow) {
     const parts = [
         formatKstDot(entry.requestedAt),
         isTimeRaffle ? '겟또타임' : '이벤트',
@@ -24,8 +24,8 @@ function metaOf({ entry, event, isTimeRaffle, result }: MyEntryRow) {
             ? '응모권 없이 참여'
             : `응모권 ${formatNumber(entry.deductedTicketCount)}장`,
     ];
-    if (result === 'PENDING' && event?.publicationScheduledAt) {
-        parts.push(`${formatKstDot(event.publicationScheduledAt, true)} 발표`);
+    if (result === 'PENDING') {
+        parts.push('결과 발표 대기');
     }
     return parts.join(' · ');
 }

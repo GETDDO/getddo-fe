@@ -1,0 +1,18 @@
+{
+    "build": {
+        "env": {
+            "VITE_API_BASE_URL": "/api",
+            "VITE_ENABLE_MSW": "true"
+        }
+    },
+    "rewrites": [
+        {
+            "source": "/api/:path*",
+            "destination": "https://dzc8oneey9mmx.cloudfront.net/api/:path*"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
+}

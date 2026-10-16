@@ -347,7 +347,7 @@ export function recordMockTicketRefund(
 
 export const ticketHandlers = [
     // T01 — MyTickets{availableCount, countByGrade, holdings, serverTime}
-    http.get(api('/tickets/me'), ({ request }) => {
+    http.get(api('/v1/tickets/me'), ({ request }) => {
         const state = stateFor(userIdOf(request));
         syncExpired(state);
         const now = mockNow().getTime();
@@ -384,7 +384,7 @@ export const ticketHandlers = [
         });
     }),
     // T02 — Cursor<TicketHistory>. createdAt DESC, id DESC 순서의 커서 페이지다
-    http.get(api('/tickets/histories/me'), ({ request }) => {
+    http.get(api('/v1/tickets/histories/me'), ({ request }) => {
         const state = stateFor(userIdOf(request));
         syncExpired(state);
         const url = new URL(request.url);

@@ -11,7 +11,7 @@ const auditLogPageSchema = pageSchema(auditLogSummarySchema);
 export const AUDIT_KEY = ['admin', 'audit-logs'] as const;
 
 // 감사 로그 엔드포인트 — AU01·AU02 (getddo-spec 05-api/audit.md 초안, 조회 전용)
-export const AUDIT_LOGS_API_PATH = '/admin/audit-logs';
+export const AUDIT_LOGS_API_PATH = '/v1/admin/audit-logs';
 export const auditLogApiPath = (auditLogId: string) => `${AUDIT_LOGS_API_PATH}/${auditLogId}`;
 
 export interface AuditLogsParams {

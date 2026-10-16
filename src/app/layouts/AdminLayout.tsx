@@ -32,10 +32,10 @@ export function AdminLayout() {
                             end={end}
                             className={({ isActive }) =>
                                 cn(
-                                    'text-subhead flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors',
+                                    'text-subhead focus-visible:ring-fg-inverse flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors focus-visible:ring-2 focus-visible:outline-none',
                                     isActive
                                         ? 'bg-surface-inverse-muted text-fg-inverse'
-                                        : 'text-fg-secondary hover:bg-surface-sunken',
+                                        : 'text-fg-inverse/75 hover:bg-surface-inverse-muted hover:text-fg-inverse',
                                 )
                             }
                         >
@@ -47,7 +47,7 @@ export function AdminLayout() {
                 <div className="border-border border-t p-3">
                     <NavLink
                         to="/"
-                        className="text-body-sm text-fg-tertiary hover:bg-surface-sunken flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors"
+                        className="text-body-sm text-fg-inverse/60 hover:bg-surface-inverse-muted hover:text-fg-inverse focus-visible:ring-fg-inverse flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
                     >
                         사용자 화면으로
                     </NavLink>
@@ -70,10 +70,10 @@ export function AdminLayout() {
                             end={end}
                             className={({ isActive }) =>
                                 cn(
-                                    'text-body-sm rounded-lg px-3 py-1.5 whitespace-nowrap transition-colors',
+                                    'text-body-sm focus-visible:ring-border-focus rounded-lg px-3 py-1.5 whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none',
                                     isActive
                                         ? 'bg-surface-inverse text-fg-inverse font-medium'
-                                        : 'text-fg-secondary hover:bg-surface-sunken',
+                                        : 'text-fg-secondary hover:bg-surface-pressed hover:text-fg-primary',
                                 )
                             }
                         >
@@ -82,7 +82,7 @@ export function AdminLayout() {
                     ))}
                     <NavLink
                         to="/"
-                        className="text-body-sm text-fg-tertiary hover:bg-surface-sunken ml-auto rounded-lg px-3 py-1.5 whitespace-nowrap transition-colors"
+                        className="text-body-sm text-fg-secondary hover:bg-surface-pressed hover:text-fg-primary focus-visible:ring-border-focus ml-auto rounded-lg px-3 py-1.5 whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none"
                     >
                         사용자 화면으로
                     </NavLink>

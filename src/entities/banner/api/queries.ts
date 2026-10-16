@@ -13,7 +13,7 @@ export const adminBannerListSchema = envelopeSchema(z.array(adminBannerSchema));
 export const ADMIN_BANNERS_KEY = ['admin', 'banners'] as const;
 
 // 관리자 배너 엔드포인트 — AB01~AB05 (getddo-spec 05-api/banner.md 초안)
-export const ADMIN_BANNERS_API_PATH = '/admin/banners';
+export const ADMIN_BANNERS_API_PATH = '/v1/admin/banners';
 export const adminBannerApiPath = (bannerId: string) => `${ADMIN_BANNERS_API_PATH}/${bannerId}`;
 export const ADMIN_BANNERS_ORDER_API_PATH = `${ADMIN_BANNERS_API_PATH}/order`;
 

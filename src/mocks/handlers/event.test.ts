@@ -4,19 +4,22 @@ import type { EventStatus } from '@entities/event';
 
 import { apiClient } from '@shared/api/client';
 
+import { ANNOUNCE_DELAY_MS } from './event';
+
 interface EventResponse {
     id: string;
     title: string;
     status: EventStatus;
     startsAt: string;
     endsAt: string;
-    publicationScheduledAt: string;
     isTimeRaffle?: boolean;
 }
 
 // 목업 이벤트가 페이지 기본값(20)보다 많다 — 시연 플로우용 래플까지 모두 받도록 한 번에 넉넉히 요청한다
 async function events() {
-    const { data } = await apiClient.get<{ data: { items: EventResponse[] } }>('/events?size=100');
+    const { data } = await apiClient.get<{ data: { items: EventResponse[] } }>(
+        '/v1/events?size=100',
+    );
     return data.data.items;
 }
 
@@ -27,14 +30,13 @@ describe('이벤트 목업 핸들러', () => {
         for (const event of await events()) {
             const starts = new Date(event.startsAt).getTime();
             const ends = new Date(event.endsAt).getTime();
-            const announces = new Date(event.publicationScheduledAt).getTime();
 
             const expected: EventStatus =
                 now < starts
                     ? 'upcoming'
                     : now < ends
                       ? 'open'
-                      : now < announces
+                      : now < ends + ANNOUNCE_DELAY_MS
                         ? 'closed'
                         : 'drawn';
 
@@ -42,11 +44,10 @@ describe('이벤트 목업 핸들러', () => {
         }
     });
 
-    it('발표 예정 시각은 마감 + 5분이다 (ADR-009)', async () => {
+    // 계약 가드 — 발표 예정 시각은 ADR-022로 모든 이벤트 응답에서 제거됐다 (05-api/event.md)
+    it('이벤트 응답에 발표 예정 시각(publicationScheduledAt)을 싣지 않는다', async () => {
         for (const event of await events()) {
-            const gap =
-                new Date(event.publicationScheduledAt).getTime() - new Date(event.endsAt).getTime();
-            expect(gap, event.id).toBe(5 * 60 * 1000);
+            expect(event, event.id).not.toHaveProperty('publicationScheduledAt');
         }
     });
 

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 
 import { useDrawCandidates } from '@entities/drawResult';
+import { Button } from '@shared/ui/button';
+import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
 import { PagedFooter } from './PagedFooter';
@@ -22,7 +24,10 @@ const gradeSummary = (snapshot: Record<string, unknown>) =>
 // AD03 — 이 실행이 실제 사용한 후보 명단 (실행 시점에 고정된 스냅샷)
 export function DrawCandidatesSection({ drawId }: { drawId: string }) {
     const [page, setPage] = useState(1);
-    const { data, isPending, isError } = useDrawCandidates(drawId, { page, size: PAGE_SIZE });
+    const { data, isPending, isError, refetch } = useDrawCandidates(drawId, {
+        page,
+        size: PAGE_SIZE,
+    });
 
     return (
         <section
@@ -40,11 +45,20 @@ export function DrawCandidatesSection({ drawId }: { drawId: string }) {
                 </p>
             </div>
 
-            {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {isPending && (
+                <LoadingBlock>
+                    <SkeletonRows rows={4} />
+                </LoadingBlock>
+            )}
             {isError && (
-                <p role="alert" className="text-destructive text-body-sm">
-                    후보 명단을 불러오지 못했습니다.
-                </p>
+                <div className="flex items-center gap-3" role="alert">
+                    <p className="text-semantic-error-strong text-body-sm">
+                        후보 명단을 불러오지 못했습니다.
+                    </p>
+                    <Button size="sm" variant="secondary" onClick={() => void refetch()}>
+                        다시 시도
+                    </Button>
+                </div>
             )}
             {data && data.items.length === 0 && (
                 <p className="text-body-sm text-fg-tertiary">후보가 없습니다.</p>

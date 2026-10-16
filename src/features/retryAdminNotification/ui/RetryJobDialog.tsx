@@ -62,7 +62,7 @@ export function RetryJobDialog({ job, onOpenChange }: RetryJobDialogProps) {
                 </DialogHeader>
 
                 {retryJob.isError && (
-                    <p role="alert" className="text-destructive text-body-sm">
+                    <p role="alert" className="text-semantic-error-strong text-body-sm">
                         {getErrorMessage(
                             retryJob.error,
                             '복구를 접수하지 못했습니다. 다시 시도해주세요.',

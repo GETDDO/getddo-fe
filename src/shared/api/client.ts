@@ -43,7 +43,8 @@ export function parseRetryAfter(value: unknown, now = Date.now()): number | unde
 export const apiClient = axios.create({
     baseURL: env.apiBaseUrl,
     timeout: 10_000,
-    withCredentials: true,
+    // 쿠키 기반 인증을 쓰지 않는다 — 크로스오리진 연결 시 BE의 allow-credentials=false와 충돌한다
+    withCredentials: false,
 });
 
 // FE-BE 에러 코드 체계가 확정되면(docs/product-context.md '프론트엔드 연동 계약') 이 인터셉터에 공통 매핑을 추가한다

@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 
 import type { MyEntryRow } from '@widgets/myEntryRows';
 
-import { formatKst, formatKstDot, isSameKstDate, KST_HOUR_MINUTE } from '@shared/lib/date';
+import { formatKst, formatKstDot } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
@@ -85,11 +85,6 @@ export function MyEntriesPage() {
     const pending = scoped.filter((row) => row.result === 'PENDING');
     const won = scoped.filter((row) => row.result === 'WON');
     const lost = scoped.filter((row) => row.result === 'LOST');
-    // 가장 빠른 발표 — 예정 시각이 남은 발표 대기 응모 중 가장 이른 것
-    const nextAnnounce = pending
-        .map((row) => row.event?.publicationScheduledAt)
-        .filter((at): at is string => !!at && new Date(at).getTime() > now.getTime())
-        .sort()[0];
     const lastWonAt = latestWonAt(won);
     const lostTickets = lost.reduce((sum, row) => sum + row.entry.deductedTicketCount, 0);
 
@@ -99,13 +94,10 @@ export function MyEntriesPage() {
             value: 'PENDING',
             label: '발표 대기',
             count: pending.length,
-            note: nextAnnounce
-                ? `가장 빠른 발표 ${
-                      isSameKstDate(nextAnnounce, now)
-                          ? `오늘 ${formatKst(nextAnnounce, KST_HOUR_MINUTE)}`
-                          : formatKstDot(nextAnnounce, true)
-                  }`
-                : '발표를 기다리는 응모가 없어요',
+            note:
+                pending.length > 0
+                    ? '결과 발표를 기다리고 있어요'
+                    : '발표를 기다리는 응모가 없어요',
         },
         {
             value: 'WON',
@@ -221,7 +213,7 @@ export function MyEntriesPage() {
                         </h2>
                         <ul className="divide-border-default divide-y">
                             {monthRows.map((row) => (
-                                <EntryTableRow key={row.entry.id} row={row} now={now} />
+                                <EntryTableRow key={row.entry.id} row={row} />
                             ))}
                         </ul>
                     </div>

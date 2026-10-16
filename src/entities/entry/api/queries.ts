@@ -17,7 +17,7 @@ const myEntryPageSchema = z.object({
 
 export const ENTRIES_KEY = ['entries'] as const;
 
-export const MY_ENTRIES_API_PATH = '/users/me/entries';
+export const MY_ENTRIES_API_PATH = '/v1/users/me/entries';
 
 const ENTRIES_PAGE_SIZE = 50;
 
@@ -44,8 +44,8 @@ export function useMyEntries() {
     });
 }
 
-export const entryStatisticsApiPath = (eventId: string) => `/events/${eventId}/statistics`;
-export const entryEligibilityApiPath = (eventId: string) => `/events/${eventId}/eligibility`;
+export const entryStatisticsApiPath = (eventId: string) => `/v1/events/${eventId}/statistics`;
+export const entryEligibilityApiPath = (eventId: string) => `/v1/events/${eventId}/eligibility`;
 
 interface EntryStatisticsOptions {
     /** 응모 진행 중(open) 이벤트인가 — true일 때만 30초 폴링한다 (ADR-0007) */

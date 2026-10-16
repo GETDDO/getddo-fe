@@ -291,7 +291,7 @@ const newestFirst =
 
 export const adminTicketHandlers = [
     // AO03 — 지급 이력. missionId를 쓰면 MISSION 행만 반환한다
-    http.get(api('/admin/ticket-grants'), ({ request }) => {
+    http.get(api('/v1/admin/ticket-grants'), ({ request }) => {
         const params = new URL(request.url).searchParams;
         const range = parseRange(params);
         if (!range) return badQuery();
@@ -335,7 +335,7 @@ export const adminTicketHandlers = [
     }),
 
     // AO04 — 사용자별 정합성. 없는 사용자는 404
-    http.get(api('/admin/users/:userId/tickets/consistency'), ({ params }) => {
+    http.get(api('/v1/admin/users/:userId/tickets/consistency'), ({ params }) => {
         const userId = String(params.userId);
         if (!MOCK_ADMIN_USERS.some((u) => u.id === userId)) return userNotFound();
         const now = mockNow();
@@ -369,7 +369,7 @@ export const adminTicketHandlers = [
     }),
 
     // AO09 — 전체 불일치 목록. 불일치한 응모권만 담고 요청마다 계산한다
-    http.get(api('/admin/tickets/inconsistencies'), ({ request }) => {
+    http.get(api('/v1/admin/tickets/inconsistencies'), ({ request }) => {
         const params = new URL(request.url).searchParams;
         const userId = params.get('userId');
         const checkedAt = mockNow().toISOString();
@@ -385,7 +385,7 @@ export const adminTicketHandlers = [
     }),
 
     // AO05 — 전체 이력
-    http.get(api('/admin/ticket-histories'), ({ request }) => {
+    http.get(api('/v1/admin/ticket-histories'), ({ request }) => {
         const params = new URL(request.url).searchParams;
         const range = parseRange(params);
         if (!range) return badQuery();
@@ -410,7 +410,7 @@ export const adminTicketHandlers = [
     }),
 
     // AO08 — 반환 이력. 실서버는 이벤트 취소→반환 연결 전까지 빈 목록이지만 목업은 데모용 샘플을 둔다
-    http.get(api('/admin/ticket-refunds'), ({ request }) => {
+    http.get(api('/v1/admin/ticket-refunds'), ({ request }) => {
         const params = new URL(request.url).searchParams;
         const range = parseRange(params);
         if (!range) return badQuery();

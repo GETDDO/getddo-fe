@@ -1,12 +1,9 @@
-import { useEffect, useState } from 'react';
-
 import type { Event } from '@entities/event';
 
 import shopCounter from '@shared/assets/shop/shop-counter.jpg';
 import shopWall from '@shared/assets/shop/shop-wall.jpg';
 import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
-import { useVirtualClock } from '@shared/lib/virtualClock';
 import { StepTile } from '@shared/ui/step-tile';
 import { TicketWallet } from '@widgets/ticketWallet';
 
@@ -19,7 +16,7 @@ import { RAFFLE_SECTION_IDS } from '../model/sectionIds';
 interface TimeRaffleHeroProps {
     live: Event[];
     upcoming: Event[];
-    /** 마감했거나 발표까지 끝난 래플 — '오늘 발표' 집계에 쓴다 */
+    /** 마감했거나 발표까지 끝난 래플 — '발표 대기' 집계에 쓴다 */
     closed: Event[];
     now: Date;
     /** 진행 칸을 눌렀을 때 — 지금 보이는 내용 칸에 그 섹션이 없으면 페이지가 칸을 바꾼 뒤 내려간다 */
@@ -136,24 +133,6 @@ export function TimeRaffleHero({
     );
 }
 
-/** 발표 예정 시각을 지났는지 판정하려면 흘러가는 시각이 필요하다 — 분 단위면 충분하다 */
-const ANNOUNCE_TICK_MS = 30 * 1000;
-
-function useTickingNow(): Date {
-    const { now } = useVirtualClock();
-    const [value, setValue] = useState(() => now());
-
-    useEffect(() => {
-        const update = () => setValue(now());
-        // 가상 시계를 옮기면 now가 새로 내려온다 — 다음 주기를 기다리지 않고 바로 맞춘다
-        update();
-        const id = setInterval(update, ANNOUNCE_TICK_MS);
-        return () => clearInterval(id);
-    }, [now]);
-
-    return value;
-}
-
 /** 진행 칸 하나 — 개수와 다음 시각 한 줄. 미션과 달리 아이콘 없이 숫자만 둔다. 진행 중은 "지금" 신호로 마젠타 점을 붙인다 */
 function StepCard({
     label,
@@ -185,10 +164,10 @@ function StepCard({
 }
 
 /**
- * 오늘 발표되는 래플 수.
+ * 발표를 기다리는 래플 수.
  *
- * 발표 예정 시각이 오늘인 래플을 센다. 예정 시각은 '원래 예정'이라 실제 공개는 늦을 수 있으므로
- * 아직 발표되지 않은 것 중 가장 이른 시각만 알려 주고, 새 시각을 약속하지 않는다.
+ * 서버가 발표 예정 시각을 주지 않으므로(ADR-022) '오늘 몇 시 발표'는 셀 수 없다 —
+ * 마감됐고 아직 공개 전인 래플(status closed)을 센다.
  */
 function AnnouncementStep({
     closed,
@@ -197,42 +176,20 @@ function AnnouncementStep({
     closed: Event[];
     onSelect: (targetId: string) => void;
 }) {
-    // 마운트 시각으로 고정하면 가상 시계가 자정을 넘기거나 화면을 오래 열어 둘 때 '오늘'이 어긋난다
-    const now = useTickingNow();
-
-    const today = closed.filter(
-        (event) =>
-            event.publicationScheduledAt != null &&
-            formatKst(event.publicationScheduledAt, { dateStyle: 'short' }) ===
-                formatKst(now, { dateStyle: 'short' }),
-    );
-    // 예정 시각이 이미 지났는데 아직 발표되지 않은 건은 '몇 시 발표'로 적을 수 없다 —
-    // 그 시각은 틀린 약속이고, 새 시각을 임의로 만들지 않는다 (05-api/drawing.md)
-    const waiting = today
-        .filter(
-            (event) =>
-                event.status !== 'drawn' &&
-                new Date(event.publicationScheduledAt ?? 0).getTime() > now.getTime(),
-        )
-        .sort(
-            (a, b) =>
-                new Date(a.publicationScheduledAt ?? 0).getTime() -
-                new Date(b.publicationScheduledAt ?? 0).getTime(),
-        );
-    const next = waiting[0];
+    const waiting = closed.filter((event) => event.status === 'closed');
 
     return (
         <StepCard
-            label="오늘 발표"
-            count={today.length}
+            label="발표 대기"
+            count={waiting.length}
             targetId={RAFFLE_SECTION_IDS.closed}
             onSelect={onSelect}
             hint={
-                next?.publicationScheduledAt
-                    ? `${formatNumber(waiting.length)}개는 ${formatKst(next.publicationScheduledAt, KST_HOUR_MINUTE)} 발표`
-                    : today.length > 0
+                waiting.length > 0
+                    ? '결과 발표를 기다리고 있어요'
+                    : closed.length > 0
                       ? '모두 발표 완료'
-                      : '오늘 발표 없음'
+                      : '발표 대기 래플 없음'
             }
         />
     );

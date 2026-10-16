@@ -59,7 +59,7 @@ export function RetryDeliveryDialog({ notification, onOpenChange }: RetryDeliver
                 </DialogHeader>
 
                 {retryDelivery.isError && (
-                    <p role="alert" className="text-destructive text-body-sm">
+                    <p role="alert" className="text-semantic-error-strong text-body-sm">
                         {getErrorMessage(
                             retryDelivery.error,
                             '복구를 접수하지 못했습니다. 다시 시도해주세요.',

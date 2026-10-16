@@ -4,10 +4,13 @@ import type { AbuseCase } from '@entities/abuseCase';
 
 import { AbuseCaseDetailDrawer, AbuseCaseTable, useAbuseCases } from '@entities/abuseCase';
 import { kstDateStartUtcIso, kstNextDateStartUtcIso } from '@shared/lib/date';
+import { isDateRangeOrdered } from '@shared/lib/filterConstants';
 import { Button } from '@shared/ui/button';
+import { DateRangeFilter } from '@shared/ui/filter-fields';
 import { Input } from '@shared/ui/input';
 import { Pager } from '@shared/ui/pager';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
+import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
 
 const PAGE_SIZE = 20;
 
@@ -31,9 +34,16 @@ export function AdminAbuseCasesPage() {
     const [from, setFrom] = useState('');
     const [to, setTo] = useState('');
     const [sourceType, setSourceType] = useState('all');
+    const [rangeError, setRangeError] = useState(false);
     const [selected, setSelected] = useState<AbuseCase | null>(null);
 
-    const { data, isPending, isError } = useAbuseCases({
+    // 검색 버튼으로 확정할 값을 미리 계산해 입력값과 적용값의 차이(미적용 변경)를 잡는다
+    const draftFrom = fromInput ? kstDateStartUtcIso(fromInput) : '';
+    const draftTo = toInput ? kstNextDateStartUtcIso(toInput) : '';
+    const hasPendingDraft = userIdInput.trim() !== userId || draftFrom !== from || draftTo !== to;
+    const hasAppliedFilters = userId !== '' || from !== '' || to !== '' || sourceType !== 'all';
+
+    const { data, isPending, isError, isFetching, refetch } = useAbuseCases({
         page,
         size: PAGE_SIZE,
         userId: userId || undefined,
@@ -44,17 +54,33 @@ export function AdminAbuseCasesPage() {
 
     const totalPages = data ? Math.max(1, Math.ceil(data.totalElements / data.size)) : 0;
     const resetPage = () => setPage(1);
+    const resetFilters = () => {
+        setUserIdInput('');
+        setUserId('');
+        setFromInput('');
+        setToInput('');
+        setFrom('');
+        setTo('');
+        setSourceType('all');
+        setRangeError(false);
+        setPage(1);
+    };
 
     return (
         <div className="flex max-w-280 flex-col gap-6 pr-10 pb-10">
             <div className="flex flex-wrap items-center gap-3">
                 <form
-                    className="flex gap-2"
+                    className="flex flex-wrap items-center gap-2"
                     onSubmit={(e) => {
                         e.preventDefault();
+                        if (!isDateRangeOrdered(fromInput, toInput)) {
+                            setRangeError(true);
+                            return;
+                        }
+                        setRangeError(false);
                         setUserId(userIdInput.trim());
-                        setFrom(fromInput ? kstDateStartUtcIso(fromInput) : '');
-                        setTo(toInput ? kstNextDateStartUtcIso(toInput) : '');
+                        setFrom(draftFrom);
+                        setTo(draftTo);
                         resetPage();
                     }}
                 >
@@ -65,23 +91,19 @@ export function AdminAbuseCasesPage() {
                         className="w-64"
                         aria-label="사용자 검색"
                     />
-                    <Input
-                        type="date"
-                        value={fromInput}
-                        onChange={(e) => setFromInput(e.target.value)}
-                        className="w-40"
-                        aria-label="시작일 필터"
-                    />
-                    <span className="text-fg-tertiary self-center">~</span>
-                    <Input
-                        type="date"
-                        value={toInput}
-                        onChange={(e) => setToInput(e.target.value)}
-                        className="w-40"
-                        aria-label="종료일 필터"
+                    <DateRangeFilter
+                        from={fromInput}
+                        to={toInput}
+                        onFromChange={setFromInput}
+                        onToChange={setToInput}
+                        basis="발생일"
+                        error={rangeError ? '시작일이 종료일보다 늦습니다.' : null}
                     />
                     <Button type="submit" variant="secondary">
                         검색
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={resetFilters}>
+                        초기화
                     </Button>
                 </form>
 
@@ -105,19 +127,55 @@ export function AdminAbuseCasesPage() {
                 </Select>
             </div>
 
-            {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {hasPendingDraft && (
+                <p className="text-fg-tertiary text-caption -mt-4">
+                    변경한 조건은 검색을 눌러야 적용됩니다.
+                </p>
+            )}
+
+            {isPending && (
+                <LoadingBlock>
+                    <TableSkeleton />
+                </LoadingBlock>
+            )}
             {isError && (
-                <p className="text-destructive text-body-sm">차단 내역을 불러오지 못했습니다.</p>
+                <div className="flex items-center gap-3" role="alert">
+                    <p className="text-semantic-error-strong text-body-sm">
+                        차단 내역을 불러오지 못했습니다.
+                    </p>
+                    <Button size="sm" variant="secondary" onClick={() => void refetch()}>
+                        다시 시도
+                    </Button>
+                </div>
             )}
             {!isPending && !isError && data && data.items.length === 0 && (
-                <p className="text-fg-tertiary text-body-sm py-6">해당하는 차단 내역이 없습니다.</p>
+                <div className="flex flex-col gap-2 py-6">
+                    <p className="text-fg-secondary text-body-sm">해당하는 차단 내역이 없습니다.</p>
+                    {hasAppliedFilters && (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="self-start"
+                            onClick={resetFilters}
+                        >
+                            검색 조건 초기화
+                        </Button>
+                    )}
+                </div>
+            )}
+            {!isPending && !isError && isFetching && (
+                <p role="status" className="text-fg-tertiary text-caption -mt-4">
+                    목록을 새로 확인하는 중…
+                </p>
             )}
             {data && data.items.length > 0 && (
                 <AbuseCaseTable cases={data.items} onRowClick={setSelected} />
             )}
             {data && data.totalElements > 0 && (
                 <div className="flex items-center justify-between">
-                    <span className="text-body-sm text-fg-tertiary">총 {data.totalElements}건</span>
+                    <span className="text-body-sm text-fg-secondary">
+                        총 {data.totalElements}건
+                    </span>
                     <Pager
                         current={page - 1}
                         total={totalPages}

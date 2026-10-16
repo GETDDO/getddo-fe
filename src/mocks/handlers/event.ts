@@ -983,16 +983,14 @@ export function mockEventEffectiveStatus(event: MockEvent): EventStatus {
 }
 
 /**
- * 목 이벤트를 응답 모양으로 바꾼다 — 상태를 지금 기준으로 다시 계산하고 발표 예정 시각을 싣는다.
- * 발표 카운트다운은 서버가 준 시각으로 계산해야 새로고침에 리셋되지 않으므로(docs/CONTEXT.md),
- * 화면에서 마감 + 5분을 더하지 않도록 목업이 서버 몫을 대신 계산한다.
+ * 목 이벤트를 응답 모양으로 바꾼다 — 상태를 지금 기준으로 다시 계산한다.
+ * 발표 예정 시각은 ADR-022로 계약에서 빠졌으므로 응답에 싣지 않는다.
  */
 function toResponse(event: MockEvent, now: number) {
     // 응모 현황은 E03 전용이므로 이벤트 응답에서 뺀다
     const { participantCount, usedTicketCount, ...rest } = event;
     void participantCount;
     void usedTicketCount;
-    const ends = new Date(event.endsAt).getTime();
     const rule = entryRuleOf(event);
     return {
         ...rest,
@@ -1003,13 +1001,12 @@ function toResponse(event: MockEvent, now: number) {
             membershipNote: `${MEMBERSHIP_LABEL[rule.membershipRule]} 등급 이상 응모할 수 있어요`,
         },
         status: statusAt(event.startsAt, event.endsAt, now),
-        publicationScheduledAt: new Date(ends + ANNOUNCE_DELAY_MS).toISOString(),
     };
 }
 
 export const eventHandlers = [
     // E01 초안 — Page 봉투 + status 필터. 목업 항목은 시연 표시용 필드(참여자 수·내 응모 등)를 더 싣는다
-    http.get(api('/events'), ({ request }) => {
+    http.get(api('/v1/events'), ({ request }) => {
         const url = new URL(request.url);
         const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
         const size = Math.max(1, Number(url.searchParams.get('size')) || 20);
@@ -1025,7 +1022,7 @@ export const eventHandlers = [
             totalElements: items.length,
         });
     }),
-    http.get(api('/events/:eventId'), ({ params }) => {
+    http.get(api('/v1/events/:eventId'), ({ params }) => {
         const event = mockEvents.find((e) => e.id === params.eventId);
         if (!event) {
             return fail(404, 'RESOURCE_NOT_FOUND', '이벤트를 찾을 수 없습니다');

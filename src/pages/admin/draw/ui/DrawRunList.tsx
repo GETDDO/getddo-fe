@@ -9,6 +9,7 @@ import {
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
+import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
 import { PagedFooter } from './PagedFooter';
@@ -30,11 +31,17 @@ export function DrawRunList({ eventId, selectedId, onSelect }: DrawRunListProps)
         size: DRAW_RUN_PAGE_SIZE,
     });
 
-    if (isPending) return <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>;
+    if (isPending) {
+        return (
+            <LoadingBlock>
+                <TableSkeleton rows={4} />
+            </LoadingBlock>
+        );
+    }
     if (isError) {
         return (
             <div className="flex items-center gap-3">
-                <p role="alert" className="text-destructive text-body-sm">
+                <p role="alert" className="text-semantic-error-strong text-body-sm">
                     추첨 실행 목록을 불러오지 못했습니다.
                 </p>
                 <Button size="sm" variant="secondary" onClick={() => void refetch()}>
@@ -45,7 +52,7 @@ export function DrawRunList({ eventId, selectedId, onSelect }: DrawRunListProps)
     }
     if (data.items.length === 0) {
         return (
-            <p className="text-fg-tertiary text-body-sm py-4">
+            <p className="text-fg-secondary text-body-sm py-4">
                 아직 추첨 실행이 없습니다. 마감 후 자동 추첨이 시작되면 이곳에 표시됩니다.
             </p>
         );
@@ -103,14 +110,14 @@ export function DrawRunList({ eventId, selectedId, onSelect }: DrawRunListProps)
                                     key={run.id}
                                     aria-selected={selected}
                                     className={cn(
-                                        'hover:bg-surface-canvas',
+                                        'hover:bg-surface-sunken focus-within:bg-surface-sunken',
                                         selected && 'bg-surface-canvas',
                                     )}
                                 >
                                     <TableCell className="text-body-sm px-4 py-3 font-medium">
                                         {run.runNumber}회차
                                         {run.originalDrawId === null && (
-                                            <span className="text-caption text-fg-tertiary ml-1">
+                                            <span className="text-caption text-fg-secondary ml-1">
                                                 (최초)
                                             </span>
                                         )}

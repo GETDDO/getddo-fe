@@ -182,7 +182,7 @@ const toSummary = ({
 
 export const auditHandlers = [
     // AU01 — 목록: actorId/action/targetType/targetId 필터 + 기간 [from,to) + Page 봉투 (페이지는 1부터)
-    http.get(api('/admin/audit-logs'), ({ request }) => {
+    http.get(api('/v1/admin/audit-logs'), ({ request }) => {
         const url = new URL(request.url);
         const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
         const size = Math.max(1, Number(url.searchParams.get('size')) || 20);
@@ -214,7 +214,7 @@ export const auditHandlers = [
     }),
 
     // AU02 — 상세: Summary + beforeData/afterData
-    http.get(api('/admin/audit-logs/:auditLogId'), ({ params }) => {
+    http.get(api('/v1/admin/audit-logs/:auditLogId'), ({ params }) => {
         const log = auditLogs.find((l) => l.id === params.auditLogId);
         if (!log) return fail(404, 'RESOURCE_NOT_FOUND', '감사 로그를 찾을 수 없습니다');
         return ok(log);

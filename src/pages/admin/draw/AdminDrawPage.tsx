@@ -4,6 +4,7 @@ import type { AdminEventStatus } from '@entities/event';
 
 import { ADMIN_STATUS_META, useAdminEvents } from '@entities/event';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
+import { CardSkeleton, LoadingBlock } from '@shared/ui/skeleton';
 
 import { DrawEventPanel } from './ui/DrawEventPanel';
 import { PolicyPendingNotice } from './ui/PolicyPendingNotice';
@@ -55,20 +56,24 @@ export function AdminDrawPage() {
                 </Select>
             </div>
 
-            {isPending && <p className="text-body-sm text-fg-tertiary">불러오는 중…</p>}
+            {isPending && (
+                <LoadingBlock>
+                    <CardSkeleton rows={3} />
+                </LoadingBlock>
+            )}
             {isError && (
-                <p role="alert" className="text-destructive text-body-sm">
+                <p role="alert" className="text-semantic-error-strong text-body-sm">
                     이벤트 목록을 불러오지 못했습니다.
                 </p>
             )}
             {!isPending && !isError && events.length === 0 && !eventId && (
-                <p className="text-fg-tertiary text-body-sm py-6">
+                <p className="text-fg-secondary text-body-sm py-6">
                     추첨이 확정된 이벤트가 없습니다. 이벤트가 마감되고 추첨이 확정되면 이곳에서
                     관리할 수 있습니다.
                 </p>
             )}
             {!eventId && events.length > 0 && (
-                <p className="text-fg-tertiary text-body-sm py-6">
+                <p className="text-fg-secondary text-body-sm py-6">
                     이벤트를 선택하면 추첨 실행·후보 명단·정합성 검증·변경 이력을 볼 수 있습니다.
                 </p>
             )}

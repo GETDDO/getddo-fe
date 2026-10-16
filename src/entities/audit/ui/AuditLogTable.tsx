@@ -64,7 +64,7 @@ export function AuditLogTable({
                             </span>
                             <span
                                 title={row.original.targetId}
-                                className="text-caption text-fg-tertiary max-w-44 truncate"
+                                className="text-caption text-fg-secondary max-w-44 truncate"
                             >
                                 {row.original.targetId}
                             </span>
@@ -76,7 +76,7 @@ export function AuditLogTable({
                     cell: ({ getValue }) => {
                         const reason = getValue();
                         if (!reason)
-                            return <span className="text-fg-tertiary text-body-sm">-</span>;
+                            return <span className="text-fg-secondary text-body-sm">-</span>;
                         // 긴 사유는 말줄임으로 잘라 표를 찢지 않고, 전체 문구는 title로 본다
                         return (
                             <span
@@ -96,6 +96,8 @@ export function AuditLogTable({
                         <Button
                             size="sm"
                             variant="ghost"
+                            className="hover:bg-surface-pressed"
+                            aria-label={`${formatKst(row.original.createdAt)} 기록 상세`}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onRowClick?.(row.original);
@@ -136,7 +138,7 @@ export function AuditLogTable({
                         <TableRow
                             key={row.id}
                             className={cn(
-                                'hover:bg-surface-canvas',
+                                'hover:bg-surface-sunken focus-within:bg-surface-sunken',
                                 onRowClick && 'cursor-pointer',
                             )}
                             onClick={() => onRowClick?.(row.original)}

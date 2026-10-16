@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import { TriangleAlert } from 'lucide-react';
+
 import { formatKst } from '@shared/lib/date';
 import { Button } from '@shared/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
@@ -54,7 +56,7 @@ function UserCell({ name, id }: { name: string; id: string }) {
     return (
         <div className="flex flex-col">
             <span className="text-body-sm text-fg-primary">{name}</span>
-            <span className="text-caption text-fg-tertiary">{id}</span>
+            <span className="text-caption text-fg-secondary">{id}</span>
         </div>
     );
 }
@@ -73,12 +75,19 @@ export function TicketInconsistencyTable({
 }) {
     return (
         <Frame
-            headers={['사용자', '응모권', '등급', '응모권 상태·버전', '마지막 이력 상태·버전', '']}
+            headers={[
+                '사용자',
+                '응모권',
+                '등급',
+                '응모권 상태·버전',
+                '마지막 이력 상태·버전',
+                '상세',
+            ]}
         >
             {rows.map((row) => (
                 <TableRow
                     key={row.ticketId}
-                    className="hover:bg-surface-canvas cursor-pointer"
+                    className="hover:bg-surface-sunken focus-within:bg-surface-sunken cursor-pointer"
                     onClick={() => onRowClick?.(row)}
                 >
                     <Cell>
@@ -112,6 +121,8 @@ export function TicketInconsistencyTable({
                         <Button
                             size="sm"
                             variant="ghost"
+                            className="hover:bg-surface-pressed"
+                            aria-label={`${row.userId} 정합성 상세`}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onRowClick?.(row);
@@ -126,7 +137,7 @@ export function TicketInconsistencyTable({
     );
 }
 
-/** 상태와 버전을 한 칸에 보인다. differs면 어긋난 쪽임을 색으로 구분한다 */
+/** 상태와 버전을 한 칸에 보인다. differs면 어긋난 쪽임을 색과 아이콘으로 함께 표시한다 */
 export function MismatchValue({
     status,
     version,
@@ -138,9 +149,15 @@ export function MismatchValue({
 }) {
     return (
         <span
-            className={differs ? 'text-destructive text-body-sm' : 'text-body-sm text-fg-primary'}
+            className={
+                differs
+                    ? 'text-semantic-error-strong text-body-sm inline-flex items-center gap-1'
+                    : 'text-body-sm text-fg-primary'
+            }
         >
+            {differs && <TriangleAlert className="size-3.5 shrink-0" aria-hidden />}
             {TICKET_STATUS_LABEL[status]} · v{version}
+            {differs && <span className="sr-only">(이력과 불일치)</span>}
         </span>
     );
 }
@@ -150,7 +167,7 @@ export function TicketGrantTable({ rows }: { rows: TicketGrant[] }) {
     return (
         <Frame headers={['지급 시각', '사용자', '구분', '등급', '출처 ID', '만료']}>
             {rows.map((row) => (
-                <TableRow key={row.historyId} className="hover:bg-surface-canvas">
+                <TableRow key={row.historyId} className="hover:bg-surface-sunken">
                     <Cell>
                         <span className={TIME}>{formatKst(row.grantedAt)}</span>
                     </Cell>
@@ -167,7 +184,7 @@ export function TicketGrantTable({ rows }: { rows: TicketGrant[] }) {
                         <Gray>{TICKET_GRADE_LABEL[row.grade]}</Gray>
                     </Cell>
                     <Cell>
-                        <span className="text-body-sm text-fg-tertiary break-all">
+                        <span className="text-body-sm text-fg-secondary break-all">
                             {row.sourceId}
                         </span>
                     </Cell>
@@ -185,7 +202,7 @@ export function AdminTicketHistoryTable({ rows }: { rows: AdminTicketHistory[] }
     return (
         <Frame headers={['처리 시각', '사용자', '처리', '등급', '처리 후 상태', '이벤트·미션']}>
             {rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-surface-canvas">
+                <TableRow key={row.id} className="hover:bg-surface-sunken">
                     <Cell>
                         <span className={TIME}>{formatKst(row.createdAt)}</span>
                     </Cell>
@@ -219,7 +236,7 @@ export function TicketRefundTable({ rows }: { rows: TicketRefund[] }) {
     return (
         <Frame headers={['반환 시각', '사용자', '이벤트', '등급', '사유', '반환분 만료']}>
             {rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-surface-canvas">
+                <TableRow key={row.id} className="hover:bg-surface-sunken">
                     <Cell>
                         <span className={TIME}>{formatKst(row.refundedAt)}</span>
                     </Cell>

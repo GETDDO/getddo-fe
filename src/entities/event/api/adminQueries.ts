@@ -13,7 +13,7 @@ const adminEventPageSchema = pageSchema(adminEventSchema);
 export const ADMIN_EVENTS_KEY = ['admin', 'events'] as const;
 
 // 관리자 이벤트 엔드포인트 — AE01~AE08 (getddo-spec 05-api/event.md 초안)
-export const ADMIN_EVENTS_API_PATH = '/admin/events';
+export const ADMIN_EVENTS_API_PATH = '/v1/admin/events';
 export const adminEventApiPath = (eventId: string) => `${ADMIN_EVENTS_API_PATH}/${eventId}`;
 
 export interface AdminEventsParams {

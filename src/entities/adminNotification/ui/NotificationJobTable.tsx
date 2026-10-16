@@ -13,10 +13,10 @@ import { NOTIFICATION_JOB_STATUS_LABEL, NOTIFICATION_TYPE_LABEL } from '../model
 const CHIP = 'text-caption rounded-md px-2 py-0.5 font-medium whitespace-nowrap';
 
 const STATUS_CHIP: Record<NotificationJobStatus, string> = {
-    PENDING: 'bg-surface-sunken text-fg-secondary',
+    PENDING: 'bg-status-revision text-status-revision-text',
     PROCESSING: 'bg-status-active text-status-active-text',
-    COMPLETED: 'bg-surface-sunken text-fg-tertiary',
-    FAILED: 'bg-destructive/10 text-destructive',
+    COMPLETED: 'bg-status-approved text-status-approved-text',
+    FAILED: 'bg-status-rejected text-status-rejected-text',
 };
 
 // 정렬·필터는 서버 쿼리로 처리하므로 행 모델만 쓰는 표시용 테이블 — 기능 슬롯을 등록하지 않는다
@@ -63,7 +63,7 @@ export function NotificationJobTable({
                                 {NOTIFICATION_JOB_STATUS_LABEL[getValue()]}
                             </span>
                             {row.original.generationStoppedBy && (
-                                <span className={cn(CHIP, 'bg-surface-sunken text-fg-tertiary')}>
+                                <span className={cn(CHIP, 'bg-surface-sunken text-fg-secondary')}>
                                     중지
                                 </span>
                             )}
@@ -108,6 +108,8 @@ export function NotificationJobTable({
                         <Button
                             size="sm"
                             variant="ghost"
+                            className="hover:bg-surface-pressed"
+                            aria-label={`${NOTIFICATION_TYPE_LABEL[row.original.notificationType]} 작업 상세`}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onRowClick?.(row.original);
@@ -148,7 +150,7 @@ export function NotificationJobTable({
                         <TableRow
                             key={row.id}
                             className={cn(
-                                'hover:bg-surface-canvas',
+                                'hover:bg-surface-sunken focus-within:bg-surface-sunken',
                                 onRowClick && 'cursor-pointer',
                             )}
                             onClick={() => onRowClick?.(row.original)}

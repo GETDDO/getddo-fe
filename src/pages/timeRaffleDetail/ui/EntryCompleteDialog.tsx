@@ -6,8 +6,6 @@ import { Link } from 'react-router-dom';
 import type { EntryTickets } from '@entities/entry';
 
 import { TICKET_GRADE_WEIGHT, ticketGradeSchema } from '@entities/ticket';
-import { KST_HOUR_MINUTE, formatKst, formatKstDot, isSameKstDate } from '@shared/lib/date';
-import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Button } from '@shared/ui/button';
 import {
     Dialog,
@@ -33,15 +31,14 @@ interface EntryCompleteDialogProps {
     remainingBalance: number | null;
     /** 한도까지 더 쓸 수 있는 응모권 수 — 상한이 없는 이벤트는 null이다 */
     remainingAllowance: number | null;
-    /** 발표 예정 시각 — 정해지지 않았으면 null */
-    announceAt: string | null;
     /** 닫은 뒤 포커스를 되돌릴 요소 — 트리거 없이 상태로 여는 모달이라 Radix가 포커스를 body로 떨어뜨린다 */
     returnFocusTo?: RefObject<HTMLElement | null>;
 }
 
 /**
  * 응모 완료 모달 — 무엇을 썼는지보다 '언제·어디서 결과를 보는지'를 알려 주는 게 목적이다.
- * 쓴 응모권·남은 응모권은 영수증처럼 회색 상자에, 발표 시각과 알림 안내는 그 아래에 둔다
+ * 쓴 응모권·남은 응모권은 영수증처럼 회색 상자에, 발표 안내는 그 아래에 둔다.
+ * 발표 예정 시각은 계약에 없으므로(ADR-022) 시각을 적지 않는다
  */
 export function EntryCompleteDialog({
     open,
@@ -51,10 +48,8 @@ export function EntryCompleteDialog({
     gradeReflected,
     remainingBalance,
     remainingAllowance,
-    announceAt,
     returnFocusTo,
 }: EntryCompleteDialogProps) {
-    const { now } = useVirtualClock();
     const used = ticketGradeSchema.options.filter((grade) => (tickets[grade] ?? 0) > 0);
     const total = used.reduce((sum, grade) => sum + (tickets[grade] ?? 0), 0);
     const reflected = used.reduce(
@@ -62,11 +57,6 @@ export function EntryCompleteDialog({
         0,
     );
 
-    const announceLabel = announceAt
-        ? isSameKstDate(announceAt, now())
-            ? `오늘 ${formatKst(announceAt, KST_HOUR_MINUTE)}`
-            : formatKstDot(announceAt, true)
-        : null;
     const moreRule =
         total === 0
             ? null
@@ -131,9 +121,7 @@ export function EntryCompleteDialog({
                 <div className="flex items-start gap-3">
                     <Bell aria-hidden className="text-fg-secondary mt-0.5 size-5 shrink-0" />
                     <div className="flex flex-col gap-0.5">
-                        <p className="text-body-bold text-fg-primary">
-                            {announceLabel ? `${announceLabel}에 발표해요` : '마감 뒤 발표해요'}
-                        </p>
+                        <p className="text-body-bold text-fg-primary">마감 뒤 발표해요</p>
                         <DialogDescription className="text-body-sm text-fg-tertiary">
                             결과가 나오면 알림으로 알려 드려요.{moreRule ? ` ${moreRule}` : ''}
                         </DialogDescription>

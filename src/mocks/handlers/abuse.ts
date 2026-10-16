@@ -88,7 +88,7 @@ const abuseCases: AbuseCaseDetail[] = [
 export const abuseHandlers = [
     // AR01 초안 — Page 봉투. spec의 요약 필드(sourceType·detectionType 등)와 목업 표시 필드가 달라
     // 시연 필드를 그대로 싣고, 경로·봉투·필터 파라미터만 계약을 따른다. 최신 차단 순으로 내린다
-    http.get(api('/admin/abuse-cases'), ({ request }) => {
+    http.get(api('/v1/admin/abuse-cases'), ({ request }) => {
         const url = new URL(request.url);
         const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
         const size = Math.max(1, Number(url.searchParams.get('size')) || 20);
@@ -120,7 +120,7 @@ export const abuseHandlers = [
         });
     }),
     // AR02 초안 — AbuseCaseDetail: 차단 사유·관련 요청·검증 근거를 관리자 전용으로 내린다
-    http.get(api('/admin/abuse-cases/:caseId'), ({ params }) => {
+    http.get(api('/v1/admin/abuse-cases/:caseId'), ({ params }) => {
         const target = abuseCases.find((c) => c.id === params.caseId);
         if (!target) {
             return fail(404, 'RESOURCE_NOT_FOUND', '차단 내역을 찾을 수 없습니다');
