@@ -1,6 +1,6 @@
 import { http } from 'msw';
 
-import type { EventStatus, MembershipRule } from '@entities/event';
+import type { AdminEventStatus, EventStatus, MembershipRule } from '@entities/event';
 
 import { MEMBERSHIP_LABEL } from '@entities/event';
 import { env } from '@shared/config/env';
@@ -982,30 +982,68 @@ export function mockEventEffectiveStatus(event: MockEvent): EventStatus {
     return statusAt(event.startsAt, event.endsAt, mockNow().getTime());
 }
 
+// spec의 원시 상태(enum) — 화면 상태와 다른 계약 값이다. 목업은 마감 + 5분 후 자동 발표(ADR-009)를
+// 흉내 내므로 발표 완료는 PUBLISHED로 싣는다
+const SPEC_STATUS: Record<EventStatus, AdminEventStatus> = {
+    upcoming: 'SCHEDULED',
+    open: 'OPEN',
+    closed: 'CLOSED',
+    drawn: 'PUBLISHED',
+};
+
 /**
- * 목 이벤트를 응답 모양으로 바꾼다 — 상태를 지금 기준으로 다시 계산한다.
+ * 목 이벤트를 spec의 EventDetail 모양으로 바꾼다 — 실서버와 같은 계약이라
+ * 화면 필드(상태·배너·응모권 수·경품 요약)는 entities/event의 toEvent 매퍼가 파생한다.
  * 발표 예정 시각은 ADR-022로 계약에서 빠졌으므로 응답에 싣지 않는다.
+ * 응모 현황(participantCount·usedTicketCount)은 E03 전용이라 싣지 않는다 (ADR-0007).
  */
 function toResponse(event: MockEvent, now: number) {
-    // 응모 현황은 E03 전용이므로 이벤트 응답에서 뺀다
-    const { participantCount, usedTicketCount, ...rest } = event;
-    void participantCount;
-    void usedTicketCount;
     const rule = entryRuleOf(event);
     return {
-        ...rest,
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        imageUrl: event.bannerImageUrl,
+        detailImageUrl: event.detailImageUrl ?? null,
+        startsAt: event.startsAt,
+        endsAt: event.endsAt,
+        status: SPEC_STATUS[statusAt(event.startsAt, event.endsAt, now)],
+        serverTime: new Date(now).toISOString(),
         ...rule,
+        prizes: [
+            {
+                id: `${event.id}-prize-1`,
+                rank: 1,
+                name: event.prizeName,
+                description: null,
+                imageUrl: null,
+                winnerCount: event.winnerCount,
+            },
+        ],
+        // 시연 전용 표시 필드 — spec에 없어 실서버 응답에는 오지 않는다
+        isRecommended: event.isRecommended,
+        isTimeRaffle: event.isTimeRaffle,
         // 멤버십 안내는 공통 문구가 아니라 이 래플의 자격 등급으로 적는다
         raffleDetail: event.raffleDetail && {
             ...event.raffleDetail,
             membershipNote: `${MEMBERSHIP_LABEL[rule.membershipRule]} 등급 이상 응모할 수 있어요`,
         },
-        status: statusAt(event.startsAt, event.endsAt, now),
+        tags: event.tags,
+        myEntryCount: event.myEntryCount,
+        myTicketCount: event.myTicketCount,
     };
 }
 
+// E01 목록 항목은 spec의 EventSummary — description·prizes는 상세(E02)에만 있다
+function toSummary(event: MockEvent, now: number) {
+    const { description: _description, prizes: _prizes, ...summary } = toResponse(event, now);
+    void _description;
+    void _prizes;
+    return summary;
+}
+
 export const eventHandlers = [
-    // E01 초안 — Page 봉투 + status 필터. 목업 항목은 시연 표시용 필드(참여자 수·내 응모 등)를 더 싣는다
+    // E01 — Page 봉투 + status 필터. 목업 항목은 시연 표시용 필드(내 응모 등)를 더 싣는다
     http.get(api('/v1/events'), ({ request }) => {
         const url = new URL(request.url);
         const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
@@ -1013,7 +1051,7 @@ export const eventHandlers = [
         const status = url.searchParams.get('status');
         const now = mockNow().getTime();
         const items = mockEvents
-            .map((event) => toResponse(event, now))
+            .map((event) => toSummary(event, now))
             .filter((event) => !status || event.status === status);
         return ok({
             items: items.slice((page - 1) * size, page * size),

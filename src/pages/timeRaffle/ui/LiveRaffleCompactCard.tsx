@@ -35,9 +35,11 @@ export function LiveRaffleCompactCard({ event }: { event: Event }) {
 
                 <h3 className="text-subhead text-fg-primary truncate">{event.title}</h3>
 
+                {/* 목록 응답에는 경품이 없어 당첨 인원을 모를 수 있다 — 모르면 참여 수만 적는다 */}
                 <p className="text-caption text-fg-tertiary">
-                    당첨 {formatNumber(event.winnerCount)}명
-                    {statistics && ` · ${formatNumber(statistics.participantCount)}명 참여 중`}
+                    {event.winnerCount != null && `당첨 ${formatNumber(event.winnerCount)}명`}
+                    {event.winnerCount != null && statistics && ' · '}
+                    {statistics && `${formatNumber(statistics.participantCount)}명 참여 중`}
                 </p>
 
                 {/* 카드마다 반복되는 이동이라 secondary — 검정 버튼은 대표 카드 하나에만 둬 시선을 모은다 (DESIGN-SYSTEM 13절) */}

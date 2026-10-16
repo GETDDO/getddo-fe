@@ -1,0 +1,64 @@
+import type { AdminEventStatus } from '../model/adminTypes';
+import type { EventDetailResponse, EventSummaryResponse } from '../model/contract';
+import type { Event, EventStatus } from '../model/types';
+
+// spec의 원시 상태 → 화면 상태.
+// REDRAWING·CANCELED는 화면 상태에 대응값이 없다 — 마감 뒤 진행 상태이므로 closed로 근사한다
+const SCREEN_STATUS: Record<AdminEventStatus, EventStatus> = {
+    SCHEDULED: 'upcoming',
+    OPEN: 'open',
+    CLOSED: 'closed',
+    DRAW_CONFIRMED: 'closed',
+    REDRAWING: 'closed',
+    PUBLISHED: 'drawn',
+    NO_ENTRANTS: 'drawn',
+    // 당첨 가능한 응모가 없어 발표가 끝난 상태 — 화면에서는 발표 완료다
+    NO_ELIGIBLE_ENTRANTS: 'drawn',
+    CANCELED: 'closed',
+};
+
+// EventSummary에는 maxTicketsPerUser가 없다 — 상세(E02)만 실값을 쓰고 목록은
+// 목업의 entryRuleOf와 같은 규칙으로 근사한다 (미사용→없음, 가중치→5, 미적용→1)
+const fallbackMaxTickets = (raw: EventSummaryResponse) =>
+    raw.eventType === 'NO_TICKET' ? null : raw.weightingEnabled ? 5 : 1;
+
+/**
+ * spec 원시 응답(EventSummary·EventDetail)을 화면용 Event 뷰모델로 변환한다.
+ * E01 목록에는 description·prizes가 없어 목록만으로 만든 이벤트는
+ * prizeName·winnerCount가 undefined이고 description이 빈 문자열이다.
+ */
+export function toEvent(raw: EventSummaryResponse | EventDetailResponse): Event {
+    const prizes = raw.prizes?.length ? [...raw.prizes].sort((a, b) => a.rank - b.rank) : undefined;
+    const topPrize = prizes?.[0];
+
+    return {
+        id: raw.id,
+        title: raw.title,
+        description: raw.description ?? '',
+        bannerImageUrl: raw.imageUrl,
+        detailImageUrl: raw.detailImageUrl ?? undefined,
+        startsAt: raw.startsAt,
+        endsAt: raw.endsAt,
+        status: SCREEN_STATUS[raw.status],
+        isRecommended: raw.isRecommended,
+        isTimeRaffle: raw.isTimeRaffle,
+        raffleDetail: raw.raffleDetail,
+        eventType: raw.eventType,
+        weightingEnabled: raw.weightingEnabled,
+        maxTicketsPerUser:
+            'maxTicketsPerUser' in raw ? raw.maxTicketsPerUser : fallbackMaxTickets(raw),
+        membershipRule: raw.membershipRule,
+        // 1회 응모의 차감 장수 — 가중치 이벤트는 장수를 사용자가 고르므로 최소 1장으로 둔다
+        requiredTickets: raw.eventType === 'TICKET' ? 1 : 0,
+        tags: raw.tags,
+        prizeName:
+            topPrize && prizes
+                ? prizes.length > 1
+                    ? `${topPrize.name} 외 ${prizes.length - 1}종`
+                    : topPrize.name
+                : undefined,
+        winnerCount: prizes?.reduce((sum, prize) => sum + prize.winnerCount, 0),
+        myEntryCount: raw.myEntryCount,
+        myTicketCount: raw.myTicketCount,
+    };
+}

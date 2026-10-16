@@ -47,8 +47,9 @@ export const eventSchema = z.object({
     requiredTickets: z.number().int().nonnegative(),
     // 카드 태그 칩 (예: "멤버십 혜택") — 없으면 칩 미노출
     tags: z.array(z.string()).optional(),
-    prizeName: z.string(),
-    winnerCount: z.number().int().positive(),
+    // 경품 요약 — prizes는 상세(E02)에만 있어 목록만으로 만든 이벤트에는 없다 (spec EventSummary)
+    prizeName: z.string().optional(),
+    winnerCount: z.number().int().positive().optional(),
     // 응모 현황(응모자 수·차감 합계)은 E03 전용 조회(entities/entry의 useEntryStatistics)로 받는다 — ADR-0007
     myEntryCount: z.number().int().nonnegative().nullable().optional(),
     // 내가 이 이벤트에 지금까지 쓴 응모권 수 — 추가 응모로 한도(ADR-010)까지 얼마나 남았는지 계산하는 값.

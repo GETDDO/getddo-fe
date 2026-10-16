@@ -91,8 +91,17 @@ export type MyResultStatus = z.infer<typeof myResultStatusSchema>;
 export type MyResult = z.infer<typeof myResultSchema>;
 
 // ── 관리자 추첨 관리(GD-125) — getddo-spec 05-api/drawing.md AD01~AD09 ──
-// 추첨 실행 상태 — getddo-spec 05-api/drawing.md DrawRun (검토 대기 초안)
-export const drawRunStatusSchema = z.enum(['PREPARING', 'READY', 'RUNNING', 'CONFIRMED', 'FAILED']);
+// 추첨 실행 상태 — getddo-spec 05-api/drawing.md DrawRun.
+// NO_ENTRIES는 spec 확정 값, NO_CANDIDATES는 BE 현행 값이다 (계약 확인 중 — GD-215)
+export const drawRunStatusSchema = z.enum([
+    'PREPARING',
+    'READY',
+    'RUNNING',
+    'CONFIRMED',
+    'FAILED',
+    'NO_ENTRIES',
+    'NO_CANDIDATES',
+]);
 export const drawExecutionTypeSchema = z.enum(['AUTO', 'MANUAL']);
 
 export const drawRunSchema = z.object({

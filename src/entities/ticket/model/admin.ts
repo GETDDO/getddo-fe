@@ -37,7 +37,8 @@ export const ticketMismatchSchema = z.object({
     ticketVersion: z.number().int(),
     latestHistoryVersion: z.number().int(),
     ticketStatus: ticketStatusSchema,
-    latestHistoryStatus: ticketStatusSchema,
+    // 이력이 한 건도 없는 응모권은 마지막 이력 상태가 null이다 (spec AO04)
+    latestHistoryStatus: ticketStatusSchema.nullable(),
 });
 
 export const ticketConsistencySchema = z.object({
@@ -70,7 +71,8 @@ export const ticketRefundSchema = z.object({
     userName: z.string(),
     reasonType: ticketRefundReasonSchema,
     refundedAt: z.iso.datetime(),
-    targetExpiresAt: z.iso.datetime(),
+    // 반환 대상 이력에 만료 시각이 없으면 null이다 (spec AO08)
+    targetExpiresAt: z.iso.datetime().nullable(),
 });
 
 export type TicketSourceType = z.infer<typeof ticketSourceTypeSchema>;

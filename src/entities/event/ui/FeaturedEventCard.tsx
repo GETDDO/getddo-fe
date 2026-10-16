@@ -57,7 +57,11 @@ export function FeaturedEventCard({
 
     // 이름 위·값 아래로 세 칸 — 한 줄로 이어 쓰면 숫자가 문장에 묻혀 눈에 안 들어왔다
     const stats = [
-        { label: '당첨', value: `${formatNumber(event.winnerCount)}명` },
+        // 경품 요약은 상세(E02)에만 있다 — 목록만으로 만든 이벤트는 당첨 인원이 없다 (spec EventSummary)
+        {
+            label: '당첨',
+            value: event.winnerCount != null ? `${formatNumber(event.winnerCount)}명` : '-',
+        },
         {
             label: '참여',
             value: participantCount != null ? `${formatNumber(participantCount)}명` : '-',

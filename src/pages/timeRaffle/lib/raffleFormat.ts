@@ -47,10 +47,14 @@ export function formatRunningRange(event: Event): string {
  * 1회 차감량이 한도와 같으면 한 번뿐이므로 '여러 장'이라고 적을 수 없다.
  */
 export function formatEntryRule(event: Event, ticketLimit: number): string {
-    const winners = `당첨 ${event.winnerCount.toLocaleString('ko-KR')}명`;
-    if (event.requiredTickets === 0) return `${winners} · 응모권 없이 참여`;
-    if (event.requiredTickets * 2 > ticketLimit) {
-        return `${winners} · 응모권 ${event.requiredTickets}장으로 응모`;
-    }
-    return `${winners} · 여러 장 응모 가능`;
+    // 목록 응답에는 경품이 없어 당첨 인원을 모를 수 있다 — 모르면 문구를 뺀다
+    const winners =
+        event.winnerCount != null ? `당첨 ${event.winnerCount.toLocaleString('ko-KR')}명` : null;
+    const rule =
+        event.requiredTickets === 0
+            ? '응모권 없이 참여'
+            : event.requiredTickets * 2 > ticketLimit
+              ? `응모권 ${event.requiredTickets}장으로 응모`
+              : '여러 장 응모 가능';
+    return winners ? `${winners} · ${rule}` : rule;
 }
