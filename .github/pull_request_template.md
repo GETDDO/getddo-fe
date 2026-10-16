@@ -1,6 +1,6 @@
 ## 📌 관련 이슈
 
-- close #이슈번호
+- Jira: GD-000 (GitHub 이슈를 쓰는 경우 `close #번호`)
 
 ## ✨ 작업 내용
 
@@ -23,13 +23,14 @@
 ## ✅ 체크리스트
 
 - [ ] 커밋 메시지 컨벤션을 준수했는가?
+- [ ] `npm run format:check`를 통과했는가?
 - [ ] 로컬에서 빌드 및 테스트가 성공했는가? (`npm run build`, `npm run test:ci`)
 - [ ] `npm run lint` 통과했는가?
 - [ ] 불필요한 주석이나 console.log를 제거했는가?
 - [ ] FSD 레이어 규칙 위반이 없는가? (상위→하위 참조만 허용, 슬라이스는 index.ts를 통해서만 import)
 
-## 📖 관련 기획서 절 번호
+## 📖 관련 명세
 
-<!-- 기획서 6.x / 8.x / 9.x 등 -->
+<!-- 관련된 getddo-spec 문서 또는 ADR 번호 (예: 02-domain/entry.md, ADR-010) -->
 
 -

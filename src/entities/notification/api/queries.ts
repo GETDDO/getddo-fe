@@ -1,0 +1,34 @@
+import { useInfiniteQuery } from '@tanstack/react-query';
+
+import { apiClient } from '@shared/api/client';
+import { envelopeSchema } from '@shared/api/envelopeSchema';
+
+import { notificationCursorSchema } from '../model/types';
+
+// N01~N03만 /api/v1 확정 — 다른 도메인은 초안이라 전역 베이스 URL은 건드리지 않는다
+export const NOTIFICATIONS_API_PATH = '/v1/notifications';
+
+export const NOTIFICATIONS_KEY = ['notifications'] as const;
+
+const NOTIFICATION_LIST_KEY = [...NOTIFICATIONS_KEY, 'list'] as const;
+
+export function useNotificationList({
+    isRead,
+    size = 20,
+    refetchOnMount,
+}: { isRead?: boolean; size?: number; refetchOnMount?: 'always' } = {}) {
+    return useInfiniteQuery({
+        queryKey: [...NOTIFICATION_LIST_KEY, { isRead, size }],
+        initialPageParam: undefined as string | undefined,
+        queryFn: async ({ pageParam }) => {
+            const { data } = await apiClient.get<unknown>(`${NOTIFICATIONS_API_PATH}/me`, {
+                // cursor는 서버가 준 nextCursor를 그대로 전달한다 (클라이언트 생성·해석 금지)
+                params: { cursor: pageParam, size, isRead },
+            });
+            return envelopeSchema(notificationCursorSchema).parse(data).data;
+        },
+        getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+        // 알림 드로어는 열 때마다 최신 목록을 보여준다 — staleTime 안이어도 마운트 시 재조회
+        refetchOnMount,
+    });
+}

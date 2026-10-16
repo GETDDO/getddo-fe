@@ -13,7 +13,7 @@ MSW로 모든 API를 목업한다.
 
 - `VITE_ENABLE_MSW=true`일 때만 활성화 (`shared/config/env.ts`의 `env.enableMsw`)
 - 핸들러는 `shared/api/mocks/handlers/`에 도메인별 파일로 분리 (`entry.ts`, `draw.ts`, `ticket.ts` …)
-- 목업 응답은 기획서(`docs/spec/LG유플러스_응모이벤트플랫폼_기획서.md`)의 계약 초안을 따르고, 미합의 항목은 임의로 확정하지 않는다
+- 목업 응답은 공용 명세(`../getddo-spec/`의 기능 요구사항·도메인 규칙)의 계약 초안을 따르고, 미합의 항목(`../getddo-spec/00-requirements/pending-decisions.md`)은 임의로 확정하지 않는다
 - 실제 응답 검증은 `entities/*/model/`의 Zod 스키마가 담당 — 목업이 아니라 스키마가 계약의 기준이다
 
 ## 결과

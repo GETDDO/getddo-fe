@@ -1,0 +1,256 @@
+import { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+
+import type { AdminEventStatus, EventType } from '@entities/event';
+
+import {
+    ADMIN_STATUS_META,
+    AdminEventTable,
+    EVENT_TYPE_LABEL,
+    useAdminEvents,
+} from '@entities/event';
+import { kstInputToUtcIso } from '@shared/lib/date';
+import { isDateRangeOrdered } from '@shared/lib/filterConstants';
+import { Button } from '@shared/ui/button';
+import { DateRangeFilter } from '@shared/ui/filter-fields';
+import { Input } from '@shared/ui/input';
+import { Pager } from '@shared/ui/pager';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
+import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
+
+const PAGE_SIZE = 10;
+
+const STATUS_OPTIONS: { value: 'all' | AdminEventStatus; label: string }[] = [
+    { value: 'all', label: '전체 상태' },
+    ...Object.entries(ADMIN_STATUS_META).map(([value, meta]) => ({
+        value: value as AdminEventStatus,
+        label: meta.label,
+    })),
+];
+
+const TYPE_OPTIONS: { value: 'all' | EventType; label: string }[] = [
+    { value: 'all', label: '전체 유형' },
+    ...(Object.entries(EVENT_TYPE_LABEL) as [EventType, string][]).map(([value, label]) => ({
+        value,
+        label,
+    })),
+];
+
+// 종료일 입력(YYYY-MM-DD, KST)을 다음 날 00:00 UTC ISO로 변환해 [from, to) 구간의 상한을 만든다
+const nextDay = (ymd: string) => {
+    const d = new Date(`${ymd}T00:00:00+09:00`);
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString();
+};
+
+// 대시보드 카드가 /admin/events?status=…로 들어오는 값 — ADMIN_STATUS_META 키만 받아들인다
+const asAdminStatus = (value: string | null): AdminEventStatus | null =>
+    value !== null && value in ADMIN_STATUS_META ? (value as AdminEventStatus) : null;
+
+export function AdminEventsPage() {
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const statusParam = asAdminStatus(searchParams.get('status'));
+    const [page, setPage] = useState(1);
+    const [keywordInput, setKeywordInput] = useState('');
+    // 검색어는 엔터·버튼으로 확정된 값만 쿼리에 넘긴다 — 입력마다 요청하지 않는다
+    const [keyword, setKeyword] = useState('');
+    const [fromInput, setFromInput] = useState('');
+    const [toInput, setToInput] = useState('');
+    // 기간도 Select와 달리 즉시 적용되지 않고 검색 버튼으로 함께 적용된다 (응모 시작 시각 기준 [from, to))
+    const [from, setFrom] = useState('');
+    const [to, setTo] = useState('');
+    const [status, setStatus] = useState<'all' | AdminEventStatus>(statusParam ?? 'all');
+    const [eventType, setEventType] = useState<'all' | EventType>('all');
+    const [rangeError, setRangeError] = useState(false);
+
+    // 같은 페이지에 머문 채 URL의 status가 바뀌면(대시보드 카드 재진입 등) 필터에 반영한다 — 렌더 중 비교 패턴
+    const [appliedStatusParam, setAppliedStatusParam] = useState(statusParam);
+    if (statusParam !== appliedStatusParam) {
+        setAppliedStatusParam(statusParam);
+        setStatus(statusParam ?? 'all');
+        setPage(1);
+    }
+
+    // 검색 버튼으로 확정할 값을 미리 계산해 입력값과 적용값의 차이(미적용 변경)를 잡는다
+    const draftFrom = fromInput ? kstInputToUtcIso(`${fromInput}T00:00`) : '';
+    const draftTo = toInput ? nextDay(toInput) : '';
+    const hasPendingDraft = keywordInput.trim() !== keyword || draftFrom !== from || draftTo !== to;
+    const hasAppliedFilters =
+        keyword !== '' || from !== '' || to !== '' || status !== 'all' || eventType !== 'all';
+
+    const { data, isPending, isError, isFetching, refetch } = useAdminEvents({
+        page,
+        size: PAGE_SIZE,
+        keyword: keyword || undefined,
+        status: status === 'all' ? undefined : status,
+        eventType: eventType === 'all' ? undefined : eventType,
+        from: from || undefined,
+        to: to || undefined,
+    });
+
+    const totalPages = data ? Math.max(1, Math.ceil(data.totalElements / data.size)) : 0;
+    const resetPage = () => setPage(1);
+    const resetFilters = () => {
+        setKeywordInput('');
+        setKeyword('');
+        setFromInput('');
+        setToInput('');
+        setFrom('');
+        setTo('');
+        setStatus('all');
+        setEventType('all');
+        setRangeError(false);
+        setPage(1);
+        if (statusParam) void navigate('/admin/events', { replace: true });
+    };
+
+    return (
+        <div className="flex max-w-280 flex-col gap-6 pr-10 pb-10">
+            <div className="flex flex-wrap items-center gap-3">
+                <form
+                    className="flex flex-wrap items-center gap-2"
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!isDateRangeOrdered(fromInput, toInput)) {
+                            setRangeError(true);
+                            return;
+                        }
+                        setRangeError(false);
+                        setKeyword(keywordInput.trim());
+                        setFrom(draftFrom);
+                        setTo(draftTo);
+                        resetPage();
+                    }}
+                >
+                    <Input
+                        value={keywordInput}
+                        onChange={(e) => setKeywordInput(e.target.value)}
+                        placeholder="이벤트 이름·설명 검색"
+                        className="w-64"
+                        aria-label="이벤트 검색"
+                    />
+                    <DateRangeFilter
+                        from={fromInput}
+                        to={toInput}
+                        onFromChange={setFromInput}
+                        onToChange={setToInput}
+                        basis="응모 시작일"
+                        error={rangeError ? '시작일이 종료일보다 늦습니다.' : null}
+                    />
+                    <Button type="submit" variant="secondary">
+                        검색
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={resetFilters}>
+                        초기화
+                    </Button>
+                </form>
+
+                <Select
+                    value={status}
+                    onValueChange={(v) => {
+                        setStatus(v as 'all' | AdminEventStatus);
+                        resetPage();
+                    }}
+                >
+                    <SelectTrigger className="w-40" aria-label="상태 필터">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {STATUS_OPTIONS.map(({ value, label }) => (
+                            <SelectItem key={value} value={value}>
+                                {label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+
+                <Select
+                    value={eventType}
+                    onValueChange={(v) => {
+                        setEventType(v as 'all' | EventType);
+                        resetPage();
+                    }}
+                >
+                    <SelectTrigger className="w-36" aria-label="유형 필터">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {TYPE_OPTIONS.map(({ value, label }) => (
+                            <SelectItem key={value} value={value}>
+                                {label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+
+                <Button className="ml-auto" onClick={() => void navigate('/admin/events/new')}>
+                    새 이벤트 등록
+                </Button>
+            </div>
+
+            {hasPendingDraft && (
+                <p className="text-fg-tertiary text-caption -mt-4">
+                    변경한 조건은 검색을 눌러야 적용됩니다.
+                </p>
+            )}
+
+            {isPending && (
+                <LoadingBlock>
+                    <TableSkeleton />
+                </LoadingBlock>
+            )}
+            {isError && (
+                <div className="flex items-center gap-3" role="alert">
+                    <p className="text-semantic-error-strong text-body-sm">
+                        이벤트 목록을 불러오지 못했습니다.
+                    </p>
+                    <Button size="sm" variant="secondary" onClick={() => void refetch()}>
+                        다시 시도
+                    </Button>
+                </div>
+            )}
+            {!isPending && !isError && data && data.items.length === 0 && (
+                <div className="flex flex-col gap-2 py-6">
+                    <p className="text-fg-secondary text-body-sm">해당하는 이벤트가 없습니다.</p>
+                    {hasAppliedFilters && (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="self-start"
+                            onClick={resetFilters}
+                        >
+                            검색 조건 초기화
+                        </Button>
+                    )}
+                </div>
+            )}
+            {!isPending && !isError && isFetching && (
+                <p role="status" className="text-fg-tertiary text-caption -mt-4">
+                    목록을 새로 확인하는 중…
+                </p>
+            )}
+            {data && data.items.length > 0 && (
+                <>
+                    <AdminEventTable
+                        events={data.items}
+                        onRowClick={(event) => void navigate(`/admin/events/${event.id}`)}
+                    />
+                    <div className="flex items-center justify-between">
+                        <span className="text-body-sm text-fg-secondary">
+                            총 {data.totalElements}건
+                        </span>
+                        <Pager
+                            current={page - 1}
+                            total={totalPages}
+                            onPrev={() => setPage((p) => p - 1)}
+                            onNext={() => setPage((p) => p + 1)}
+                            prevDisabled={page <= 1}
+                            nextDisabled={page >= totalPages}
+                        />
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}

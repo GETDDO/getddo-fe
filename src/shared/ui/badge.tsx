@@ -1,42 +1,58 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from 'cn';
-import { Slot } from 'radix-ui';
 import * as React from 'react';
 
+/**
+ * 배지 — 상태·분류·수치를 짧게 보여주는 둥근 알약 (피그마 홈 기준).
+ * variant: brand(핑크 채움 — 드물게, "지금" 신호는 칩보다 ● 점을 권장) · info(카테고리, 파란 테두리) ·
+ * neutral(분류·상태, 회색) · accent(연노랑 — 보상 결과 바탕에만, 정보 칩에는 쓰지 않는다) · outline(흰 바탕+테두리 — 시간·참여 수 같은 정보) ·
+ * surface(흰 바탕) · inverse(검정 — D-day·오늘 마감·등수). 색 역할은 docs/DESIGN-SYSTEM.md 13).
+ * size (피그마 칩 SM·MD·LG, 패딩은 모두 짝수): sm 22 (좌우 8·위아래 2, 글자 12 Medium — 개수·"나") ·
+ * md 26 (좌우 12·위아래 4, 글자 12 Medium — 기본: 태그·D-day·상태) · lg 28 (좌우 12·위아래 6, 글자 14 SemiBold — 등수·배너 위 칩).
+ * 아이콘은 children으로 넣는다.
+ * 글자 크기는 text-xs/text-sm으로 둔다 — 커스텀 타이포 토큰은 공용 cn이 글자색과 같은 묶음으로 보고 색을 지운다
+ */
 const badgeVariants = cva(
-    'group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!',
+    "inline-flex text-xs leading-[1.125rem] font-medium shrink-0 items-center gap-1 rounded-full border border-transparent whitespace-nowrap [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
     {
         variants: {
             variant: {
-                default: 'bg-primary text-primary-foreground [a]:hover:bg-primary/80',
-                secondary: 'bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80',
-                destructive:
-                    'bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20',
-                outline:
-                    'border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground',
-                ghost: 'hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50',
-                link: 'text-primary underline-offset-4 hover:underline',
+                brand: 'bg-brand-primary text-fg-on-brand',
+                info: 'bg-status-active text-status-active-text border-status-active-text',
+                neutral: 'bg-surface-sunken text-fg-secondary',
+                accent: 'bg-ticket-accent text-fg-primary',
+                outline: 'bg-surface-page text-fg-secondary border-border-default',
+                // 흰 바탕 알약 — 배너 위 마감 시간처럼 색 배경 위에 띄울 때
+                surface: 'bg-surface-page text-fg-primary',
+                // 검정 알약 — 이벤트 카드 D-day처럼 무채색 위계에서 가장 진하게
+                inverse: 'bg-action-neutral text-fg-on-brand',
+            },
+            size: {
+                sm: 'h-5.5 px-2 py-0.5',
+                md: 'h-6.5 px-3 py-1',
+                // 등수·배너 위 칩 — 글자 14 SemiBold (피그마 Label SM, 줄 높이 16)
+                lg: 'h-7 px-3 py-1.5 text-sm leading-4 font-semibold',
+                // 이전 이름 — lg와 같다 (배너 마감 시간에서 쓰던 34 알약을 lg로 합쳤다)
+                xl: 'h-7 px-3 py-1.5 text-sm leading-4 font-semibold',
             },
         },
         defaultVariants: {
-            variant: 'default',
+            variant: 'neutral',
+            size: 'md',
         },
     },
 );
 
 function Badge({
     className,
-    variant = 'default',
-    asChild = false,
+    variant,
+    size,
     ...props
-}: React.ComponentProps<'span'> & VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
-    const Comp = asChild ? Slot.Root : 'span';
-
+}: React.ComponentProps<'span'> & VariantProps<typeof badgeVariants>) {
     return (
-        <Comp
+        <span
             data-slot="badge"
-            data-variant={variant}
-            className={cn(badgeVariants({ variant }), className)}
+            className={cn(badgeVariants({ variant, size }), className)}
             {...props}
         />
     );

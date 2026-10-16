@@ -31,7 +31,7 @@ function DialogOverlay({
         <DialogPrimitive.Overlay
             data-slot="dialog-overlay"
             className={cn(
-                'data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs',
+                'data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs dark:bg-black/50',
                 className,
             )}
             {...props}
@@ -61,7 +61,11 @@ function DialogContent({
                 {children}
                 {showCloseButton && (
                     <DialogPrimitive.Close data-slot="dialog-close" asChild>
-                        <Button variant="ghost" className="absolute top-2 right-2" size="icon-sm">
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="text-fg-secondary hover:text-fg-primary absolute top-3 right-3 size-9 cursor-pointer hover:bg-transparent dark:hover:bg-transparent [&_svg:not([class*='size-'])]:size-5"
+                        >
                             <XIcon />
                             <span className="sr-only">Close</span>
                         </Button>
@@ -94,7 +98,8 @@ function DialogFooter({
         <div
             data-slot="dialog-footer"
             className={cn(
-                'bg-muted/50 -mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t p-4 sm:flex-row sm:justify-end',
+                // 서비스 모달 공통 — 회색 띠·구분선 없이 버튼이 한 줄을 똑같이 나눠 채운다 (응모 확인 모달과 같은 꼴)
+                'flex gap-4 *:flex-1',
                 className,
             )}
             {...props}
@@ -102,7 +107,7 @@ function DialogFooter({
             {children}
             {showCloseButton && (
                 <DialogPrimitive.Close asChild>
-                    <Button variant="outline">Close</Button>
+                    <Button variant="secondary">Close</Button>
                 </DialogPrimitive.Close>
             )}
         </div>
