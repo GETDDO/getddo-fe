@@ -7,30 +7,20 @@ import { MyResultBadge } from '@entities/drawResult';
 import { EventThumbnail } from '@entities/event';
 import { TICKET_GRADE_DOT, TICKET_GRADE_LABEL, TICKET_GRADES } from '@entities/ticket';
 import { getErrorCodeMessage } from '@shared/api/errorMessage';
-import { formatKst, formatKstDot, isSameKstDate, KST_HOUR_MINUTE } from '@shared/lib/date';
+import { formatKstDot } from '@shared/lib/date';
 import { Badge } from '@shared/ui/badge';
 
 /** 표 칸 너비 — 머리줄(EntryTableHead)과 줄이 같은 값을 쓴다 */
 export const ENTRY_GRID = 'md:grid-cols-[minmax(0,1fr)_10.5rem_9rem_5.5rem_1.25rem]';
 
-/** "1시간 40분 남음" — 발표 대기 줄에서만 쓴다 */
-function remainingLabel(ms: number) {
-    const minutes = Math.max(1, Math.ceil(ms / 60_000));
-    const hours = Math.floor(minutes / 60);
-    if (hours >= 24) return `${Math.floor(hours / 24)}일 남음`;
-    return hours > 0 ? `${hours}시간 ${minutes % 60}분 남음` : `${minutes}분 남음`;
-}
-
 /**
  * 내 응모 내역 표의 한 줄 — 줄 전체가 이벤트·겟또타임 상세로 가는 링크다.
  * 넓은 화면에서는 응모·사용 응모권·발표·결과 칸으로 펼치고, 좁은 화면에서는 위아래로 쌓는다.
- * 발표 시각은 서버가 준 예정 시각만 쓴다 — 지연 안내 문구는 계약에 없어 만들지 않는다
+ * 발표 칸은 예정 시각이 아니라 대기 여부만 보인다 — 서버가 발표 시각을 주지 않는다 (ADR-022)
  */
-export function EntryTableRow({ row, now }: { row: MyEntryRow; now: Date }) {
+export function EntryTableRow({ row }: { row: MyEntryRow }) {
     const { entry, event, isTimeRaffle, result } = row;
     const rejected = entry.status === 'REJECTED';
-    const announceAt = event?.publicationScheduledAt;
-    const untilAnnounce = announceAt ? new Date(announceAt).getTime() - now.getTime() : 0;
     const usedGrades = TICKET_GRADES.filter((grade) => entry.deductedTicketsByGrade[grade] > 0);
     const rejectionReason = rejected
         ? (getErrorCodeMessage(entry.rejectionCode) ?? entry.rejectionReason)
@@ -100,20 +90,8 @@ export function EntryTableRow({ row, now }: { row: MyEntryRow; now: Date }) {
                 </div>
 
                 <div className="col-span-2 flex flex-col pl-16 md:col-span-1 md:pl-0">
-                    {announceAt && !rejected ? (
-                        <>
-                            <span className="text-body-sm text-fg-primary">
-                                {isSameKstDate(announceAt, now)
-                                    ? `오늘 ${formatKst(announceAt, KST_HOUR_MINUTE)}`
-                                    : formatKstDot(announceAt, true)}
-                                <span className="md:hidden"> 발표</span>
-                            </span>
-                            {result === 'PENDING' && untilAnnounce > 0 && (
-                                <span className="text-caption text-fg-tertiary">
-                                    {remainingLabel(untilAnnounce)}
-                                </span>
-                            )}
-                        </>
+                    {!rejected && result === 'PENDING' ? (
+                        <span className="text-body-sm text-fg-primary">발표 대기</span>
                     ) : (
                         <span className="text-caption text-fg-tertiary hidden md:inline">—</span>
                     )}
