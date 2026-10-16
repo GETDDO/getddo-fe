@@ -12,7 +12,7 @@ import { ticketGradeSchema, useMyTickets } from '@entities/ticket';
 import { useEnterEvent } from '@features/enterEvent';
 import { getErrorMessage } from '@shared/api/errorMessage';
 import { Button } from '@shared/ui/button';
-import { Loading } from '@shared/ui/loading';
+import { SkeletonDetail } from '@shared/ui/skeleton';
 
 import { BronzeOnlyTicket } from './ui/BronzeOnlyTicket';
 import { DrawResultSection } from './ui/DrawResultSection';
@@ -66,7 +66,7 @@ export function TimeRaffleDetailPage() {
     if (isPending) {
         return (
             <main className={CONTAINER}>
-                <Loading size="lg" />
+                <SkeletonDetail />
             </main>
         );
     }

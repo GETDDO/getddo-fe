@@ -2,6 +2,7 @@ import {
     buildAttendanceMonth,
     buildAttendanceWeek,
     countMonthlyAttendance,
+    claimedStreakBonuses,
     isStreakBonusDate,
     pickBonusMascotIndex,
 } from './attendanceWeek';
@@ -58,27 +59,41 @@ describe('buildAttendanceMonth', () => {
     });
 });
 
+describe('claimedStreakBonuses', () => {
+    it('받은 단계만 받은 출석 기준일로 모은다 — 단계 일수와 날짜는 다를 수 있다', () => {
+        const bonuses = claimedStreakBonuses([
+            {
+                milestoneDays: 7,
+                rewardTicketCount: 1,
+                claimed: true,
+                claimedAt: '2026-09-11T01:00:00Z',
+            },
+            { milestoneDays: 14, rewardTicketCount: 3, claimed: false, claimedAt: null },
+        ]);
+        expect([...bonuses]).toEqual([['2026-09-11', 1]]);
+    });
+});
+
 describe('isStreakBonusDate', () => {
-    it('정책의 보상 단계 일수에 해당하는 날짜만 보상일이다', () => {
-        const bonusDays = new Set([5, 10, 20]);
-        expect(isStreakBonusDate('2026-09-05', bonusDays)).toBe(true);
-        expect(isStreakBonusDate('2026-09-20', bonusDays)).toBe(true);
-        expect(isStreakBonusDate('2026-09-07', bonusDays)).toBe(false);
+    it('보상을 받은 날짜만 보상일이다', () => {
+        const bonusDates = new Set(['2026-09-11']);
+        expect(isStreakBonusDate('2026-09-11', bonusDates)).toBe(true);
+        expect(isStreakBonusDate('2026-09-07', bonusDates)).toBe(false);
     });
 });
 
 describe('pickBonusMascotIndex', () => {
-    const bonusDays = new Set([7, 14, 28]);
+    const bonusDates = new Set(['2026-09-07', '2026-09-14', '2026-09-28']);
 
     it('같은 날짜는 항상 같은 캐릭터를 고른다', () => {
-        expect(pickBonusMascotIndex('2026-09-14', bonusDays, 4)).toBe(
-            pickBonusMascotIndex('2026-09-14', bonusDays, 4),
+        expect(pickBonusMascotIndex('2026-09-14', bonusDates, 4)).toBe(
+            pickBonusMascotIndex('2026-09-14', bonusDates, 4),
         );
     });
 
     it('한 달 안의 보상일끼리는 캐릭터가 겹치지 않는다', () => {
         const picked = ['2026-09-07', '2026-09-14', '2026-09-28'].map((date) =>
-            pickBonusMascotIndex(date, bonusDays, 4),
+            pickBonusMascotIndex(date, bonusDates, 4),
         );
         expect(new Set(picked).size).toBe(3);
     });

@@ -5,7 +5,7 @@ import type { VirtualUser } from '@entities/user';
 
 import { useSessionStore, useVirtualUsers } from '@entities/user';
 import { cn } from '@shared/lib/utils';
-import { Loading } from '@shared/ui/loading';
+import { SkeletonList } from '@shared/ui/skeleton';
 
 export function LoginPage() {
     const navigate = useNavigate();
@@ -30,7 +30,16 @@ export function LoginPage() {
                     </p>
                 </div>
 
-                {isPending && <Loading />}
+                {isPending && (
+                    <div role="status">
+                        <span className="sr-only">사용자 목록을 불러오는 중이에요</span>
+                        <SkeletonList
+                            count={5}
+                            rowClassName="h-16"
+                            thumbnailClassName="size-10 rounded-full"
+                        />
+                    </div>
+                )}
                 {isError && (
                     <p className="text-destructive text-body-sm text-center">
                         가상 사용자 목록을 불러오지 못했습니다.

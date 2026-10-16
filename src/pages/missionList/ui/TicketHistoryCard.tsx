@@ -24,7 +24,8 @@ export function TicketHistoryCard({ className }: { className?: string }) {
                 className,
             )}
         >
-            <div className="absolute inset-0 flex flex-col gap-2 p-4">
+            {/* 카드 여백 8 + 줄 여백 16 = 24 — 옆 출석 카드와 같은 여백 (DESIGN-SYSTEM 5절) */}
+            <div className="absolute inset-0 flex flex-col gap-2 p-2">
                 {/*
                   항상 보이는 얇은 border/strong 색 스크롤바(4px, 손잡이 최소 64px).
                   크롬·사파리는 ::-webkit-scrollbar로 그리면 macOS에서도 숨겨지지 않는다 — 표준 scrollbar-* 속성을 함께 주면 이 설정이 무시되므로 파이어폭스에만 준다.

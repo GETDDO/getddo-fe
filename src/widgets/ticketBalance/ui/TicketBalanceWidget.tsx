@@ -12,8 +12,8 @@ import { hasGamePlayer } from '@features/playGame';
 import { useDragScroll } from '@shared/lib/useDragScroll';
 import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
-import { Skeleton } from '@shared/ui/skeleton';
-import { TicketCard } from '@shared/ui/ticket-card';
+import { SkeletonCard } from '@shared/ui/skeleton';
+import { TicketCard, TicketCardMedia } from '@shared/ui/ticket-card';
 
 import type { OrderableEarnCard } from '../lib/orderEarnCards';
 
@@ -134,7 +134,7 @@ export function TicketBalanceWidget({
                 <div role="status" className="flex gap-4 overflow-hidden">
                     <span className="sr-only">응모권 카드를 불러오는 중이에요</span>
                     {Array.from({ length: 4 }, (_, index) => (
-                        <Skeleton key={index} className="h-90 w-66.25 shrink-0 rounded-2xl" />
+                        <SkeletonCard key={index} className="h-90 w-66.25 shrink-0" />
                     ))}
                 </div>
             ) : (
@@ -221,15 +221,11 @@ function EarnTicketCard({ card }: { card: EarnCard }) {
                 />
             )}
             {/* 미션 그림(16:9, 바탕 투명)은 바탕 없이 카드 위에 바로 얹는다 — 그림이 없을 때만 회색 칸 + 아이콘 */}
-            <div
-                className={`${card.thumbnailUrl ? '' : 'bg-surface-canvas'} flex h-30 shrink-0 items-center justify-center overflow-hidden rounded-lg`}
-            >
-                {card.thumbnailUrl ? (
-                    <img src={card.thumbnailUrl} alt="" className="size-full object-contain" />
-                ) : (
-                    <card.thumbnailIcon className="text-fg-disabled size-8" />
-                )}
-            </div>
+            <TicketCardMedia
+                src={card.thumbnailUrl}
+                fit="contain"
+                fallback={<card.thumbnailIcon className="text-fg-disabled size-8" />}
+            />
             <div className="mt-3 flex flex-col gap-2">
                 <div className="flex flex-col">
                     <span className="text-fg-tertiary text-caption">{card.category}</span>

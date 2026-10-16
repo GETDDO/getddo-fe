@@ -10,7 +10,7 @@ import {
     preloadGamePlayer,
     useSubmitGamePlay,
 } from '@features/playGame';
-import { Loading } from '@shared/ui/loading';
+import { SkeletonDetail } from '@shared/ui/skeleton';
 import { GameRail } from '@widgets/gameRail';
 
 import { GameHero } from './ui/GameHero';
@@ -51,7 +51,7 @@ export function GameDetailPage() {
     if (isPending) {
         return (
             <main className={`${CONTAINER} py-20`}>
-                <Loading size="lg" />
+                <SkeletonDetail media="video" />
             </main>
         );
     }

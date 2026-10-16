@@ -51,10 +51,12 @@ const mockGames: GameMeta[] = [
         dailyLimit: 1,
     },
     {
-        id: 'game-mole',
-        title: '두더지 잡기',
-        description: '튀어나오는 두더지를 빠르게 잡아요',
-        thumbnailUrl: null,
+        // 두더지 잡기 자리를 타꼬 주문(순서 기억)으로 바꿨다 — 다른 게임과 쓰는 능력이 겹치지 않게
+        id: 'game-order',
+        title: '타꼬 주문',
+        description: '손님 주문을 외워 순서대로 내줘요',
+        // 피그마 image 255
+        thumbnailUrl: '/images/games/takko-order.jpg',
         dailyLimit: 1,
     },
 ];
@@ -77,7 +79,7 @@ const seedPlayState: Record<string, GamePlayState> = {
     },
     'game-timing': { bestScore: 0, todayPlayCount: 0, rewardedToday: false, remainingPlays: 1 },
     'game-color': { bestScore: 120, todayPlayCount: 0, rewardedToday: false, remainingPlays: 1 },
-    'game-mole': { todayPlayCount: 0, rewardedToday: false, remainingPlays: 1 },
+    'game-order': { bestScore: 0, todayPlayCount: 0, rewardedToday: false, remainingPlays: 1 },
 };
 
 const defaultPlayState = (): GamePlayState => ({

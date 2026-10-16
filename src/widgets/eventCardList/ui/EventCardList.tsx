@@ -5,7 +5,7 @@ import type { Event } from '@entities/event';
 
 import { EventCard } from '@entities/event';
 import { Button } from '@shared/ui/button';
-import { Skeleton } from '@shared/ui/skeleton';
+import { SkeletonCard } from '@shared/ui/skeleton';
 
 export function EventCardList({
     title,
@@ -49,7 +49,7 @@ export function EventCardList({
             {isPending && (
                 <div aria-hidden className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {Array.from({ length: 4 }, (_, index) => (
-                        <Skeleton key={index} className="h-70 rounded-2xl" />
+                        <SkeletonCard key={index} className="h-70" />
                     ))}
                 </div>
             )}
