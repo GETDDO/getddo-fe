@@ -9,18 +9,35 @@ import { formatNumber } from '@shared/lib/format';
 import { cn } from '@shared/lib/utils';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { badgeVariants } from '@shared/ui/badge';
-import { Button } from '@shared/ui/button';
 import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
 import { useOpenEventStats } from '../model/useOpenEventStats';
 import { DashboardPanel } from './DashboardPanel';
+import { ViewAllLink } from './ViewAllLink';
 
 const PREVIEW = 5;
 /** 진행 중 이벤트는 최대치(100)로 받아 마감이 가까운 순으로 고른다 */
 const OPEN_EVENTS_SIZE = 100;
-/** 1시간 안에 마감하면 남은 시간 칩을 강조한다 */
+/** 1시간 안에 마감하면 '마감 임박' */
 const URGENT_MS = 60 * 60 * 1000;
+/** 목록 안 최다 대비 이 비율 미만이면 '응모 저조' */
+const LOW_RATIO = 0.25;
+
+/** 숫자를 비교하지 않아도 되게 판단을 칩으로 — 마감 임박 > 인기 > 응모 저조 순으로 하나만 */
+const STATUS_CHIP = {
+    urgent: { label: '마감 임박', className: 'bg-status-pending text-status-pending-text' },
+    hot: { label: '인기', className: 'bg-brand-soft text-fg-brand' },
+    low: { label: '응모 저조', className: 'bg-surface-sunken text-fg-secondary' },
+} as const;
+
+function eventStatus(remainingMs: number, spent: number | undefined, maxSpent: number) {
+    if (remainingMs <= URGENT_MS) return STATUS_CHIP.urgent;
+    if (spent === undefined || maxSpent === 0) return null;
+    if (spent === maxSpent) return STATUS_CHIP.hot;
+    if (spent / maxSpent < LOW_RATIO) return STATUS_CHIP.low;
+    return null;
+}
 
 /** 이벤트 한 줄 — 마감까지 남은 시간, 응모자 수, 쓰인 응모권(E03)과 목록 안 최댓값 대비 막대 */
 function OpenEventRow({
@@ -41,7 +58,7 @@ function OpenEventRow({
     const to = `/admin/events/${encodeURIComponent(event.id)}`;
     const spent = stats?.totalSpentTicketCount ?? 0;
     const ratio = maxSpent > 0 ? spent / maxSpent : 0;
-    const urgent = remainingMs <= URGENT_MS;
+    const status = eventStatus(remainingMs, stats?.totalSpentTicketCount, maxSpent);
     const fallback = stats === null ? '—' : '…';
 
     return (
@@ -63,17 +80,8 @@ function OpenEventRow({
                     {formatKstDot(event.endsAt, true)} 마감
                 </span>
             </TableCell>
-            <TableCell>
-                <span
-                    className={cn(
-                        badgeVariants({ variant: null }),
-                        urgent
-                            ? 'bg-status-pending text-status-pending-text'
-                            : 'bg-surface-sunken text-fg-secondary',
-                    )}
-                >
-                    {formatRemaining(remainingMs, 'minute')} 남음
-                </span>
+            <TableCell className="text-body-sm text-fg-secondary tabular-nums">
+                {formatRemaining(remainingMs, 'minute')} 남음
             </TableCell>
             <TableCell className="text-body-sm text-right tabular-nums">
                 {stats ? `${formatNumber(stats.participantCount)}명` : fallback}
@@ -90,6 +98,13 @@ function OpenEventRow({
                         {stats ? `${formatNumber(spent)}장` : fallback}
                     </span>
                 </span>
+            </TableCell>
+            <TableCell className="w-28 text-center">
+                {status && (
+                    <span className={cn(badgeVariants({ variant: null }), status.className)}>
+                        {status.label}
+                    </span>
+                )}
             </TableCell>
         </TableRow>
     );
@@ -116,11 +131,7 @@ export function OpenEventsPanel({ className }: { className?: string }) {
                     ? `진행 중 ${formatNumber(query.data.totalElements)}개 중 마감이 가까운 ${events.length}개`
                     : '마감이 가까운 순'
             }
-            actions={
-                <Button size="sm" variant="ghost" asChild>
-                    <Link to="/admin/events?status=OPEN">전체보기</Link>
-                </Button>
-            }
+            actions={<ViewAllLink to="/admin/events?status=OPEN" />}
             error={query.isError}
             onRetry={() => void query.refetch()}
             className={className}
@@ -142,6 +153,7 @@ export function OpenEventsPanel({ className }: { className?: string }) {
                             <TableHead className="text-fg-tertiary">마감까지</TableHead>
                             <TableHead className="text-fg-tertiary text-right">응모자</TableHead>
                             <TableHead className="text-fg-tertiary">사용 응모권</TableHead>
+                            <TableHead className="text-fg-tertiary text-center">상태</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>

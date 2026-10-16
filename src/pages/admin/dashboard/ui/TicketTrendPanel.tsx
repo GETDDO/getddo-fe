@@ -1,6 +1,6 @@
 import { useReducedMotion } from 'framer-motion';
 import { useId } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
     Area,
     CartesianGrid,
@@ -15,24 +15,24 @@ import {
 
 import { TICKET_SOURCE_TYPE_LABEL } from '@entities/ticket';
 import { formatNumber } from '@shared/lib/format';
-import { Button } from '@shared/ui/button';
 import { LoadingBlock, Skeleton } from '@shared/ui/skeleton';
 
 import type { TrendRow } from '../model/useTicketTrend';
 
 import { TREND_SOURCES } from '../model/useTicketTrend';
 import { DashboardPanel } from './DashboardPanel';
+import { ViewAllLink } from './ViewAllLink';
 
 // 디자인 시스템 차트 규칙 — 현재 값은 chart/line 실선 + 아래로 옅어지는 영역, 비교 값은 점선
 const LINE = 'var(--color-chart-line)';
 const COMPARE = 'var(--color-chart-axis)';
 const AXIS_TICK = { fill: 'var(--color-chart-axis)', fontSize: 12 };
-/** 값 점 — 흰 속에 마젠타 테두리 */
+/** 값 점 — 평소에는 흰 속에 마젠타 테두리, 올리면 조금 큰 마젠타 점(테두리 없음) */
 const POINT = { r: 4.5, fill: 'var(--color-surface-page)', stroke: LINE, strokeWidth: 2.5 };
 
 /** 말풍선 크기 — 점 위에 꼬리를 달아 띄운다 */
 const BUBBLE_W = 168;
-const BUBBLE_H = 74;
+const BUBBLE_H = 92;
 const BUBBLE_GAP = 14;
 
 /**
@@ -48,14 +48,7 @@ function PointBubble({ cx, cy, payload }: { cx?: number; cy?: number; payload?: 
     const top = below ? cy + BUBBLE_GAP : cy - BUBBLE_GAP - BUBBLE_H;
     return (
         <g>
-            <circle
-                cx={cx}
-                cy={cy}
-                r={6}
-                fill={LINE}
-                stroke="var(--color-surface-page)"
-                strokeWidth={3}
-            />
+            <circle cx={cx} cy={cy} r={6} fill={LINE} />
             <foreignObject
                 x={left}
                 y={top - (below ? 0 : 6)}
@@ -78,6 +71,9 @@ function PointBubble({ cx, cy, payload }: { cx?: number; cy?: number; payload?: 
                                     `${TICKET_SOURCE_TYPE_LABEL[source]} ${formatNumber(row[source])}`,
                             ).join(' · ')}
                         </span>
+                        <span className="mt-0.5 text-[0.6875rem] opacity-70">
+                            눌러서 그날 지급 이력 보기 ›
+                        </span>
                     </div>
                     {/* 꼬리 — 점을 가리키는 작은 삼각형 */}
                     <span
@@ -93,6 +89,9 @@ function PointBubble({ cx, cy, payload }: { cx?: number; cy?: number; payload?: 
         </g>
     );
 }
+
+/** 오늘 구간(어제→오늘)은 하루가 끝나지 않았으므로 점선으로 따로 그린다 — 줄어든 게 아니라 집계 중임을 보인다 */
+type ChartRow = TrendRow & { past: number | null; today: number | null };
 
 /** 응모권 지급(직선 꺾은선 + 영역)과 응모 사용(점선) 추이 — 보상이 들어오고 쓰이는 흐름을 한 그림으로 본다 */
 export function TicketTrendPanel({
@@ -114,54 +113,55 @@ export function TicketTrendPanel({
     const totalGranted = rows.reduce((sum, row) => sum + row.granted, 0);
     const totalUsed = rows.reduce((sum, row) => sum + row.used, 0);
     const useRate = totalGranted > 0 ? Math.round((totalUsed / totalGranted) * 100) : 0;
+    const navigate = useNavigate();
+    const summary = [
+        {
+            label: '지급',
+            legend: <span className="bg-chart-line h-0.5 w-3 rounded-full" />,
+            value: `${formatNumber(totalGranted)}장`,
+        },
+        {
+            label: '응모에 사용',
+            legend: <span className="border-chart-axis w-3 border-t-2 border-dashed" />,
+            value: `${formatNumber(totalUsed)}장`,
+        },
+        { label: '사용률', legend: null, value: `${useRate}%` },
+    ];
+    const last = rows.length - 1;
+    const chartRows: ChartRow[] = rows.map((row, index) => ({
+        ...row,
+        past: index < last ? row.granted : null,
+        today: index >= last - 1 ? row.granted : null,
+    }));
+    // 점(날짜)을 누르면 그날로 걸러진 지급 이력을 연다
+    const openDay = (index: unknown) => {
+        const row = rows[Number(index)];
+        if (row) void navigate(`/admin/tickets?tab=grants&date=${row.ymd}`);
+    };
 
     return (
         <DashboardPanel
             title="응모권 지급·응모 추이"
             caption={`최근 ${rows.length}일 · 오늘은 지금까지 집계 (가상 시계 기준)`}
-            actions={
-                <Button size="sm" variant="ghost" asChild>
-                    <Link to="/admin/tickets?tab=grants">지급 이력</Link>
-                </Button>
-            }
+            actions={<ViewAllLink to="/admin/tickets?tab=grants" />}
             error={isError}
             onRetry={onRetry}
             className={className}
         >
-            {/* 기간 합계를 크게 — 그래프가 무엇의 합인지 먼저 읽힌다 */}
-            <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
-                <div className="flex flex-col">
-                    <span className="text-caption text-fg-tertiary flex items-center gap-1.5">
-                        <span className="bg-chart-line h-0.5 w-3 rounded-full" />
-                        지급
-                    </span>
-                    {isPending ? (
-                        <Skeleton className="mt-1 h-8 w-28" />
-                    ) : (
-                        <span className="text-title-1 text-fg-primary tabular-nums">
-                            {formatNumber(totalGranted)}장
-                        </span>
-                    )}
-                </div>
-                <div className="flex flex-col">
-                    <span className="text-caption text-fg-tertiary flex items-center gap-1.5">
-                        <span className="border-chart-axis w-3 border-t-2 border-dashed" />
-                        응모에 사용
-                    </span>
-                    {isPending ? (
-                        <Skeleton className="mt-1 h-6 w-20" />
-                    ) : (
-                        <span className="text-title-3 text-fg-secondary tabular-nums">
-                            {formatNumber(totalUsed)}장
-                        </span>
-                    )}
-                </div>
-                {!isPending && (
-                    <span className="bg-brand-soft text-fg-brand text-caption mb-1 rounded-full px-2 py-0.5 font-semibold tabular-nums">
-                        사용률 {useRate}%
-                    </span>
-                )}
-            </div>
+            {/* 기간 합계 — 세 값을 같은 크기로 나란히. 선 모양 범례가 그래프 선과 짝을 이룬다 */}
+            <dl className="divide-border-default flex flex-wrap divide-x">
+                {summary.map(({ label, legend, value }) => (
+                    <div key={label} className="flex flex-col gap-0.5 px-5 first:pl-0">
+                        <dt className="text-caption text-fg-tertiary flex items-center gap-1.5">
+                            {legend}
+                            {label}
+                        </dt>
+                        <dd className="text-title-3 text-fg-primary tabular-nums">
+                            {isPending ? <Skeleton className="h-7 w-16" /> : value}
+                        </dd>
+                    </div>
+                ))}
+            </dl>
             {isPending ? (
                 <LoadingBlock>
                     <Skeleton className="h-64 w-full rounded-xl" />
@@ -173,13 +173,15 @@ export function TicketTrendPanel({
                 >
                     <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart
-                            data={rows}
+                            data={chartRows}
                             margin={{ top: 16, right: 12, bottom: 0, left: -16 }}
+                            onClick={(state) => openDay(state.activeTooltipIndex)}
+                            className="cursor-pointer"
                         >
                             <defs>
                                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor={LINE} stopOpacity={0.14} />
-                                    <stop offset="100%" stopColor={LINE} stopOpacity={0} />
+                                    <stop offset="0%" stopColor={LINE} stopOpacity={0.32} />
+                                    <stop offset="100%" stopColor={LINE} stopOpacity={0.02} />
                                 </linearGradient>
                             </defs>
                             {/* 가로 격자만 — 세로선이 점을 관통하지 않게 */}
@@ -217,12 +219,40 @@ export function TicketTrendPanel({
                                 activeDot={false}
                                 isAnimationActive={!reduceMotion}
                             />
-                            <Area
-                                dataKey="granted"
+                            {/* 영역 채움과 점은 전체 기간, 선은 지난날(실선)과 오늘 구간(점선)으로 나눠 그린다 */}
+                            <Line
+                                dataKey="past"
                                 type="linear"
                                 stroke={LINE}
                                 strokeWidth={2.5}
+                                dot={false}
+                                activeDot={false}
+                                isAnimationActive={!reduceMotion}
+                            />
+                            <Line
+                                dataKey="today"
+                                type="linear"
+                                stroke={LINE}
+                                strokeWidth={2.5}
+                                strokeDasharray="6 5"
+                                dot={false}
+                                activeDot={false}
+                                isAnimationActive={!reduceMotion}
+                            />
+                            <Area
+                                dataKey="granted"
+                                type="linear"
+                                stroke="none"
                                 fill={`url(#${gradientId})`}
+                                dot={false}
+                                activeDot={false}
+                                isAnimationActive={!reduceMotion}
+                            />
+                            {/* 점·말풍선 전용 선 — recharts는 선을 영역보다 위에 그리므로, 점을 맨 마지막 선에 달아야 흰 속 점이 선을 가린다 */}
+                            <Line
+                                dataKey="granted"
+                                type="linear"
+                                stroke="none"
                                 dot={POINT}
                                 activeDot={(props: {
                                     cx?: number;

@@ -21,9 +21,14 @@ export function AdminLayout() {
             {/* 화면 높이에 고정해 긴 페이지에서도 아래 '사용자 화면으로'가 항상 보이게 한다 — 메뉴가 넘치면 메뉴만 스크롤 */}
             <aside className="border-border bg-surface-inverse sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r md:flex">
                 <div className="flex h-16 shrink-0 items-center px-5">
-                    <span className="text-title-3 text-fg-inverse">
+                    {/* 로고를 누르면 대시보드로 */}
+                    <NavLink
+                        to="/admin"
+                        aria-label="관리자 대시보드로 이동"
+                        className="text-title-3 text-fg-inverse focus-visible:ring-fg-inverse rounded focus-visible:ring-2 focus-visible:outline-none"
+                    >
                         U <span className="text-fg-brand">+</span> GETDDO
-                    </span>
+                    </NavLink>
                 </div>
                 {/* 메뉴는 사이드바 폭을 꽉 채운 네모 줄 — 고른 메뉴는 줄 전체가 밝아진다 */}
                 <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto py-3">

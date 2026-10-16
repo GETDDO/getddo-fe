@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowUpRight, Minus } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, ChevronRight, Minus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { useAbuseCases } from '@entities/abuseCase';
@@ -45,7 +45,7 @@ function Delta({ value, previous, unit }: { value: number; previous: number; uni
     );
 }
 
-/** 숫자 카드 — 흰 카드에 이름·큰 숫자·어제 대비만. 색 막대·아이콘 없이 숫자가 먼저 읽히게 한다 */
+/** 숫자 카드 — 흰 카드에 이름·큰 숫자·어제 대비만. 색 막대 없이 숫자가 먼저 읽히고, 오른쪽 위 > 로 누를 수 있음을 알린다 */
 function StatCard({
     label,
     value,
@@ -60,7 +60,7 @@ function StatCard({
     return (
         <div
             className={cn(
-                'bg-surface-page border-border-default relative flex flex-col gap-1 rounded-2xl border p-5 transition-colors',
+                'group bg-surface-page border-border-default relative flex flex-col gap-1 rounded-2xl border p-5 transition-colors',
                 'hover:border-fg-brand',
             )}
         >
@@ -72,6 +72,11 @@ function StatCard({
                     'absolute inset-0 rounded-2xl',
                     'focus-visible:ring-border-focus focus-visible:ring-offset-surface-page focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
                 )}
+            />
+            {/* 누르면 관리 화면으로 간다는 표시 — 움직임 없이 올리면 색만 진해진다 */}
+            <ChevronRight
+                aria-hidden
+                className="text-fg-tertiary group-hover:text-fg-primary absolute top-5 right-5 size-5"
             />
             <span className="text-body-sm text-fg-tertiary">{label}</span>
             <div className="text-title-1 text-fg-primary tabular-nums">
@@ -109,10 +114,10 @@ function StatCard({
  * 건수는 Page.totalElements를 재사용한다(size=1로 본문을 가볍게). 오늘·어제는 가상 시계 기준 KST 날짜다
  */
 export function AdminStatSummary() {
-    const [yesterday, today] = recentKstDays(useVirtualClock().now(), 2).map(({ from, to }) => ({
-        from,
-        to,
-    }));
+    const days = recentKstDays(useVirtualClock().now(), 2);
+    const [yesterday, today] = days.map(({ from, to }) => ({ from, to }));
+    // 카드를 누르면 오늘 조건이 걸린 채 목록이 열린다
+    const todayYmd = days[1]?.ymd ?? '';
 
     const openEvents = useAdminEvents({ page: 1, size: 1, status: 'OPEN' });
     // 응모권 건수는 [어제, 오늘] 순서로 받는다
@@ -144,7 +149,7 @@ export function AdminStatSummary() {
                 error={granted.isError}
                 onRetry={granted.refetch}
                 description="출석·미션·게임 보상"
-                to="/admin/tickets?tab=grants"
+                to={`/admin/tickets?tab=grants&date=${todayYmd}`}
             />
             <StatCard
                 label="오늘 응모에 쓴 응모권"
@@ -155,7 +160,7 @@ export function AdminStatSummary() {
                 error={used.isError}
                 onRetry={used.refetch}
                 description="이벤트 응모로 차감된 응모권"
-                to="/admin/tickets?tab=histories"
+                to={`/admin/tickets?tab=histories&date=${todayYmd}&operationType=USE`}
             />
             <StatCard
                 label="오늘 어뷰징 차단"
@@ -165,7 +170,7 @@ export function AdminStatSummary() {
                 error={abuseToday.isError}
                 onRetry={() => void abuseToday.refetch()}
                 description="지급 전 차단된 요청"
-                to="/admin/abuse-cases"
+                to={`/admin/abuse-cases?date=${todayYmd}`}
             />
         </div>
     );

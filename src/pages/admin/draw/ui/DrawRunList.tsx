@@ -89,7 +89,7 @@ export function DrawRunList({ eventId, selectedId, onSelect }: DrawRunListProps)
                             <TableHead className="text-caption text-fg-tertiary h-11 px-4">
                                 구분
                             </TableHead>
-                            <TableHead className="text-caption text-fg-tertiary h-11 px-4">
+                            <TableHead className="text-caption text-fg-tertiary h-11 px-4 text-center">
                                 상태
                             </TableHead>
                             <TableHead className="text-caption text-fg-tertiary h-11 px-4">
@@ -127,7 +127,7 @@ export function DrawRunList({ eventId, selectedId, onSelect }: DrawRunListProps)
                                     <TableCell className="text-body-sm text-fg-secondary px-4 py-3">
                                         {DRAW_EXECUTION_TYPE_LABEL[run.executionType]}
                                     </TableCell>
-                                    <TableCell className="px-4 py-3">
+                                    <TableCell className="px-4 py-3 text-center">
                                         <span className={cn(CHIP, status.chipClass)}>
                                             {status.label}
                                         </span>

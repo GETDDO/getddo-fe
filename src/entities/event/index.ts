@@ -26,6 +26,7 @@ export {
     adminEventApiPath,
     useAdminEvent,
     useAdminEvents,
+    useAdminEventStatusCounts,
 } from './api/adminQueries';
 export {
     EVENTS_API_PATH,

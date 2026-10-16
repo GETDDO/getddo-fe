@@ -189,3 +189,8 @@ export function recentKstDays(now: Date, days: number): KstDayRange[] {
         return { ymd, from: from.toISOString(), to: kstNextDateStartUtcIso(ymd) };
     });
 }
+
+/** 주소 조건 등으로 받은 날짜 문자열이 "YYYY-MM-DD" 꼴이면 그대로, 아니면 null (대시보드 → 목록 날짜 필터 연결) */
+export function parseYmd(value: string | null): string | null {
+    return value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+}

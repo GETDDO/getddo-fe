@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { TriangleAlert } from 'lucide-react';
 
 import { formatKst } from '@shared/lib/date';
+import { cn } from '@shared/lib/utils';
 import { badgeVariants } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
@@ -28,7 +29,16 @@ import { TICKET_GRADE_LABEL } from '../model/grade';
 const CHIP = badgeVariants({ variant: null });
 const TIME = 'text-fg-secondary text-body-sm whitespace-nowrap';
 
-function Frame({ headers, children }: { headers: string[]; children: ReactNode }) {
+/** centered — 칩만 담는 열의 머리글. 칩 너비가 제각각이라 가운데로 맞춘다 */
+function Frame({
+    headers,
+    centered = [],
+    children,
+}: {
+    headers: string[];
+    centered?: string[];
+    children: ReactNode;
+}) {
     return (
         <div className="bg-surface-page border-border-default overflow-hidden rounded-2xl border">
             <Table>
@@ -37,7 +47,10 @@ function Frame({ headers, children }: { headers: string[]; children: ReactNode }
                         {headers.map((header) => (
                             <TableHead
                                 key={header}
-                                className="text-caption text-fg-tertiary h-11 px-4 font-semibold"
+                                className={cn(
+                                    'text-caption text-fg-tertiary h-11 px-4 font-semibold',
+                                    centered.includes(header) && 'text-center',
+                                )}
                             >
                                 {header}
                             </TableHead>
@@ -50,8 +63,8 @@ function Frame({ headers, children }: { headers: string[]; children: ReactNode }
     );
 }
 
-const Cell = ({ children }: { children: ReactNode }) => (
-    <TableCell className="px-4 py-3 align-top">{children}</TableCell>
+const Cell = ({ children, center = false }: { children: ReactNode; center?: boolean }) => (
+    <TableCell className={cn('px-4 py-3 align-top', center && 'text-center')}>{children}</TableCell>
 );
 
 function UserCell({ name, id }: { name: string; id: string }) {
@@ -77,6 +90,7 @@ export function TicketInconsistencyTable({
 }) {
     return (
         <Frame
+            centered={['등급']}
             headers={[
                 '사용자',
                 '응모권',
@@ -100,7 +114,7 @@ export function TicketInconsistencyTable({
                             {row.ticketId}
                         </span>
                     </Cell>
-                    <Cell>
+                    <Cell center>
                         <Gray>{TICKET_GRADE_LABEL[row.grade]}</Gray>
                     </Cell>
                     <Cell>
@@ -167,7 +181,10 @@ export function MismatchValue({
 /** AO03 — 지급 이력 */
 export function TicketGrantTable({ rows }: { rows: TicketGrant[] }) {
     return (
-        <Frame headers={['지급 시각', '사용자', '구분', '등급', '출처 ID', '만료']}>
+        <Frame
+            centered={['구분', '등급']}
+            headers={['지급 시각', '사용자', '구분', '등급', '출처 ID', '만료']}
+        >
             {rows.map((row) => (
                 <TableRow key={row.historyId} className="hover:bg-surface-sunken">
                     <Cell>
@@ -176,13 +193,13 @@ export function TicketGrantTable({ rows }: { rows: TicketGrant[] }) {
                     <Cell>
                         <UserCell name={row.userName} id={row.userId} />
                     </Cell>
-                    <Cell>
+                    <Cell center>
                         <Gray>
                             {TICKET_SOURCE_TYPE_LABEL[row.sourceType]}
                             {row.missionId ? ` · ${row.missionId}` : ''}
                         </Gray>
                     </Cell>
-                    <Cell>
+                    <Cell center>
                         <Gray>{TICKET_GRADE_LABEL[row.grade]}</Gray>
                     </Cell>
                     <Cell>
@@ -202,7 +219,10 @@ export function TicketGrantTable({ rows }: { rows: TicketGrant[] }) {
 /** AO05 — 전체 이력 */
 export function AdminTicketHistoryTable({ rows }: { rows: AdminTicketHistory[] }) {
     return (
-        <Frame headers={['처리 시각', '사용자', '처리', '등급', '처리 후 상태', '이벤트·미션']}>
+        <Frame
+            centered={['처리', '등급']}
+            headers={['처리 시각', '사용자', '처리', '등급', '처리 후 상태', '이벤트·미션']}
+        >
             {rows.map((row) => (
                 <TableRow key={row.id} className="hover:bg-surface-sunken">
                     <Cell>
@@ -211,10 +231,10 @@ export function AdminTicketHistoryTable({ rows }: { rows: AdminTicketHistory[] }
                     <Cell>
                         <UserCell name={row.userName} id={row.userId} />
                     </Cell>
-                    <Cell>
+                    <Cell center>
                         <Gray>{TICKET_OPERATION_LABEL[row.operationType]}</Gray>
                     </Cell>
-                    <Cell>
+                    <Cell center>
                         <Gray>{TICKET_GRADE_LABEL[row.grade]}</Gray>
                     </Cell>
                     <Cell>
@@ -236,7 +256,10 @@ export function AdminTicketHistoryTable({ rows }: { rows: AdminTicketHistory[] }
 /** AO08 — 반환 이력. 반환은 이벤트 취소와 같은 트랜잭션에서 끝나므로 처리 상태 열이 없다 */
 export function TicketRefundTable({ rows }: { rows: TicketRefund[] }) {
     return (
-        <Frame headers={['반환 시각', '사용자', '이벤트', '등급', '사유', '반환분 만료']}>
+        <Frame
+            centered={['등급', '사유']}
+            headers={['반환 시각', '사용자', '이벤트', '등급', '사유', '반환분 만료']}
+        >
             {rows.map((row) => (
                 <TableRow key={row.id} className="hover:bg-surface-sunken">
                     <Cell>
@@ -248,10 +271,10 @@ export function TicketRefundTable({ rows }: { rows: TicketRefund[] }) {
                     <Cell>
                         <span className="text-body-sm text-fg-primary">{row.eventTitle}</span>
                     </Cell>
-                    <Cell>
+                    <Cell center>
                         <Gray>{TICKET_GRADE_LABEL[row.grade]}</Gray>
                     </Cell>
-                    <Cell>
+                    <Cell center>
                         <Gray>{TICKET_REFUND_REASON_LABEL[row.reasonType]}</Gray>
                     </Cell>
                     <Cell>
