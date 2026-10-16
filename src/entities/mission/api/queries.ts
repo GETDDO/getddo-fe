@@ -13,7 +13,7 @@ const missionPageSchema = pageSchema(missionSummarySchema);
 
 export const MISSIONS_KEY = ['missions'] as const;
 
-export const MISSIONS_API_PATH = '/missions';
+export const MISSIONS_API_PATH = '/v1/missions';
 
 export const missionApiPath = (missionId: string) => `${MISSIONS_API_PATH}/${missionId}`;
 

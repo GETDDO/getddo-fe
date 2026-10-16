@@ -13,7 +13,7 @@ const eventListSchema = envelopeSchema(pageSchema(eventSchema));
 export const EVENTS_KEY = ['events'] as const;
 
 // 이벤트 도메인의 엔드포인트 — 경로가 바뀌면 여기만 고친다 (다른 슬라이스는 이 상수를 재사용)
-export const EVENTS_API_PATH = '/events';
+export const EVENTS_API_PATH = '/v1/events';
 export const eventApiPath = (eventId: string) => `${EVENTS_API_PATH}/${eventId}`;
 export const eventEntriesApiPath = (eventId: string) => `${EVENTS_API_PATH}/${eventId}/entries`;
 

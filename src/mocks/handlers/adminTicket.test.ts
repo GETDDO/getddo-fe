@@ -35,7 +35,7 @@ afterEach(resetAdminTicketStore);
 
 describe('AO09 전체 불일치 목록', () => {
     it('시드된 불일치 응모권만 상태와 버전 비교 값과 함께 반환한다', async () => {
-        const res = await get('/admin/tickets/inconsistencies');
+        const res = await get('/v1/admin/tickets/inconsistencies');
         expect(res.status).toBe(200);
         const data = page(ticketInconsistencySchema, res.data);
         expect(data.items.map((i) => i.ticketId)).toEqual(['tk-007', 'tk-010', 'tk-013']);
@@ -54,16 +54,16 @@ describe('AO09 전체 불일치 목록', () => {
         const target = adminTicketStore.tickets.find((t) => t.id === 'tk-007');
         if (!target) throw new Error('seed missing');
         target.status = 'SPENT';
-        const res = await get('/admin/tickets/inconsistencies');
+        const res = await get('/v1/admin/tickets/inconsistencies');
         const ids = page(ticketInconsistencySchema, res.data).items.map((i) => i.ticketId);
         expect(ids).not.toContain('tk-007');
         expect(ids).toHaveLength(2);
     });
 
     it('userId로 거르고 불일치가 없으면 빈 페이지다', async () => {
-        const mine = await get('/admin/tickets/inconsistencies', { userId: 'vu-haneul' });
+        const mine = await get('/v1/admin/tickets/inconsistencies', { userId: 'vu-haneul' });
         expect(page(ticketInconsistencySchema, mine.data).items).toHaveLength(1);
-        const none = await get('/admin/tickets/inconsistencies', { userId: 'vu-doyoon' });
+        const none = await get('/v1/admin/tickets/inconsistencies', { userId: 'vu-doyoon' });
         const data = page(ticketInconsistencySchema, none.data);
         expect(data.items).toEqual([]);
         expect(data.totalElements).toBe(0);
@@ -72,7 +72,7 @@ describe('AO09 전체 불일치 목록', () => {
 
 describe('AO04 사용자별 정합성', () => {
     it('불일치 사용자는 isConsistent=false와 불일치 응모권을 돌려준다', async () => {
-        const res = await get('/admin/users/vu-haneul/tickets/consistency');
+        const res = await get('/v1/admin/users/vu-haneul/tickets/consistency');
         const data = envelopeSchema(ticketConsistencySchema).parse(res.data).data;
         expect(data.isConsistent).toBe(false);
         expect(data.inconsistencies).toHaveLength(1);
@@ -84,7 +84,7 @@ describe('AO04 사용자별 정합성', () => {
     });
 
     it('일치 사용자는 isConsistent=true이고 목록이 비어 있다', async () => {
-        const res = await get('/admin/users/vu-doyoon/tickets/consistency');
+        const res = await get('/v1/admin/users/vu-doyoon/tickets/consistency');
         const data = envelopeSchema(ticketConsistencySchema).parse(res.data).data;
         expect(data.isConsistent).toBe(true);
         expect(data.inconsistencies).toEqual([]);
@@ -94,14 +94,14 @@ describe('AO04 사용자별 정합성', () => {
         const target = adminTicketStore.tickets.find((t) => t.userId === 'vu-doyoon');
         if (!target) throw new Error('seed missing');
         target.version += 1;
-        const res = await get('/admin/users/vu-doyoon/tickets/consistency');
+        const res = await get('/v1/admin/users/vu-doyoon/tickets/consistency');
         expect(envelopeSchema(ticketConsistencySchema).parse(res.data).data.isConsistent).toBe(
             false,
         );
     });
 
     it('없는 사용자는 404다', async () => {
-        const res = await get('/admin/users/nobody/tickets/consistency');
+        const res = await get('/v1/admin/users/nobody/tickets/consistency');
         expect(res.status).toBe(404);
         expect(res.data.success).toBe(false);
     });
@@ -109,7 +109,7 @@ describe('AO04 사용자별 정합성', () => {
 
 describe('AO03 지급 이력', () => {
     it('GRANT 이력만 최신순으로 반환한다', async () => {
-        const res = await get('/admin/ticket-grants', { size: 100 });
+        const res = await get('/v1/admin/ticket-grants', { size: 100 });
         const data = page(ticketGrantSchema, res.data);
         expect(data.totalElements).toBe(15);
         const times = data.items.map((g) => g.grantedAt);
@@ -119,19 +119,19 @@ describe('AO03 지급 이력', () => {
     it('keyword는 이름 부분일치, userId는 정확 일치다', async () => {
         const byName = page(
             ticketGrantSchema,
-            (await get('/admin/ticket-grants', { keyword: '서연' })).data,
+            (await get('/v1/admin/ticket-grants', { keyword: '서연' })).data,
         );
         expect(byName.items.every((g) => g.userName === '박서연')).toBe(true);
         expect(byName.totalElements).toBe(3);
         const byId = page(
             ticketGrantSchema,
-            (await get('/admin/ticket-grants', { userId: 'vu-yuna' })).data,
+            (await get('/v1/admin/ticket-grants', { userId: 'vu-yuna' })).data,
         );
         expect(byId.totalElements).toBe(2);
     });
 
     it('missionId를 쓰면 MISSION 행만 반환한다', async () => {
-        const res = await get('/admin/ticket-grants', { missionId: 'ms-quiz' });
+        const res = await get('/v1/admin/ticket-grants', { missionId: 'ms-quiz' });
         const data = page(ticketGrantSchema, res.data);
         expect(data.totalElements).toBe(2);
         expect(
@@ -142,12 +142,12 @@ describe('AO03 지급 이력', () => {
     it('sourceType과 grade 필터를 적용한다', async () => {
         const game = page(
             ticketGrantSchema,
-            (await get('/admin/ticket-grants', { sourceType: 'GAME' })).data,
+            (await get('/v1/admin/ticket-grants', { sourceType: 'GAME' })).data,
         );
         expect(game.items.every((g) => g.sourceType === 'GAME')).toBe(true);
         const gold = page(
             ticketGrantSchema,
-            (await get('/admin/ticket-grants', { grade: 'GOLD' })).data,
+            (await get('/v1/admin/ticket-grants', { grade: 'GOLD' })).data,
         );
         expect(gold.totalElements).toBe(2);
     });
@@ -155,12 +155,12 @@ describe('AO03 지급 이력', () => {
     it('기간은 [from, to)이다', async () => {
         const all = page(
             ticketGrantSchema,
-            (await get('/admin/ticket-grants', { size: 100 })).data,
+            (await get('/v1/admin/ticket-grants', { size: 100 })).data,
         ).items;
         const sorted = [...all].sort((a, b) => a.grantedAt.localeCompare(b.grantedAt));
         const second = sorted[1];
         if (!second) throw new Error('seed missing');
-        const res = await get('/admin/ticket-grants', {
+        const res = await get('/v1/admin/ticket-grants', {
             size: 100,
             from: sorted[0]?.grantedAt,
             to: second.grantedAt,
@@ -171,10 +171,10 @@ describe('AO03 지급 이력', () => {
     });
 
     it('시간대가 없거나 from이 to 이상이면 400이다', async () => {
-        expect((await get('/admin/ticket-grants', { from: '2026-10-01T00:00:00' })).status).toBe(
+        expect((await get('/v1/admin/ticket-grants', { from: '2026-10-01T00:00:00' })).status).toBe(
             400,
         );
-        const res = await get('/admin/ticket-grants', {
+        const res = await get('/v1/admin/ticket-grants', {
             from: '2026-10-02T00:00:00Z',
             to: '2026-10-01T00:00:00Z',
         });
@@ -183,14 +183,14 @@ describe('AO03 지급 이력', () => {
     });
 
     it('page와 size가 범위를 벗어나면 400이다', async () => {
-        expect((await get('/admin/ticket-grants', { size: 101 })).status).toBe(400);
-        expect((await get('/admin/ticket-grants', { page: 0 })).status).toBe(400);
+        expect((await get('/v1/admin/ticket-grants', { size: 101 })).status).toBe(400);
+        expect((await get('/v1/admin/ticket-grants', { page: 0 })).status).toBe(400);
     });
 
     it('페이지는 1부터 나뉜다', async () => {
         const data = page(
             ticketGrantSchema,
-            (await get('/admin/ticket-grants', { page: 2, size: 10 })).data,
+            (await get('/v1/admin/ticket-grants', { page: 2, size: 10 })).data,
         );
         expect(data.page).toBe(2);
         expect(data.items).toHaveLength(5);
@@ -200,7 +200,7 @@ describe('AO03 지급 이력', () => {
 
 describe('AO05 전체 이력', () => {
     it('이름 필드를 싣고 최신순으로 반환한다', async () => {
-        const res = await get('/admin/ticket-histories', { size: 100 });
+        const res = await get('/v1/admin/ticket-histories', { size: 100 });
         const data = page(adminTicketHistorySchema, res.data);
         expect(data.items[0]?.userName).toBeTruthy();
         const times = data.items.map((h) => h.createdAt);
@@ -209,7 +209,7 @@ describe('AO05 전체 이력', () => {
 
     it('operationType·eventId·missionId·userId 필터를 적용한다', async () => {
         const list = async (params: Record<string, unknown>) =>
-            page(adminTicketHistorySchema, (await get('/admin/ticket-histories', params)).data);
+            page(adminTicketHistorySchema, (await get('/v1/admin/ticket-histories', params)).data);
         const use = await list({ operationType: 'USE', size: 100 });
         expect(use.items.length).toBeGreaterThan(0);
         expect(use.items.every((h) => h.operationType === 'USE')).toBe(true);
@@ -225,7 +225,7 @@ describe('AO05 전체 이력', () => {
     });
 
     it('내부 필드(version 등)는 응답에 노출하지 않는다', async () => {
-        const res = await get('/admin/ticket-histories');
+        const res = await get('/v1/admin/ticket-histories');
         expect(res.data.data.items[0]).not.toHaveProperty('version');
         expect(res.data.data.items[0]).not.toHaveProperty('sourceType');
     });
@@ -233,7 +233,7 @@ describe('AO05 전체 이력', () => {
 
 describe('AO08 반환 이력', () => {
     it('상태·재시도 필드 없이 반환 정보를 돌려준다', async () => {
-        const res = await get('/admin/ticket-refunds', { size: 100 });
+        const res = await get('/v1/admin/ticket-refunds', { size: 100 });
         const data = page(ticketRefundSchema, res.data);
         expect(data.totalElements).toBe(adminTicketStore.refunds.length);
         expect(data.items[0]).not.toHaveProperty('status');
@@ -244,14 +244,14 @@ describe('AO08 반환 이력', () => {
     it('eventId·userId·기간으로 거른다', async () => {
         const event = page(
             ticketRefundSchema,
-            (await get('/admin/ticket-refunds', { eventId: 'evt-201' })).data,
+            (await get('/v1/admin/ticket-refunds', { eventId: 'evt-201' })).data,
         );
         expect(event.items.every((r) => r.eventId === 'evt-201')).toBe(true);
         const none = page(
             ticketRefundSchema,
-            (await get('/admin/ticket-refunds', { userId: 'vu-yuna' })).data,
+            (await get('/v1/admin/ticket-refunds', { userId: 'vu-yuna' })).data,
         );
         expect(none.items).toEqual([]);
-        expect((await get('/admin/ticket-refunds', { from: 'bad' })).status).toBe(400);
+        expect((await get('/v1/admin/ticket-refunds', { from: 'bad' })).status).toBe(400);
     });
 });

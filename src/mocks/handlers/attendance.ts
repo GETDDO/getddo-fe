@@ -144,7 +144,7 @@ const milestonesFor = (state: AttendanceState, month: string): AttendanceMilesto
 
 export const attendanceHandlers = [
     // AT01 초안 — 오늘 출석 여부·연속 일수·일일 보상량·이번 달 단계·다음 초기화 시각
-    http.get(api('/attendances/today'), ({ request }) => {
+    http.get(api('/v1/attendances/today'), ({ request }) => {
         const now = mockNow();
         const today = toDate(now);
         const state = stateFor(userIdOf(request));
@@ -160,7 +160,7 @@ export const attendanceHandlers = [
         });
     }),
     // AT02 초안 — 본문을 받지 않는다. 날짜·보상량은 서버 KST 기준일·정책으로 정한다
-    http.post(api('/attendances'), async ({ request }) => {
+    http.post(api('/v1/attendances'), async ({ request }) => {
         // 본문이 붙어 오는 경우도 있으므로 소비해 두고, 출석 판정에는 쓰지 않는다
         await request.json().catch(() => null);
 
@@ -237,7 +237,7 @@ export const attendanceHandlers = [
         return ok(receipt, 201);
     }),
     // AT03 초안 — month는 필수 'YYYY-MM'. 기록 없는 달·미래 달은 오류가 아니라 빈 목록이다
-    http.get(api('/attendances'), ({ request }) => {
+    http.get(api('/v1/attendances'), ({ request }) => {
         const month = new URL(request.url).searchParams.get('month');
         if (!month || !MONTH_PATTERN.test(month)) {
             return fail(400, 'COMMON-002', 'month는 YYYY-MM 형식이어야 합니다');

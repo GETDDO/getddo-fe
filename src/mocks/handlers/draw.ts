@@ -619,7 +619,7 @@ export function resetMockDraws() {
 
 export const drawHandlers = [
     // AD01 — 이벤트의 추첨 실행 목록 (Page). 마감 전 이벤트는 빈 목록이다
-    http.get(api('/admin/events/:eventId/draws'), ({ params, request }) => {
+    http.get(api('/v1/admin/events/:eventId/draws'), ({ params, request }) => {
         const eventId = String(params.eventId);
         if (!eventInfoOf(eventId)) return notFound();
         const store = getStore(eventId);
@@ -628,13 +628,13 @@ export const drawHandlers = [
     }),
 
     // AD02 — 실행 상세 (취소 근거·결과·실패 정보 포함)
-    http.get(api('/admin/draws/:drawId'), ({ params }) => {
+    http.get(api('/v1/admin/draws/:drawId'), ({ params }) => {
         const found = findRun(String(params.drawId));
         return found ? ok(found.run.detail) : notFound();
     }),
 
     // AD03 — 해당 실행이 실제 사용한 후보 명단 (Page)
-    http.get(api('/admin/draws/:drawId/participants'), ({ params, request }) => {
+    http.get(api('/v1/admin/draws/:drawId/participants'), ({ params, request }) => {
         const found = findRun(String(params.drawId));
         if (!found) return notFound();
         const ids = new Set(found.run.candidateIds);
@@ -643,7 +643,7 @@ export const drawHandlers = [
     }),
 
     // AD04 — 정합성 검증. 난수를 다시 돌리지 않고 저장된 결과가 후보·규칙과 맞는지 확인한다
-    http.post(api('/admin/draws/:drawId/checks'), ({ params, request }) => {
+    http.post(api('/v1/admin/draws/:drawId/checks'), ({ params, request }) => {
         const found = findRun(String(params.drawId));
         if (!found) return notFound();
         const { store, run } = found;
@@ -713,7 +713,7 @@ export const drawHandlers = [
     }),
 
     // AD08 — 검증 이력 (Page, 최신순)
-    http.get(api('/admin/draws/:drawId/checks'), ({ params, request }) => {
+    http.get(api('/v1/admin/draws/:drawId/checks'), ({ params, request }) => {
         const found = findRun(String(params.drawId));
         if (!found) return notFound();
         const history = found.store.verifications
@@ -723,7 +723,7 @@ export const drawHandlers = [
     }),
 
     // AD05 — 당첨 취소 + 재추첨 등록. 같은 키·같은 본문은 200으로 기존 결과를 돌려준다
-    http.post(api('/admin/wins/:winId/cancellations'), async ({ params, request }) => {
+    http.post(api('/v1/admin/wins/:winId/cancellations'), async ({ params, request }) => {
         if (!isAdminContext(request)) return forbidden();
         // 확정 계약: UUID 멱등키 필수, 사유는 양끝 공백 제거 후 1~1000자 (오류 코드 문자열은 미확정이라 공통 코드를 쓴다)
         const key = request.headers.get(IDEMPOTENCY_HEADER)?.trim();
@@ -785,7 +785,7 @@ export const drawHandlers = [
     }),
 
     // AD06 — 최초 발표 이후 재추첨 결과를 공개 명단에 반영한다 (최초 공개 전 확인은 후속 계약)
-    http.post(api('/admin/draws/:drawId/publication'), async ({ params, request }) => {
+    http.post(api('/v1/admin/draws/:drawId/publication'), async ({ params, request }) => {
         const found = findRun(String(params.drawId));
         if (!found) return notFound();
         const reason = await readReason(request);
@@ -849,7 +849,7 @@ export const drawHandlers = [
     }),
 
     // AD07 — 공개 명단 변경 이력 (Page, 최신 revision 먼저)
-    http.get(api('/admin/events/:eventId/result-changes'), ({ params, request }) => {
+    http.get(api('/v1/admin/events/:eventId/result-changes'), ({ params, request }) => {
         const eventId = String(params.eventId);
         if (!eventInfoOf(eventId)) return notFound();
         const store = getStore(eventId);
@@ -858,7 +858,7 @@ export const drawHandlers = [
     }),
 
     // 최초 추첨 실패 재개 (GD-87) — 활성 관리자만, 본문 없음. 확정이면 저장 결과 200, 미확정·진행 중이면 202
-    http.post(api('/admin/draws/:runId/resume'), ({ params, request }) => {
+    http.post(api('/v1/admin/draws/:runId/resume'), ({ params, request }) => {
         if (!isAdminContext(request)) return forbidden();
         const found = findRun(String(params.runId));
         if (!found) return notFound();
@@ -877,7 +877,7 @@ export const drawHandlers = [
     }),
 
     // AD09 — 취소에 연결된 재추첨 실행의 시작·재개. 응답은 DrawExecutionResponse이고 확정된 실행은 저장 결과를 돌려준다
-    http.post(api('/admin/cancellations/:cancellationId/redraws'), ({ params, request }) => {
+    http.post(api('/v1/admin/cancellations/:cancellationId/redraws'), ({ params, request }) => {
         if (!isAdminContext(request)) return forbidden();
         const found = findCancellation(String(params.cancellationId));
         if (!found) return notFound();

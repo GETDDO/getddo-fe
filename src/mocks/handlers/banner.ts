@@ -108,7 +108,7 @@ const readBody = async (request: Request) =>
 
 export const bannerHandlers = [
     // B01 — 공개 배너 목록: Banner = id/eventId/imageUrl/displayOrder (spec 초안, 배열을 data에 싣는다)
-    http.get(api('/banners'), () =>
+    http.get(api('/v1/banners'), () =>
         ok(
             sorted().map(({ id, eventId, imageKey, displayOrder }) => ({
                 id,
@@ -120,10 +120,10 @@ export const bannerHandlers = [
     ),
 
     // AB01 — 관리자 목록
-    http.get(api('/admin/banners'), () => ok(sorted().map(toAdminResponse))),
+    http.get(api('/v1/admin/banners'), () => ok(sorted().map(toAdminResponse))),
 
     // AB02 — 등록: 최대 5개를 넘으면 409
-    http.post(api('/admin/banners'), async ({ request }) => {
+    http.post(api('/v1/admin/banners'), async ({ request }) => {
         const body = await readBody(request);
         if (!body) return fail(400, 'COMMON-002', '요청 본문이 올바르지 않습니다');
         const error = validateWriteBody(body);
@@ -151,7 +151,7 @@ export const bannerHandlers = [
 
     // AB05 — 순서 변경: 현재 배너 전체 ID를 중복 없이 노출 순서대로 받아 원자적으로 반영한다.
     // 정적 경로라 :bannerId 경로보다 먼저 등록한다
-    http.put(api('/admin/banners/order'), async ({ request }) => {
+    http.put(api('/v1/admin/banners/order'), async ({ request }) => {
         const body = (await request.json().catch(() => null)) as { bannerIds?: unknown } | null;
         const ids = body?.bannerIds;
         if (!Array.isArray(ids) || ids.some((id) => typeof id !== 'string')) {
@@ -179,7 +179,7 @@ export const bannerHandlers = [
     }),
 
     // AB03 — 수정
-    http.put(api('/admin/banners/:bannerId'), async ({ params, request }) => {
+    http.put(api('/v1/admin/banners/:bannerId'), async ({ params, request }) => {
         const item = mockBanners.find((b) => b.id === params.bannerId);
         if (!item) return fail(404, 'RESOURCE_NOT_FOUND', '배너를 찾을 수 없습니다');
         const body = await readBody(request);
@@ -195,7 +195,7 @@ export const bannerHandlers = [
     }),
 
     // AB04 — 삭제
-    http.delete(api('/admin/banners/:bannerId'), ({ params }) => {
+    http.delete(api('/v1/admin/banners/:bannerId'), ({ params }) => {
         const index = mockBanners.findIndex((b) => b.id === params.bannerId);
         if (index < 0) return fail(404, 'RESOURCE_NOT_FOUND', '배너를 찾을 수 없습니다');
         mockBanners.splice(index, 1);

@@ -1006,7 +1006,7 @@ function toResponse(event: MockEvent, now: number) {
 
 export const eventHandlers = [
     // E01 초안 — Page 봉투 + status 필터. 목업 항목은 시연 표시용 필드(참여자 수·내 응모 등)를 더 싣는다
-    http.get(api('/events'), ({ request }) => {
+    http.get(api('/v1/events'), ({ request }) => {
         const url = new URL(request.url);
         const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
         const size = Math.max(1, Number(url.searchParams.get('size')) || 20);
@@ -1022,7 +1022,7 @@ export const eventHandlers = [
             totalElements: items.length,
         });
     }),
-    http.get(api('/events/:eventId'), ({ params }) => {
+    http.get(api('/v1/events/:eventId'), ({ params }) => {
         const event = mockEvents.find((e) => e.id === params.eventId);
         if (!event) {
             return fail(404, 'RESOURCE_NOT_FOUND', '이벤트를 찾을 수 없습니다');

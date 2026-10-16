@@ -241,7 +241,7 @@ export function mockEventEntrantIds(eventId: string): string[] {
 
 export const entryHandlers = [
     // E06 초안 — Page<EntryReceipt> 봉투, page·size 파라미터를 적용한다 (페이지는 1부터)
-    http.get(api('/users/me/entries'), ({ request }) => {
+    http.get(api('/v1/users/me/entries'), ({ request }) => {
         const all = myEntriesFor(userIdOf(request));
         const url = new URL(request.url);
         const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
@@ -254,7 +254,7 @@ export const entryHandlers = [
         });
     }),
     // E05 초안 — 이벤트별 내 응모 내역. 거절 이력도 같은 영수증 목록으로 돌려준다 (GD-145)
-    http.get(api('/events/:eventId/entries/me'), ({ params, request }) => {
+    http.get(api('/v1/events/:eventId/entries/me'), ({ params, request }) => {
         const url = new URL(request.url);
         const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
         const size = Math.max(1, Number(url.searchParams.get('size')) || 20);
@@ -269,7 +269,7 @@ export const entryHandlers = [
         });
     }),
     // E03 — 이벤트별 응모 현황. 당첨 확률은 반환하지 않는다
-    http.get(api('/events/:eventId/statistics'), ({ params, request }) => {
+    http.get(api('/v1/events/:eventId/statistics'), ({ params, request }) => {
         const event = findMockEvent(String(params.eventId));
         if (!event) {
             return fail(404, 'ENTRY-004', '이벤트를 찾을 수 없습니다');
@@ -279,7 +279,7 @@ export const entryHandlers = [
         return ok({ ...getMockEventStatistics(event), mySpentTicketCount });
     }),
     // E07 — 응모 자격 조회. 서버가 판정한 불가 사유를 모두 돌려준다 (화면은 사전 차단보다 결과 안내에 쓴다)
-    http.get(api('/events/:eventId/eligibility'), ({ params, request }) => {
+    http.get(api('/v1/events/:eventId/eligibility'), ({ params, request }) => {
         const event = findMockEvent(String(params.eventId));
         if (!event) {
             return fail(404, 'ENTRY-004', '이벤트를 찾을 수 없습니다');
@@ -339,7 +339,7 @@ export const entryHandlers = [
         });
     }),
     // E04 — 응모 접수. 등급별 장수 맵(tickets)을 이벤트 유형별 규칙으로 검증해 차감한다 (GD-150)
-    http.post(api('/events/:eventId/entries'), async ({ params, request }) => {
+    http.post(api('/v1/events/:eventId/entries'), async ({ params, request }) => {
         const idempotencyKey = request.headers.get(IDEMPOTENCY_HEADER);
         if (!idempotencyKey) {
             return fail(400, 'COMMON-002', '멱등키가 필요합니다');

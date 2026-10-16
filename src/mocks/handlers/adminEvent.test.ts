@@ -49,7 +49,7 @@ const validBody = (over: Record<string, unknown> = {}) => ({
 });
 
 async function createEvent(over: Record<string, unknown> = {}) {
-    const res = await call('post', '/admin/events', validBody(over));
+    const res = await call('post', '/v1/admin/events', validBody(over));
     expect(res.status).toBe(201);
     return (res.data as Envelope<AdminEventBody>).data;
 }
@@ -62,13 +62,15 @@ const openWindow = () => ({
 
 // 사용자 목록이 Page 봉투+페이지로 오므로 관리 목업 수(33건)를 덮는 size로 요청한다
 async function userEventIds() {
-    const { data } = await apiClient.get<{ data: { items: { id: string }[] } }>('/events?size=100');
+    const { data } = await apiClient.get<{ data: { items: { id: string }[] } }>(
+        '/v1/events?size=100',
+    );
     return data.data.items.map((e) => e.id);
 }
 
 describe('관리자 이벤트 목업 핸들러', () => {
     it('목록이 Page 봉투 모양이고 필터와 페이지가 동작한다', async () => {
-        const res = await call('get', '/admin/events', undefined);
+        const res = await call('get', '/v1/admin/events', undefined);
         expect(res.status).toBe(200);
 
         const page = (res.data as Envelope<{ items: AdminEventBody[]; totalElements: number }>)
@@ -77,19 +79,22 @@ describe('관리자 이벤트 목업 핸들러', () => {
         expect(page.totalElements).toBeGreaterThanOrEqual(page.items.length);
 
         // 상태 필터 — 취소 상태 시드만 남아야 한다
-        const canceled = await call('get', '/admin/events?status=CANCELED');
+        const canceled = await call('get', '/v1/admin/events?status=CANCELED');
         const canceledItems = (canceled.data as Envelope<{ items: AdminEventBody[] }>).data.items;
         expect(canceledItems.length).toBeGreaterThan(0);
         expect(canceledItems.every((e) => e.status === 'CANCELED')).toBe(true);
 
         // 키워드 필터
-        const searched = await call('get', `/admin/events?keyword=${encodeURIComponent('취소된')}`);
+        const searched = await call(
+            'get',
+            `/v1/admin/events?keyword=${encodeURIComponent('취소된')}`,
+        );
         const searchedItems = (searched.data as Envelope<{ items: AdminEventBody[] }>).data.items;
         expect(searchedItems.some((e) => e.id === 'adm-902')).toBe(true);
 
         // 페이지 슬라이스 — 2페이지는 1페이지와 다른 항목을 가진다
-        const p1 = await call('get', '/admin/events?page=1&size=2');
-        const p2 = await call('get', '/admin/events?page=2&size=2');
+        const p1 = await call('get', '/v1/admin/events?page=1&size=2');
+        const p2 = await call('get', '/v1/admin/events?page=2&size=2');
         const ids1 = (p1.data as Envelope<{ items: AdminEventBody[] }>).data.items.map((e) => e.id);
         const ids2 = (p2.data as Envelope<{ items: AdminEventBody[] }>).data.items.map((e) => e.id);
         expect(ids1.filter((id) => ids2.includes(id))).toHaveLength(0);
@@ -98,32 +103,36 @@ describe('관리자 이벤트 목업 핸들러', () => {
     it('등록하면 관리자 목록과 사용자 목록 모두에 나타난다', async () => {
         const created = await createEvent();
 
-        const detail = await call('get', `/admin/events/${created.id}`);
+        const detail = await call('get', `/v1/admin/events/${created.id}`);
         expect((detail.data as Envelope<AdminEventBody>).data.title).toBe('관리자 테스트 이벤트');
 
         expect(await userEventIds()).toContain(created.id);
     });
 
     it('경품 없이 등록하거나 기간이 거꾸로면 400으로 거절한다', async () => {
-        const noPrizes = await call('post', '/admin/events', validBody({ prizes: [] }));
+        const noPrizes = await call('post', '/v1/admin/events', validBody({ prizes: [] }));
         expect(noPrizes.status).toBe(400);
 
         const reversed = await call(
             'post',
-            '/admin/events',
+            '/v1/admin/events',
             validBody({ startsAt: '2099-06-02T00:00:00Z', endsAt: '2099-06-01T00:00:00Z' }),
         );
         expect(reversed.status).toBe(400);
 
         // 응모권 미사용 이벤트에 가중치는 올 수 없다
-        const badCombo = await call('post', '/admin/events', validBody({ weightingEnabled: true }));
+        const badCombo = await call(
+            'post',
+            '/v1/admin/events',
+            validBody({ weightingEnabled: true }),
+        );
         expect(badCombo.status).toBe(400);
     });
 
     it('같은 등수의 경품을 중복 등록하면 400으로 거절한다', async () => {
         const res = await call(
             'post',
-            '/admin/events',
+            '/v1/admin/events',
             validBody({
                 prizes: [
                     { rank: 1, name: 'A', winnerCount: 1 },
@@ -140,7 +149,7 @@ describe('관리자 이벤트 목업 핸들러', () => {
         const created = await createEvent();
         expect(await userEventIds()).toContain(created.id);
 
-        const res = await call('post', `/admin/events/${created.id}/cancel`, {
+        const res = await call('post', `/v1/admin/events/${created.id}/cancel`, {
             reason: '경품 수급 문제',
         });
         expect(res.status).toBe(200);
@@ -162,7 +171,7 @@ describe('관리자 이벤트 목업 핸들러', () => {
 
         // 사용자가 응모권 3장으로 응모한다 (잔액 10 → 7)
         const entered = await apiClient.post(
-            `/events/${created.id}/entries`,
+            `/v1/events/${created.id}/entries`,
             { tickets: { BRONZE: 3 } },
             {
                 headers: {
@@ -176,12 +185,12 @@ describe('관리자 이벤트 목업 핸들러', () => {
 
         const balanceOf = async () =>
             (
-                await apiClient.get<{ data: { availableCount: number } }>('/tickets/me', {
+                await apiClient.get<{ data: { availableCount: number } }>('/v1/tickets/me', {
                     headers: { 'X-User-ID': userId },
                 })
             ).data.data.availableCount;
 
-        const first = await call('post', `/admin/events/${created.id}/cancel`, {
+        const first = await call('post', `/v1/admin/events/${created.id}/cancel`, {
             reason: '경품 수급 문제',
         });
         const firstResult = (first.data as Envelope<EventOperationResult>).data;
@@ -189,7 +198,7 @@ describe('관리자 이벤트 목업 핸들러', () => {
         expect(await balanceOf()).toBe(10);
 
         // 재취소는 멱등하게 성공하지만 반환 수량은 0이고 잔액도 변하지 않는다
-        const second = await call('post', `/admin/events/${created.id}/cancel`, {
+        const second = await call('post', `/v1/admin/events/${created.id}/cancel`, {
             reason: '취소 재요청',
         });
         expect(second.status).toBe(200);
@@ -199,7 +208,7 @@ describe('관리자 이벤트 목업 핸들러', () => {
 
     it('사유 없이 상태 운영을 요청하면 400으로 거절한다', async () => {
         const created = await createEvent();
-        const res = await call('post', `/admin/events/${created.id}/cancel`, { reason: '  ' });
+        const res = await call('post', `/v1/admin/events/${created.id}/cancel`, { reason: '  ' });
         expect(res.status).toBe(400);
     });
 
@@ -213,7 +222,7 @@ describe('관리자 이벤트 목업 핸들러', () => {
 
         // 진행 중 이벤트에 응모를 넣어 사용자 목록에도 실제 이력이 생겼는지 확인한다
         const entered = await apiClient.post(
-            `/events/${open.id}/entries`,
+            `/v1/events/${open.id}/entries`,
             { tickets: {} },
             {
                 headers: {
@@ -225,15 +234,15 @@ describe('관리자 이벤트 목업 핸들러', () => {
         );
         expect(entered.status).toBe(201);
 
-        const blocked = await call('delete', `/admin/events/${open.id}`);
+        const blocked = await call('delete', `/v1/admin/events/${open.id}`);
         expect(blocked.status).toBe(409);
 
-        const removed = await call('delete', `/admin/events/${deletable.id}`);
+        const removed = await call('delete', `/v1/admin/events/${deletable.id}`);
         expect(removed.status).toBe(200);
         expect(await userEventIds()).not.toContain(deletable.id);
 
         // 이미 시작한 이벤트는 삭제할 수 없다
-        const started = await call('delete', '/admin/events/evt-001');
+        const started = await call('delete', '/v1/admin/events/evt-001');
         expect(started.status).toBe(409);
     });
 });
