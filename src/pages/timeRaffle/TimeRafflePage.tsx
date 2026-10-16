@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useEventList } from '@entities/event';
 import { useVirtualClock } from '@shared/lib/virtualClock';
 import { Badge } from '@shared/ui/badge';
-import { Skeleton, SkeletonCard, SkeletonHeading } from '@shared/ui/skeleton';
+import { LoadingBlock, Skeleton, SkeletonCard, SkeletonHeading } from '@shared/ui/skeleton';
 
 import { RAFFLE_SECTION_IDS } from './model/sectionIds';
 import { ClosedRaffleList } from './ui/ClosedRaffleList';
@@ -68,17 +68,19 @@ export function TimeRafflePage() {
         return (
             // 페이지 모양을 아는 화면이라 스켈레톤 — 머리 배너, 지금 진행 중 제목·대표 카드·작은 카드
             <main className={CONTAINER}>
-                <div aria-hidden className="flex flex-col gap-14">
-                    <Skeleton className="h-72 w-full rounded-3xl" />
-                    <div className="flex flex-col gap-6">
-                        <SkeletonHeading caption />
-                        <SkeletonCard className="h-64" />
-                        <div className="grid gap-6 md:grid-cols-2">
-                            <SkeletonCard className="h-40" />
-                            <SkeletonCard className="h-40" />
+                <LoadingBlock>
+                    <div aria-hidden className="flex flex-col gap-14">
+                        <Skeleton className="h-72 w-full rounded-3xl" />
+                        <div className="flex flex-col gap-6">
+                            <SkeletonHeading caption />
+                            <SkeletonCard className="h-64" />
+                            <div className="grid gap-6 md:grid-cols-2">
+                                <SkeletonCard className="h-40" />
+                                <SkeletonCard className="h-40" />
+                            </div>
                         </div>
                     </div>
-                </div>
+                </LoadingBlock>
             </main>
         );
     }

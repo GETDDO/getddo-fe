@@ -96,7 +96,8 @@ function SkeletonList({
 
 /**
  * 상세 페이지 — 그림 면 + 제목·설명 막대·버튼 면, 아래 안내 카드 면.
- * 래플·게임·미션 상세가 함께 쓴다 (media=null이면 그림 없이 머리만)
+ * 래플·게임·미션 상세가 함께 쓴다 (media=null이면 그림 없이 머리만).
+ * 페이지 전체를 대신하므로 화면 낭독기용 로딩 안내(LoadingBlock)를 함께 둔다
  */
 function SkeletonDetail({
     media = 'square',
@@ -106,23 +107,27 @@ function SkeletonDetail({
     className?: string;
 }) {
     return (
-        <div aria-hidden className={cn('flex flex-col gap-10', className)}>
-            <div className={cn('grid gap-8', media && 'md:grid-cols-2')}>
-                {media && (
-                    <SkeletonCard
-                        className={media === 'square' ? 'aspect-square max-h-110' : 'aspect-video'}
-                    />
-                )}
-                <div className="flex flex-col gap-4">
-                    <SkeletonText className="h-6 w-20" />
-                    <SkeletonText className="h-9 w-4/5" />
-                    <SkeletonText className="h-5 w-full" />
-                    <SkeletonText className="h-5 w-2/3" />
-                    <Skeleton className="mt-4 h-12 w-full rounded-xl md:mt-auto" />
+        <LoadingBlock>
+            <div aria-hidden className={cn('flex flex-col gap-10', className)}>
+                <div className={cn('grid gap-8', media && 'md:grid-cols-2')}>
+                    {media && (
+                        <SkeletonCard
+                            className={
+                                media === 'square' ? 'aspect-square max-h-110' : 'aspect-video'
+                            }
+                        />
+                    )}
+                    <div className="flex flex-col gap-4">
+                        <SkeletonText className="h-6 w-20" />
+                        <SkeletonText className="h-9 w-4/5" />
+                        <SkeletonText className="h-5 w-full" />
+                        <SkeletonText className="h-5 w-2/3" />
+                        <Skeleton className="mt-4 h-12 w-full rounded-xl md:mt-auto" />
+                    </div>
                 </div>
+                <SkeletonCard className="h-48" />
             </div>
-            <SkeletonCard className="h-48" />
-        </div>
+        </LoadingBlock>
     );
 }
 
