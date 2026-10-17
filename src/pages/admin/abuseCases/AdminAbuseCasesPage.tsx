@@ -1,14 +1,14 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import type { AbuseCase } from '@entities/abuseCase';
 
 import { AbuseCaseDetailDrawer, AbuseCaseTable, useAbuseCases } from '@entities/abuseCase';
-import { kstDateStartUtcIso, kstNextDateStartUtcIso } from '@shared/lib/date';
+import { kstDateStartUtcIso, kstNextDateStartUtcIso, parseYmd } from '@shared/lib/date';
 import { isDateRangeOrdered } from '@shared/lib/filterConstants';
 import { Button } from '@shared/ui/button';
-import { DateRangeFilter } from '@shared/ui/filter-fields';
-import { Input } from '@shared/ui/input';
-import { Pager } from '@shared/ui/pager';
+import { DateRangeFilter, TextFilter } from '@shared/ui/filter-fields';
+import { Pagination } from '@shared/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
 import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
 
@@ -24,15 +24,18 @@ const SOURCE_TYPE_OPTIONS = [
 ];
 
 export function AdminAbuseCasesPage() {
+    // 대시보드 '오늘 어뷰징 차단' 카드에서 들어오면(?date=YYYY-MM-DD) 그날로 걸러진 채 연다
+    const [searchParams] = useSearchParams();
+    const linkedDate = parseYmd(searchParams.get('date')) ?? '';
     const [page, setPage] = useState(1);
     const [userIdInput, setUserIdInput] = useState('');
     // 검색어는 검색 버튼으로 확정된 값만 쿼리에 넘긴다 — 입력마다 요청하지 않는다
     const [userId, setUserId] = useState('');
-    const [fromInput, setFromInput] = useState('');
-    const [toInput, setToInput] = useState('');
+    const [fromInput, setFromInput] = useState(linkedDate);
+    const [toInput, setToInput] = useState(linkedDate);
     // 기간도 Select와 달리 즉시 적용되지 않고 검색 버튼으로 함께 적용된다 ([from, to), 발생 시각 기준)
-    const [from, setFrom] = useState('');
-    const [to, setTo] = useState('');
+    const [from, setFrom] = useState(linkedDate);
+    const [to, setTo] = useState(linkedDate);
     const [sourceType, setSourceType] = useState('all');
     const [rangeError, setRangeError] = useState(false);
     const [selected, setSelected] = useState<AbuseCase | null>(null);
@@ -67,7 +70,7 @@ export function AdminAbuseCasesPage() {
     };
 
     return (
-        <div className="flex max-w-280 flex-col gap-6 pr-10 pb-10">
+        <div className="flex flex-col gap-6 pr-10 pb-10">
             <div className="flex flex-wrap items-center gap-3">
                 <form
                     className="flex flex-wrap items-center gap-2"
@@ -84,12 +87,12 @@ export function AdminAbuseCasesPage() {
                         resetPage();
                     }}
                 >
-                    <Input
+                    <TextFilter
                         value={userIdInput}
-                        onChange={(e) => setUserIdInput(e.target.value)}
+                        onChange={setUserIdInput}
                         placeholder="사용자 ID 검색"
+                        label="사용자 검색"
                         className="w-64"
-                        aria-label="사용자 검색"
                     />
                     <DateRangeFilter
                         from={fromInput}
@@ -176,14 +179,7 @@ export function AdminAbuseCasesPage() {
                     <span className="text-body-sm text-fg-secondary">
                         총 {data.totalElements}건
                     </span>
-                    <Pager
-                        current={page - 1}
-                        total={totalPages}
-                        onPrev={() => setPage((p) => p - 1)}
-                        onNext={() => setPage((p) => p + 1)}
-                        prevDisabled={page <= 1}
-                        nextDisabled={page >= totalPages}
-                    />
+                    <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
                 </div>
             )}
 

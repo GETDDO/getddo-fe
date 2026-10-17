@@ -1,8 +1,10 @@
 import { Clock, RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { formatKst } from '@shared/lib/date';
+import { formatKst, formatYmd, kstNextDateStartUtcIso } from '@shared/lib/date';
+import { cn } from '@shared/lib/utils';
 import { useVirtualClock } from '@shared/lib/virtualClock';
+import { badgeVariants } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/ui/card';
 import { Input } from '@shared/ui/input';
@@ -31,6 +33,18 @@ function parseKstLocal(value: string): Date | null {
     const at = new Date(d.getTime() - KST_OFFSET_MS);
     return Number.isNaN(at.getTime()) ? null : at;
 }
+
+const MINUTE = 60_000;
+/** 시연에서 자주 쓰는 이동 — 지금 표시 시각에서 앞으로 */
+const QUICK_JUMPS = [
+    { label: '+10분', ms: 10 * MINUTE },
+    { label: '+1시간', ms: 60 * MINUTE },
+    { label: '+6시간', ms: 6 * 60 * MINUTE },
+    { label: '+1일', ms: 24 * 60 * MINUTE },
+] as const;
+
+// 관리자 화면의 다른 칸과 같이 그림자 없이 테두리만 둔다
+const PANEL = 'shadow-none';
 
 function formatOffset(diffMs: number): string {
     const minutes = Math.round(Math.abs(diffMs) / 60_000);
@@ -62,14 +76,19 @@ export function VirtualClockControl() {
     };
 
     return (
-        <div className="flex flex-col gap-4">
-            <Card>
+        <div className="grid gap-4 lg:grid-cols-2">
+            <Card size="lg" className={PANEL}>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Clock className="size-4" />
                         현재 표시 시각
                         {isOverridden && (
-                            <span className="bg-brand-primary/10 text-fg-brand text-caption rounded-full px-2 py-0.5 font-medium">
+                            <span
+                                className={cn(
+                                    badgeVariants({ variant: null }),
+                                    'bg-brand-soft text-fg-brand',
+                                )}
+                            >
                                 시간 여행 중
                             </span>
                         )}
@@ -107,7 +126,7 @@ export function VirtualClockControl() {
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card size="lg" className={PANEL}>
                 <CardHeader>
                     <CardTitle>특정 시각 지정</CardTitle>
                     <CardDescription>KST 기준으로 입력한 날짜·시각으로 이동합니다.</CardDescription>
@@ -130,6 +149,37 @@ export function VirtualClockControl() {
                         <Button type="button" onClick={applyAbsolute} disabled={!absolute}>
                             지정
                         </Button>
+                    </div>
+                    {/* 빠른 이동 — 마감·추첨·발표 흐름을 시연할 때 지금 표시 시각에서 바로 앞으로 간다 */}
+                    <div className="mt-5 flex flex-col gap-1.5">
+                        <span className="text-body-sm font-medium">빠른 이동</span>
+                        <div className="flex flex-wrap gap-2">
+                            {QUICK_JUMPS.map(({ label, ms }) => (
+                                <Button
+                                    key={label}
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => setOverride(new Date(now().getTime() + ms))}
+                                >
+                                    {label}
+                                </Button>
+                            ))}
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                onClick={() =>
+                                    setOverride(
+                                        new Date(
+                                            kstNextDateStartUtcIso(formatYmd(now().toISOString())),
+                                        ),
+                                    )
+                                }
+                            >
+                                다음 날 0시
+                            </Button>
+                        </div>
                     </div>
                 </CardContent>
             </Card>

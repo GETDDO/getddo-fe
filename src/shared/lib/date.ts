@@ -171,3 +171,37 @@ export function formatKstDot(date: Date | string, withTime = false): string {
     const day = `${pad(k.getUTCMonth() + 1)}.${pad(k.getUTCDate())}`;
     return withTime ? `${day} ${pad(k.getUTCHours())}:${pad(k.getUTCMinutes())}` : day;
 }
+
+/** KST 하루 구간 — 날짜("YYYY-MM-DD")와 그날 00:00~다음 날 00:00의 `[from, to)` UTC ISO */
+export interface KstDayRange {
+    ymd: string;
+    from: string;
+    to: string;
+}
+
+/** now가 속한 KST 날짜까지 최근 days일의 하루 구간 — 오래된 날부터 (관리자 대시보드 일별 집계) */
+export function recentKstDays(now: Date, days: number): KstDayRange[] {
+    const todayStart = new Date(kstDateStartUtcIso(formatYmd(now.toISOString())));
+    return Array.from({ length: days }, (_, index) => {
+        const from = new Date(todayStart);
+        from.setUTCDate(from.getUTCDate() - (days - 1 - index));
+        const ymd = formatYmd(from.toISOString());
+        return { ymd, from: from.toISOString(), to: kstNextDateStartUtcIso(ymd) };
+    });
+}
+
+/**
+ * 주소 조건 등으로 받은 날짜 문자열이 달력에 있는 "YYYY-MM-DD"면 그대로, 아니면 null (대시보드 → 목록 날짜 필터 연결).
+ * 2026-02-31처럼 꼴만 맞는 날짜는 다음 달로 넘어가거나(조회 범위가 틀어짐) 13월처럼 변환 중 오류가 나므로 거른다
+ */
+export function parseYmd(value: string | null): string | null {
+    const match = value ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(value) : null;
+    if (!match) return null;
+    const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+    const date = new Date(Date.UTC(year, month - 1, day));
+    const valid =
+        date.getUTCFullYear() === year &&
+        date.getUTCMonth() === month - 1 &&
+        date.getUTCDate() === day;
+    return valid ? value : null;
+}

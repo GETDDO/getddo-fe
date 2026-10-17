@@ -104,6 +104,12 @@
     --color-chart-grid: #f1f3f5;
     --color-chart-axis: #9aa1ab;
     --color-chart-highlight: #f59e0b;
+    /* 분포 그래프(도넛) 계열색 — 브랜드 마젠타 한 계열, 1이 가장 진하다. 올린 칸만 brand-primary로 바꾼다 */
+    --color-chart-series-1: #9e0057;
+    --color-chart-series-2: #d1338c;
+    --color-chart-series-3: #ec85b8;
+    --color-chart-series-4: #f8c6de;
+    --color-chart-series-5: #e4e7ea;
     --background-image-chart-area: linear-gradient(
         180deg,
         rgb(230 0 126 / 0) 0%,
@@ -250,6 +256,11 @@
 
     /* Chart */
     --color-chart-compare: #4b525c;
+    --color-chart-series-1: #ff8cc4;
+    --color-chart-series-2: #e2559f;
+    --color-chart-series-3: #a83a76;
+    --color-chart-series-4: #5e2747;
+    --color-chart-series-5: #343a42;
     --color-chart-grid: #2b323c;
     --color-chart-axis: #6b727c;
     --background-image-chart-area: linear-gradient(
@@ -319,6 +330,11 @@
     --color-chart-compare: #cdd2d8;
     --color-chart-grid: #f1f3f5;
     --color-chart-axis: #9aa1ab;
+    --color-chart-series-1: #9e0057;
+    --color-chart-series-2: #d1338c;
+    --color-chart-series-3: #ec85b8;
+    --color-chart-series-4: #f8c6de;
+    --color-chart-series-5: #e4e7ea;
     --background-image-chart-area: linear-gradient(
         180deg,
         rgb(230 0 126 / 0) 0%,

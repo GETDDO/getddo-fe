@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
+import { badgeVariants } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
@@ -10,7 +11,10 @@ import type { NotificationJob, NotificationJobStatus } from '../model/types';
 
 import { NOTIFICATION_JOB_STATUS_LABEL, NOTIFICATION_TYPE_LABEL } from '../model/types';
 
-const CHIP = 'text-caption rounded-md px-2 py-0.5 font-medium whitespace-nowrap';
+// 상태·분류 칩 — 사용자 화면과 같은 공용 배지 모양(둥근 알약, 높이 26·글자 12)에 색만 칩마다 입힌다
+const CHIP = badgeVariants({ variant: null });
+// 칩만 담는 열 — 칩 너비가 제각각이라 왼쪽 정렬이면 들쭉날쭉해 보여 머리글과 함께 가운데로 맞춘다
+const CENTER_COLUMNS = new Set<string>(['notificationType', 'status']);
 
 const STATUS_CHIP: Record<NotificationJobStatus, string> = {
     PENDING: 'bg-status-revision text-status-revision-text',
@@ -58,7 +62,7 @@ export function NotificationJobTable({
                 helper.accessor('status', {
                     header: '상태',
                     cell: ({ getValue, row }) => (
-                        <span className="flex items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1.5">
                             <span className={cn(CHIP, STATUS_CHIP[getValue()])}>
                                 {NOTIFICATION_JOB_STATUS_LABEL[getValue()]}
                             </span>
@@ -134,7 +138,10 @@ export function NotificationJobTable({
                             {headerGroup.headers.map((header) => (
                                 <TableHead
                                     key={header.id}
-                                    className="text-caption text-fg-tertiary h-11 px-4 font-semibold"
+                                    className={cn(
+                                        'text-caption text-fg-tertiary h-11 px-4 font-semibold',
+                                        CENTER_COLUMNS.has(header.column.id) && 'text-center',
+                                    )}
                                 >
                                     {flexRender(
                                         header.column.columnDef.header,
@@ -156,7 +163,13 @@ export function NotificationJobTable({
                             onClick={() => onRowClick?.(row.original)}
                         >
                             {row.getAllCells().map((cell) => (
-                                <TableCell key={cell.id} className="px-4 py-3 align-top">
+                                <TableCell
+                                    key={cell.id}
+                                    className={cn(
+                                        'px-4 py-3 align-middle',
+                                        CENTER_COLUMNS.has(cell.column.id) && 'text-center',
+                                    )}
+                                >
                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                 </TableCell>
                             ))}

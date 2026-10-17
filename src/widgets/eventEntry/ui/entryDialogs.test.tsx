@@ -37,7 +37,7 @@ describe('EntryConfirmDialog', () => {
         expect(screen.getByText('응모 후에는 취소할 수 없어요.')).toBeInTheDocument();
     });
 
-    it('빈 tickets 맵이면 응모권을 쓰지 않는다고 안내한다', () => {
+    it('빈 tickets 맵이면 응모권 없이 참여한다고 안내한다', () => {
         render(
             <EntryConfirmDialog
                 open
@@ -49,7 +49,7 @@ describe('EntryConfirmDialog', () => {
             />,
         );
 
-        expect(screen.getByText('응모권을 쓰지 않는 래플이에요.')).toBeInTheDocument();
+        expect(screen.getByText('응모권 없이 참여하는 이벤트예요.')).toBeInTheDocument();
     });
 });
 

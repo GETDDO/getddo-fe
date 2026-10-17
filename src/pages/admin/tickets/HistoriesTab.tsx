@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import {
     AdminTicketHistoryTable,
     TICKET_OPERATION_LABEL,
     useAdminTicketHistories,
 } from '@entities/ticket';
-import { kstDateStartUtcIso, kstNextDateStartUtcIso } from '@shared/lib/date';
+import { kstDateStartUtcIso, kstNextDateStartUtcIso, parseYmd } from '@shared/lib/date';
 import { ALL, isDateRangeOrdered, orUndefined, PAGE_SIZE } from '@shared/lib/filterConstants';
 import { Button } from '@shared/ui/button';
 import { DateRangeFilter, OptionFilter, TextFilter } from '@shared/ui/filter-fields';
@@ -20,9 +21,21 @@ const EMPTY = { userId: '', eventId: '', missionId: '', operationType: ALL, from
 
 // AO05 — 전체 이력
 export function HistoriesTab() {
+    // 대시보드 숫자 카드에서 들어오면(?date=YYYY-MM-DD&operationType=USE) 그 조건이 걸린 채 연다
+    const [searchParams] = useSearchParams();
+    const linkedDate = parseYmd(searchParams.get('date'));
+    const linkedOperation = searchParams.get('operationType');
+    const initial = {
+        ...EMPTY,
+        ...(linkedDate && { from: linkedDate, to: linkedDate }),
+        ...(linkedOperation &&
+            OPERATION_OPTIONS.some((option) => option.value === linkedOperation) && {
+                operationType: linkedOperation,
+            }),
+    };
     const [page, setPage] = useState(1);
-    const [draft, setDraft] = useState(EMPTY);
-    const [applied, setApplied] = useState(EMPTY);
+    const [draft, setDraft] = useState(initial);
+    const [applied, setApplied] = useState(initial);
     const [rangeError, setRangeError] = useState(false);
     const hasPendingDraft = JSON.stringify(draft) !== JSON.stringify(applied);
     const hasAppliedFilters = JSON.stringify(applied) !== JSON.stringify(EMPTY);

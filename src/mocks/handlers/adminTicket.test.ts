@@ -33,6 +33,11 @@ const page = <T extends ZodType>(schema: T, body: unknown) =>
 
 afterEach(resetAdminTicketStore);
 
+// 지급 행 수 — 고정 시드에 대시보드 추이용 최근 지급이 더해지므로 기댓값을 저장소에서 센다
+const grantRows = (
+    match: (h: (typeof adminTicketStore.histories)[number]) => boolean = () => true,
+) => adminTicketStore.histories.filter((h) => h.operationType === 'GRANT' && match(h)).length;
+
 describe('AO09 전체 불일치 목록', () => {
     it('시드된 불일치 응모권만 상태와 버전 비교 값과 함께 반환한다', async () => {
         const res = await get('/v1/admin/tickets/inconsistencies');
@@ -111,7 +116,7 @@ describe('AO03 지급 이력', () => {
     it('GRANT 이력만 최신순으로 반환한다', async () => {
         const res = await get('/v1/admin/ticket-grants', { size: 100 });
         const data = page(ticketGrantSchema, res.data);
-        expect(data.totalElements).toBe(15);
+        expect(data.totalElements).toBe(grantRows());
         const times = data.items.map((g) => g.grantedAt);
         expect(times).toEqual([...times].sort().reverse());
     });
@@ -122,18 +127,18 @@ describe('AO03 지급 이력', () => {
             (await get('/v1/admin/ticket-grants', { keyword: '서연' })).data,
         );
         expect(byName.items.every((g) => g.userName === '박서연')).toBe(true);
-        expect(byName.totalElements).toBe(3);
+        expect(byName.totalElements).toBe(grantRows((h) => h.userName === '박서연'));
         const byId = page(
             ticketGrantSchema,
             (await get('/v1/admin/ticket-grants', { userId: 'vu-yuna' })).data,
         );
-        expect(byId.totalElements).toBe(2);
+        expect(byId.totalElements).toBe(grantRows((h) => h.userId === 'vu-yuna'));
     });
 
     it('missionId를 쓰면 MISSION 행만 반환한다', async () => {
         const res = await get('/v1/admin/ticket-grants', { missionId: 'ms-quiz' });
         const data = page(ticketGrantSchema, res.data);
-        expect(data.totalElements).toBe(2);
+        expect(data.totalElements).toBe(grantRows((h) => h.missionId === 'ms-quiz'));
         expect(
             data.items.every((g) => g.sourceType === 'MISSION' && g.missionId === 'ms-quiz'),
         ).toBe(true);
@@ -149,7 +154,7 @@ describe('AO03 지급 이력', () => {
             ticketGrantSchema,
             (await get('/v1/admin/ticket-grants', { grade: 'GOLD' })).data,
         );
-        expect(gold.totalElements).toBe(2);
+        expect(gold.totalElements).toBe(grantRows((h) => h.grade === 'GOLD'));
     });
 
     it('기간은 [from, to)이다', async () => {
@@ -193,8 +198,8 @@ describe('AO03 지급 이력', () => {
             (await get('/v1/admin/ticket-grants', { page: 2, size: 10 })).data,
         );
         expect(data.page).toBe(2);
-        expect(data.items).toHaveLength(5);
-        expect(data.totalElements).toBe(15);
+        expect(data.items).toHaveLength(Math.min(10, grantRows() - 10));
+        expect(data.totalElements).toBe(grantRows());
     });
 });
 

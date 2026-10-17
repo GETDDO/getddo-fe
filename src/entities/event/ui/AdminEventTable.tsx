@@ -1,9 +1,9 @@
 import { createColumnHelper, flexRender, tableFeatures, useTable } from '@tanstack/react-table';
-import { Ticket } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
+import { badgeVariants } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
@@ -16,7 +16,13 @@ import {
     MEMBERSHIP_LABEL,
 } from '../model/adminStatusMeta';
 
-const CHIP = 'text-caption rounded-md px-2 py-0.5 font-medium whitespace-nowrap';
+// 상태·분류 칩 — 사용자 화면과 같은 공용 배지 모양(둥근 알약, 높이 26·글자 12)에 색만 칩마다 입힌다
+const CHIP = badgeVariants({ variant: null });
+// 칩만 담는 열 — 칩 너비가 제각각이라 왼쪽 정렬이면 들쭉날쭉해 보여 머리글과 함께 가운데로 맞춘다
+const CENTER_COLUMNS = new Set<string>(['eventType', 'status']);
+
+// 좁은 칸 모드에서 남기는 열
+const COMPACT_COLUMNS = new Set(['title', 'status', 'detail']);
 
 const KST_YMD_HM: Intl.DateTimeFormatOptions = {
     year: 'numeric',
@@ -39,9 +45,15 @@ const helper = createColumnHelper<typeof features, AdminEvent>();
 export function AdminEventTable({
     events,
     onRowClick,
+    compact = false,
+    selectedId,
 }: {
     events: AdminEvent[];
     onRowClick?: (event: AdminEvent) => void;
+    /** 오른쪽에 상세가 열려 칸이 좁을 때 — 이벤트·상태·상세 열만 남긴다 */
+    compact?: boolean;
+    /** 상세가 열린 줄 — 바탕으로 표시한다 */
+    selectedId?: string;
 }) {
     const columns = useMemo(
         () =>
@@ -62,17 +74,8 @@ export function AdminEventTable({
                 helper.accessor('eventType', {
                     header: '유형',
                     cell: ({ row, getValue }) => (
-                        <div className="flex flex-col gap-1">
-                            <span
-                                className={cn(
-                                    CHIP,
-                                    'w-fit items-center gap-1',
-                                    EVENT_TYPE_CHIP[getValue()],
-                                )}
-                            >
-                                {getValue() === 'TICKET' && (
-                                    <Ticket className="size-3" aria-hidden />
-                                )}
+                        <div className="flex flex-col items-center gap-1">
+                            <span className={cn(CHIP, EVENT_TYPE_CHIP[getValue()])}>
                                 {EVENT_TYPE_LABEL[getValue()]}
                             </span>
                             {getValue() === 'TICKET' && (
@@ -160,7 +163,19 @@ export function AdminEventTable({
         [onRowClick],
     );
 
-    const table = useTable({ features, columns, data: events });
+    const visibleColumns = useMemo(
+        () =>
+            compact
+                ? // accessor 열은 정의 단계에서 id 대신 accessorKey만 갖는다
+                  columns.filter((column) =>
+                      COMPACT_COLUMNS.has(
+                          column.id ?? ('accessorKey' in column ? String(column.accessorKey) : ''),
+                      ),
+                  )
+                : columns,
+        [columns, compact],
+    );
+    const table = useTable({ features, columns: visibleColumns, data: events });
 
     return (
         <div className="bg-surface-page border-border-default overflow-hidden rounded-2xl border">
@@ -171,7 +186,10 @@ export function AdminEventTable({
                             {headerGroup.headers.map((header) => (
                                 <TableHead
                                     key={header.id}
-                                    className="text-caption text-fg-tertiary h-11 px-4 font-semibold"
+                                    className={cn(
+                                        'text-caption text-fg-tertiary h-11 px-4 font-semibold',
+                                        CENTER_COLUMNS.has(header.column.id) && 'text-center',
+                                    )}
                                 >
                                     {flexRender(
                                         header.column.columnDef.header,
@@ -187,13 +205,26 @@ export function AdminEventTable({
                         <TableRow
                             key={row.id}
                             onClick={() => onRowClick?.(row.original)}
+                            aria-selected={
+                                selectedId === undefined
+                                    ? undefined
+                                    : row.original.id === selectedId
+                            }
                             className={cn(
                                 'hover:bg-surface-sunken focus-within:bg-surface-sunken',
                                 onRowClick && 'cursor-pointer',
+                                row.original.id === selectedId &&
+                                    'bg-brand-soft hover:bg-brand-soft focus-within:bg-brand-soft',
                             )}
                         >
                             {row.getAllCells().map((cell) => (
-                                <TableCell key={cell.id} className="px-4 py-3 align-top">
+                                <TableCell
+                                    key={cell.id}
+                                    className={cn(
+                                        'px-4 py-3 align-middle',
+                                        CENTER_COLUMNS.has(cell.column.id) && 'text-center',
+                                    )}
+                                >
                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                 </TableCell>
                             ))}

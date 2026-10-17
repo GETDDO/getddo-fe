@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { adminEventStatusSchema, eventTypeSchema, membershipRuleSchema } from './adminTypes';
+import { eventSchema } from './types';
 
 // spec 05-api/event.md E01·E02의 원시 응답 모양 — 화면용 Event는 lib/toEvent.ts의 매퍼로 만든다
 
@@ -30,6 +31,8 @@ export const eventSummaryResponseSchema = z.object({
 
     // 아래는 spec에 없는 시연 전용 필드 — 계약 확정 전까지 목업만 채우고 실서버 응답에는 없다
     detailImageUrl: z.string().nullable().optional(),
+    // 상세 상단 캠페인 비주얼(GD-217) — 템플릿 union은 화면용 스키마의 정의를 그대로 쓴다
+    detailVisual: eventSchema.shape.detailVisual,
     isRecommended: z.boolean().optional(),
     isTimeRaffle: z.boolean().optional(),
     raffleDetail: z

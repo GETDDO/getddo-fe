@@ -145,14 +145,19 @@ _(Figma 원본 섹션 라벨은 "2. Button — 버튼"이며, 토큰 이름은 `
 
 ### 10) Chart — 관리자 전용
 
-| Token             | Hex       | 용도                                         |
-| ----------------- | --------- | -------------------------------------------- |
-| `chart/line`      | `#E6007E` | 현재 기간 선 (2px, `brand/primary` 재사용)   |
-| `chart/point`     | `#BC0066` | 강조 포인트 (`brand/primary-pressed` 재사용) |
-| `chart/compare`   | `#CDD2D8` | 지난 기간 선 (1.5px 점선)                    |
-| `chart/grid`      | `#F1F3F5` | 가로 격자선                                  |
-| `chart/axis`      | `#9AA1AB` | 축 라벨                                      |
-| `chart/highlight` | `#F59E0B` | 이상치, 어뷰징 탐지                          |
+| Token             | Hex       | 용도                                           |
+| ----------------- | --------- | ---------------------------------------------- |
+| `chart/line`      | `#E6007E` | 현재 기간 선 (2px, `brand/primary` 재사용)     |
+| `chart/point`     | `#BC0066` | 강조 포인트 (`brand/primary-pressed` 재사용)   |
+| `chart/compare`   | `#CDD2D8` | 지난 기간 선 (1.5px 점선)                      |
+| `chart/grid`      | `#F1F3F5` | 가로 격자선                                    |
+| `chart/axis`      | `#9AA1AB` | 축 라벨                                        |
+| `chart/highlight` | `#F59E0B` | 이상치, 어뷰징 탐지                            |
+| `chart/series-1`  | `#9E0057` | 분포 그래프 계열색 — 가장 진함 (예: 발표 대기) |
+| `chart/series-2`  | `#D1338C` | 분포 그래프 계열색 (예: 추첨 필요)             |
+| `chart/series-3`  | `#EC85B8` | 분포 그래프 계열색 (예: 진행 중)               |
+| `chart/series-4`  | `#F8C6DE` | 분포 그래프 계열색 (예: 진행 예정)             |
+| `chart/series-5`  | `#E4E7EA` | 분포 그래프 계열색 — 가장 옅음 (예: 종료)      |
 
 ### 11) Gradient
 

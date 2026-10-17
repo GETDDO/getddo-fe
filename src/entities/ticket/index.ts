@@ -53,7 +53,9 @@ export {
     ADMIN_TICKET_REFUNDS_API_PATH,
     ADMIN_TICKETS_KEY,
     ticketConsistencyApiPath,
+    useAdminTicketGrantCounts,
     useAdminTicketGrants,
+    useAdminTicketHistoryCounts,
     useAdminTicketHistories,
     useAdminTicketRefunds,
     useTicketConsistency,
@@ -66,6 +68,7 @@ export {
     TicketRefundTable,
 } from './ui/AdminTicketTables';
 export { TicketConsistencyDrawer } from './ui/TicketConsistencyDrawer';
+export { GradeTicketTiles } from './ui/GradeTicketTiles';
 export { TicketGradePill } from './ui/TicketGradePill';
 export { groupTicketHistories } from './lib/groupHistories';
 export type { TicketHistoryGroup } from './lib/groupHistories';

@@ -13,13 +13,16 @@ import { useEnterEvent } from '@features/enterEvent';
 import { getErrorMessage } from '@shared/api/errorMessage';
 import { Button } from '@shared/ui/button';
 import { SkeletonDetail } from '@shared/ui/skeleton';
+import {
+    EntryCompleteDialog,
+    EntryConfirmDialog,
+    InsufficientTicketsDialog,
+    readEligibility,
+} from '@widgets/eventEntry';
 
 import { BronzeOnlyTicket } from './ui/BronzeOnlyTicket';
 import { DrawResultSection } from './ui/DrawResultSection';
-import { EntryCompleteDialog } from './ui/EntryCompleteDialog';
-import { EntryConfirmDialog } from './ui/EntryConfirmDialog';
 import { GradeTicketSteppers } from './ui/GradeTicketSteppers';
-import { InsufficientTicketsDialog } from './ui/InsufficientTicketsDialog';
 import { MyResultCard } from './ui/MyResultCard';
 import { MyTicketCard } from './ui/MyTicketCard';
 import { RaffleDetailHero } from './ui/RaffleDetailHero';
@@ -94,19 +97,8 @@ export function TimeRaffleDetailPage() {
         (event.maxTicketsPerUser == null
             ? null
             : Math.max(0, event.maxTicketsPerUser - alreadyUsed));
-    // 서버가 '끝난 응모'로 판정한 사유만 '응모 완료'다 — 자격 부족·장수 부족과 구분한다 (E07)
-    const completed =
-        eligibility?.reasons.includes('ALREADY_ENTERED') === true ||
-        eligibility?.reasons.includes('TICKET_LIMIT_EXCEEDED') === true;
-    // 장수로 해소되지 않는 자격 부재 — 클릭해도 소용없으니 잠근다
-    const forbidden =
-        eligibility?.reasons.includes('ADMIN_ENTRY_FORBIDDEN') === true ||
-        eligibility?.reasons.includes('ENTRY_MEMBERSHIP_NOT_MET') === true ||
-        eligibility?.reasons.includes('EVENT_NOT_OPEN') === true;
-    // 자격은 되지만 장수가 모자란 사유 — 클릭은 열어 두고 부족 안내로 보낸다
-    const lacking =
-        eligibility?.reasons.includes('BRONZE_REQUIRED') === true ||
-        eligibility?.reasons.includes('INSUFFICIENT_TICKETS') === true;
+    // 자격 사유를 세 갈래로 읽는 규칙은 이벤트 상세와 같아야 하므로 한곳에 둔다 (E07)
+    const { completed, forbidden, lacking } = readEligibility(eligibility);
     const canEnter =
         isOpen &&
         !completed &&

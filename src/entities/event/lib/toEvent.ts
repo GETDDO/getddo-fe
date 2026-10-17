@@ -41,6 +41,7 @@ export function toEvent(raw: EventSummaryResponse | EventDetailResponse): Event 
         description: raw.description ?? '',
         bannerImageUrl: raw.imageUrl,
         detailImageUrl: raw.detailImageUrl ?? undefined,
+        detailVisual: raw.detailVisual,
         startsAt: raw.startsAt,
         endsAt: raw.endsAt,
         status: SCREEN_STATUS[raw.status],
