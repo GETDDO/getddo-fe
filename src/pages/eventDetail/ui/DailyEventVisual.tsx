@@ -120,28 +120,39 @@ export function DailyEventVisual({ event, visual }: { event: Event; visual: Dail
                     </p>
                 </div>
 
+                {/*
+                 * 읽기 전용이라 격자(grid)가 아니라 목록으로 읽힌다.
+                 * role="grid"는 행(row) 구조와 화살표 키 이동까지 요구하는데 이 달력은 둘 다 없다.
+                 * 요일 머리글과 빈 칸은 자리를 맞추는 장식이고, 날짜마다 전체 날짜를 읽어 주므로 숨긴다.
+                 */}
                 <div
-                    role="grid"
+                    role="list"
                     aria-label="이벤트 기간 응모 현황"
                     className="mt-4.5 grid grid-cols-7 gap-1.5 rounded-[1.125rem] border-2 border-[#CDEAE4] bg-[#F4FBF9] p-3 sm:gap-2 sm:p-5"
                 >
                     {WEEKDAYS.map((weekday) => (
                         <span
                             key={weekday}
+                            aria-hidden
                             className={`text-caption pb-1 text-center ${MUTE}`}
-                            role="columnheader"
                         >
                             {weekday}
                         </span>
                     ))}
                     {Array.from({ length: calendar.leadingBlanks }, (_, index) => (
-                        <span key={`blank-${index}`} />
+                        <span key={`blank-${index}`} aria-hidden />
                     ))}
                     {calendar.days.map((day) => (
                         <span
                             key={day.key}
-                            role="gridcell"
-                            aria-label={`${day.key} ${day.entered ? '응모 완료' : day.missed ? '미응모' : ''}`}
+                            role="listitem"
+                            // 아직 오지 않은 날은 덧붙일 상태가 없다 — 빈 문자열을 이어 붙이면 공백으로 끝난다
+                            aria-label={[
+                                day.key,
+                                day.entered ? '응모 완료' : day.missed ? '미응모' : null,
+                            ]
+                                .filter(Boolean)
+                                .join(' ')}
                             className={`text-body-sm relative grid aspect-square place-items-center rounded-xl font-semibold ${
                                 day.entered
                                     ? 'bg-[#2A1810] text-white'
