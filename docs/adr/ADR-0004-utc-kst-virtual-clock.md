@@ -9,7 +9,7 @@
 
 ## 결정
 
-- 서버와는 UTC ISO 8601 문자열로만 주고받는다
+- API 시각 응답은 UTC ISO 8601 `Z` 문자열, 요청은 UTC 또는 명시적 오프셋을 사용한다. 시간대 없는 시각 문자열은 보내지 않는다. KST 업무 날짜(`YYYY-MM-DD`)·업무월(`YYYY-MM`)은 시각과 구분한다 (`../getddo-spec/05-api/common.md`)
 - 화면 표시와 날짜 비교는 `shared/utils/date`의 KST 함수(`formatKst`, `isSameKstDate`)로만 처리한다
 - 시간 판정 로직의 "지금"은 `useVirtualClock().now()`에서 가져온다 — 관리자가 `setOverride`로 시각을 오버라이드할 수 있다 (2026-09-29 이동: `app/virtual-clock` → `shared/lib/virtual-clock.ts` — FSD 경계상 `app`에 두면 하위 레이어가 사용할 수 없었다. 현재 위치는 `shared/model/virtualClock`, ADR-0010)
 - **업무 기준일·기준월은 KST(Asia/Seoul)다** — 출석·게임 보상은 매일 00:00 KST에, 연속 출석·응모권 귀속월·만료는 매월 1일 00:00 KST 경계로 초기화된다 (공용 명세 "공통 시간 기준과 화면 표시", `../getddo-spec/00-requirements/functional-requirements.md`). 저장·비교는 UTC, 표시·관리자 입력 해석은 KST다
@@ -19,7 +19,7 @@
 
 - 시간 소스: 현재처럼 `useVirtualClock().now()` 단일 진입점을 유지한다. 오버라이드는 클라이언트(sessionStorage)에 저장하고 MSW 목업(`mocks/now.ts`)이 같은 값을 읽는다. 이 동기화는 sessionStorage를 쓸 수 있는 환경에서만 보장된다 — 저장에 실패하면 Provider는 메모리 오버라이드로 동작하지만 `mockNow()`는 실제 시각을 반환하므로 화면 시각과 목업 이벤트 상태가 어긋난다
 - 조작 단위: 헤더 티커의 ±1시간·±10분, 관리자 화면의 KST 절대 시각 지정을 유지한다
-- 시연용 이벤트 기준 이동을 추가한다 — "시작 직전", "마감 1분 전", "결과 발표 시점"처럼 선택한 이벤트의 `startsAt`·`endsAt`·`drawScheduledAt`으로 FE가 목표 시각을 계산해 `setOverride`에 넘긴다. 서버에는 "절대 시각 설정" 외의 조작 API를 요구하지 않는다. `drawScheduledAt`은 마감+5분 자동 추첨 기준 시각으로, 관리자 응답에만 포함된다(ADR-022).
+- 시연용 이벤트 기준 이동을 추가한다 — "시작 직전", "마감 1분 전", "자동 추첨 기준 시각"처럼 선택한 이벤트의 `startsAt`·`endsAt`·`drawScheduledAt`으로 FE가 목표 시각을 계산해 `setOverride`에 넘긴다. 서버에는 "절대 시각 설정" 외의 조작 API를 요구하지 않는다. `drawScheduledAt`은 마감+5분 자동 추첨 기준 시각으로, 관리자 응답에만 포함된다. 최초 발표는 육안 검토 후 단일 요청으로 최종 확인·공개하며 시간 이동만으로 공개되지 않는다(ADR-022의 2026-10-15 보완).
 - **실서버 연동 시 클라이언트 오버라이드만으로는 시연이 성립하지 않는다** — 마감·발표 판정은 서버 시각 기준이다. 서버 측 시계 오버라이드 API 제공 여부는 백엔드 협의 안건이며, 결정 전까지 가상 시계 시연은 MSW 환경을 기준으로 한다
 
 ## 결과
