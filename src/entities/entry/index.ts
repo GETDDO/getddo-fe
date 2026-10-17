@@ -22,6 +22,7 @@ export {
     entryStatisticsApiPath,
     useEntryEligibility,
     useEntryStatistics,
+    useEntryStatisticsList,
     useMyEntries,
 } from './api/queries';
 export { MyEntryItem } from './ui/MyEntryItem';

@@ -1,9 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 
 import { apiClient } from '@shared/api/client';
 import { envelopeSchema } from '@shared/api/envelopeSchema';
 import { queryPresets } from '@shared/api/queryPresets';
+
+import type { EntryStatistics } from '../model/types';
 
 import { entryEligibilitySchema, entrySchema, entryStatisticsSchema } from '../model/types';
 
@@ -47,6 +49,13 @@ export function useMyEntries() {
 export const entryStatisticsApiPath = (eventId: string) => `/v1/events/${eventId}/statistics`;
 export const entryEligibilityApiPath = (eventId: string) => `/v1/events/${eventId}/eligibility`;
 
+// 응모 현황 조회·키 — 단건 훅과 여러 건 훅이 같은 키로 캐시를 나눠 쓴다
+const entryStatisticsKey = (eventId: string) => [...ENTRIES_KEY, 'statistics', eventId] as const;
+const fetchEntryStatistics = async (eventId: string) => {
+    const { data } = await apiClient.get<unknown>(entryStatisticsApiPath(eventId));
+    return envelopeSchema(entryStatisticsSchema).parse(data).data;
+};
+
 interface EntryStatisticsOptions {
     /** 응모 진행 중(open) 이벤트인가 — true일 때만 30초 폴링한다 (ADR-0007) */
     isOpen?: boolean;
@@ -64,13 +73,28 @@ export function useEntryStatistics(
 ) {
     return useQuery({
         ...queryPresets.realtime,
-        queryKey: [...ENTRIES_KEY, 'statistics', eventId],
-        queryFn: async () => {
-            const { data } = await apiClient.get<unknown>(entryStatisticsApiPath(eventId));
-            return envelopeSchema(entryStatisticsSchema).parse(data).data;
-        },
+        queryKey: entryStatisticsKey(eventId),
+        queryFn: () => fetchEntryStatistics(eventId),
         enabled,
         refetchInterval: isOpen ? queryPresets.realtime.refetchInterval : false,
+    });
+}
+
+/**
+ * 여러 이벤트의 응모 현황(E03)을 한 번에 — 관리자 대시보드처럼 진행 중 이벤트들을 나란히 비교할 때 쓴다.
+ * 진행 중 이벤트만 넘기므로 realtime 프리셋대로 폴링한다. 결과 순서는 넘긴 eventIds 순서와 같고,
+ * 조회에 실패한 이벤트는 null(그 줄만 '현황 없음'), 아직 받는 중이면 undefined
+ */
+export function useEntryStatisticsList(
+    eventIds: readonly string[],
+): (EntryStatistics | null | undefined)[] {
+    return useQueries({
+        queries: eventIds.map((eventId) => ({
+            ...queryPresets.realtime,
+            queryKey: entryStatisticsKey(eventId),
+            queryFn: () => fetchEntryStatistics(eventId),
+        })),
+        combine: (results) => results.map((result) => (result.isError ? null : result.data)),
     });
 }
 

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { EntryStatistics } from '@entities/entry';
 import type { AdminEvent } from '@entities/event';
 
+import { useEntryStatisticsList } from '@entities/entry';
 import { useAdminEvents } from '@entities/event';
 import { formatKstDot, formatRemaining } from '@shared/lib/date';
 import { formatNumber } from '@shared/lib/format';
@@ -12,7 +13,6 @@ import { badgeVariants } from '@shared/ui/badge';
 import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
-import { useOpenEventStats } from '../model/useOpenEventStats';
 import { DashboardPanel } from './DashboardPanel';
 import { ViewAllLink } from './ViewAllLink';
 
@@ -120,7 +120,7 @@ export function OpenEventsPanel({ className }: { className?: string }) {
         .filter(({ remainingMs }) => remainingMs > 0)
         .sort((a, b) => a.remainingMs - b.remainingMs)
         .slice(0, PREVIEW);
-    const stats = useOpenEventStats(events.map(({ event }) => event.id));
+    const stats = useEntryStatisticsList(events.map(({ event }) => event.id));
     const maxSpent = Math.max(0, ...stats.map((item) => item?.totalSpentTicketCount ?? 0));
 
     return (
