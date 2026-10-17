@@ -51,20 +51,23 @@ export const adminRoutes: RouteObject[] = [
                         default: m.AdminEventsPage,
                     })),
                 ),
+                // 상세는 목록 오른쪽 칸(Outlet)에 열린다 — 목록·검색 조건이 그대로 남는다
+                children: [
+                    {
+                        path: ':eventId',
+                        element: lazyPage(() =>
+                            import('@pages/admin/eventDetail/AdminEventDetailPage').then((m) => ({
+                                default: m.AdminEventDetailPage,
+                            })),
+                        ),
+                    },
+                ],
             },
             {
                 path: 'events/new',
                 element: lazyPage(() =>
                     import('@pages/admin/eventForm/AdminEventFormPage').then((m) => ({
                         default: m.AdminEventFormPage,
-                    })),
-                ),
-            },
-            {
-                path: 'events/:eventId',
-                element: lazyPage(() =>
-                    import('@pages/admin/eventDetail/AdminEventDetailPage').then((m) => ({
-                        default: m.AdminEventDetailPage,
                     })),
                 ),
             },

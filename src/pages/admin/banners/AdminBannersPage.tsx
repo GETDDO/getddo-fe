@@ -71,7 +71,7 @@ export function AdminBannersPage() {
         : 0;
 
     return (
-        <div className="flex max-w-280 flex-col gap-6 pr-10 pb-10">
+        <div className="flex flex-col gap-6 pr-10 pb-10">
             <div className="flex flex-wrap items-center gap-3">
                 <p className="text-body-sm text-fg-secondary">
                     홈 화면 상단에 노출됩니다. 위쪽 배너가 먼저 보이며 최대 {BANNER_MAX_COUNT}개까지

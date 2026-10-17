@@ -1,11 +1,19 @@
 import { useState } from 'react';
 
 import { useDrawCandidates } from '@entities/drawResult';
+import { MEMBERSHIP_LABEL, membershipRuleSchema } from '@entities/event';
 import { Button } from '@shared/ui/button';
 import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
 import { PagedFooter } from './PagedFooter';
+
+/** 자격 스냅샷의 멤버십(excellent·vip·vvip)을 화면 라벨(우수·VIP·VVIP)로 — 모르는 값은 원문, 없으면 — */
+function membershipLabel(value: unknown) {
+    const parsed = membershipRuleSchema.safeParse(value);
+    if (parsed.success) return MEMBERSHIP_LABEL[parsed.data];
+    return typeof value === 'string' ? value : '—';
+}
 
 const PAGE_SIZE = 10;
 
@@ -87,10 +95,7 @@ export function DrawCandidatesSection({ drawId }: { drawId: string }) {
                                         {gradeSummary(candidate.entrySnapshot)}
                                     </TableCell>
                                     <TableCell className="text-fg-secondary">
-                                        {typeof candidate.eligibilitySnapshot.membership ===
-                                        'string'
-                                            ? candidate.eligibilitySnapshot.membership
-                                            : '—'}
+                                        {membershipLabel(candidate.eligibilitySnapshot.membership)}
                                     </TableCell>
                                 </TableRow>
                             ))}

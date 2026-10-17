@@ -6,7 +6,7 @@ export function AdminVirtualUsersPage() {
     const currentUserId = useSessionStore((state) => state.user?.id);
 
     return (
-        <div className="flex max-w-280 flex-col gap-6 pr-10 pb-10">
+        <div className="flex flex-col gap-6 pr-10 pb-10">
             <div className="bg-surface-sunken border-border-default flex flex-col gap-1 rounded-2xl border p-4">
                 <p className="text-body-bold text-fg-primary">조회 전용 화면입니다</p>
                 {/* 가상 사용자의 수정 가능 범위는 spec이 정하지 않아 생성·수정·삭제를 만들지 않는다 */}

@@ -4,9 +4,11 @@ import {
     kstInputToUtcIso,
     kstNextDateStartUtcIso,
     kstNextMonthStart,
+    parseYmd,
     utcIsoToKstInput,
     formatKstTimeRange,
     formatRemaining,
+    recentKstDays,
 } from './date';
 
 describe('kstNextMonthStart', () => {
@@ -97,5 +99,43 @@ describe('formatKstTimeRange', () => {
         expect(formatKstTimeRange('2026-10-14T05:42:00Z', '2026-11-03T05:42:00Z')).toBe(
             '11월 3일 14:42 마감',
         );
+    });
+});
+
+describe('recentKstDays', () => {
+    it('KST 오늘까지 오래된 날부터 하루 구간을 만든다', () => {
+        // 10/16 00:30 KST — UTC로는 아직 10/15라도 KST 날짜 기준으로 자른다
+        const days = recentKstDays(new Date('2026-10-15T15:30:00Z'), 3);
+        expect(days.map((d) => d.ymd)).toEqual(['2026-10-14', '2026-10-15', '2026-10-16']);
+        expect(days[2]).toEqual({
+            ymd: '2026-10-16',
+            from: '2026-10-15T15:00:00.000Z',
+            to: '2026-10-16T15:00:00.000Z',
+        });
+    });
+    it('달이 바뀌어도 이어진다', () => {
+        const days = recentKstDays(new Date('2026-11-01T03:00:00Z'), 2);
+        expect(days.map((d) => d.ymd)).toEqual(['2026-10-31', '2026-11-01']);
+    });
+});
+
+describe('parseYmd', () => {
+    it('달력에 있는 날짜는 그대로 돌려준다', () => {
+        expect(parseYmd('2026-10-16')).toBe('2026-10-16');
+        expect(parseYmd('2028-02-29')).toBe('2028-02-29');
+    });
+
+    it('꼴이 다르거나 비어 있으면 null', () => {
+        expect(parseYmd(null)).toBeNull();
+        expect(parseYmd('')).toBeNull();
+        expect(parseYmd('2026-1-6')).toBeNull();
+        expect(parseYmd('2026-10-16T00:00')).toBeNull();
+    });
+
+    it('꼴만 맞고 달력에 없는 날짜는 null — 다음 달로 넘어가거나 변환 오류가 나지 않게', () => {
+        expect(parseYmd('2026-02-31')).toBeNull();
+        expect(parseYmd('2026-02-29')).toBeNull();
+        expect(parseYmd('2026-13-01')).toBeNull();
+        expect(parseYmd('2026-00-10')).toBeNull();
     });
 });

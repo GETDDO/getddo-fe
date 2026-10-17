@@ -1,5 +1,5 @@
+import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 
 import type { AuditLogSummary } from '@entities/audit';
 
@@ -10,97 +10,94 @@ import {
     useAuditLogs,
 } from '@entities/audit';
 import { formatKst } from '@shared/lib/date';
-import { Button } from '@shared/ui/button';
+import { formatNumber } from '@shared/lib/format';
 import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
+
+import { DashboardPanel } from './DashboardPanel';
+import { ViewAllLink } from './ViewAllLink';
 
 const PREVIEW_SIZE = 5;
 
 /**
- * 감사 로그 미리보기 — 감사 조회는 서버 정렬 보장이 계약에 없어 '최근'으로 단정하지 않는다.
- * 실서버에서 최신순 정렬이 확인되면 제목을 '최근 감사 로그'로 바꾼다 (GD-198 계획 메모).
+ * 최근 운영 기록 — 감사 로그 앞 5건을 표로. 줄을 누르면 상세 서랍이 열린다.
+ * 감사 조회는 실서버 연동 전이라(공통 감사 AU01·AU02 제외) 연동 방식이 정해지면 정렬·문구를 다시 맞춘다
  */
 export function RecentAuditLogsPanel() {
     const query = useAuditLogs({ page: 1, size: PREVIEW_SIZE });
     const [selected, setSelected] = useState<AuditLogSummary | null>(null);
+    const items = query.data?.items ?? [];
 
     return (
-        <section
-            aria-labelledby="audit-preview-title"
-            className="bg-surface-page border-border-default flex flex-col gap-3 rounded-2xl border p-5"
+        <DashboardPanel
+            title="최근 운영 기록"
+            caption={
+                query.data
+                    ? `기록된 운영 작업 ${formatNumber(query.data.totalElements)}건 중 ${items.length}건`
+                    : '관리자가 한 작업을 기록해요'
+            }
+            actions={<ViewAllLink to="/admin/audit" />}
+            error={query.isError}
+            onRetry={() => void query.refetch()}
         >
-            <div className="flex items-center justify-between gap-3">
-                <div className="flex flex-col gap-0.5">
-                    <h2 id="audit-preview-title" className="text-body-bold text-fg-primary">
-                        감사 로그 미리보기
-                    </h2>
-                    <p className="text-caption text-fg-tertiary">
-                        기록된 운영 액션 {query.data?.totalElements ?? '-'}건 중 {PREVIEW_SIZE}건
-                    </p>
-                </div>
-                <div className="flex items-center gap-1">
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        aria-label="목록 새로고침"
-                        onClick={() => void query.refetch()}
-                    >
-                        새로고침
-                    </Button>
-                    <Button size="sm" variant="ghost" asChild>
-                        <Link to="/admin/audit">전체보기</Link>
-                    </Button>
-                </div>
-            </div>
-
-            {query.isPending && (
+            {query.isPending ? (
                 <LoadingBlock>
                     <SkeletonRows rows={3} />
                 </LoadingBlock>
-            )}
-            {query.isError && (
-                <div className="flex items-center gap-3" role="alert">
-                    <p className="text-semantic-error-strong text-body-sm">
-                        감사 로그를 불러오지 못했습니다.
-                    </p>
-                    <Button size="sm" variant="secondary" onClick={() => void query.refetch()}>
-                        다시 시도
-                    </Button>
-                </div>
-            )}
-            {query.data && query.data.items.length === 0 && (
-                <p className="text-body-sm text-fg-tertiary py-4">기록된 감사 로그가 없습니다.</p>
-            )}
-            {query.data && query.data.items.length > 0 && (
-                <ul className="flex flex-col gap-2">
-                    {query.data.items.map((log) => (
-                        <li
-                            key={log.id}
-                            className="border-border-default flex flex-col gap-1 rounded-xl border p-3"
-                        >
-                            <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-body-sm text-fg-primary font-medium">
-                                    {auditActionLabel(log.action)}
-                                </span>
-                                <span className="text-caption text-fg-tertiary">
+            ) : items.length === 0 ? (
+                <p className="text-body-sm text-fg-tertiary py-6 text-center">
+                    기록된 운영 작업이 없습니다.
+                </p>
+            ) : (
+                <Table>
+                    <TableHeader>
+                        <TableRow className="hover:bg-transparent">
+                            <TableHead className="text-fg-tertiary">시각</TableHead>
+                            <TableHead className="text-fg-tertiary">작업</TableHead>
+                            <TableHead className="text-fg-tertiary">대상</TableHead>
+                            <TableHead className="text-fg-tertiary">처리자</TableHead>
+                            <TableHead className="w-10">
+                                <span className="sr-only">상세</span>
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {items.map((log) => (
+                            <TableRow
+                                key={log.id}
+                                className="hover:bg-surface-sunken cursor-pointer"
+                                onClick={() => setSelected(log)}
+                            >
+                                <TableCell className="text-body-sm text-fg-secondary tabular-nums">
+                                    {formatKst(log.createdAt)}
+                                </TableCell>
+                                <TableCell className="text-body-sm-bold text-fg-primary">
+                                    {/* 줄 클릭과 별개로 키보드·화면 낭독기용 버튼을 둔다 */}
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelected(log);
+                                        }}
+                                        aria-label={`${auditActionLabel(log.action)} 기록 상세`}
+                                        className="focus-visible:ring-border-focus rounded text-left focus-visible:ring-2 focus-visible:outline-none"
+                                    >
+                                        {auditActionLabel(log.action)}
+                                    </button>
+                                </TableCell>
+                                <TableCell className="text-body-sm text-fg-secondary">
                                     {auditTargetTypeLabel(log.targetType)}
-                                </span>
-                                <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="hover:bg-surface-pressed ml-auto"
-                                    aria-label={`감사 로그 ${log.id} 상세`}
-                                    onClick={() => setSelected(log)}
-                                >
-                                    상세
-                                </Button>
-                            </div>
-                            <div className="text-caption text-fg-tertiary flex flex-wrap gap-x-3">
-                                <span>{log.actorId ?? '시스템'}</span>
-                                <span>{formatKst(log.createdAt)}</span>
-                            </div>
-                        </li>
-                    ))}
-                </ul>
+                                </TableCell>
+                                <TableCell className="text-body-sm text-fg-secondary">
+                                    {log.actorId ?? '시스템'}
+                                </TableCell>
+                                <TableCell>
+                                    <ChevronRight aria-hidden className="text-fg-tertiary size-4" />
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             )}
 
             <AuditLogDetailDrawer
@@ -110,6 +107,6 @@ export function RecentAuditLogsPanel() {
                     if (!open) setSelected(null);
                 }}
             />
-        </section>
+        </DashboardPanel>
     );
 }

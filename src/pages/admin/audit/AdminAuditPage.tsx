@@ -12,9 +12,8 @@ import {
 import { kstInputToUtcIso } from '@shared/lib/date';
 import { isDateRangeOrdered } from '@shared/lib/filterConstants';
 import { Button } from '@shared/ui/button';
-import { DateRangeFilter } from '@shared/ui/filter-fields';
-import { Input } from '@shared/ui/input';
-import { Pager } from '@shared/ui/pager';
+import { DateRangeFilter, TextFilter } from '@shared/ui/filter-fields';
+import { Pagination } from '@shared/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
 import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
 
@@ -85,7 +84,7 @@ export function AdminAuditPage() {
     };
 
     return (
-        <div className="flex max-w-280 flex-col gap-6 pr-10 pb-10">
+        <div className="flex flex-col gap-6 pr-10 pb-10">
             <div className="flex flex-wrap items-center gap-3">
                 <form
                     className="flex flex-wrap items-center gap-2"
@@ -102,12 +101,12 @@ export function AdminAuditPage() {
                         resetPage();
                     }}
                 >
-                    <Input
+                    <TextFilter
                         value={actorIdInput}
-                        onChange={(e) => setActorIdInput(e.target.value)}
+                        onChange={setActorIdInput}
                         placeholder="처리자 ID 검색"
+                        label="처리자 검색"
                         className="w-64"
-                        aria-label="처리자 검색"
                     />
                     <DateRangeFilter
                         from={fromInput}
@@ -212,14 +211,7 @@ export function AdminAuditPage() {
                         <span className="text-body-sm text-fg-secondary">
                             총 {data.totalElements}건
                         </span>
-                        <Pager
-                            current={page - 1}
-                            total={totalPages}
-                            onPrev={() => setPage((p) => p - 1)}
-                            onNext={() => setPage((p) => p + 1)}
-                            prevDisabled={page <= 1}
-                            nextDisabled={page >= totalPages}
-                        />
+                        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
                     </div>
                 </>
             )}

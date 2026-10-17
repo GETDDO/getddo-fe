@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 
 import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
+import { badgeVariants } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
@@ -10,7 +11,10 @@ import type { AuditLogSummary } from '../model/types';
 
 import { auditActionLabel, auditTargetTypeLabel } from '../model/types';
 
-const CHIP = 'text-caption rounded-md px-2 py-0.5 font-medium whitespace-nowrap';
+// 상태·분류 칩 — 사용자 화면과 같은 공용 배지 모양(둥근 알약, 높이 26·글자 12)에 색만 칩마다 입힌다
+const CHIP = badgeVariants({ variant: null });
+// 칩만 담는 열 — 칩 너비가 제각각이라 왼쪽 정렬이면 들쭉날쭉해 보여 머리글과 함께 가운데로 맞춘다
+const CENTER_COLUMNS = new Set<string>(['action']);
 
 // 정렬·필터는 서버 쿼리로 처리하므로 행 모델만 쓰는 표시용 테이블 — 기능 슬롯을 등록하지 않는다
 const features = tableFeatures({});
@@ -122,7 +126,10 @@ export function AuditLogTable({
                             {headerGroup.headers.map((header) => (
                                 <TableHead
                                     key={header.id}
-                                    className="text-caption text-fg-tertiary h-11 px-4 font-semibold"
+                                    className={cn(
+                                        'text-caption text-fg-tertiary h-11 px-4 font-semibold',
+                                        CENTER_COLUMNS.has(header.column.id) && 'text-center',
+                                    )}
                                 >
                                     {flexRender(
                                         header.column.columnDef.header,
@@ -144,7 +151,13 @@ export function AuditLogTable({
                             onClick={() => onRowClick?.(row.original)}
                         >
                             {row.getAllCells().map((cell) => (
-                                <TableCell key={cell.id} className="px-4 py-3 align-top">
+                                <TableCell
+                                    key={cell.id}
+                                    className={cn(
+                                        'px-4 py-3 align-middle',
+                                        CENTER_COLUMNS.has(cell.column.id) && 'text-center',
+                                    )}
+                                >
                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                 </TableCell>
                             ))}

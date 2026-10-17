@@ -1,11 +1,13 @@
 import { cn } from '@shared/lib/utils';
+import { badgeVariants } from '@shared/ui/badge';
 
 /** 화면에 "정책 미확정"을 표시하는 칩 — 임의로 확정한 동작이 아니라 계약 대기 항목이라는 뜻이다 */
 export function PolicyPendingChip({ className }: { className?: string }) {
     return (
         <span
             className={cn(
-                'text-caption bg-status-pending text-status-pending-text rounded-md px-2 py-0.5 font-medium whitespace-nowrap',
+                badgeVariants({ variant: null }),
+                'bg-status-pending text-status-pending-text',
                 className,
             )}
         >
