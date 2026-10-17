@@ -10,12 +10,12 @@ import {
     useMyTickets,
     useTicketHistories,
 } from '@entities/ticket';
-import { formatNumber } from '@shared/lib/format';
-import { useCountUp } from '@shared/lib/useCountUp';
+import { useCountUp } from '@shared/hooks/useCountUp';
 import { SkeletonText } from '@shared/ui/skeleton';
+import { formatNumber } from '@shared/utils/format';
 
 import ticketCharacter from '../assets/ticket-character.png';
-import { summarizeMonthlyTickets } from '../lib/monthlyTicketSummary';
+import { summarizeMonthlyTickets } from '../utils/monthlyTicketSummary';
 import { TicketGradeInfo } from './TicketGradeInfo';
 
 /** 응모권 모양 — 양옆 절취선 높이를 반원으로 파낸다 (왼쪽 반·오른쪽 반에 각각 구멍 하나) */

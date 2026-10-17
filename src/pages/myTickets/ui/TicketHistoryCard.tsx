@@ -6,12 +6,12 @@ import {
     type TicketHistoryGroup,
     type TicketOperationType,
 } from '@entities/ticket';
-import { formatKst, isSameKstDate, KST_HOUR_MINUTE } from '@shared/lib/date';
-import { formatNumber } from '@shared/lib/format';
 import { Button } from '@shared/ui/button';
 import { Segmented } from '@shared/ui/segmented';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
 import { SkeletonList } from '@shared/ui/skeleton';
+import { formatKst, isSameKstDate, KST_HOUR_MINUTE } from '@shared/utils/date';
+import { formatNumber } from '@shared/utils/format';
 
 type Kind = 'ALL' | 'IN' | 'OUT' | 'EXPIRE_REFUND';
 type Period = '7D' | '30D' | '90D' | 'ALL';

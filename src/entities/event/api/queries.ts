@@ -6,8 +6,8 @@ import { queryPresets } from '@shared/api/queryPresets';
 
 import type { Event } from '../model/types';
 
-import { toEvent } from '../lib/toEvent';
 import { eventDetailResponseSchema, eventSummaryResponseSchema } from '../model/contract';
+import { toEvent } from '../utils/toEvent';
 
 // spec 원시 응답(EventSummary/EventDetail)을 parse한 뒤 화면용 Event로 변환한다
 const eventListSchema = envelopeSchema(pageSchema(eventSummaryResponseSchema));

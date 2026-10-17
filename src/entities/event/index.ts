@@ -1,5 +1,5 @@
-export { eventDetailPath } from './lib/eventPath';
-export { toEvent } from './lib/toEvent';
+export { eventDetailPath } from './utils/eventPath';
+export { toEvent } from './utils/toEvent';
 export { eventSchema, eventStatusSchema } from './model/types';
 export type { Event, EventStatus } from './model/types';
 export {

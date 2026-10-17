@@ -9,14 +9,14 @@ import {
     EVENT_TYPE_LABEL,
     useAdminEvents,
 } from '@entities/event';
-import { kstInputToUtcIso } from '@shared/lib/date';
-import { isDateRangeOrdered } from '@shared/lib/filterConstants';
-import { cn } from '@shared/lib/utils';
+import { isDateRangeOrdered } from '@shared/model/filterConstants';
 import { Button } from '@shared/ui/button';
 import { DateRangeFilter, TextFilter } from '@shared/ui/filter-fields';
 import { Pagination } from '@shared/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
 import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
+import { cn } from '@shared/utils/cn';
+import { kstInputToUtcIso } from '@shared/utils/date';
 
 const PAGE_SIZE = 10;
 

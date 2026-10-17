@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 
 import { useId } from 'react';
 
-import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
+import { cn } from '@shared/utils/cn';
 
 /**
  * 대시보드 칸 — 실패 알림·감사 로그 미리보기와 같은 흰 카드(여백 20)에 제목·설명·오른쪽 동작을 둔다.

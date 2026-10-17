@@ -59,18 +59,18 @@
 
 정책 원본은 `../getddo-spec/00-requirements/functional-requirements.md`의 "공통 시간 기준과 화면 표시"다.
 
-- 서버와 주고받는 시각은 **UTC ISO 8601** 문자열(또는 오프셋 명시), 화면 표시는 `shared/lib/date`의 `formatKst`만 사용한다
+- 서버와 주고받는 시각은 **UTC ISO 8601** 문자열(또는 오프셋 명시), 화면 표시는 `shared/utils/date`의 `formatKst`만 사용한다
 - **업무 기준일·기준월은 KST다** — 일일 출석·게임 보상은 매일 00:00 KST에, 연속 출석·응모권 귀속월·만료는 매월 1일 00:00 KST 경계를 따른다. 관리자가 화면에 입력하는 운영 시각도 KST로 해석한다
 - **마감·발표 판정은 서버 시각 기준**이다. 마감 전 접수 완료된 응모는 응답이 늦게 도착해도 유효하고, 클라이언트 시각으로 마감 여부를 판정해 버튼을 막는 로직을 만들지 않는다 (표시용 카운트다운은 허용). 서버의 마감 판정은 응모 트랜잭션 커밋 직전의 최종 확인이며, 그 확인과 커밋 확정 사이의 미세 간격 안에 커밋된 응모는 마감 전 접수로 인정한다(GD-205)
 - 마감 후 사용자 화면은 **'응모 마감 · 결과 발표 대기'만 표시**한다 — 5분 카운트다운과 고정 발표 예정 시각은 없다(ADR-022). `publicationScheduledAt`은 E08·E09와 이벤트 목록·상세 응답에서 제외됐고, 관리자 응답에만 최초 자동 추첨 기준 시각 `drawScheduledAt`(`endsAt`+5분)이 있다(GD-203)
 - 최초 공개는 **관리자 수동 공개 요청**이다 — 결과 확정·관리자 확인 저장·시간 경과만으로 공개되지 않고, 스케줄러의 자동 공개·공개 재호출도 없다. 확인(`POST /admin/draws/{runId}/result-confirmation`)과 공개는 별도 동작이며 입출력·오류 세부는 GD-199 후속이다. 서버가 실제 공개하기 전 결과는 표시하지 않는다
-- 시간 판정이 필요한 로직은 `new Date()`를 직접 호출하지 않고 `useVirtualClock().now()`(`shared/lib/virtualClock`)를 경유한다 — 관리자 시간 여행(시연)이 오버라이드할 수 있어야 하기 때문이다. 순수 함수는 `now`를 인자로 받는다(`shared/lib/date` 참조)
+- 시간 판정이 필요한 로직은 `new Date()`를 직접 호출하지 않고 `useVirtualClock().now()`(`shared/model/virtualClock`)를 경유한다 — 관리자 시간 여행(시연)이 오버라이드할 수 있어야 하기 때문이다. 순수 함수는 `now`를 인자로 받는다(`shared/utils/date` 참조)
 
 ## 중복 방지·멱등키
 
 "같은 요청의 재시도와 새로운 요청을 구분한다"는 확정 정책이다 (`../getddo-spec/02-domain/entry.md` — 응모권 미사용 이벤트도 동일).
 
-- 재시도·중복 클릭으로 같은 부작용이 두 번 생기면 안 되는 POST에는 `shared/lib/idempotency-key`의 `createIdempotencyKey()`로 생성한 키를 `IDEMPOTENCY_HEADER` 헤더(`Idempotency-Key`)에 붙인다
+- 재시도·중복 클릭으로 같은 부작용이 두 번 생기면 안 되는 POST에는 `shared/utils/idempotencyKey`의 `createIdempotencyKey()`로 생성한 키를 `IDEMPOTENCY_HEADER` 헤더(`Idempotency-Key`)에 붙인다
 - 작업별 구분은 `05-api/common.md` 초안을 따른다: 응모·미션=멱등키(응모의 키는 UUID이며 응모 요청 결과(접수 또는 저장된 거절)의 ID로 그대로 쓴다 — GD-134·GD-145), **출석=사용자·KST 기준일 재처리**, **게임=서버 발급 `playId`**, 알림 읽음=사용자·알림 ID. 추첨·재추첨 등 새 부수효과 요청에도 같은 판단을 적용한다
 - 같은 키·다른 본문의 재요청은 409로 거절하고, 같은 키·같은 본문은 처음 결과를 200으로 돌려준다 (목업 `entry.ts`도 동일하게 동작)
 

@@ -2,9 +2,9 @@ import { createColumnHelper, flexRender, tableFeatures, useTable } from '@tansta
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { formatKst } from '@shared/lib/date';
 import { Button } from '@shared/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
+import { formatKst } from '@shared/utils/date';
 
 import type { AdminBanner } from '../model/types';
 

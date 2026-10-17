@@ -1,8 +1,8 @@
 import { Gift, Ticket, UsersRound } from 'lucide-react';
 
 import { useEntryStatistics } from '@entities/entry';
-import { formatNumber } from '@shared/lib/format';
 import { Badge } from '@shared/ui/badge';
+import { formatNumber } from '@shared/utils/format';
 
 interface LiveEntryStatusProps {
     eventId: string;

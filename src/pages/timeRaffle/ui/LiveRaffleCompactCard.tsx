@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import type { Event } from '@entities/event';
 
 import { useEntryStatistics } from '@entities/entry';
-import { formatNumber } from '@shared/lib/format';
 import { Button } from '@shared/ui/button';
+import { formatNumber } from '@shared/utils/format';
 
 import { CloseCountdownChip } from './CloseCountdownChip';
 import { RaffleThumbnail } from './RaffleThumbnail';

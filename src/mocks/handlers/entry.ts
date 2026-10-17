@@ -6,7 +6,7 @@ import type { TicketGrade } from '@entities/ticket';
 
 import { ticketGradeSchema } from '@entities/ticket';
 import { env } from '@shared/config/env';
-import { IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
+import { IDEMPOTENCY_HEADER } from '@shared/utils/idempotencyKey';
 
 import { mockNow } from '../now';
 import {

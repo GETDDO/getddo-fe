@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { adminEventStatusSchema, eventTypeSchema, membershipRuleSchema } from './adminTypes';
 import { eventSchema } from './types';
 
-// spec 05-api/event.md E01·E02의 원시 응답 모양 — 화면용 Event는 lib/toEvent.ts의 매퍼로 만든다
+// spec 05-api/event.md E01·E02의 원시 응답 모양 — 화면용 Event는 utils/toEvent.ts의 매퍼로 만든다
 
 // E02 상세의 경품 — 목록(E01)에는 실리지 않는다
 export const eventPrizeSchema = z.object({

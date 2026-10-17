@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 
 import { groupTicketHistories, useMyTickets, useTicketHistories } from '@entities/ticket';
-import { formatKst, KST_HOUR_MINUTE, kstDayDiff, toKst } from '@shared/lib/date';
-import { useVirtualClock } from '@shared/lib/virtualClock';
+import { useVirtualClock } from '@shared/model/virtualClock';
 import { Button } from '@shared/ui/button';
 import { PageHeader } from '@shared/ui/page-header';
 import { SkeletonCard } from '@shared/ui/skeleton';
+import { formatKst, KST_HOUR_MINUTE, kstDayDiff, toKst } from '@shared/utils/date';
 
 import type { ExpiringSoon } from './ui/TicketWalletHero';
 

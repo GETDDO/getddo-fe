@@ -9,10 +9,10 @@ import {
     auditTargetTypeLabel,
     useAuditLogs,
 } from '@entities/audit';
-import { formatKst } from '@shared/lib/date';
-import { formatNumber } from '@shared/lib/format';
 import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
+import { formatKst } from '@shared/utils/date';
+import { formatNumber } from '@shared/utils/format';
 
 import { DashboardPanel } from './DashboardPanel';
 import { ViewAllLink } from './ViewAllLink';

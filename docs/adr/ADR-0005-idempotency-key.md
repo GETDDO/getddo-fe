@@ -9,7 +9,7 @@
 
 ## 결정
 
-"재시도·중복 클릭으로 같은 부작용이 두 번 생기면 안 되는 POST"에는 `shared/lib/idempotency-key`의 `createIdempotencyKey()`로 생성한 키를 `IDEMPOTENCY_HEADER` 헤더에 붙인다.
+"재시도·중복 클릭으로 같은 부작용이 두 번 생기면 안 되는 POST"에는 `shared/utils/idempotencyKey`의 `createIdempotencyKey()`로 생성한 키를 `IDEMPOTENCY_HEADER` 헤더에 붙인다.
 
 - 현재 대상: `POST /events/:eventId/entries`(응모 — 사용·미사용 이벤트 모두)
 - 헤더명은 spec 공통 계약 초안(`05-api/common.md`)의 `Idempotency-Key`를 따른다. 초안이라 확정 시 `IDEMPOTENCY_HEADER` 상수 값만 바뀌고 사용 지점은 그대로다 (2026-09-30 `X-Idempotency-Key`에서 교체)
