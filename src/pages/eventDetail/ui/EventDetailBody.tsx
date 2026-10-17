@@ -53,10 +53,16 @@ export function EventDetailBody({ event }: { event: Event }) {
 /** 상세 이미지가 없을 때의 글 본문 — 이벤트 계약(E02)이 주는 값만 쓴다 */
 function EventTextBody({ event }: { event: Event }) {
     const specs: { label: string; value: string }[] = [
-        { label: '경품', value: event.prizeName },
+        // 경품 요약은 상세(E02)에만 있다 — 없으면 '-'로 둔다 (spec EventSummary)
+        { label: '경품', value: event.prizeName ?? '-' },
         {
             label: '추첨 인원',
-            value: event.winnerCount === 1 ? '단 1명' : `${formatNumber(event.winnerCount)}명`,
+            value:
+                event.winnerCount != null
+                    ? event.winnerCount === 1
+                        ? '단 1명'
+                        : `${formatNumber(event.winnerCount)}명`
+                    : '-',
         },
         {
             label: '응모 기간',

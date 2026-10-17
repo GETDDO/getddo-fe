@@ -116,7 +116,9 @@ export function CouponEventVisual({ event, visual }: { event: Event; visual: Cou
                      * 절차라 약속할 시각이 없다 (ADR-022, 05-api/drawing.md)
                      */}
                     <span className={`text-body-sm ${MUTE}`}>
-                        추첨 {formatNumber(event.winnerCount)}명 · 마감 후 발표
+                        {event.winnerCount != null &&
+                            `추첨 ${formatNumber(event.winnerCount)}명 · `}
+                        마감 후 발표
                     </span>
                 </p>
             </section>
