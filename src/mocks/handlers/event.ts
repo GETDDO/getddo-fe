@@ -1,6 +1,6 @@
 import { http } from 'msw';
 
-import type { EventStatus, MembershipRule } from '@entities/event';
+import type { Event, EventStatus, MembershipRule } from '@entities/event';
 
 import { MEMBERSHIP_LABEL } from '@entities/event';
 import { env } from '@shared/config/env';
@@ -150,6 +150,8 @@ export interface MockEvent {
     description: string;
     bannerImageUrl: string | null;
     detailImageUrl?: string | null;
+    /** 상세 본문을 이미지 대신 글·값으로 받는 캠페인 비주얼 — 있으면 상세 본문이 이것으로 바뀐다 */
+    detailVisual?: Event['detailVisual'];
     startsAt: string;
     endsAt: string;
     status: EventStatus;
@@ -266,15 +268,37 @@ export const mockEvents: MockEvent[] = [
         id: 'evt-006',
         isRecommended: true,
         title: '데이터 쿠폰 무료 응모',
-        description: '응모권 없이 누구나 참여할 수 있는 데이터 쿠폰 추첨 이벤트',
-        bannerImageUrl: '/images/events/data-coupon.webp',
-        startsAt: '2026-09-01T00:00:00Z',
-        endsAt: '2026-10-31T14:59:59Z',
+        description:
+            '응모권 없이 누구나 참여할 수 있는 데이터 쿠폰 추첨 이벤트예요. 한 번만 응모할 수 있고, 마감 뒤 자동으로 추첨합니다. 당첨되면 쿠폰이 U+ 멤버십 앱 쿠폰함으로 바로 들어가요.',
+        bannerImageUrl: '/images/events/banners/data-coupon.svg',
+        /* 쿠폰 한 장 꼴 캠페인 비주얼 — 경품이 한 종류라 등수를 세울 게 없다 */
+        detailVisual: {
+            template: 'coupon',
+            category: '무료 응모',
+            headline: ['데이터 5GB', '무료로 받아가세요'],
+            subtitle: '버튼 한 번이면 응모 끝! 추첨을 통해 데이터 이용권을 드려요',
+            coupon: { name: '데이터 이용권', amount: '5GB', value: '33,000원', emoji: '📶' },
+            steps: [
+                { title: '로그인', description: '이벤트 페이지에서 로그인해요' },
+                { title: '무료 응모', description: '하단 버튼을 눌러 응모를 완료해요' },
+                { title: '쿠폰 받기', description: '당첨 시 문자로 쿠폰 번호가 발송돼요' },
+            ],
+            notices: [
+                '이벤트는 1인 1회만 응모할 수 있습니다.',
+                // 발표일을 적지 않는다 — 공개 시점은 관리자 확인에 달려 있다 (ADR-022)
+                '당첨자에게는 발표 후 문자로 쿠폰 번호가 발송됩니다.',
+                '데이터 이용권은 발송일로부터 30일 이내에 등록해야 합니다.',
+                '쿠폰은 현금으로 교환하거나 타인에게 양도할 수 없습니다.',
+                '부정한 방법으로 응모한 경우 당첨이 취소될 수 있습니다.',
+            ],
+        },
+        startsAt: kstAt(-25, 0),
+        endsAt: kstAt(15, 23),
         status: 'open',
         requiredTickets: 0,
         tags: ['데이터·통신'],
-        prizeName: 'U+ 데이터 쿠폰 1GB',
-        winnerCount: 200,
+        prizeName: 'U+ 데이터 쿠폰 5GB',
+        winnerCount: 1000,
         participantCount: 4820,
         usedTicketCount: 0,
         myEntryCount: 1,
@@ -283,10 +307,41 @@ export const mockEvents: MockEvent[] = [
     {
         id: 'evt-007',
         title: '아메리카노 쿠폰 데일리 응모',
-        description: '응모권 없이 매일 참여할 수 있는 커피 쿠폰 추첨 이벤트',
-        bannerImageUrl: null,
-        startsAt: '2026-09-01T00:00:00Z',
-        endsAt: '2026-10-31T14:59:59Z',
+        description:
+            '응모권 없이 참여할 수 있는 커피 쿠폰 추첨 이벤트예요. 마감 뒤 자동으로 추첨하고, 관리자 확인이 끝나면 당첨자 명단을 공개합니다. 쿠폰은 발표 후 순차 지급돼요.',
+        bannerImageUrl: '/images/events/banners/americano.png',
+        detailImageUrl: '/images/events/americano.jpg',
+        /*
+         * 응모 현황 달력 꼴 — 기간이 길어 지금 어디쯤인지가 중요한 이벤트다.
+         * 달력은 운영자 입력이 아니라 이벤트 기간과 내 응모 기록에서 만든다.
+         * heroHex는 경품 사진 배경에서 뽑은 색이라 사진이 히어로 배경에 얹힌 것처럼 이어진다.
+         */
+        detailVisual: {
+            template: 'daily',
+            category: '기간 응모',
+            headline: ['매일 한 잔,', '아메리카노 쿠폰'],
+            subtitle: '응모해 두고 발표를 기다리면 돼요',
+            daily: { prizeName: '아메리카노 모바일 쿠폰', heroHex: '#CDEAE4' },
+            steps: [
+                { title: '응모하기', description: '응모권 없이 버튼 한 번으로 참여해요' },
+                { title: '자동 추첨', description: '응모가 마감되면 자동으로 추첨해요' },
+                { title: '쿠폰 받기', description: '당첨되면 발표 후 문자로 쿠폰이 와요' },
+            ],
+            notices: [
+                /*
+                 * 디자인 원안은 '하루 1회·매일 00:00 초기화'였지만 계약에 그런 규칙이 없다.
+                 * 응모권 미사용 이벤트는 사용자당 1회다 (mocks/handlers/entry.ts 사용자당 1회 제한).
+                 * TODO: 일일 응모를 하려면 E04 접수·E07 자격에 날짜 단위 초기화 계약이 먼저 필요하다.
+                 */
+                '이벤트는 기간 중 1인 1회만 참여할 수 있으며, 응모권은 사용되지 않습니다.',
+                '응모는 이벤트 종료일 마감 시각에 종료되며, 마감 후에는 참여할 수 없습니다.',
+                '당첨 쿠폰은 당첨자 발표 후 문자로 발송됩니다.',
+                '쿠폰 유효기간은 발송일로부터 30일이며, 기간 내 미사용 시 소멸됩니다.',
+                '부정한 방법으로 응모한 경우 당첨이 취소될 수 있습니다.',
+            ],
+        },
+        startsAt: kstAt(-10, 0),
+        endsAt: kstAt(20, 23),
         status: 'open',
         requiredTickets: 0,
         tags: ['기프티콘·상품권'],
@@ -355,11 +410,37 @@ export const mockEvents: MockEvent[] = [
     },
     {
         id: 'evt-011',
-        title: '9월 멤버십 위크',
-        description: '멤버십 등급별 포인트 혜택 이벤트. 응모권 없이 참여할 수 있어요.',
-        bannerImageUrl: null,
-        startsAt: '2026-09-08T00:00:00Z',
-        endsAt: '2026-10-21T14:59:59Z',
+        title: '멤버십 위크 포인트 응모',
+        description:
+            '멤버십 등급별 포인트 혜택 이벤트예요. 응모권 없이 한 번 참여할 수 있고, 마감 뒤 자동으로 추첨합니다. 당첨 포인트는 발표 후 멤버십 계정으로 바로 적립돼요.',
+        bannerImageUrl: '/images/events/banners/membership-point.png',
+        detailImageUrl: '/images/events/membership-point.webp',
+        /*
+         * 포인트 금화 꼴 캠페인 비주얼 — 경품이 포인트 하나라 쿠폰도 등수도 세울 게 없다.
+         * 추첨 인원·기간·마감 시각·참여 자격은 비주얼에 적지 않고 이벤트 값에서 끌어온다.
+         */
+        detailVisual: {
+            template: 'point',
+            category: '멤버십 위크',
+            headline: ['멤버십 위크', '포인트 응모'],
+            subtitle: '응모권 없이 한 번만 누르면 끝! 마감 후 자동으로 추첨해요',
+            point: { name: 'U+ 멤버십 포인트', amount: 5000 },
+            steps: [
+                { title: '응모하기', description: '응모권 없이 버튼 한 번으로 참여해요' },
+                // 마감 시각은 요약 표가 이벤트 값으로 적는다 — 여기에 날짜를 박으면 기간이 바뀔 때 어긋난다
+                { title: '자동 추첨', description: '응모가 마감되면 자동으로 추첨해요' },
+                { title: '포인트 적립', description: '발표 후 멤버십 계정으로 바로 적립돼요' },
+            ],
+            notices: [
+                '멤버십 우수 등급 이상 고객만 참여할 수 있습니다.',
+                '이벤트는 기간 중 1인 1회만 참여할 수 있으며, 응모권은 사용되지 않습니다.',
+                '응모는 이벤트 종료일 마감 시각에 종료되며, 마감 후에는 참여할 수 없습니다.',
+                '당첨 포인트는 발표 후 멤버십 계정으로 자동 적립됩니다.',
+                '적립된 포인트는 현금으로 교환하거나 타인에게 양도할 수 없습니다.',
+            ],
+        },
+        startsAt: kstAt(-8, 0),
+        endsAt: kstAt(5, 23),
         status: 'open',
         requiredTickets: 0,
         tags: ['멤버십 혜택'],
@@ -374,12 +455,17 @@ export const mockEvents: MockEvent[] = [
         id: 'evt-012',
         isRecommended: true,
         title: '갤럭시 버즈3 오픈 응모',
-        description: '응모권 없이 참여하는 갤럭시 버즈3 추첨 이벤트',
-        bannerImageUrl: null,
-        startsAt: '2026-09-15T00:00:00Z',
-        endsAt: '2026-10-05T14:59:59Z',
+        description:
+            '응모권 없이 참여하는 갤럭시 버즈3 추첨 이벤트예요. 마감 뒤 자동으로 추첨하고, 관리자 확인이 끝나면 당첨자 명단을 공개합니다. 경품은 발표 후 3 영업일 이내 발송돼요.',
+        bannerImageUrl: '/images/events/banners/galaxy-buds.png',
+        detailImageUrl: '/images/events/galaxy-buds3.jpg',
+        // 발표가 끝난 이벤트 — 이벤트탭에 '발표 완료' 상태가 하나는 있어야 한다
+        startsAt: kstAt(-40, 0),
+        endsAt: kstAt(-11, 23),
         status: 'open',
         requiredTickets: 0,
+        // VIP 전용 — 상세의 '참여 자격' 문구가 등급별로 달라지는 것을 보려면 하나는 상위 등급이어야 한다
+        membershipRule: 'vip',
         tags: ['디지털기기'],
         prizeName: '갤럭시 버즈3',
         winnerCount: 20,
@@ -390,16 +476,71 @@ export const mockEvents: MockEvent[] = [
     },
     {
         id: 'evt-013',
-        title: '갤럭시 워치 스트랩 증정 응모',
-        description: '응모권 없이 참여하는 한정 스트랩 증정 이벤트',
-        bannerImageUrl: null,
-        startsAt: '2026-09-18T00:00:00Z',
-        endsAt: '2026-10-25T14:59:59Z',
+        title: '갤럭시 워치5 스트랩 증정 응모',
+        description:
+            '응모권 없이 참여하는 갤럭시 워치5 40mm 스트랩 증정 이벤트예요. 한 번만 응모할 수 있고, 색상은 당첨자에게 무작위로 발송됩니다. 재고 사정에 따라 동일 가치의 다른 색으로 대체될 수 있어요.',
+        bannerImageUrl: '/images/events/banners/galaxy-watch5.png',
+        /*
+         * 색상 고르기 꼴 캠페인 비주얼 — 굿즈 하나에 색이 여럿이고 발송 색은 무작위다.
+         * 추첨 인원·기간·마감 시각·참여 방법·참여 자격은 비주얼에 적지 않고 이벤트 값에서 끌어온다.
+         */
+        detailVisual: {
+            template: 'colorPick',
+            category: '한정 증정',
+            headline: ['한정 스트랩,', '어떤 색이 올까요?'],
+            // 몇 명에게 주는지는 히어로 칩이 winnerCount로 적는다 — 글에 숫자를 박지 않는다
+            subtitle: '응모권 없이 한 번 응모하면 추첨을 통해 스트랩을 보내드려요',
+            giveaway: {
+                name: '갤럭시 워치5 40mm 스트랩',
+                /*
+                 * 실사 사진은 라벤더 한 색만 있다. 나머지 색은 이 한 장을 색만 틀어서 보인다.
+                 * baseHex는 사진에서 실제로 뽑은 스트랩 색이라 라벤더를 고르면 필터 없이 원본이 나온다.
+                 * TODO: 색마다 실사 사진을 받아 colors[].photoUrl을 채우면 근사 대신 원본이 나온다.
+                 */
+                photo: {
+                    url: '/images/events/galaxy-watch5.png',
+                    baseHex: '#AFA6BD',
+                    // 화면은 워치 색과 무관하다 — 필터가 돌리는 것을 원본으로 되살린다
+                    overlayUrl: '/images/events/galaxy-watch5-dial.png',
+                },
+                colors: [
+                    { name: '라벤더', hex: '#AFA6BD' },
+                    { name: '그라파이트', hex: '#3B3F45' },
+                    { name: '실버', hex: '#BFC4CA' },
+                    { name: '블루', hex: '#4A6FA5' },
+                    { name: '핑크', hex: '#E9A3B4' },
+                    { name: '그린', hex: '#7FA58E' },
+                ],
+            },
+            steps: [
+                { title: '응모하기', description: '응모권 없이 버튼 한 번으로 참여해요' },
+                { title: '추첨', description: '마감 후 자동으로 추첨해요' },
+                {
+                    title: '랜덤 색상 발송',
+                    description: '당첨되면 무작위 색상의 스트랩을 보내드려요',
+                },
+            ],
+            // 사진에 워치 본체가 같이 나오는데 경품은 스트랩뿐이라 눈에 띄는 자리에 못 박는다
+            callout: '경품은 스트랩만 제공되며, 사진 속 워치 본체는 포함되지 않아요.',
+            notices: [
+                '경품은 갤럭시 워치5 40mm 스트랩 1개이며, 워치 본체는 제공되지 않습니다.',
+                '사진 속 워치 본체는 스트랩 착용 예시를 보여 주기 위한 연출입니다.',
+                '멤버십 우수 등급 이상 고객만 참여할 수 있습니다.',
+                '이벤트는 기간 중 1인 1회만 참여할 수 있으며, 응모권은 사용되지 않습니다.',
+                // 마감 날짜를 박지 않는다 — 요약 표가 이벤트 값으로 적는다
+                '응모는 이벤트 종료일 마감 시각에 종료되며, 마감 후에는 참여할 수 없습니다.',
+                '스트랩 색상은 선택할 수 없으며, 당첨자에게 무작위로 발송됩니다.',
+                '재고 사정에 따라 동일 가치의 다른 색상으로 대체될 수 있습니다.',
+                '경품은 현금으로 교환하거나 타인에게 양도할 수 없습니다.',
+            ],
+        },
+        startsAt: kstAt(-28, 0),
+        endsAt: kstAt(9, 23),
         status: 'open',
         requiredTickets: 0,
         tags: ['한정 굿즈'],
-        prizeName: '갤럭시 워치 스트랩',
-        winnerCount: 100,
+        prizeName: '갤럭시 워치5 40mm 스트랩',
+        winnerCount: 20,
         participantCount: 640,
         usedTicketCount: 0,
         myEntryCount: 0,
@@ -448,15 +589,61 @@ export const mockEvents: MockEvent[] = [
     {
         id: 'evt-202',
         title: '배달앱 5천원 쿠폰 응모',
-        description: '응모권 없이 참여하는 배달 쿠폰 추첨 이벤트',
-        bannerImageUrl: null,
-        startsAt: '2026-09-10T00:00:00Z',
-        endsAt: '2026-10-25T14:59:59Z',
+        description:
+            '응모권 없이 참여하는 배달 쿠폰 추첨 이벤트예요. 한 번만 응모할 수 있고, 쿠폰은 발표 후 문자로 받은 코드로 배달앱에 등록해 쓸 수 있어요. 쿠폰 유효기간은 발급일로부터 30일입니다.',
+        bannerImageUrl: '/images/events/banners/delivery-coupon.svg',
+        /*
+         * 금액권 티켓 꼴 캠페인 비주얼 — 경품이 금액권 하나다.
+         * 추첨 인원·기간·마감 시각·참여 방법·참여 자격은 비주얼에 적지 않고 이벤트 값에서 끌어온다.
+         */
+        detailVisual: {
+            template: 'voucher',
+            category: '배달 쿠폰 추첨',
+            headline: ['배달앱 5천원', '쿠폰 응모'],
+            subtitle: '응모권 없이 한 번만 응모하면 추첨에 참여할 수 있어요',
+            voucher: {
+                name: '배달앱 쿠폰',
+                amount: 5000,
+                amountLabel: '5천원',
+                validDays: 30,
+                emoji: '🛵',
+            },
+            steps: [
+                { title: '응모하기', description: '응모권 없이 버튼 한 번으로 참여해요' },
+                {
+                    title: '문자로 코드 받기',
+                    description: '당첨되면 발표 후 쿠폰 코드가 문자로 와요',
+                },
+                {
+                    title: '배달앱에 등록',
+                    description: '받은 코드를 배달앱 쿠폰함에 등록해 써요',
+                },
+            ],
+            smsPreview: {
+                from: '[이벤트] 당첨 안내',
+                lines: [
+                    '축하합니다! 배달앱 쿠폰 5천원에 당첨되셨어요.',
+                    '쿠폰 코드: XXXX-XXXX-XXXX',
+                    '배달앱 쿠폰함에서 코드를 등록해 주세요.',
+                ],
+            },
+            notices: [
+                '멤버십 우수 등급 이상 고객만 참여할 수 있습니다.',
+                '이벤트는 기간 중 1인 1회만 참여할 수 있으며, 응모권은 사용되지 않습니다.',
+                // 마감 날짜를 박지 않는다 — 요약 표가 이벤트 값으로 적는다
+                '응모는 이벤트 종료일 마감 시각에 종료되며, 마감 후에는 참여할 수 없습니다.',
+                '당첨자에게는 발표 후 쿠폰 코드가 문자로 발송됩니다.',
+                '쿠폰 유효기간은 발급일로부터 30일이며, 기간 내 미등록 또는 미사용 시 소멸됩니다.',
+                '쿠폰은 현금으로 교환하거나 타인에게 양도할 수 없습니다.',
+            ],
+        },
+        startsAt: kstAt(-36, 0),
+        endsAt: kstAt(9, 23),
         status: 'open',
         requiredTickets: 0,
         tags: ['기프티콘·상품권'],
         prizeName: '배달앱 5,000원 쿠폰',
-        winnerCount: 300,
+        winnerCount: 10,
         participantCount: 3120,
         usedTicketCount: 0,
         myEntryCount: 0,
@@ -465,10 +652,12 @@ export const mockEvents: MockEvent[] = [
     {
         id: 'evt-203',
         title: '무너 캘린더 증정 응모',
-        description: '응모권 없이 참여하는 2027년 무너 캘린더 증정 이벤트',
-        bannerImageUrl: null,
-        startsAt: '2026-09-12T00:00:00Z',
-        endsAt: '2026-10-12T14:59:59Z',
+        description:
+            '응모권 없이 참여하는 2027년 무너 캘린더 증정 이벤트예요. 한 번만 응모할 수 있고, 캘린더는 당첨자 주소로 무료 배송됩니다. 주소가 등록되지 않은 경우 당첨이 취소될 수 있어요.',
+        bannerImageUrl: '/images/events/banners/muno-calendar.svg',
+        // 발표가 끝난 이벤트 — '발표 완료' 상태를 둘로 둬서 목록 거르기가 비어 보이지 않게 한다
+        startsAt: kstAt(-34, 0),
+        endsAt: kstAt(-4, 23),
         status: 'open',
         requiredTickets: 0,
         tags: ['한정 굿즈'],
@@ -501,18 +690,23 @@ export const mockEvents: MockEvent[] = [
     {
         id: 'evt-205',
         title: '멤버십 VIP콕 더블 혜택',
-        description: '멤버십 등급 대상 혜택 이벤트. 응모권 없이 참여할 수 있어요.',
-        bannerImageUrl: null,
-        startsAt: '2026-09-14T00:00:00Z',
-        endsAt: '2026-10-14T14:59:59Z',
+        description:
+            'VVIP 등급에게 VIP콕 혜택을 한 번 더 드리는 이벤트예요. 응모권 없이 한 번 참여할 수 있고, 당첨되면 이번 달 VIP콕을 한 번 더 쓸 수 있는 이용권이 지급됩니다.',
+        bannerImageUrl: '/images/events/banners/vip-double.png',
+        detailImageUrl: '/images/events/vip-double.png',
+        // 아직 열리지 않은 이벤트 — '오픈 예정' 상태와 잠긴 응모 버튼을 확인하려면 하나는 미래여야 한다
+        startsAt: kstAt(2, 0),
+        endsAt: kstAt(30, 23),
         status: 'open',
         requiredTickets: 0,
+        membershipRule: 'vvip',
         tags: ['멤버십 혜택'],
         prizeName: 'VIP콕 더블 이용권',
         winnerCount: 800,
-        participantCount: 1980,
-        usedTicketCount: 0,
-        myEntryCount: 1,
+        // 아직 열리지 않아 응모자도, 내 응모도 없다
+        participantCount: null,
+        usedTicketCount: null,
+        myEntryCount: 0,
         myTicketCount: 0,
     },
     {
@@ -557,10 +751,16 @@ export const mockEvents: MockEvent[] = [
     {
         id: 'evt-208',
         title: '무너 리유저블 컵 증정',
-        description: '응모권 없이 참여하는 한정 리유저블 컵 증정 이벤트',
-        bannerImageUrl: null,
-        startsAt: '2026-09-16T00:00:00Z',
-        endsAt: '2026-10-16T14:59:59Z',
+        description:
+            '응모권 없이 참여하는 한정 리유저블 컵 증정 이벤트예요. 한 번만 응모할 수 있고, 컵은 당첨자 발표 후 순차 발송됩니다. 수량 한정이라 조기 종료될 수 있어요.',
+        bannerImageUrl: '/images/events/banners/reusable-cup.svg',
+        /*
+         * 방금 마감돼 발표를 기다리는 이벤트 — 화면을 열자마자 '발표 대기'를 볼 수 있다.
+         * 마감 + 5분이 지나면 '발표 완료'로 넘어간다. 다시 보려면 새로고침하거나
+         * 관리자 가상 시계(/admin/virtual-clock)로 시간을 되돌리면 된다.
+         */
+        startsAt: kstAt(-20, 0),
+        endsAt: demoTime(-2 * MINUTE),
         status: 'open',
         requiredTickets: 0,
         tags: ['한정 굿즈'],
@@ -984,7 +1184,9 @@ export function mockEventEffectiveStatus(event: MockEvent): EventStatus {
 
 /**
  * 목 이벤트를 응답 모양으로 바꾼다 — 상태를 지금 기준으로 다시 계산한다.
- * 발표 예정 시각은 ADR-022로 계약에서 빠졌으므로 응답에 싣지 않는다.
+ *
+ * 추첨·발표 예정 시각은 싣지 않는다. 최초 공개는 관리자가 명단을 확인한 뒤 직접 하는 절차라
+ * 사용자에게 약속할 시각이 없다 (GD-203, 05-api/event.md). 관리자 응답에만 drawScheduledAt을 준다.
  */
 function toResponse(event: MockEvent, now: number) {
     // 응모 현황은 E03 전용이므로 이벤트 응답에서 뺀다
@@ -1002,6 +1204,14 @@ function toResponse(event: MockEvent, now: number) {
         },
         status: statusAt(event.startsAt, event.endsAt, now),
     };
+}
+
+/**
+ * 마감 + 5분의 최초 자동 추첨 기준 시각 — 관리자 응답에만 싣는다 (05-api/event.md AdminEvent).
+ * 실제 추첨 실행·명단 확인·결과 공개가 끝났다는 뜻이 아니다.
+ */
+export function mockDrawScheduledAt(endsAt: string): string {
+    return new Date(new Date(endsAt).getTime() + ANNOUNCE_DELAY_MS).toISOString();
 }
 
 export const eventHandlers = [

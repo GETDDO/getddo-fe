@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 import type { EntryTickets } from '@entities/entry';
 
-import { TICKET_GRADE_WEIGHT, ticketGradeSchema } from '@entities/ticket';
+import { GradeTicketTiles, TICKET_GRADE_WEIGHT, ticketGradeSchema } from '@entities/ticket';
 import { Button } from '@shared/ui/button';
 import {
     Dialog,
@@ -16,16 +16,14 @@ import {
     DialogTitle,
 } from '@shared/ui/dialog';
 
-import { GradeTicketTiles } from './GradeTicketTiles';
-
 interface EntryCompleteDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    /** 응모한 래플 이름 */
+    /** 응모한 이벤트·겟또타임 이름 */
     title: string;
     /** 이번 응모에 쓴 등급별 장수 — 생략된 등급은 0이다 */
     tickets: EntryTickets;
-    /** 등급을 추첨에 반영하는 래플인가 — 반영할 때만 '브론즈 몇 장만큼'을 보인다 */
+    /** 등급을 추첨에 반영하는가 — 반영할 때만 '브론즈 몇 장만큼'을 보인다 */
     gradeReflected: boolean;
     /** 응모 뒤 남은 전체 응모권 — 잔액을 몰랐으면 null */
     remainingBalance: number | null;
@@ -37,8 +35,7 @@ interface EntryCompleteDialogProps {
 
 /**
  * 응모 완료 모달 — 무엇을 썼는지보다 '언제·어디서 결과를 보는지'를 알려 주는 게 목적이다.
- * 쓴 응모권·남은 응모권은 영수증처럼 회색 상자에, 발표 안내는 그 아래에 둔다.
- * 발표 예정 시각은 계약에 없으므로(ADR-022) 시각을 적지 않는다
+ * 쓴 응모권·남은 응모권은 영수증처럼 회색 상자에, 발표 시각과 알림 안내는 그 아래에 둔다
  */
 export function EntryCompleteDialog({
     open,
@@ -121,7 +118,10 @@ export function EntryCompleteDialog({
                 <div className="flex items-start gap-3">
                     <Bell aria-hidden className="text-fg-secondary mt-0.5 size-5 shrink-0" />
                     <div className="flex flex-col gap-0.5">
-                        <p className="text-body-bold text-fg-primary">마감 뒤 발표해요</p>
+                        <p className="text-body-bold text-fg-primary">
+                            {/* 발표 시각은 약속하지 않는다 — 공개는 관리자 확인 뒤다 (ADR-022) */}
+                            마감 뒤 추첨하고, 확인이 끝나면 결과를 공개해요
+                        </p>
                         <DialogDescription className="text-body-sm text-fg-tertiary">
                             결과가 나오면 알림으로 알려 드려요.{moreRule ? ` ${moreRule}` : ''}
                         </DialogDescription>

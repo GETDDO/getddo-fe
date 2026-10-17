@@ -1,9 +1,7 @@
 import type { Event } from '@entities/event';
 
-import { TICKET_GRADES, useMyTickets } from '@entities/ticket';
+import { GradeTicketTiles, TICKET_GRADES, useMyTickets } from '@entities/ticket';
 import { formatNumber } from '@shared/lib/format';
-
-import { GradeTicketTiles } from './GradeTicketTiles';
 
 /**
  * 내 응모권 현황 — 왼쪽은 이 래플에 낸 것, 오른쪽은 지금 가진 것.

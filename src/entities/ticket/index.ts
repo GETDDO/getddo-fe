@@ -68,6 +68,7 @@ export {
     TicketRefundTable,
 } from './ui/AdminTicketTables';
 export { TicketConsistencyDrawer } from './ui/TicketConsistencyDrawer';
+export { GradeTicketTiles } from './ui/GradeTicketTiles';
 export { TicketGradePill } from './ui/TicketGradePill';
 export { groupTicketHistories } from './lib/groupHistories';
 export type { TicketHistoryGroup } from './lib/groupHistories';

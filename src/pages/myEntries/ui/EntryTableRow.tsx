@@ -11,12 +11,15 @@ import { formatKstDot } from '@shared/lib/date';
 import { Badge } from '@shared/ui/badge';
 
 /** 표 칸 너비 — 머리줄(EntryTableHead)과 줄이 같은 값을 쓴다 */
-export const ENTRY_GRID = 'md:grid-cols-[minmax(0,1fr)_10.5rem_9rem_5.5rem_1.25rem]';
+export const ENTRY_GRID = 'md:grid-cols-[minmax(0,1fr)_10.5rem_5.5rem_1.25rem]';
 
 /**
  * 내 응모 내역 표의 한 줄 — 줄 전체가 이벤트·겟또타임 상세로 가는 링크다.
- * 넓은 화면에서는 응모·사용 응모권·발표·결과 칸으로 펼치고, 좁은 화면에서는 위아래로 쌓는다.
- * 발표 칸은 예정 시각이 아니라 대기 여부만 보인다 — 서버가 발표 시각을 주지 않는다 (ADR-022)
+ * 넓은 화면에서는 응모·사용 응모권·결과 칸으로 펼치고, 좁은 화면에서는 위아래로 쌓는다.
+ *
+ * 발표 칸은 두지 않는다. 전에는 발표 예정 시각을 적었지만 그 값이 사용자 응답에서 빠졌고
+ * (GD-203), 실제 공개 시각은 결과 조회(E08)에만 있어 응모 내역은 들고 있지 않다. 남는 것은
+ * 상태뿐이어서 결과 칩과 같은 말이 된다 — 상태는 결과 칩 하나로만 알린다 (ADR-022)
  */
 export function EntryTableRow({ row }: { row: MyEntryRow }) {
     const { entry, event, isTimeRaffle, result } = row;
@@ -86,14 +89,6 @@ export function EntryTableRow({ row }: { row: MyEntryRow }) {
                                 ))}
                             </span>
                         </div>
-                    )}
-                </div>
-
-                <div className="col-span-2 flex flex-col pl-16 md:col-span-1 md:pl-0">
-                    {!rejected && result === 'PENDING' ? (
-                        <span className="text-body-sm text-fg-primary">발표 대기</span>
-                    ) : (
-                        <span className="text-caption text-fg-tertiary hidden md:inline">—</span>
                     )}
                 </div>
 
