@@ -76,7 +76,8 @@ export function ColorPickEventVisual({ event, visual }: { event: Event; visual: 
     const colors = giveaway.colors;
     // 스키마가 색을 한 개 이상 받지만(min(1)) 그건 타입으로 드러나지 않는다 — 빈 목록이 오면 그린다는 게 없다
     const color = colors[picked] ?? colors[0];
-    const winners = formatNumber(event.winnerCount);
+    // 경품 요약은 상세(E02)에만 있다 — 없으면 인원 자리를 비운다 (spec EventSummary)
+    const winners = event.winnerCount != null ? `${formatNumber(event.winnerCount)}명` : null;
 
     if (!color) return null;
 
@@ -100,7 +101,7 @@ export function ColorPickEventVisual({ event, visual }: { event: Event; visual: 
 
     const summary = [
         { label: '경품', value: giveaway.name, accent: '색상 랜덤' },
-        { label: '추첨 인원', value: `${winners}명` },
+        { label: '추첨 인원', value: winners ?? '-' },
         {
             label: '응모 기간',
             value: `${formatYmd(event.startsAt)} ~ ${formatYmd(event.endsAt)}`,
@@ -123,7 +124,8 @@ export function ColorPickEventVisual({ event, visual }: { event: Event; visual: 
             <header className="bg-[#27313D] px-5 pt-12 pb-11 text-center text-white sm:px-8 sm:pt-15">
                 <span className="text-body-sm-bold rounded-full bg-[#FF8FA3] px-3.5 py-1.5 text-[#1A222C]">
                     {/* 몇 명에게 주는지는 이벤트 값에서 끌어온다 — 글에 숫자를 박지 않는다 */}
-                    {visual.category} · {winners}명
+                    {visual.category}
+                    {winners && ` · ${winners}`}
                 </span>
 
                 <h1 className="text-display mt-5 font-black tracking-tight">

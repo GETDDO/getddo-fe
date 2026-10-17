@@ -428,26 +428,19 @@ describe('추첨 목업', () => {
         });
     });
 
-    it('AD06은 재추첨 결과를 공개 명단에 반영하고 AD07에 변경 이력을 남기며 재반영은 중복 생성하지 않는다', async () => {
+    it('AD06은 본문 없이 재추첨 결과를 공개 명단에 반영하고 AD07에 변경 이력을 남기며 재반영은 중복 생성하지 않는다', async () => {
         const { win, res } = await cancelFirstWinner(EVENT, keyOf(6));
         const redrawId = res.data.data.replacementDrawRunId;
 
         // 확정 전에는 반영할 수 없다
-        const early = await call('post', `/v1/admin/draws/${redrawId}/publication`, {
-            body: { reason: '재추첨 확인' },
-        });
+        const early = await call('post', `/v1/admin/draws/${redrawId}/publication`);
         expect(early.status).toBe(409);
 
         settleRedraw();
-        const noReason = await call('post', `/v1/admin/draws/${redrawId}/publication`, {
-            body: { reason: '' },
-        });
-        expect(noReason.status).toBe(400);
-
+        // 계약은 본문 없음 (05-api/drawing.md AD06)
         const applied = await call<{ revision: number; drawRunId: string }>(
             'post',
             `/v1/admin/draws/${redrawId}/publication`,
-            { body: { reason: '재추첨 결과 확인' } },
         );
         expect(applied.status).toBe(200);
         expect(applied.data.data).toMatchObject({ drawRunId: redrawId, revision: 2 });
@@ -455,9 +448,6 @@ describe('추첨 목업', () => {
         const again = await call<{ revision: number }>(
             'post',
             `/v1/admin/draws/${redrawId}/publication`,
-            {
-                body: { reason: '재추첨 결과 확인' },
-            },
         );
         expect(again.status).toBe(200);
         expect(again.data.data.revision).toBe(2);
@@ -472,7 +462,8 @@ describe('추첨 목업', () => {
         expect(changes.data.data.totalElements).toBe(1);
         const change = changes.data.data.items[0]!;
         expect(change.revision).toBe(2);
-        expect(change.reason).toBe('재추첨 결과 확인');
+        // 본문이 없는 계약이라 이력의 사유는 연결된 취소의 사유다 (cancelFirstWinner 기본값)
+        expect(change.reason).toBe('본인 확인 실패');
         expect(change.changes).toHaveLength(1);
         expect(change.changes[0]?.beforeUserId).toBe(
             (await firstRun(EVENT)).results.find((r) => r.id === win.id)?.userId,
@@ -487,17 +478,12 @@ describe('추첨 목업', () => {
         const beforeFirst = await call(
             'post',
             `/v1/admin/draws/${res.data.data.replacementDrawRunId}/publication`,
-            {
-                body: { reason: '확인' },
-            },
         );
         expect(beforeFirst.status).toBe(409);
 
         // 최초 실행은 재추첨이 아니다
         const original = await firstRun(EVENT);
-        const notRedraw = await call('post', `/v1/admin/draws/${original.id}/publication`, {
-            body: { reason: '확인' },
-        });
+        const notRedraw = await call('post', `/v1/admin/draws/${original.id}/publication`);
         expect(notRedraw.status).toBe(409);
     });
 });

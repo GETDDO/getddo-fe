@@ -6,6 +6,12 @@ export const DRAW_RUN_STATUS_META: Record<DrawRunStatus, { label: string; chipCl
     RUNNING: { label: '추첨 중', chipClass: 'bg-status-active text-status-active-text' },
     CONFIRMED: { label: '확정', chipClass: 'bg-status-approved text-status-approved-text' },
     FAILED: { label: '실패', chipClass: 'bg-status-rejected text-status-rejected-text' },
+    // 당첨자를 뽑지 않고 끝난 실행 — 실패가 아니라 정상 종료라 중립 톤으로 둔다
+    NO_ENTRIES: { label: '응모자 없음', chipClass: 'bg-status-pending text-status-pending-text' },
+    NO_CANDIDATES: {
+        label: '추첨 대상 없음',
+        chipClass: 'bg-status-pending text-status-pending-text',
+    },
 };
 
 export const DRAW_EXECUTION_TYPE_LABEL = { AUTO: '자동', MANUAL: '수동' } as const;

@@ -87,8 +87,9 @@ export function DailyEventVisual({ event, visual }: { event: Event; visual: Dail
 
                     {/* 기간·추첨 인원은 이벤트 값을 그대로 쓴다 — 글에 숫자를 박지 않는다 */}
                     <p className={`text-body-sm-bold mt-3.5 ${INK}`}>
-                        {formatYmd(event.startsAt)} ~ {formatYmd(event.endsAt)} · 총{' '}
-                        {formatNumber(event.winnerCount)}명 추첨
+                        {formatYmd(event.startsAt)} ~ {formatYmd(event.endsAt)}
+                        {event.winnerCount != null &&
+                            ` · 총 ${formatNumber(event.winnerCount)}명 추첨`}
                     </p>
                 </div>
 

@@ -33,7 +33,11 @@ export function LiveRaffleCard({ event }: LiveRaffleCardProps) {
 
     // 가운데 소개 칸 아래 현황 — 이름 위·값 아래 큰 숫자로 둬 한눈에 들어오게 한다
     const stats = [
-        { label: '당첨 인원', value: `${formatNumber(event.winnerCount)}명` },
+        // 경품 요약은 상세(E02)에만 있다 — 목록만으로 만든 이벤트는 당첨 인원이 없다 (spec EventSummary)
+        {
+            label: '당첨 인원',
+            value: event.winnerCount != null ? `${formatNumber(event.winnerCount)}명` : '-',
+        },
         {
             label: '참여 중',
             value: statistics ? `${formatNumber(statistics.participantCount)}명` : '-',
@@ -117,13 +121,15 @@ function EntryConditions({
 }) {
     const rows = [
         { label: '응모 방식', value: entryMethodLabel(event) },
-        event.eventType === 'TICKET' && {
-            label: '1인 최대',
-            value:
-                event.maxTicketsPerUser === null
-                    ? '제한 없음'
-                    : `${formatNumber(event.maxTicketsPerUser)}장`,
-        },
+        // 상한 실값은 상세(E02)에만 있다 — 목록만으로 만든 가중치 이벤트는 undefined라 행을 뺀다
+        event.eventType === 'TICKET' &&
+            event.maxTicketsPerUser !== undefined && {
+                label: '1인 최대',
+                value:
+                    event.maxTicketsPerUser === null
+                        ? '제한 없음'
+                        : `${formatNumber(event.maxTicketsPerUser)}장`,
+            },
         mySpentTicketCount != null &&
             mySpentTicketCount > 0 && {
                 label: '내 응모',

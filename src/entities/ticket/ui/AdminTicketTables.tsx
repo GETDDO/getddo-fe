@@ -161,7 +161,8 @@ export function MismatchValue({
     version,
     differs = false,
 }: {
-    status: keyof typeof TICKET_STATUS_LABEL;
+    // 이력이 없는 응모권은 마지막 이력 상태가 null이다 (spec AO04)
+    status: keyof typeof TICKET_STATUS_LABEL | null;
     version: number;
     differs?: boolean;
 }) {
@@ -174,7 +175,7 @@ export function MismatchValue({
             }
         >
             {differs && <TriangleAlert className="size-3.5 shrink-0" aria-hidden />}
-            {TICKET_STATUS_LABEL[status]} · v{version}
+            {status ? `${TICKET_STATUS_LABEL[status]} · v${version}` : '이력 없음'}
             {differs && <span className="sr-only">(이력과 불일치)</span>}
         </span>
     );
@@ -280,7 +281,9 @@ export function TicketRefundTable({ rows }: { rows: TicketRefund[] }) {
                         <Gray>{TICKET_REFUND_REASON_LABEL[row.reasonType]}</Gray>
                     </Cell>
                     <Cell>
-                        <span className={TIME}>{formatKst(row.targetExpiresAt)}</span>
+                        <span className={TIME}>
+                            {row.targetExpiresAt ? formatKst(row.targetExpiresAt) : '-'}
+                        </span>
                     </Cell>
                 </TableRow>
             ))}

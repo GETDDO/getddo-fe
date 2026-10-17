@@ -40,10 +40,11 @@ export function VoucherEventVisual({ event, visual }: { event: Event; visual: Vo
     const amountText = voucher.amountLabel ?? `${formatNumber(voucher.amount)}원`;
     // 티켓은 '원'을 작게 따로 세우므로 표기에서 떼어 낸다
     const amountHead = amountText.replace(/원$/, '');
-    const winners = formatNumber(event.winnerCount);
+    // 경품 요약은 상세(E02)에만 있다 — 없으면 인원 자리를 비운다 (spec EventSummary)
+    const winners = event.winnerCount != null ? formatNumber(event.winnerCount) : null;
     const summary = [
         { label: '경품', value: `${voucher.name} ${amountText}` },
-        { label: '추첨 인원', value: `${winners}명` },
+        { label: '추첨 인원', value: winners == null ? '-' : `${winners}명` },
         {
             label: '응모 기간',
             value: `${formatYmd(event.startsAt)} ~ ${formatYmd(event.endsAt)}`,
@@ -93,7 +94,7 @@ export function VoucherEventVisual({ event, visual }: { event: Event; visual: Vo
                     // 경품 사진이 없을 때의 가벼운 대역 — 이모지는 글자라 어느 화면에서도 선명하다
                     <p
                         role="img"
-                        aria-label={`${voucher.name} ${amountText} · 추첨 ${winners}명`}
+                        aria-label={`${voucher.name} ${amountText} · 추첨 ${winners == null ? '-' : `${winners}명`}`}
                         className="mx-auto mt-10 grid aspect-[1.9] w-full max-w-100 place-items-center rounded-[1.25rem] bg-white text-[clamp(4rem,16vw,6rem)] leading-none shadow-[0_24px_40px_-20px_rgba(80,0,10,0.45)]"
                     >
                         {voucher.emoji}
@@ -101,7 +102,7 @@ export function VoucherEventVisual({ event, visual }: { event: Event; visual: Vo
                 ) : (
                     <div
                         role="img"
-                        aria-label={`${voucher.name} ${amountText} · 추첨 ${winners}명`}
+                        aria-label={`${voucher.name} ${amountText} · 추첨 ${winners == null ? '-' : `${winners}명`}`}
                         className="mx-auto mt-10 flex max-w-115 -rotate-3 drop-shadow-[0_24px_30px_rgba(80,0,10,0.35)]"
                     >
                         <div
@@ -125,7 +126,7 @@ export function VoucherEventVisual({ event, visual }: { event: Event; visual: Vo
                             className={`text-body-sm-bold flex w-21 shrink-0 flex-col items-center justify-center rounded-r-[1.125rem] border-l-[3px] border-dashed border-[#23161A]/25 bg-[#FFE07A] sm:w-26 ${INK}`}
                         >
                             <span>추첨</span>
-                            <strong className="text-title-2 font-black">{winners}</strong>
+                            <strong className="text-title-2 font-black">{winners ?? '-'}</strong>
                             <span>명</span>
                         </div>
                     </div>

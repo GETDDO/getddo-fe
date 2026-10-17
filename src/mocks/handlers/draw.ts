@@ -572,11 +572,6 @@ const isAdminContext = (request: Request) => {
     return !userId || findMockVirtualUser(userId)?.role === 'ADMIN';
 };
 
-const readReason = async (request: Request) => {
-    const body = (await request.json().catch(() => null)) as { reason?: unknown } | null;
-    return typeof body?.reason === 'string' ? body.reason.trim() : '';
-};
-
 function findRun(drawId: string) {
     const eventId = eventIdFromId(drawId, 'drw');
     const store = eventId ? getStore(eventId) : null;
@@ -784,12 +779,11 @@ export const drawHandlers = [
         return ok(cancellationBody(stored, replacement), 202);
     }),
 
-    // AD06 — 최초 발표 이후 재추첨 결과를 공개 명단에 반영한다 (최초 공개 전 확인은 후속 계약)
-    http.post(api('/v1/admin/draws/:drawId/publication'), async ({ params, request }) => {
+    // AD06 — 최초 발표 이후 재추첨 결과를 공개 명단에 반영한다 (최초 공개 전 확인은 후속 계약).
+    // 요청 본문이 없는 계약이다 — 변경 이력의 사유는 연결된 취소의 사유를 쓴다 (05-api/drawing.md)
+    http.post(api('/v1/admin/draws/:drawId/publication'), ({ params, request }) => {
         const found = findRun(String(params.drawId));
         if (!found) return notFound();
-        const reason = await readReason(request);
-        if (!reason) return invalid('반영 사유를 입력해야 합니다.');
         const { store, run } = found;
         const { detail } = run;
 
@@ -828,7 +822,8 @@ export const drawHandlers = [
             publicationId: update.publicationId,
             revision: update.revision,
             drawRunId: detail.id,
-            reason,
+            // 계약은 본문 없음 — 이력의 사유는 이 재추첨을 만든 취소의 사유를 가져온다
+            reason: detail.cancellations[0]?.reason ?? '',
             confirmedBy: actor,
             confirmedAt: now,
             updatedAt: now,
@@ -869,6 +864,9 @@ export const drawHandlers = [
         if (store.canceled) return conflict('취소된 이벤트의 추첨은 재개할 수 없습니다.');
 
         if (detail.status === 'CONFIRMED') return ok(toExecution(detail), 200);
+        // NO_ENTRIES·NO_CANDIDATES는 확정 종료라 재개하지 않는다
+        if (detail.status === 'NO_ENTRIES' || detail.status === 'NO_CANDIDATES')
+            return conflict('종료된 추첨 실행은 재개할 수 없습니다.');
         if (detail.status === 'FAILED') {
             detail.status = 'PREPARING';
             run.progressFrom = Date.now();
@@ -886,6 +884,9 @@ export const drawHandlers = [
 
         const { detail } = run;
         if (detail.status === 'CONFIRMED') return ok(toExecution(detail), 200);
+        // NO_ENTRIES·NO_CANDIDATES는 확정 종료라 재개하지 않는다
+        if (detail.status === 'NO_ENTRIES' || detail.status === 'NO_CANDIDATES')
+            return conflict('종료된 추첨 실행은 재개할 수 없습니다.');
         if (detail.status === 'FAILED') {
             detail.status = 'PREPARING';
             run.progressFrom = Date.now();

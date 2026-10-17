@@ -1,6 +1,13 @@
 export { eventDetailPath } from './lib/eventPath';
+export { toEvent } from './lib/toEvent';
 export { eventSchema, eventStatusSchema } from './model/types';
 export type { Event, EventStatus } from './model/types';
+export {
+    eventDetailResponseSchema,
+    eventPrizeSchema,
+    eventSummaryResponseSchema,
+} from './model/contract';
+export type { EventDetailResponse, EventPrize, EventSummaryResponse } from './model/contract';
 export {
     adminEventSchema,
     adminEventStatusSchema,

@@ -128,7 +128,8 @@ function ClosedRaffleRow({ event, now }: { event: Event; now: Date }) {
 
     const meta = [
         `${kstDayLabel(event.endsAt, now)} ${formatKst(event.endsAt, KST_HOUR_MINUTE)} 마감`,
-        `당첨 ${formatNumber(event.winnerCount)}명`,
+        // 목록 응답에는 경품이 없어 당첨 인원을 모를 수 있다 (spec EventSummary)
+        event.winnerCount != null ? `당첨 ${formatNumber(event.winnerCount)}명` : null,
         statistics ? `${formatNumber(statistics.participantCount)}명 참여` : null,
     ].filter(Boolean);
 

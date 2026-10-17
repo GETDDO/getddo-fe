@@ -194,8 +194,13 @@ function RunDetailBody({
         !anyBeforeFirstPublication &&
         !hasUnpublishedCanceledResult &&
         !alreadyPublished;
+    // 종료된 실행(NO_ENTRIES·NO_CANDIDATES)은 재개 불가 — 진행 중이거나 실패한 재추첨만 연다
     const canResume =
-        isRedraw && !confirmed && run.cancellations.length > 0 && !eventCanceled && eventReady;
+        isRedraw &&
+        (inProgress || run.status === 'FAILED') &&
+        run.cancellations.length > 0 &&
+        !eventCanceled &&
+        eventReady;
     // 실패한 최초 실행은 새로 만들지 않고 같은 실행을 재개한다 (GD-87) — 재추첨은 AD09로 재개한다
     const canResumeInitial = !isRedraw && run.status === 'FAILED' && !eventCanceled && eventReady;
     const cancelable = confirmed && !eventCanceled && eventReady;

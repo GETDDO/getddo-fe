@@ -19,10 +19,16 @@ export function RaffleDetailsCard({ event }: { event: Event }) {
     type Spec = { label: string; value: string | null };
     // 13줄이 한 줄로 길게 이어지던 표를 '상품·일정'과 '응모 현황' 두 묶음으로 나눈다 — 넓은 화면에서는 나란히 둔다
     const productSpecs: Spec[] = [
-        { label: '상품 구성', value: detail?.prizeComposition ?? event.prizeName },
+        // 경품 요약은 상세(E02)에만 있다 — 값이 없으면 해당 행을 숨긴다 (spec EventSummary)
+        { label: '상품 구성', value: detail?.prizeComposition ?? event.prizeName ?? null },
         {
             label: '추첨 인원',
-            value: event.winnerCount === 1 ? '단 1명' : `${formatNumber(event.winnerCount)}명`,
+            value:
+                event.winnerCount != null
+                    ? event.winnerCount === 1
+                        ? '단 1명'
+                        : `${formatNumber(event.winnerCount)}명`
+                    : null,
         },
         { label: '배송 일정', value: detail?.shippingSchedule ?? null },
         {

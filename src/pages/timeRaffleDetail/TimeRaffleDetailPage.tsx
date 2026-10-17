@@ -94,7 +94,7 @@ export function TimeRaffleDetailPage() {
         (event.myEntryCount ?? 0) * event.requiredTickets;
     const remainingLimit =
         eligibility?.remainingTicketLimit ??
-        (event.maxTicketsPerUser === null
+        (event.maxTicketsPerUser == null
             ? null
             : Math.max(0, event.maxTicketsPerUser - alreadyUsed));
     // 자격 사유를 세 갈래로 읽는 규칙은 이벤트 상세와 같아야 하므로 한곳에 둔다 (E07)

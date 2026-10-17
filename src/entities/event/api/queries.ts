@@ -6,9 +6,11 @@ import { queryPresets } from '@shared/api/queryPresets';
 
 import type { Event } from '../model/types';
 
-import { eventSchema } from '../model/types';
+import { toEvent } from '../lib/toEvent';
+import { eventDetailResponseSchema, eventSummaryResponseSchema } from '../model/contract';
 
-const eventListSchema = envelopeSchema(pageSchema(eventSchema));
+// spec 원시 응답(EventSummary/EventDetail)을 parse한 뒤 화면용 Event로 변환한다
+const eventListSchema = envelopeSchema(pageSchema(eventSummaryResponseSchema));
 
 export const EVENTS_KEY = ['events'] as const;
 
@@ -31,7 +33,7 @@ export function useEventList() {
                     params: { page, size: EVENTS_PAGE_SIZE },
                 });
                 const parsed = eventListSchema.parse(data).data;
-                events.push(...parsed.items);
+                events.push(...parsed.items.map(toEvent));
                 if (events.length >= parsed.totalElements || parsed.items.length === 0) break;
             }
             return events;
@@ -46,7 +48,7 @@ export function useEvent(eventId: string) {
         queryKey: [...EVENTS_KEY, 'detail', eventId],
         queryFn: async () => {
             const { data } = await apiClient.get<unknown>(eventApiPath(eventId));
-            return envelopeSchema(eventSchema).parse(data).data;
+            return toEvent(envelopeSchema(eventDetailResponseSchema).parse(data).data);
         },
         // 상태 전환 감지용 폴링 (ADR-0007) — 마감 상태도 결과 발표(closed → drawn) 전환을 감지해야 하므로 추첨 완료 전까지 30초 폴링을 유지한다
         refetchInterval: (query) => {

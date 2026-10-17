@@ -49,10 +49,10 @@ export function UpcomingEventCard({ event }: { event: Event }) {
                     오늘 {formatKst(event.startsAt, TIME_ONLY)} 오픈 예정
                 </StatusDot>
                 <p className="text-body-bold text-fg-primary truncate">{event.title}</p>
-                {/* 당첨 인원은 제목 옆 괄호 대신 아랫줄에 — 괄호만으로는 무슨 인원인지 헷갈렸다 */}
+                {/* 당첨 인원은 제목 옆 괄호 대신 아랫줄에 — 괄호만으로는 무슨 인원인지 헷갈렸다. 목록 응답에는 prizes가 없어 인원이 비면 문구를 뺀다 */}
                 <p className="text-caption text-fg-tertiary">
-                    당첨 {formatNumber(event.winnerCount)}명 · 응모권{' '}
-                    {formatNumber(event.requiredTickets)}장부터 응모
+                    {event.winnerCount != null && `당첨 ${formatNumber(event.winnerCount)}명 · `}
+                    응모권 {formatNumber(event.requiredTickets)}장부터 응모
                 </p>
             </div>
         </Link>
