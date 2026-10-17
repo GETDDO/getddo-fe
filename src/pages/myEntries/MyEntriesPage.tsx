@@ -186,9 +186,9 @@ export function MyEntriesPage() {
                     aria-hidden
                     className={`bg-surface-sunken text-caption text-fg-tertiary hidden gap-x-4 rounded-lg px-3 py-2 md:grid ${ENTRY_GRID}`}
                 >
-                    <span>응모</span>
+                    {/* 줄의 1열은 썸네일(size-13) + gap-3 뒤에 제목이 오므로 머리글도 그만큼 들여쓴다 */}
+                    <span className="pl-16">응모</span>
                     <span>사용 응모권</span>
-                    <span>발표</span>
                     <span className="text-right">결과</span>
                     <span />
                 </div>

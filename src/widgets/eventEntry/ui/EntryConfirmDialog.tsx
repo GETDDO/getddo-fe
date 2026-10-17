@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 
 import type { EntryTickets } from '@entities/entry';
 
-import { ticketGradeSchema } from '@entities/ticket';
+import { GradeTicketTiles, ticketGradeSchema } from '@entities/ticket';
 import { Button } from '@shared/ui/button';
 import {
     Dialog,
@@ -14,8 +14,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@shared/ui/dialog';
-
-import { GradeTicketTiles } from './GradeTicketTiles';
 
 interface EntryConfirmDialogProps {
     open: boolean;
@@ -120,7 +118,7 @@ export function EntryConfirmDialog({
                         </>
                     ) : (
                         <p className="text-body-sm text-fg-secondary">
-                            응모권을 쓰지 않는 래플이에요.
+                            응모권 없이 참여하는 이벤트예요.
                         </p>
                     )}
                     {/* 사용자의 응모 취소는 제공하지 않는다 (getddo-spec 02-domain/entry.md) */}
