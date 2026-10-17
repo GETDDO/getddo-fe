@@ -1,5 +1,6 @@
+import { X } from 'lucide-react';
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import type { EventActionKind } from '@features/manageEvent';
 
@@ -38,24 +39,31 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
 export function AdminEventDetailPage() {
     const { eventId = '' } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    // 목록 오른쪽 칸에서 열린다 — 닫으면 목록 조건(?status= 등)을 그대로 둔 채 1단으로 돌아간다
+    const closeTo = {
+        pathname: '/admin/events',
+        search: searchParams.toString() ? `?${searchParams.toString()}` : '',
+    };
+    const close = () => void navigate(closeTo);
     const { data: event, isPending, isError } = useAdminEvent(eventId);
     const [action, setAction] = useState<EventActionKind | null>(null);
 
     if (isPending) {
         return (
-            <LoadingBlock className="pb-10">
+            <LoadingBlock>
                 <CardSkeleton rows={8} />
             </LoadingBlock>
         );
     }
     if (isError || !event) {
         return (
-            <div className="flex flex-col gap-4 pb-10">
+            <div className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-5">
                 <p className="text-semantic-error-strong text-body-sm">
                     이벤트를 불러오지 못했습니다.
                 </p>
-                <Button variant="secondary" className="w-fit" asChild>
-                    <Link to="/admin/events">목록으로</Link>
+                <Button variant="secondary" className="w-fit" onClick={close}>
+                    닫기
                 </Button>
             </div>
         );
@@ -72,16 +80,33 @@ export function AdminEventDetailPage() {
     const status = ADMIN_STATUS_META[event.status];
 
     return (
-        <div className="flex flex-col gap-6 pb-10 md:pr-10">
-            <div className="flex flex-wrap items-center gap-3">
-                <Button variant="secondary" size="sm" asChild>
-                    <Link to="/admin/events">← 목록</Link>
-                </Button>
-                <h2 className="text-title-3 text-fg-primary truncate">{event.title}</h2>
-                <span className={cn(badgeVariants({ variant: null }), status.chipClass)}>
-                    {status.label}
-                </span>
-                <div className="ml-auto flex flex-wrap gap-2">
+        <div className="flex flex-col gap-4">
+            {/* 머리 — 제목·상태와 닫기, 그 아래 운영 행동. 좁은 칸에서도 제목이 잘리지 않게 줄을 나눈다 */}
+            <section className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-5">
+                <div className="flex items-start gap-3">
+                    <div className="flex min-w-0 flex-col gap-2">
+                        <span
+                            className={cn(
+                                badgeVariants({ variant: null }),
+                                status.chipClass,
+                                'self-start',
+                            )}
+                        >
+                            {status.label}
+                        </span>
+                        <h2 className="text-title-3 text-fg-primary">{event.title}</h2>
+                    </div>
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        className="ml-auto size-9 shrink-0"
+                        aria-label="상세 닫기"
+                        onClick={close}
+                    >
+                        <X aria-hidden className="size-5" />
+                    </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
                     {hasDraw && (
                         <Button variant="secondary" asChild>
                             <Link to={`/admin/draw?eventId=${event.id}`}>추첨 관리</Link>
@@ -103,9 +128,9 @@ export function AdminEventDetailPage() {
                         </Button>
                     )}
                 </div>
-            </div>
+            </section>
 
-            <section className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-6">
+            <section className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-5">
                 <h3 className="text-body-bold text-fg-primary">기본 정보</h3>
                 <InfoRow label="이벤트 ID">{event.id}</InfoRow>
                 <InfoRow label="설명">
@@ -135,7 +160,7 @@ export function AdminEventDetailPage() {
                 <InfoRow label="등록일">{formatKst(event.createdAt, KST_YMD_HM)}</InfoRow>
             </section>
 
-            <section className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-6">
+            <section className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-5">
                 <h3 className="text-body-bold text-fg-primary">경품 ({event.prizes.length}종)</h3>
                 <Table>
                     <TableHeader>
@@ -168,7 +193,7 @@ export function AdminEventDetailPage() {
                 onOpenChange={(open) => {
                     if (!open) setAction(null);
                 }}
-                onDeleted={() => void navigate('/admin/events')}
+                onDeleted={close}
             />
         </div>
     );

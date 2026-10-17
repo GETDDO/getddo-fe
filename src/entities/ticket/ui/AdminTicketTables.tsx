@@ -64,7 +64,9 @@ function Frame({
 }
 
 const Cell = ({ children, center = false }: { children: ReactNode; center?: boolean }) => (
-    <TableCell className={cn('px-4 py-3 align-top', center && 'text-center')}>{children}</TableCell>
+    <TableCell className={cn('px-4 py-3 align-middle', center && 'text-center')}>
+        {children}
+    </TableCell>
 );
 
 function UserCell({ name, id }: { name: string; id: string }) {

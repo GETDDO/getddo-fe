@@ -1,5 +1,3 @@
-import type { KeyboardEvent } from 'react';
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -9,6 +7,7 @@ import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { badgeVariants } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
+import { ChipTabs } from '@shared/ui/chip-tabs';
 import { CardSkeleton, LoadingBlock } from '@shared/ui/skeleton';
 
 import { DrawRunDetail } from './DrawRunDetail';
@@ -35,6 +34,8 @@ export function DrawEventPanel({ eventId }: { eventId: string }) {
     const latest = useEventDraws(eventId, { page: 1, size: DRAW_RUN_PAGE_SIZE });
     const [chosenId, setChosenId] = useState<string | null>(null);
     const [tab, setTab] = useState<PanelTab>('runs');
+    // 고른 실행의 다음 행동 버튼이 들어올 머리 카드 자리 — 실행 상세가 포털로 채운다
+    const [actionSlot, setActionSlot] = useState<HTMLDivElement | null>(null);
 
     // 이벤트가 바뀌면 부모가 key로 패널을 새로 만들어 선택·페이지·탭이 초기화된다
     const selectedId = chosenId ?? latest.data?.items[0]?.id ?? null;
@@ -44,21 +45,6 @@ export function DrawEventPanel({ eventId }: { eventId: string }) {
     const awaitingFirstPublication = event?.status === 'DRAW_CONFIRMED';
     // ADR-022 — 발표 예정 시각·카운트다운은 계약에서 제외됐다. 표시 시각은 최초 자동 추첨 기준이다
     const drawScheduledAt = event?.drawScheduledAt;
-
-    // 비선택 탭은 tabIndex=-1이라 방향키로 이동한다 — APG 탭 패턴의 roving tabindex
-    const handleTabKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-        e.preventDefault();
-        const index = TABS.findIndex((t) => t.value === tab);
-        const nextIndex =
-            e.key === 'ArrowRight'
-                ? (index + 1) % TABS.length
-                : (index - 1 + TABS.length) % TABS.length;
-        const nextTab = TABS[nextIndex];
-        if (!nextTab) return;
-        setTab(nextTab.value);
-        document.getElementById(`draw-tab-${nextTab.value}`)?.focus();
-    };
 
     return (
         <div className="flex flex-col gap-6">
@@ -102,36 +88,21 @@ export function DrawEventPanel({ eventId }: { eventId: string }) {
                             않습니다.
                         </p>
                     )}
+                    {/* 비어 있으면 숨는다 — 처리할 행동이 있을 때만 구분선과 함께 나타난다 */}
+                    <div
+                        ref={setActionSlot}
+                        className="border-border-default border-t pt-3 empty:hidden"
+                    />
                 </section>
             )}
 
-            <div
-                role="tablist"
-                aria-label="추첨 관리 구분"
-                className="flex gap-1"
-                onKeyDown={handleTabKeyDown}
-            >
-                {TABS.map(({ value, label }) => (
-                    <button
-                        key={value}
-                        type="button"
-                        role="tab"
-                        id={`draw-tab-${value}`}
-                        aria-selected={tab === value}
-                        aria-controls={`draw-panel-${value}`}
-                        tabIndex={tab === value ? 0 : -1}
-                        onClick={() => setTab(value)}
-                        className={cn(
-                            'text-body-sm focus-visible:ring-border-focus focus-visible:ring-offset-surface-page rounded-lg px-3 py-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
-                            tab === value
-                                ? 'bg-surface-inverse text-fg-inverse font-medium'
-                                : 'text-fg-secondary hover:bg-surface-pressed hover:text-fg-primary',
-                        )}
-                    >
-                        {label}
-                    </button>
-                ))}
-            </div>
+            <ChipTabs
+                tabs={TABS}
+                value={tab}
+                onValueChange={setTab}
+                label="추첨 관리 구분"
+                idPrefix="draw"
+            />
 
             {tab === 'runs' && (
                 <div
@@ -148,6 +119,7 @@ export function DrawEventPanel({ eventId }: { eventId: string }) {
                             eventCanceled={event?.status === 'CANCELED'}
                             eventReady={event != null && !eventError}
                             onRunCreated={select}
+                            actionSlot={actionSlot}
                         />
                     )}
                 </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Outlet, useMatch, useNavigate, useSearchParams } from 'react-router-dom';
 
 import type { AdminEventStatus, EventType } from '@entities/event';
 
@@ -11,9 +11,9 @@ import {
 } from '@entities/event';
 import { kstInputToUtcIso } from '@shared/lib/date';
 import { isDateRangeOrdered } from '@shared/lib/filterConstants';
+import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
-import { DateRangeFilter } from '@shared/ui/filter-fields';
-import { Input } from '@shared/ui/input';
+import { DateRangeFilter, TextFilter } from '@shared/ui/filter-fields';
 import { Pagination } from '@shared/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
 import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
@@ -21,7 +21,7 @@ import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
 const PAGE_SIZE = 10;
 
 const STATUS_OPTIONS: { value: 'all' | AdminEventStatus; label: string }[] = [
-    { value: 'all', label: '전체 상태' },
+    { value: 'all', label: '이벤트 상태' },
     ...Object.entries(ADMIN_STATUS_META).map(([value, meta]) => ({
         value: value as AdminEventStatus,
         label: meta.label,
@@ -29,7 +29,7 @@ const STATUS_OPTIONS: { value: 'all' | AdminEventStatus; label: string }[] = [
 ];
 
 const TYPE_OPTIONS: { value: 'all' | EventType; label: string }[] = [
-    { value: 'all', label: '전체 유형' },
+    { value: 'all', label: '응모권 유형' },
     ...(Object.entries(EVENT_TYPE_LABEL) as [EventType, string][]).map(([value, label]) => ({
         value,
         label,
@@ -51,6 +51,16 @@ export function AdminEventsPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const statusParam = asAdminStatus(searchParams.get('status'));
+    // 오른쪽 칸에 열린 상세 — /admin/events/:eventId 하위 라우트
+    const selectedId = useMatch('/admin/events/:eventId')?.params.eventId;
+    // 상세를 열고 닫아도 ?status= 같은 목록 조건은 그대로 둔다
+    const openDetail = (eventId: string | null) => {
+        const search = searchParams.toString();
+        void navigate({
+            pathname: eventId ? `/admin/events/${encodeURIComponent(eventId)}` : '/admin/events',
+            search: search ? `?${search}` : '',
+        });
+    };
     const [page, setPage] = useState(1);
     const [keywordInput, setKeywordInput] = useState('');
     // 검색어는 엔터·버튼으로 확정된 값만 쿼리에 넘긴다 — 입력마다 요청하지 않는다
@@ -123,12 +133,12 @@ export function AdminEventsPage() {
                         resetPage();
                     }}
                 >
-                    <Input
+                    <TextFilter
                         value={keywordInput}
-                        onChange={(e) => setKeywordInput(e.target.value)}
+                        onChange={setKeywordInput}
                         placeholder="이벤트 이름·설명 검색"
+                        label="이벤트 검색"
                         className="w-64"
-                        aria-label="이벤트 검색"
                     />
                     <DateRangeFilter
                         from={fromInput}
@@ -195,55 +205,85 @@ export function AdminEventsPage() {
                 </p>
             )}
 
-            {isPending && (
-                <LoadingBlock>
-                    <TableSkeleton />
-                </LoadingBlock>
-            )}
-            {isError && (
-                <div className="flex items-center gap-3" role="alert">
-                    <p className="text-semantic-error-strong text-body-sm">
-                        이벤트 목록을 불러오지 못했습니다.
-                    </p>
-                    <Button size="sm" variant="secondary" onClick={() => void refetch()}>
-                        다시 시도
-                    </Button>
-                </div>
-            )}
-            {!isPending && !isError && data && data.items.length === 0 && (
-                <div className="flex flex-col gap-2 py-6">
-                    <p className="text-fg-secondary text-body-sm">해당하는 이벤트가 없습니다.</p>
-                    {hasAppliedFilters && (
-                        <Button
-                            size="sm"
-                            variant="ghost"
-                            className="self-start"
-                            onClick={resetFilters}
-                        >
-                            검색 조건 초기화
-                        </Button>
+            {/* 줄을 고르면 1단 → 2단 — 왼쪽은 줄인 목록, 오른쪽은 상세 */}
+            <div
+                className={cn(
+                    'flex flex-col gap-6',
+                    selectedId &&
+                        'lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start lg:gap-4',
+                )}
+            >
+                <div className="flex min-w-0 flex-col gap-6">
+                    {isPending && (
+                        <LoadingBlock>
+                            <TableSkeleton />
+                        </LoadingBlock>
+                    )}
+                    {isError && (
+                        <div className="flex items-center gap-3" role="alert">
+                            <p className="text-semantic-error-strong text-body-sm">
+                                이벤트 목록을 불러오지 못했습니다.
+                            </p>
+                            <Button size="sm" variant="secondary" onClick={() => void refetch()}>
+                                다시 시도
+                            </Button>
+                        </div>
+                    )}
+                    {!isPending && !isError && data && data.items.length === 0 && (
+                        <div className="flex flex-col gap-2 py-6">
+                            <p className="text-fg-secondary text-body-sm">
+                                해당하는 이벤트가 없습니다.
+                            </p>
+                            {hasAppliedFilters && (
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="self-start"
+                                    onClick={resetFilters}
+                                >
+                                    검색 조건 초기화
+                                </Button>
+                            )}
+                        </div>
+                    )}
+                    {!isPending && !isError && isFetching && (
+                        <p role="status" className="text-fg-tertiary text-caption -mt-4">
+                            목록을 새로 확인하는 중…
+                        </p>
+                    )}
+                    {data && data.items.length > 0 && (
+                        <>
+                            <AdminEventTable
+                                events={data.items}
+                                compact={selectedId != null}
+                                selectedId={selectedId}
+                                onRowClick={(event) =>
+                                    // 열린 줄을 다시 누르면 닫는다
+                                    openDetail(event.id === selectedId ? null : event.id)
+                                }
+                            />
+                            <div className="flex items-center justify-between">
+                                <span className="text-body-sm text-fg-secondary">
+                                    총 {data.totalElements}건
+                                </span>
+                                <Pagination
+                                    page={page}
+                                    totalPages={totalPages}
+                                    onPageChange={setPage}
+                                />
+                            </div>
+                        </>
                     )}
                 </div>
-            )}
-            {!isPending && !isError && isFetching && (
-                <p role="status" className="text-fg-tertiary text-caption -mt-4">
-                    목록을 새로 확인하는 중…
-                </p>
-            )}
-            {data && data.items.length > 0 && (
-                <>
-                    <AdminEventTable
-                        events={data.items}
-                        onRowClick={(event) => void navigate(`/admin/events/${event.id}`)}
-                    />
-                    <div className="flex items-center justify-between">
-                        <span className="text-body-sm text-fg-secondary">
-                            총 {data.totalElements}건
-                        </span>
-                        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-                    </div>
-                </>
-            )}
+                {selectedId && (
+                    <aside
+                        aria-label="이벤트 상세"
+                        className="min-w-0 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto"
+                    >
+                        <Outlet />
+                    </aside>
+                )}
+            </div>
         </div>
     );
 }

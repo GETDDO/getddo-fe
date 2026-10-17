@@ -61,7 +61,8 @@ function StatCard({
         <div
             className={cn(
                 'group bg-surface-page border-border-default relative flex flex-col gap-1 rounded-2xl border p-5 transition-colors',
-                'hover:border-fg-brand',
+                // 1px 테두리 + 1px 링 — 크기를 바꾸지 않고 2px로 또렷하게
+                'hover:border-fg-brand hover:ring-fg-brand hover:ring-1',
             )}
         >
             {/* 카드 전체를 덮는 링크 — 재시도 버튼은 relative로 링크 위에 띄운다 */}

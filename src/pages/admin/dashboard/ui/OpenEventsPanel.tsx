@@ -83,7 +83,7 @@ function OpenEventRow({
             <TableCell className="text-body-sm text-fg-secondary tabular-nums">
                 {formatRemaining(remainingMs, 'minute')} 남음
             </TableCell>
-            <TableCell className="text-body-sm text-right tabular-nums">
+            <TableCell className="text-body-sm pr-10 text-right tabular-nums">
                 {stats ? `${formatNumber(stats.participantCount)}명` : fallback}
             </TableCell>
             <TableCell className="w-56">
@@ -151,7 +151,9 @@ export function OpenEventsPanel({ className }: { className?: string }) {
                             <TableHead className="text-fg-tertiary">No</TableHead>
                             <TableHead className="text-fg-tertiary">이벤트</TableHead>
                             <TableHead className="text-fg-tertiary">마감까지</TableHead>
-                            <TableHead className="text-fg-tertiary text-right">응모자</TableHead>
+                            <TableHead className="text-fg-tertiary pr-10 text-right">
+                                응모자
+                            </TableHead>
                             <TableHead className="text-fg-tertiary">사용 응모권</TableHead>
                             <TableHead className="text-fg-tertiary text-center">상태</TableHead>
                         </TableRow>

@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 
 import type { DrawResult, DrawRunDetail as DrawRunDetailData } from '@entities/drawResult';
@@ -19,6 +20,7 @@ import { formatKst } from '@shared/lib/date';
 import { cn } from '@shared/lib/utils';
 import { badgeVariants } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
+import { Segmented } from '@shared/ui/segmented';
 import { CardSkeleton, LoadingBlock } from '@shared/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@shared/ui/table';
 
@@ -28,6 +30,13 @@ import { PolicyPendingChip } from './PolicyPendingNotice';
 
 // 상태·분류 칩 — 사용자 화면과 같은 공용 배지 모양(둥근 알약, 높이 26·글자 12)에 색만 칩마다 입힌다
 const CHIP = badgeVariants({ variant: null });
+
+type RunSection = 'results' | 'verifications' | 'candidates';
+const RUN_SECTIONS: readonly { value: RunSection; label: string }[] = [
+    { value: 'results', label: '추첨 결과' },
+    { value: 'verifications', label: '정합성 검증' },
+    { value: 'candidates', label: '후보 명단' },
+];
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
     return (
@@ -68,6 +77,8 @@ interface DrawRunDetailProps {
     eventReady: boolean;
     /** 당첨 취소로 재추첨 실행이 생기면 그 실행으로 선택을 옮긴다 */
     onRunCreated: (drawId: string) => void;
+    /** 다음 행동 버튼을 그릴 자리 — 이벤트 머리 카드. 없으면 실행 요약 카드 안에 그린다 */
+    actionSlot?: HTMLElement | null;
 }
 
 // AD02 실행 상세 — 실행 요약, 실패 정보, 취소 근거, 결과(당첨 취소 진입), 재추첨 시작·재개와 공개 반영
@@ -76,6 +87,7 @@ export function DrawRunDetail({
     eventCanceled,
     eventReady,
     onRunCreated,
+    actionSlot,
 }: DrawRunDetailProps) {
     const { data: run, isPending, isError, refetch, isFetching } = useDrawRun(drawId);
 
@@ -105,6 +117,7 @@ export function DrawRunDetail({
             eventCanceled={eventCanceled}
             eventReady={eventReady}
             onRunCreated={onRunCreated}
+            actionSlot={actionSlot}
             refreshing={isFetching}
             onRefresh={() => void refetch()}
         />
@@ -116,6 +129,7 @@ interface RunDetailBodyProps {
     eventCanceled: boolean;
     eventReady: boolean;
     onRunCreated: (drawId: string) => void;
+    actionSlot?: HTMLElement | null;
     refreshing: boolean;
     onRefresh: () => void;
 }
@@ -125,10 +139,12 @@ function RunDetailBody({
     eventCanceled,
     eventReady,
     onRunCreated,
+    actionSlot,
     refreshing,
     onRefresh,
 }: RunDetailBodyProps) {
     const [cancelTarget, setCancelTarget] = useState<DrawResult | null>(null);
+    const [section, setSection] = useState<RunSection>('results');
     const [publishOpen, setPublishOpen] = useState(false);
     const start = useStartRedraw();
     const resumeInitial = useResumeDraw();
@@ -198,8 +214,36 @@ function RunDetailBody({
         });
     };
 
+    const hasActions = inProgress || canResumeInitial || canResume;
+    // 다음 행동 — 이벤트 머리 카드(actionSlot)로 올려 첫눈에 보이게 한다. 어느 실행의 행동인지 함께 적는다
+    const actions = hasActions && (
+        <div className="flex flex-wrap items-center gap-3">
+            <span className="text-body-sm text-fg-secondary">
+                다음 할 일 · {run.runNumber}회차 {isRedraw ? '재추첨' : '최초 추첨'}
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+                {inProgress && (
+                    <Button size="sm" variant="secondary" disabled={refreshing} onClick={onRefresh}>
+                        상태 새로고침
+                    </Button>
+                )}
+                {canResumeInitial && (
+                    <Button size="sm" disabled={resumeInitial.isPending} onClick={resumeFirstRun}>
+                        {resumeInitial.isPending ? '요청 중…' : '최초 추첨 재개'}
+                    </Button>
+                )}
+                {canResume && (
+                    <Button size="sm" disabled={start.isPending} onClick={resume}>
+                        {start.isPending ? '요청 중…' : '재추첨 시작·재개'}
+                    </Button>
+                )}
+            </div>
+        </div>
+    );
+
     return (
         <div className="flex flex-col gap-6">
+            {actionSlot && actions ? createPortal(actions, actionSlot) : null}
             <section
                 aria-labelledby="draw-run-summary-title"
                 className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-6"
@@ -209,32 +253,7 @@ function RunDetailBody({
                         {run.runNumber}회차 {isRedraw ? '재추첨' : '최초 추첨'}
                     </h3>
                     <span className={cn(CHIP, status.chipClass)}>{status.label}</span>
-                    <div className="ml-auto flex gap-2">
-                        {inProgress && (
-                            <Button
-                                size="sm"
-                                variant="secondary"
-                                disabled={refreshing}
-                                onClick={onRefresh}
-                            >
-                                상태 새로고침
-                            </Button>
-                        )}
-                        {canResumeInitial && (
-                            <Button
-                                size="sm"
-                                disabled={resumeInitial.isPending}
-                                onClick={resumeFirstRun}
-                            >
-                                {resumeInitial.isPending ? '요청 중…' : '최초 추첨 재개'}
-                            </Button>
-                        )}
-                        {canResume && (
-                            <Button size="sm" disabled={start.isPending} onClick={resume}>
-                                {start.isPending ? '요청 중…' : '재추첨 시작·재개'}
-                            </Button>
-                        )}
-                    </div>
+                    {!actionSlot && actions && <div className="ml-auto">{actions}</div>}
                 </div>
 
                 <Field label="실행 ID">{run.id}</Field>
@@ -400,63 +419,75 @@ function RunDetailBody({
                 </section>
             )}
 
-            <section
-                aria-labelledby="draw-run-results-title"
-                className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-6"
-            >
-                <h3 id="draw-run-results-title" className="text-body-bold text-fg-primary">
-                    추첨 결과
-                </h3>
-                {run.results.length === 0 ? (
-                    <p className="text-body-sm text-fg-tertiary">
-                        {inProgress
-                            ? '선정이 끝나면 결과가 표시됩니다. 진행 중인 결과는 미충원으로 처리하지 않습니다.'
-                            : '표시할 결과가 없습니다.'}
-                    </p>
-                ) : (
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="hover:bg-transparent">
-                                <TableHead>등수</TableHead>
-                                <TableHead>슬롯</TableHead>
-                                <TableHead>당첨자</TableHead>
-                                <TableHead>상태</TableHead>
-                                <TableHead>당첨 취소</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {run.results.map((result) => (
-                                <TableRow key={result.id} className="hover:bg-transparent">
-                                    <TableCell>{result.prizeRank}등</TableCell>
-                                    <TableCell>{result.slotNumber}</TableCell>
-                                    <TableCell className="font-medium">
-                                        {result.userId ?? '—'}
-                                    </TableCell>
-                                    <TableCell>
-                                        <ResultChips result={result} />
-                                    </TableCell>
-                                    <TableCell>
-                                        {result.resultType === 'SELECTED' && !result.isCanceled && (
-                                            <Button
-                                                size="sm"
-                                                variant="secondary"
-                                                disabled={!cancelable}
-                                                aria-label={`${result.slotNumber}번 슬롯 당첨 취소`}
-                                                onClick={() => setCancelTarget(result)}
-                                            >
-                                                취소
-                                            </Button>
-                                        )}
-                                    </TableCell>
+            {/* 결과·검증·후보 명단은 한 번에 하나만 — 카드가 세로로 길게 쌓이지 않게 */}
+            <Segmented
+                value={section}
+                onValueChange={setSection}
+                options={RUN_SECTIONS}
+                label="실행 상세 보기"
+                className="self-start"
+            />
+            {section === 'results' && (
+                <section
+                    aria-labelledby="draw-run-results-title"
+                    className="bg-surface-page border-border-default flex flex-col gap-4 rounded-2xl border p-6"
+                >
+                    <h3 id="draw-run-results-title" className="text-body-bold text-fg-primary">
+                        추첨 결과
+                    </h3>
+                    {run.results.length === 0 ? (
+                        <p className="text-body-sm text-fg-tertiary">
+                            {inProgress
+                                ? '선정이 끝나면 결과가 표시됩니다. 진행 중인 결과는 미충원으로 처리하지 않습니다.'
+                                : '표시할 결과가 없습니다.'}
+                        </p>
+                    ) : (
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="hover:bg-transparent">
+                                    <TableHead>등수</TableHead>
+                                    <TableHead>슬롯</TableHead>
+                                    <TableHead>당첨자</TableHead>
+                                    <TableHead>상태</TableHead>
+                                    <TableHead>당첨 취소</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                )}
-            </section>
-
-            <DrawVerificationsSection drawId={run.id} canVerify={confirmed} />
-            <DrawCandidatesSection drawId={run.id} />
+                            </TableHeader>
+                            <TableBody>
+                                {run.results.map((result) => (
+                                    <TableRow key={result.id} className="hover:bg-transparent">
+                                        <TableCell>{result.prizeRank}등</TableCell>
+                                        <TableCell>{result.slotNumber}</TableCell>
+                                        <TableCell className="font-medium">
+                                            {result.userId ?? '—'}
+                                        </TableCell>
+                                        <TableCell>
+                                            <ResultChips result={result} />
+                                        </TableCell>
+                                        <TableCell>
+                                            {result.resultType === 'SELECTED' &&
+                                                !result.isCanceled && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        disabled={!cancelable}
+                                                        aria-label={`${result.slotNumber}번 슬롯 당첨 취소`}
+                                                        onClick={() => setCancelTarget(result)}
+                                                    >
+                                                        취소
+                                                    </Button>
+                                                )}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    )}
+                </section>
+            )}
+            {section === 'verifications' && (
+                <DrawVerificationsSection drawId={run.id} canVerify={confirmed} />
+            )}
+            {section === 'candidates' && <DrawCandidatesSection drawId={run.id} />}
 
             <CancelWinDialog
                 result={cancelTarget}

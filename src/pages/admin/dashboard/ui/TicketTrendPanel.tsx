@@ -1,5 +1,5 @@
 import { useReducedMotion } from 'framer-motion';
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Area,
@@ -10,6 +10,7 @@ import {
     Tooltip,
     XAxis,
     YAxis,
+    useChartHeight,
     useChartWidth,
     usePlotArea,
 } from 'recharts';
@@ -29,7 +30,7 @@ import { ViewAllLink } from './ViewAllLink';
 const LINE = 'var(--color-chart-line)';
 const COMPARE = 'var(--color-fg-secondary)';
 const AXIS_TICK = { fill: 'var(--color-chart-axis)', fontSize: 12 };
-/** 값 점 — 평소에는 흰 속에 마젠타 테두리, 올리면 조금 큰 마젠타 점(테두리 없음) */
+/** 값 점 — 평소에는 흰 속에 마젠타 테두리, 올리면 FocusLayer가 조금 큰 마젠타 점을 겹친다 */
 const POINT = { r: 4.5, fill: 'var(--color-surface-page)', stroke: LINE, strokeWidth: 2.5 };
 
 /** 말풍선 크기 — 점 위에 꼬리를 달아 띄운다 */
@@ -37,28 +38,67 @@ const BUBBLE_W = 168;
 const BUBBLE_H = 92;
 const BUBBLE_GAP = 14;
 
+/** 올린 날짜가 바뀔 때 점·말풍선·사각형이 미끄러지는 시간 */
+const MOVE = '220ms cubic-bezier(0.22, 1, 0.36, 1)';
+
 /**
- * 올린 점 위의 말풍선 — 프라이머리 바탕에 아래로 꼬리. 점 바로 위에 붙도록 차트 안(SVG)에 그린다.
- * 점이 위쪽 끝에 가까워 말풍선이 잘리면 점 아래로 뒤집고, 좌우 끝에서는 차트 안으로 밀어 넣되 꼬리는 점을 가리킨다
+ * 올린 점과 말풍선 — 점마다 새로 그리지 않고 한 벌만 두어, 날짜가 바뀌면 그 자리로 미끄러진다.
+ * 좌표는 고정한 y축 범위(0~yTop)와 그림 영역으로 직접 계산한다. 말풍선이 위로 잘리면 점 아래로 뒤집고,
+ * 좌우 끝에서는 차트 안으로 밀어 넣되 꼬리는 점을 가리킨다
  */
-function PointBubble({ cx, cy, payload }: { cx?: number; cy?: number; payload?: unknown }) {
+function FocusLayer({
+    rows,
+    index,
+    visible,
+    yTop,
+    animate,
+}: {
+    rows: TrendRow[];
+    index: number;
+    visible: boolean;
+    yTop: number;
+    animate: boolean;
+}) {
+    const plot = usePlotArea();
     const chartWidth = useChartWidth() ?? 0;
-    const row = payload as TrendRow | undefined;
-    if (cx == null || cy == null || !row) return null;
+    const chartHeight = useChartHeight() ?? 0;
+    const row = rows[index];
+    if (!plot || !row) return null;
+    const cx = plot.x + (plot.width * index) / Math.max(rows.length - 1, 1);
+    const cy = plot.y + plot.height * (1 - row.granted / yTop);
     const left = Math.min(Math.max(cx - BUBBLE_W / 2, 0), Math.max(chartWidth - BUBBLE_W, 0));
     const below = cy - BUBBLE_GAP - BUBBLE_H < 0;
-    const top = below ? cy + BUBBLE_GAP : cy - BUBBLE_GAP - BUBBLE_H;
+    const top = below ? cy + BUBBLE_GAP : cy - BUBBLE_GAP - BUBBLE_H - 6;
     return (
-        <g>
-            <circle cx={cx} cy={cy} r={6} fill={LINE} />
+        <g
+            className="pointer-events-none"
+            style={{
+                opacity: visible ? 1 : 0,
+                transition: animate ? 'opacity 160ms ease-out' : 'none',
+            }}
+        >
+            <circle
+                cx={cx}
+                cy={cy}
+                r={6}
+                fill={LINE}
+                style={{ transition: animate ? `cx ${MOVE}, cy ${MOVE}` : 'none' }}
+            />
             <foreignObject
-                x={left}
-                y={top - (below ? 0 : 6)}
-                width={BUBBLE_W}
-                height={BUBBLE_H + 6}
-                className="pointer-events-none overflow-visible"
+                x={0}
+                y={0}
+                width={chartWidth}
+                height={chartHeight}
+                className="overflow-visible"
             >
-                <div className={below ? 'flex flex-col-reverse' : 'flex flex-col'}>
+                <div
+                    className={below ? 'absolute flex flex-col-reverse' : 'absolute flex flex-col'}
+                    style={{
+                        width: BUBBLE_W,
+                        transform: `translate(${left}px, ${top}px)`,
+                        transition: animate ? `transform ${MOVE}` : 'none',
+                    }}
+                >
                     <div className="bg-brand-primary text-fg-on-brand flex w-full flex-col gap-0.5 rounded-xl px-3 py-2 shadow-md">
                         <span className="text-caption flex justify-between opacity-80">
                             {row.ymd}
@@ -79,7 +119,10 @@ function PointBubble({ cx, cy, payload }: { cx?: number; cy?: number; payload?: 
                     </div>
                     {/* 꼬리 — 점을 가리키는 작은 삼각형 */}
                     <span
-                        style={{ marginLeft: cx - left - 6 }}
+                        style={{
+                            marginLeft: cx - left - 6,
+                            transition: animate ? `margin-left ${MOVE}` : 'none',
+                        }}
                         className={
                             below
                                 ? 'border-b-brand-primary size-0 border-x-[6px] border-b-[6px] border-x-transparent'
@@ -94,9 +137,20 @@ function PointBubble({ cx, cy, payload }: { cx?: number; cy?: number; payload?: 
 
 /**
  * 올린 날짜 칸 — 점 위아래로 옅은 브랜드색 사각형을 세워 어느 날을 보는지 분명히 한다.
- * 점 간격의 절반 너비로, 위는 진하고 아래로 옅어진다
+ * 점 간격의 절반 너비로, 모서리 없이 위는 진하고 아래로 옅어진다
  */
-function HoverBand({ count, points }: { count: number; points?: { x: number; y: number }[] }) {
+function HoverBand({
+    count,
+    fillId,
+    animate,
+    points,
+}: {
+    count: number;
+    animate: boolean;
+    /** 위에서 아래로 옅어지는 채움 그라데이션 id */
+    fillId: string;
+    points?: { x: number; y: number }[];
+}) {
     const plot = usePlotArea();
     const x = points?.[0]?.x;
     if (!plot || x == null) return null;
@@ -107,10 +161,9 @@ function HoverBand({ count, points }: { count: number; points?: { x: number; y: 
             y={plot.y}
             width={width}
             height={plot.height}
-            rx={6}
-            fill={LINE}
-            fillOpacity={0.1}
+            fill={`url(#${fillId})`}
             className="pointer-events-none"
+            style={{ transition: animate ? `x ${MOVE}` : 'none' }}
         />
     );
 }
@@ -152,6 +205,13 @@ export function TicketTrendPanel({
         },
         { label: '사용률', legend: null, value: `${useRate}%` },
     ];
+    // 올린 날짜 — 떠나도 마지막 날짜는 기억해 말풍선이 제자리에서 사라지게 한다
+    const [hovered, setHovered] = useState<number | null>(null);
+    const [shown, setShown] = useState(0);
+    if (hovered != null && hovered !== shown) setShown(hovered);
+    // 말풍선 좌표를 직접 계산하려고 y축 범위를 고정한다 — 눈금 4칸, 정수 간격
+    const yStep = Math.max(1, Math.ceil(Math.max(0, ...rows.map((row) => row.granted)) / 4));
+    const yTop = yStep * 4;
     const last = rows.length - 1;
     const chartRows: ChartRow[] = rows.map((row, index) => ({
         ...row,
@@ -201,11 +261,26 @@ export function TicketTrendPanel({
                             data={chartRows}
                             margin={{ top: 16, right: 12, bottom: 0, left: -16 }}
                             onClick={(state) => openDay(state.activeTooltipIndex)}
+                            onMouseMove={(state) => {
+                                const index = state.activeTooltipIndex;
+                                setHovered(index == null ? null : Number(index));
+                            }}
+                            onMouseLeave={() => setHovered(null)}
                             className="cursor-pointer"
                         >
                             <defs>
                                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="0%" stopColor={LINE} stopOpacity={0.32} />
+                                    <stop offset="100%" stopColor={LINE} stopOpacity={0.02} />
+                                </linearGradient>
+                                <linearGradient
+                                    id={`${gradientId}-band`}
+                                    x1="0"
+                                    y1="0"
+                                    x2="0"
+                                    y2="1"
+                                >
+                                    <stop offset="0%" stopColor={LINE} stopOpacity={0.22} />
                                     <stop offset="100%" stopColor={LINE} stopOpacity={0.02} />
                                 </linearGradient>
                             </defs>
@@ -225,11 +300,19 @@ export function TicketTrendPanel({
                                 axisLine={false}
                                 tick={AXIS_TICK}
                                 width={48}
+                                domain={[0, yTop]}
+                                ticks={[0, yStep, yStep * 2, yStep * 3, yTop]}
                             />
                             {/* 말풍선은 점 위에 직접 그리므로 툴팁 상자는 숨기고 세로 안내선만 둔다 */}
                             <Tooltip
                                 content={() => null}
-                                cursor={<HoverBand count={rows.length} />}
+                                cursor={
+                                    <HoverBand
+                                        count={rows.length}
+                                        fillId={`${gradientId}-band`}
+                                        animate={!reduceMotion}
+                                    />
+                                }
                             />
                             <Line
                                 dataKey="used"
@@ -277,12 +360,15 @@ export function TicketTrendPanel({
                                 type="linear"
                                 stroke="none"
                                 dot={POINT}
-                                activeDot={(props: {
-                                    cx?: number;
-                                    cy?: number;
-                                    payload?: unknown;
-                                }) => <PointBubble key="bubble" {...props} />}
+                                activeDot={false}
                                 isAnimationActive={!reduceMotion}
+                            />
+                            <FocusLayer
+                                rows={rows}
+                                index={shown}
+                                visible={hovered != null}
+                                yTop={yTop}
+                                animate={!reduceMotion}
                             />
                         </ComposedChart>
                     </ResponsiveContainer>

@@ -17,22 +17,22 @@ import { DashboardPanel } from './DashboardPanel';
 import { ViewAllLink } from './ViewAllLink';
 
 /**
- * 단계 색 — 무채색 한 계열로 손이 가야 하는 단계일수록 진하게(발표 대기 > 추첨 필요 > 진행 중 > 예정 > 종료).
- * 색은 올린 칸에만 프라이머리로 입혀 지금 보는 칸이 바로 읽히게 한다
+ * 단계 색 — 관리자 분포 그래프 계열색(마젠타 한 계열). 손이 가야 하는 단계일수록 진하게
+ * (발표 대기 > 추첨 필요 > 진행 중 > 예정 > 종료). 올린 칸만 프라이머리로 바꿔 지금 보는 칸이 바로 읽히게 한다
  */
 const STAGE_FILL: Record<EventStageKey, string> = {
-    publish: 'var(--color-fg-primary)',
-    draw: 'var(--color-fg-secondary)',
-    open: 'var(--color-chart-axis)',
-    scheduled: 'var(--color-border-strong)',
-    done: 'var(--color-surface-pressed)',
+    publish: 'var(--color-chart-series-1)',
+    draw: 'var(--color-chart-series-2)',
+    open: 'var(--color-chart-series-3)',
+    scheduled: 'var(--color-chart-series-4)',
+    done: 'var(--color-chart-series-5)',
 };
 const STAGE_DOT: Record<EventStageKey, string> = {
-    publish: 'bg-fg-primary',
-    draw: 'bg-fg-secondary',
-    open: 'bg-chart-axis',
-    scheduled: 'bg-border-strong',
-    done: 'bg-surface-pressed',
+    publish: 'bg-chart-series-1',
+    draw: 'bg-chart-series-2',
+    open: 'bg-chart-series-3',
+    scheduled: 'bg-chart-series-4',
+    done: 'bg-chart-series-5',
 };
 const ACTIVE_FILL = 'var(--color-brand-primary)';
 /** 올린 칸이 바깥으로 튀어나오는 길이 */
@@ -123,6 +123,11 @@ export function EventStagePanel() {
                                         <Cell
                                             key={key}
                                             fill={index === hovered ? ACTIVE_FILL : STAGE_FILL[key]}
+                                            // 한 칸을 올리면 나머지는 흐려져 같은 계열 안에서도 올린 칸이 떠오른다
+                                            fillOpacity={
+                                                hovered == null || index === hovered ? 1 : 0.35
+                                            }
+                                            className="transition-[fill-opacity] duration-200"
                                         />
                                     ))}
                                 </Pie>

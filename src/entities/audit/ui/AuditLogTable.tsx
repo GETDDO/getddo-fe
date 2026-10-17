@@ -154,7 +154,7 @@ export function AuditLogTable({
                                 <TableCell
                                     key={cell.id}
                                     className={cn(
-                                        'px-4 py-3 align-top',
+                                        'px-4 py-3 align-middle',
                                         CENTER_COLUMNS.has(cell.column.id) && 'text-center',
                                     )}
                                 >

@@ -18,12 +18,12 @@ import { DateRangeFilter, OptionFilter, TextFilter } from '@shared/ui/filter-fie
 import { PagedResult } from '@shared/ui/paged-result';
 
 const STATUS_OPTIONS = [
-    { value: ALL, label: '전체 상태' },
+    { value: ALL, label: '작업 상태' },
     ...Object.entries(NOTIFICATION_JOB_STATUS_LABEL).map(([value, label]) => ({ value, label })),
 ];
 
 const TYPE_OPTIONS = [
-    { value: ALL, label: '전체 유형' },
+    { value: ALL, label: '알림 유형' },
     ...Object.entries(NOTIFICATION_TYPE_LABEL).map(([value, label]) => ({ value, label })),
 ];
 

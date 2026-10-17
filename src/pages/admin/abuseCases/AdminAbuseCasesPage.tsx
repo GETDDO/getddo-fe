@@ -7,8 +7,7 @@ import { AbuseCaseDetailDrawer, AbuseCaseTable, useAbuseCases } from '@entities/
 import { kstDateStartUtcIso, kstNextDateStartUtcIso, parseYmd } from '@shared/lib/date';
 import { isDateRangeOrdered } from '@shared/lib/filterConstants';
 import { Button } from '@shared/ui/button';
-import { DateRangeFilter } from '@shared/ui/filter-fields';
-import { Input } from '@shared/ui/input';
+import { DateRangeFilter, TextFilter } from '@shared/ui/filter-fields';
 import { Pagination } from '@shared/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
 import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
@@ -88,12 +87,12 @@ export function AdminAbuseCasesPage() {
                         resetPage();
                     }}
                 >
-                    <Input
+                    <TextFilter
                         value={userIdInput}
-                        onChange={(e) => setUserIdInput(e.target.value)}
+                        onChange={setUserIdInput}
                         placeholder="사용자 ID 검색"
+                        label="사용자 검색"
                         className="w-64"
-                        aria-label="사용자 검색"
                     />
                     <DateRangeFilter
                         from={fromInput}
