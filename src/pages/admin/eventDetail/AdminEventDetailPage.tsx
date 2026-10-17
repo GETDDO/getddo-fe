@@ -72,8 +72,9 @@ export function AdminEventDetailPage() {
     // spec event.md 운영 규칙 — 수정·삭제는 진행 예정(SCHEDULED)만, 취소는 CANCELED 외 모든 상태에서 허용
     const canEdit = event.status === 'SCHEDULED';
     const canCancel = event.status !== 'CANCELED';
-    // 추첨이 확정된 이후 단계에서만 추첨 관리 화면으로 연결한다
+    // 마감 이후 추첨 단계(자동 추첨 진행·확정·발표·재추첨)에서만 추첨 관리 화면으로 연결한다
     const hasDraw =
+        event.status === 'CLOSED' ||
         event.status === 'DRAW_CONFIRMED' ||
         event.status === 'PUBLISHED' ||
         event.status === 'REDRAWING';

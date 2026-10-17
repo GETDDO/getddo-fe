@@ -184,7 +184,7 @@ export function ActionQueuePanel() {
                       : `확인이 필요한 일 ${pendingKinds}가지`
             }
             error={isError}
-            onRetry={() => queries.forEach((query) => void query.refetch())}
+            onRetry={() => [...queries, publishWaiting].forEach((query) => void query.refetch())}
         >
             {isPending ? (
                 <LoadingBlock>

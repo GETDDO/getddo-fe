@@ -4,6 +4,7 @@ import {
     kstInputToUtcIso,
     kstNextDateStartUtcIso,
     kstNextMonthStart,
+    parseYmd,
     utcIsoToKstInput,
     formatKstTimeRange,
     formatRemaining,
@@ -115,5 +116,26 @@ describe('recentKstDays', () => {
     it('달이 바뀌어도 이어진다', () => {
         const days = recentKstDays(new Date('2026-11-01T03:00:00Z'), 2);
         expect(days.map((d) => d.ymd)).toEqual(['2026-10-31', '2026-11-01']);
+    });
+});
+
+describe('parseYmd', () => {
+    it('달력에 있는 날짜는 그대로 돌려준다', () => {
+        expect(parseYmd('2026-10-16')).toBe('2026-10-16');
+        expect(parseYmd('2028-02-29')).toBe('2028-02-29');
+    });
+
+    it('꼴이 다르거나 비어 있으면 null', () => {
+        expect(parseYmd(null)).toBeNull();
+        expect(parseYmd('')).toBeNull();
+        expect(parseYmd('2026-1-6')).toBeNull();
+        expect(parseYmd('2026-10-16T00:00')).toBeNull();
+    });
+
+    it('꼴만 맞고 달력에 없는 날짜는 null — 다음 달로 넘어가거나 변환 오류가 나지 않게', () => {
+        expect(parseYmd('2026-02-31')).toBeNull();
+        expect(parseYmd('2026-02-29')).toBeNull();
+        expect(parseYmd('2026-13-01')).toBeNull();
+        expect(parseYmd('2026-00-10')).toBeNull();
     });
 });

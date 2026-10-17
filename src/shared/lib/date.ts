@@ -190,7 +190,18 @@ export function recentKstDays(now: Date, days: number): KstDayRange[] {
     });
 }
 
-/** 주소 조건 등으로 받은 날짜 문자열이 "YYYY-MM-DD" 꼴이면 그대로, 아니면 null (대시보드 → 목록 날짜 필터 연결) */
+/**
+ * 주소 조건 등으로 받은 날짜 문자열이 달력에 있는 "YYYY-MM-DD"면 그대로, 아니면 null (대시보드 → 목록 날짜 필터 연결).
+ * 2026-02-31처럼 꼴만 맞는 날짜는 다음 달로 넘어가거나(조회 범위가 틀어짐) 13월처럼 변환 중 오류가 나므로 거른다
+ */
 export function parseYmd(value: string | null): string | null {
-    return value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+    const match = value ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(value) : null;
+    if (!match) return null;
+    const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+    const date = new Date(Date.UTC(year, month - 1, day));
+    const valid =
+        date.getUTCFullYear() === year &&
+        date.getUTCMonth() === month - 1 &&
+        date.getUTCDate() === day;
+    return valid ? value : null;
 }

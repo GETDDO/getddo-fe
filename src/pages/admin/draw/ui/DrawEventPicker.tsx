@@ -9,7 +9,7 @@ import { badgeVariants } from '@shared/ui/badge';
 
 /**
  * 이벤트를 고르기 전 첫 화면 — 추첨 관리 대상 이벤트를 카드로 바로 보여 고르는 단계를 줄인다.
- * 손이 먼저 가야 하는 이벤트(재추첨 중·발표 대기)가 앞에 오도록 부모가 정렬해 넘긴다
+ * 손이 먼저 가야 하는 이벤트(재추첨 중·발표 대기·마감)가 앞에 오도록 부모가 정렬해 넘긴다
  */
 export function DrawEventPicker({
     events,
@@ -25,7 +25,7 @@ export function DrawEventPicker({
                     관리할 이벤트
                 </h2>
                 <p className="text-caption text-fg-tertiary">
-                    추첨이 확정된 이벤트 {events.length}개 · 발표가 필요한 이벤트가 먼저 보여요
+                    마감 이후 이벤트 {events.length}개 · 발표가 필요한 이벤트가 먼저 보여요
                 </p>
             </div>
             <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

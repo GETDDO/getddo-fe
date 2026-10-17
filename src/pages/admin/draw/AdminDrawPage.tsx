@@ -10,14 +10,21 @@ import { DrawEventPanel } from './ui/DrawEventPanel';
 import { DrawEventPicker } from './ui/DrawEventPicker';
 import { PolicyPendingNotice } from './ui/PolicyPendingNotice';
 
-// 추첨이 확정됐거나 이후 단계(발표·재추첨)에 있는 이벤트만 관리 대상으로 고른다
+// 마감 이후 추첨 단계(자동 추첨 대기·진행, 확정, 발표, 재추첨)의 이벤트를 관리 대상으로 고른다.
+// 마감(CLOSED)도 최초 추첨 실행이 생길 수 있어 포함한다 — 대시보드 '추첨 필요'와 같은 범위
 const DRAW_STATUSES: ReadonlySet<AdminEventStatus> = new Set([
+    'CLOSED',
     'DRAW_CONFIRMED',
     'PUBLISHED',
     'REDRAWING',
 ]);
-// 손이 먼저 가야 하는 순서 — 재추첨 중 > 발표 대기 > 발표 완료
-const DRAW_PRIORITY: Record<string, number> = { REDRAWING: 0, DRAW_CONFIRMED: 1, PUBLISHED: 2 };
+// 손이 먼저 가야 하는 순서 — 재추첨 중 > 발표 대기 > 마감(추첨 진행) > 발표 완료
+const DRAW_PRIORITY: Record<string, number> = {
+    REDRAWING: 0,
+    DRAW_CONFIRMED: 1,
+    CLOSED: 2,
+    PUBLISHED: 3,
+};
 // 이벤트 선택 목록은 한 번에 담는다 — 목업 규모(관리 이벤트 33건 내외)를 덮는 AE01 최대 크기
 const EVENT_PICKER_SIZE = 100;
 
@@ -71,8 +78,7 @@ export function AdminDrawPage() {
             )}
             {!isPending && !isError && events.length === 0 && !eventId && (
                 <p className="text-fg-secondary text-body-sm py-6">
-                    추첨이 확정된 이벤트가 없습니다. 이벤트가 마감되고 추첨이 확정되면 이곳에서
-                    관리할 수 있습니다.
+                    추첨을 관리할 이벤트가 없습니다. 이벤트가 마감되면 이곳에서 관리할 수 있습니다.
                 </p>
             )}
             {!eventId && events.length > 0 && (
