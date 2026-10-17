@@ -40,7 +40,8 @@ export const eventSchema = z.object({
     // weightingEnabled:true, 월말 소진용은 maxTicketsPerUser:null 조합이다 (getddo-spec 05-api/event.md)
     eventType: eventTypeSchema,
     weightingEnabled: z.boolean(),
-    maxTicketsPerUser: z.number().int().nullable(),
+    // 상한 실값은 상세(E02)에만 있다 — 목록(E01)만으로 만든 이벤트는 undefined다
+    maxTicketsPerUser: z.number().int().nullable().optional(),
     membershipRule: membershipRuleSchema,
     // 레거시 표시용 필드 — 목록 섹션 분리·카드 표시에 쓴다. 응모 규칙 판정은 위 네 필드를 따른다.
     // TODO: 응모권 필요 여부 표시를 eventType으로 옮기는 전환은 별도 작업

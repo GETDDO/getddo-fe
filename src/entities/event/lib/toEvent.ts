@@ -18,11 +18,13 @@ const SCREEN_STATUS: Record<AdminEventStatus, EventStatus> = {
 };
 
 /**
- * EventSummary에는 maxTicketsPerUser가 없다 — 상세(E02)만 실값을 쓰고 목록은
- * 목업의 entryRuleOf와 같은 규칙으로 근사한다 (미사용→없음, 가중치→5, 미적용→1)
+ * EventSummary에는 maxTicketsPerUser가 없다 — spec상 조합이 확정된 경우(미사용→null,
+ * 가중치 미적용→1)만 채운다. 가중치 이벤트는 정수 상한과 null(월말 소진용·무제한)이
+ * 모두 가능해 근사하지 않는다 — '5'로 어림하면 무제한 이벤트가 '5장'으로 잘못 읽힌다.
+ * 상한 표시에는 상세(E02)의 실값만 쓴다 (getddo-spec 05-api/event.md)
  */
-const fallbackMaxTickets = (raw: EventSummaryResponse) =>
-    raw.eventType === 'NO_TICKET' ? null : raw.weightingEnabled ? 5 : 1;
+const fallbackMaxTickets = (raw: EventSummaryResponse): number | null | undefined =>
+    raw.eventType === 'NO_TICKET' ? null : raw.weightingEnabled ? undefined : 1;
 
 /**
  * spec 원시 응답(EventSummary·EventDetail)을 화면용 Event 뷰모델로 변환한다.

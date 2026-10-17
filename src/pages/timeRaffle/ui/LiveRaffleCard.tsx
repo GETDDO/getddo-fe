@@ -121,13 +121,15 @@ function EntryConditions({
 }) {
     const rows = [
         { label: '응모 방식', value: entryMethodLabel(event) },
-        event.eventType === 'TICKET' && {
-            label: '1인 최대',
-            value:
-                event.maxTicketsPerUser === null
-                    ? '제한 없음'
-                    : `${formatNumber(event.maxTicketsPerUser)}장`,
-        },
+        // 상한 실값은 상세(E02)에만 있다 — 목록만으로 만든 가중치 이벤트는 undefined라 행을 뺀다
+        event.eventType === 'TICKET' &&
+            event.maxTicketsPerUser !== undefined && {
+                label: '1인 최대',
+                value:
+                    event.maxTicketsPerUser === null
+                        ? '제한 없음'
+                        : `${formatNumber(event.maxTicketsPerUser)}장`,
+            },
         mySpentTicketCount != null &&
             mySpentTicketCount > 0 && {
                 label: '내 응모',

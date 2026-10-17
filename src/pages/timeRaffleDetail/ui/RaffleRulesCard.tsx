@@ -20,6 +20,8 @@ const POLICY_RULES = [
 /** 이 래플에 응모권을 몇 번·몇 장 낼 수 있는지 — 누적 상한(ADR-010)에 따라 문장이 갈린다 */
 function entryLimitRule(event: Event): string {
     if (event.eventType === 'NO_TICKET') return '응모권 없이 한 번 참여할 수 있어요.';
+    // 상한 실값은 상세(E02)에만 있다 — 목록만으로 만든 이벤트는 상한 문구를 적지 않는다
+    if (event.maxTicketsPerUser === undefined) return '응모권으로 이 래플에 응모할 수 있어요.';
     if (event.maxTicketsPerUser === null)
         return '마감 전까지 장수 제한 없이 나눠서 응모할 수 있어요.';
     if (event.maxTicketsPerUser <= event.requiredTickets)

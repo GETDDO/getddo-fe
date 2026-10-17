@@ -91,7 +91,7 @@ export function TimeRaffleDetailPage() {
         (event.myEntryCount ?? 0) * event.requiredTickets;
     const remainingLimit =
         eligibility?.remainingTicketLimit ??
-        (event.maxTicketsPerUser === null
+        (event.maxTicketsPerUser == null
             ? null
             : Math.max(0, event.maxTicketsPerUser - alreadyUsed));
     // 서버가 '끝난 응모'로 판정한 사유만 '응모 완료'다 — 자격 부족·장수 부족과 구분한다 (E07)

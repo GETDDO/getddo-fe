@@ -92,8 +92,16 @@ describe('toEvent', () => {
         expect(event.prizeName).toBeUndefined();
         expect(event.winnerCount).toBeUndefined();
         expect(event.description).toBe('');
-        // EventSummary에는 maxTicketsPerUser가 없다 — 가중치 이벤트는 누적 상한 5로 근사한다
-        expect(event.maxTicketsPerUser).toBe(5);
+        // 가중치 이벤트는 상한이 정수·null(월말 소진용) 모두 가능해 근사하지 않는다
+        expect(event.maxTicketsPerUser).toBeUndefined();
+    });
+
+    it('상한이 spec상 확정된 목록 조합만 채운다 — 미사용은 null, 가중치 미적용은 1', () => {
+        expect(
+            toEvent({ ...SUMMARY, eventType: 'NO_TICKET', weightingEnabled: false })
+                .maxTicketsPerUser,
+        ).toBeNull();
+        expect(toEvent({ ...SUMMARY, weightingEnabled: false }).maxTicketsPerUser).toBe(1);
     });
 
     it('상세 응답은 실제 maxTicketsPerUser를 쓴다', () => {

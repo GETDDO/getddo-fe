@@ -49,7 +49,7 @@
     - 상태: `SCHEDULED→upcoming, OPEN→open, CLOSED·DRAW_CONFIRMED·REDRAWING·CANCELED→closed, PUBLISHED·NO_ENTRANTS→drawn`
     - `prizes` → `prizeName`(rank 1순 이름, 2종 이상이면 `외 N종`)·`winnerCount`(합계); 없으면(목록) `undefined`
     - `requiredTickets`: `TICKET→1, NO_TICKET→0` (1회 차감 의미 — 가중치는 `maxTicketsPerUser`가 담당)
-    - `maxTicketsPerUser`: 상세는 실값, 목록은 없으므로 `entryRuleOf`와 같은 근사(`NO_TICKET→null, 가중치→5, 미적용→1`)
+    - `maxTicketsPerUser`: 상세는 실값. 목록은 spec상 확정 조합만 채운다(`NO_TICKET→null, 가중치 미적용→1`) — 가중치 이벤트는 정수 상한·null(월말 소진용) 모두 가능해 `undefined`로 둔다 (CodeRabbit 리뷰 반영 — '5'로 근사하면 무제한이 '5장'으로 잘못 읽힌다)
     - `description`: 목록은 `''`로 채운다
 - Create: `src/entities/event/lib/toEvent.test.ts` — 상태 매핑·이미지·경품 요약·응모권 파생·목록/상세 분리 검증
 - Modify: `src/entities/event/model/types.ts` — `prizeName`·`winnerCount`를 optional로 완화 (목록이 채울 수 없음)

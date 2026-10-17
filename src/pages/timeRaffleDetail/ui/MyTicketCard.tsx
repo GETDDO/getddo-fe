@@ -34,7 +34,7 @@ export function MyTicketCard({ event }: { event: Event }) {
                         </span>
                         {usesTickets && <span>응모권 {formatNumber(usedTickets)}장 사용</span>}
                     </p>
-                    {limit !== null && (
+                    {limit != null && (
                         <div className="mt-auto flex flex-col gap-1.5">
                             <div
                                 role="progressbar"
