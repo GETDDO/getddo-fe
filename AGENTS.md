@@ -43,11 +43,11 @@ src/
   mocks/      # MSW 목업 — FSD 레이어 밖의 독립 영역, entities·shared만 참조 가능
 ```
 
-슬라이스 내부는 `ui/`, `model/`, `api/`, `hooks/`, `utils/` 하위 폴더 + `index.ts`(공개 API)로 구성한다. 단, `pages` 슬라이스는 예외다 — 라우트가 페이지를 직접 가리키는 최상위 소비자라 공개 API 배럴이 불필요하므로, 페이지 컴포넌트(`XxxPage.tsx`)를 슬라이스 루트에 두고 `index.ts`를 만들지 않는다.
+슬라이스 내부는 `ui/`, `model/`, `api/`, `hooks/`, `utils/`, `assets/` 하위 폴더 + `index.ts`(공개 API)로 구성한다. 단, `pages` 슬라이스는 예외다 — 라우트가 페이지를 직접 가리키는 최상위 소비자라 공개 API 배럴이 불필요하므로, 페이지 컴포넌트(`XxxPage.tsx`)를 슬라이스 루트에 두고 `index.ts`를 만들지 않는다.
 
 세그먼트 배치 기준:
 
-- `ui/`에는 React 컴포넌트(.tsx)만 둔다 — 정적 데이터·에셋 매핑·상수·스토어·context는 `model/`, 순수 함수·로더는 `utils/`, React 훅(`use*`)은 `hooks/`에 둔다 (구 `lib/`은 2026-10-17 GD-222에서 폐기·3분리됐다)
+- `ui/`에는 React 컴포넌트(.tsx)만 둔다 — 정적 데이터·에셋 매핑·상수·스토어·context는 `model/`, 순수 함수·로더는 `utils/`, React 훅(`use*`)은 `hooks/`, 이미지·폰트·오디오·에셋 CSS는 `assets/`에 둔다 (구 `lib/`은 2026-10-17 GD-222에서 폐기·3분리됐다)
 - 슬라이스 루트 `index.ts`만이 공개 API다 — 세그먼트 `index.ts`는 두지 않고, 루트 index가 세그먼트 파일을 직접 참조해 공개 항목을 named export로 열거한다 (pages 제외 — pages는 index.ts 없이 루트의 `XxxPage.tsx`가 곧 공개 API다)
 - 폴더·일반 파일은 camelCase, React 컴포넌트 파일은 PascalCase. `shared/ui/`만 shadcn 관례(kebab-case.tsx)를 따르고, 이미지·폰트·오디오 등 바이너리 에셋 파일명은 rename 대상이 아니다
 
@@ -67,7 +67,7 @@ app → pages → widgets → features → entities → shared
 
 - 하위 → 상위 참조 ❌ (예: `entities → pages`)
 - 같은 레이어의 다른 슬라이스 참조 ❌ (예: `features/enterEvent → features/checkAttendance`) — 공유가 필요하면 `shared`나 `entities`로 내린다
-- 슬라이스 내부 파일 직접 import ❌ — 반드시 해당 슬라이스의 `index.ts`를 통해 import한다 (딥 임포트 금지). 단, pages는 슬라이스 루트의 `XxxPage.tsx`까지가 허용 경계다 — `ui/`·`model/`·`api/`·`hooks/`·`utils/` 하위 파일을 외부에서 참조할 수 없다
+- 슬라이스 내부 파일 직접 import ❌ — 반드시 해당 슬라이스의 `index.ts`를 통해 import한다 (딥 임포트 금지). 단, pages는 슬라이스 루트의 `XxxPage.tsx`까지가 허용 경계다 — `ui/`·`model/`·`api/`·`hooks/`·`utils/`·`assets/` 하위 파일을 외부에서 참조할 수 없다
 - `import.meta.env` 직접 참조 ❌ — `@shared/config/env`의 `env` 객체만 사용한다
 
 ## 코드 작성 규칙

@@ -1,2 +1,3 @@
-export { latestWonAt, useMyEntryRows } from './hooks/useMyEntryRows';
+export { useMyEntryRows } from './hooks/useMyEntryRows';
+export { latestWonAt } from './utils/latestWonAt';
 export type { MyEntryRow } from './hooks/useMyEntryRows';

@@ -1,6 +1,6 @@
-import type { MyEntryRow } from './useMyEntryRows';
+import type { MyEntryRow } from '../hooks/useMyEntryRows';
 
-import { latestWonAt } from './useMyEntryRows';
+import { latestWonAt } from './latestWonAt';
 
 const row = (requestedAt: string, endsAt: string | null, result: MyEntryRow['result']) =>
     ({

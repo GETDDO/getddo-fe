@@ -15,13 +15,12 @@
 - `hooks/` — React 훅 (`use*`)
 - `model/` — 스토어·context·상수·스키마·에셋 매핑·도메인 규칙 (기존 `model/` 규칙 확장)
 
-판단 기준: 파일이 React 훅이면 `hooks/`, 도메인을 아는 상태·스키마·상수면 `model/`, 나머지 순수 함수는 `utils/`.
+판단 기준: 파일이 React 훅이면 `hooks/`, 도메인을 아는 상태·스키마·상수면 `model/`, 나머지 순수 함수는 `utils/`. 같은 기준으로 `model/`에 있던 훅(`useEventStageCounts`, `useTicketTrend`)도 `hooks/`로 이동한다.
 
 ## 버린 선택지
 
 - **FSD 표준 `lib` 유지 + 관심사별 하위 라이브러리** (`lib/date/` …) — FSD 정석이지만 현재 파일 규모(슬라이스당 1~3개)에서는 하위 폴더가 과도한 중첩이라 기각.
 - **`store`/`types`/`constants`/`data` 세그먼트까지 분리** — 스토어·상수 파일이 각각 1~2건뿐이라 빈 폴더만 늘어난다. `model/`이 비대해지면 그때 `store/` 분리를 검토한다. `types/`는 Zod 스키마에서 타입을 infer하는 구조와 역할이 겹쳐 채택하지 않는다.
-- **`model`에 있던 훅(`useEventStageCounts`, `useTicketTrend`)도 같은 기준으로 `hooks/`로 이동했다.
 
 ## 결과
 
