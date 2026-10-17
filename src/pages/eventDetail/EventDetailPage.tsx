@@ -10,8 +10,8 @@ import { useEvent } from '@entities/event';
 import { useMyTickets } from '@entities/ticket';
 import { useEnterEvent } from '@features/enterEvent';
 import { getErrorMessage } from '@shared/api/errorMessage';
-import { formatYmd } from '@shared/lib/date';
 import { Loading } from '@shared/ui/loading';
+import { formatYmd } from '@shared/utils/date';
 import {
     EntryCompleteDialog,
     EntryConfirmDialog,

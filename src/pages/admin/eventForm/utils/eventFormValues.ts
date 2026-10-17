@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import type { AdminEvent, EventWriteRequest } from '@entities/event';
 
-import { kstInputToUtcIso, utcIsoToKstInput } from '@shared/lib/date';
+import { kstInputToUtcIso, utcIsoToKstInput } from '@shared/utils/date';
 
 // 경품의 id는 수정 시 기존 경품 식별용이다 (spec PrizeWrite.id — 없으면 신규로 취급)
 // useFieldArray가 'id'를 내부 키로 예약하므로 호출부에서 keyName을 바꿔 충돌을 피한다

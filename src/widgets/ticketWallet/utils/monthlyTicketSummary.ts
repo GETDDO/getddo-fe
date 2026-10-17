@@ -1,6 +1,6 @@
 import type { TicketHistory } from '@entities/ticket';
 
-import { toKst } from '@shared/lib/date';
+import { toKst } from '@shared/utils/date';
 
 // 이력 한 건은 응모권 한 장의 처리다 — 적립은 지급·반환 건수, 사용은 차감·만료 건수로 센다
 const EARNED: ReadonlySet<TicketHistory['operationType']> = new Set(['GRANT', 'REFUND']);

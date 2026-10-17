@@ -3,18 +3,20 @@ import { useSearchParams } from 'react-router-dom';
 
 import type { MyEntryRow } from '@widgets/myEntryRows';
 
-import { formatKst, formatKstDot } from '@shared/lib/date';
-import { formatNumber } from '@shared/lib/format';
-import { useVirtualClock } from '@shared/lib/virtualClock';
+import { useVirtualClock } from '@shared/model/virtualClock';
 import { Button } from '@shared/ui/button';
 import { PageHeader } from '@shared/ui/page-header';
 import { Segmented } from '@shared/ui/segmented';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
 import { SkeletonList } from '@shared/ui/skeleton';
+import { formatKst, formatKstDot } from '@shared/utils/date';
+import { formatNumber } from '@shared/utils/format';
 import { latestWonAt, useMyEntryRows } from '@widgets/myEntryRows';
 
 import type { StatusTile } from './ui/EntryStatusTiles';
 
+import { EntryStatusTiles } from './ui/EntryStatusTiles';
+import { ENTRY_GRID, EntryTableRow } from './ui/EntryTableRow';
 import {
     filterEntryRows,
     readEntryFilters,
@@ -23,9 +25,7 @@ import {
     type EntryPeriod,
     type EntrySort,
     type EntryStatusFilter,
-} from './lib/filterEntries';
-import { EntryStatusTiles } from './ui/EntryStatusTiles';
-import { ENTRY_GRID, EntryTableRow } from './ui/EntryTableRow';
+} from './utils/filterEntries';
 
 /** "더 보기" 한 번에 늘리는 줄 수 */
 const PAGE_SIZE = 20;

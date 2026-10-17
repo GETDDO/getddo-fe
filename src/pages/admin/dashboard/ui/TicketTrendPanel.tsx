@@ -16,12 +16,12 @@ import {
 } from 'recharts';
 
 import { TICKET_SOURCE_TYPE_LABEL } from '@entities/ticket';
-import { formatNumber } from '@shared/lib/format';
 import { LoadingBlock, Skeleton } from '@shared/ui/skeleton';
+import { formatNumber } from '@shared/utils/format';
 
-import type { TrendRow } from '../model/useTicketTrend';
+import type { TrendRow } from '../hooks/useTicketTrend';
 
-import { TREND_SOURCES } from '../model/useTicketTrend';
+import { TREND_SOURCES } from '../hooks/useTicketTrend';
 import { DashboardPanel } from './DashboardPanel';
 import { ViewAllLink } from './ViewAllLink';
 

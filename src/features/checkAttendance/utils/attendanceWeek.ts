@@ -1,6 +1,6 @@
 import type { AttendanceMilestone } from '@entities/attendance';
 
-import { formatYmd, toKst } from '@shared/lib/date';
+import { formatYmd, toKst } from '@shared/utils/date';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];

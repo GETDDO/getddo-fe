@@ -1,6 +1,6 @@
 import { ArrowDown } from 'lucide-react';
 
-import type { EntryStatusFilter } from '../lib/filterEntries';
+import type { EntryStatusFilter } from '../utils/filterEntries';
 
 /** 결과 칸 하나의 표시 값 */
 export interface StatusTile {

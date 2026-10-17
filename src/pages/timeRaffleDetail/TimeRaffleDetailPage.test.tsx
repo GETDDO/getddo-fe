@@ -5,8 +5,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
 import { apiClient } from '@shared/api/client';
-import { createIdempotencyKey, IDEMPOTENCY_HEADER } from '@shared/lib/idempotencyKey';
-import { VirtualClockContext } from '@shared/lib/virtualClock';
+import { VirtualClockContext } from '@shared/model/virtualClock';
+import { createIdempotencyKey, IDEMPOTENCY_HEADER } from '@shared/utils/idempotencyKey';
 
 import { TimeRaffleDetailPage } from './TimeRaffleDetailPage';
 

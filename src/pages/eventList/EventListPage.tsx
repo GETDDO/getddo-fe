@@ -4,8 +4,8 @@ import { useState } from 'react';
 import type { Event } from '@entities/event';
 
 import { useEventList } from '@entities/event';
-import { cn } from '@shared/lib/utils';
 import { Skeleton } from '@shared/ui/skeleton';
+import { cn } from '@shared/utils/cn';
 
 import type { EventFilter } from './model/eventFilters';
 

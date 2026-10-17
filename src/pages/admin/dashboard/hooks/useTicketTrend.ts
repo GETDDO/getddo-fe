@@ -1,8 +1,8 @@
 import type { TicketSourceType } from '@entities/ticket';
 
 import { useAdminTicketGrantCounts, useAdminTicketHistoryCounts } from '@entities/ticket';
-import { recentKstDays } from '@shared/lib/date';
-import { useVirtualClock } from '@shared/lib/virtualClock';
+import { useVirtualClock } from '@shared/model/virtualClock';
+import { recentKstDays } from '@shared/utils/date';
 
 export const TREND_SOURCES: readonly TicketSourceType[] = ['ATTENDANCE', 'MISSION', 'GAME'];
 

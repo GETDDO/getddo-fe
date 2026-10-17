@@ -7,9 +7,9 @@ import {
     type MyTickets,
     type TicketGrade,
 } from '@entities/ticket';
-import { formatNumber } from '@shared/lib/format';
 import { Badge } from '@shared/ui/badge';
 import { TICKET_OUTLINE_FILTER, TICKET_SHADOW_FILTER } from '@shared/ui/ticket-card';
+import { formatNumber } from '@shared/utils/format';
 
 import { GradeBar } from './GradeBar';
 

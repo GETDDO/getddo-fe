@@ -1,6 +1,6 @@
 import type { Notification } from '@entities/notification';
 
-import { isSameKstDate } from '@shared/lib/date';
+import { isSameKstDate } from '@shared/utils/date';
 
 export type NotificationGroup = { label: '오늘' | '이전'; items: Notification[] };
 

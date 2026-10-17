@@ -9,13 +9,13 @@ import {
     AuditLogTable,
     useAuditLogs,
 } from '@entities/audit';
-import { kstInputToUtcIso } from '@shared/lib/date';
-import { isDateRangeOrdered } from '@shared/lib/filterConstants';
+import { isDateRangeOrdered } from '@shared/model/filterConstants';
 import { Button } from '@shared/ui/button';
 import { DateRangeFilter, TextFilter } from '@shared/ui/filter-fields';
 import { Pagination } from '@shared/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
 import { LoadingBlock, TableSkeleton } from '@shared/ui/skeleton';
+import { kstInputToUtcIso } from '@shared/utils/date';
 
 const PAGE_SIZE = 20;
 

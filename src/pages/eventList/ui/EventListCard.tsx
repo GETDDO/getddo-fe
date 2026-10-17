@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 
 import type { Event } from '@entities/event';
 
-import { formatYmd, kstDayDiff } from '@shared/lib/date';
-import { useVirtualClock } from '@shared/lib/virtualClock';
+import { useVirtualClock } from '@shared/model/virtualClock';
+import { formatYmd, kstDayDiff } from '@shared/utils/date';
 
 export function EventListCard({ event }: { event: Event }) {
     // 마감 판정이 아닌 D-day 표시 전용이므로 마운트 시각을 쓴다

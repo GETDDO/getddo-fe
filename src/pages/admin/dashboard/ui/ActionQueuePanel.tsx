@@ -13,11 +13,11 @@ import { Link } from 'react-router-dom';
 import { useAdminNotificationJobs } from '@entities/adminNotification';
 import { useAdminEvents } from '@entities/event';
 import { useTicketInconsistencies } from '@entities/ticket';
-import { formatRemaining } from '@shared/lib/date';
-import { formatNumber } from '@shared/lib/format';
-import { useVirtualClock } from '@shared/lib/virtualClock';
+import { useVirtualClock } from '@shared/model/virtualClock';
 import { Button } from '@shared/ui/button';
 import { LoadingBlock, SkeletonRows } from '@shared/ui/skeleton';
+import { formatRemaining } from '@shared/utils/date';
+import { formatNumber } from '@shared/utils/format';
 
 import { DashboardPanel } from './DashboardPanel';
 

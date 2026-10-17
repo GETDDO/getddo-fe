@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { GameSound } from './gameSounds';
+import type { GameSound } from '../model/gameSounds';
 
 /** 소리 단계별 음량 — 0은 음소거, 1~5단계 */
 export const BGM_VOLUME_STEPS = [0, 0.1, 0.2, 0.35, 0.5, 0.7] as const;

@@ -6,7 +6,7 @@ import {
     formatKstTimeRange,
     formatRemaining,
     kstDayDiff,
-} from '@shared/lib/date';
+} from '@shared/utils/date';
 
 const MONTH_DAY: Intl.DateTimeFormatOptions = { month: 'long', day: 'numeric' };
 const WEEKDAY: Intl.DateTimeFormatOptions = { weekday: 'short' };
@@ -16,7 +16,7 @@ export function kstDateHeadline(now: Date): string {
     return `${formatKst(now, MONTH_DAY)}(${formatKst(now, WEEKDAY)})`;
 }
 
-/** 마감까지 남은 시간 — "9분 50초" · "1시간 23분" · "19일 23시간" (shared/lib/date formatRemaining) */
+/** 마감까지 남은 시간 — "9분 50초" · "1시간 23분" · "19일 23시간" (shared/utils/date formatRemaining) */
 export function formatCloseCountdown(remainingMs: number): string {
     return formatRemaining(remainingMs);
 }

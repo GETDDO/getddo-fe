@@ -5,12 +5,12 @@ import type { Event } from '@entities/event';
 
 import { useEntryStatistics } from '@entities/entry';
 import { queryPresets } from '@shared/api/queryPresets';
-import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
-import { formatNumber } from '@shared/lib/format';
-import { useVirtualClock } from '@shared/lib/virtualClock';
+import { useVirtualClock } from '@shared/model/virtualClock';
 import { Button } from '@shared/ui/button';
+import { KST_HOUR_MINUTE, formatKst } from '@shared/utils/date';
+import { formatNumber } from '@shared/utils/format';
 
-import { formatRunningRange } from '../lib/raffleFormat';
+import { formatRunningRange } from '../utils/raffleFormat';
 import { CloseCountdownChip } from './CloseCountdownChip';
 import { RaffleThumbnail } from './RaffleThumbnail';
 

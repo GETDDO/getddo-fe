@@ -1,6 +1,6 @@
 import { AdminStatSummary } from '@widgets/adminStatSummary';
 
-import { useTicketTrend } from './model/useTicketTrend';
+import { useTicketTrend } from './hooks/useTicketTrend';
 import { ActionQueuePanel } from './ui/ActionQueuePanel';
 import { EventStagePanel } from './ui/EventStagePanel';
 import { OpenEventsPanel } from './ui/OpenEventsPanel';

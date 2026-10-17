@@ -8,11 +8,11 @@ import {
     useMarkAllNotificationsRead,
     useMarkNotificationRead,
 } from '@features/markNotificationRead';
-import { useVirtualClock } from '@shared/lib/virtualClock';
+import { useVirtualClock } from '@shared/model/virtualClock';
 import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
 
-import { groupNotifications } from '../lib/groupNotifications';
-import { toInternalPath } from '../lib/toInternalPath';
+import { groupNotifications } from '../utils/groupNotifications';
+import { toInternalPath } from '../utils/toInternalPath';
 import { NotificationDrawer } from './NotificationDrawer';
 import { NotificationEmpty, NotificationGroupList } from './NotificationGroupList';
 

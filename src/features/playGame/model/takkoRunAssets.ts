@@ -1,4 +1,4 @@
-import type { TakkoRunImageKey, TakkoRunImages } from './drawTakkoRun';
+import type { TakkoRunImageKey, TakkoRunImages } from '../utils/drawTakkoRun';
 import type { GameSound } from './gameSounds';
 
 import completeUrl from '../assets/audio/complete.wav';

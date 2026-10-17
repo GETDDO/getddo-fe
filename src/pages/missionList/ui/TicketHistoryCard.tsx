@@ -1,10 +1,10 @@
 import { Fragment, useState } from 'react';
 
 import { TicketHistoryRow, useTicketHistories } from '@entities/ticket';
-import { cn } from '@shared/lib/utils';
 import { SkeletonList } from '@shared/ui/skeleton';
+import { cn } from '@shared/utils/cn';
 
-import { useFreshIds } from '../lib/useFreshIds';
+import { useFreshIds } from '../hooks/useFreshIds';
 
 /**
  * 최근 지급·차감 이력(누르면 상세가 펼쳐지는 아코디언). 사용 가능·이번 달 요약은 페이지 머리의 응모권 지갑이 보여 준다.

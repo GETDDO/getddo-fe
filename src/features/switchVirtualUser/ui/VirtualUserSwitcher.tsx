@@ -3,9 +3,9 @@ import { useState, type ReactNode } from 'react';
 
 import { useSessionStore, useVirtualUsers } from '@entities/user';
 import profileAvatar from '@shared/assets/ui/profile-avatar-head.png';
-import { cn } from '@shared/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@shared/ui/popover';
 import { SkeletonList } from '@shared/ui/skeleton';
+import { cn } from '@shared/utils/cn';
 
 interface VirtualUserSwitcherProps {
     /** 트리거를 바꾸고 싶을 때 넘긴다 (기본: 프로필 아이콘 버튼) */

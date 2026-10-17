@@ -1,8 +1,8 @@
 import { groupTicketHistories, useMyTickets, useTicketHistories } from '@entities/ticket';
 import { useSessionStore } from '@entities/user';
 import { AppearanceSettings } from '@features/appearanceSettings';
-import { formatKstDot, isSameKstDate } from '@shared/lib/date';
-import { useVirtualClock } from '@shared/lib/virtualClock';
+import { useVirtualClock } from '@shared/model/virtualClock';
+import { formatKstDot, isSameKstDate } from '@shared/utils/date';
 import { latestWonAt, useMyEntryRows } from '@widgets/myEntryRows';
 
 import { AccountInfoCard } from './ui/AccountInfoCard';

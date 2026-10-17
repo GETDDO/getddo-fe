@@ -1,6 +1,6 @@
 import type { MissionSummary } from '@entities/mission';
 
-import { kstDayDiff } from '@shared/lib/date';
+import { kstDayDiff } from '@shared/utils/date';
 
 /** 미션 운영 단계 — 운영 기간 [startsAt, endsAt) 기준 */
 export type MissionPhase = 'upcoming' | 'open' | 'ended';

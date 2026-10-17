@@ -4,8 +4,8 @@ import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { MissionRewardDialog } from '@entities/mission';
 import { TICKET_GRADE_LABEL, type TicketGrade, TicketGradeReveal } from '@entities/ticket';
 import { AttendanceCheckCard } from '@features/checkAttendance';
-import { cn } from '@shared/lib/utils';
 import { Button } from '@shared/ui/button';
+import { cn } from '@shared/utils/cn';
 import { GameRail } from '@widgets/gameRail';
 
 import { MISSION_SECTION_IDS } from './model/sectionIds';

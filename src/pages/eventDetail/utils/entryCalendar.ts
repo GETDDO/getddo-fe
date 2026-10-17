@@ -1,4 +1,4 @@
-import { toKst } from '@shared/lib/date';
+import { toKst } from '@shared/utils/date';
 
 /**
  * 이벤트 기간을 KST 날짜 칸으로 펼친다.

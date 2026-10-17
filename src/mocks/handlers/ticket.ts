@@ -4,7 +4,7 @@ import type { TicketGrade, TicketHistory, TicketOperationType } from '@entities/
 
 import { ticketGradeSchema } from '@entities/ticket';
 import { env } from '@shared/config/env';
-import { kstNextMonthStart, toKst } from '@shared/lib/date';
+import { kstNextMonthStart, toKst } from '@shared/utils/date';
 
 import { mockNow } from '../now';
 import { ok } from './response';

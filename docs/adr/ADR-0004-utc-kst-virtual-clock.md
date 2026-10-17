@@ -10,7 +10,7 @@
 ## 결정
 
 - 서버와는 UTC ISO 8601 문자열로만 주고받는다
-- 화면 표시와 날짜 비교는 `shared/lib/date`의 KST 함수(`formatKst`, `isSameKstDate`)로만 처리한다
+- 화면 표시와 날짜 비교는 `shared/utils/date`의 KST 함수(`formatKst`, `isSameKstDate`)로만 처리한다
 - 시간 판정 로직의 "지금"은 `useVirtualClock().now()`에서 가져온다 — 관리자가 `setOverride`로 시각을 오버라이드할 수 있다 (2026-09-29 이동: `app/virtual-clock` → `shared/lib/virtual-clock.ts` — FSD 경계상 `app`에 두면 하위 레이어가 사용할 수 없었다)
 - **업무 기준일·기준월은 KST(Asia/Seoul)다** — 출석·게임 보상은 매일 00:00 KST에, 연속 출석·응모권 귀속월·만료는 매월 1일 00:00 KST 경계로 초기화된다 (공용 명세 "공통 시간 기준과 화면 표시", `../getddo-spec/00-requirements/functional-requirements.md`). 저장·비교는 UTC, 표시·관리자 입력 해석은 KST다
 - 마감·발표 판정은 서버 책임이다 — 클라이언트 시각으로 마감·발표 여부를 판정해 요청을 막거나 결과를 노출하지 않는다. ~~발표 카운트다운은 서버 발표 예정 시각 기준이다~~ (ADR-022로 `publicationScheduledAt`과 카운트다운이 제거되고 최초 공개는 관리자 수동 요청이 됐다 — 마감 후 화면은 '결과 발표 대기'만 표시, 2026-10-14)
@@ -24,7 +24,7 @@
 
 ## 결과
 
-- 타임존 판정이 한 파일(`shared/lib/date.ts`)에 모인다
+- 타임존 판정이 한 파일(`shared/utils/date.ts`)에 모인다
 - `new Date()` 직접 호출은 시간 판정 로직에서 금지 — 가상 시계를 우회하면 시연 기능이 깨진다
 - `toKst` 반환값은 UTC 메서드로 KST를 읽는 비교 전용 값이다. 표시에 쓰면 9시간 어긋나 보인다
 - 업무상 "하루"의 경계는 KST 자정이다 — `isSameKstDate`가 초기화 경계와 일치한다. 다만 만료 시각·카운트다운처럼 '날짜'가 아닌 '시각' 비교가 필요한 판정과 혼동하지 않는다

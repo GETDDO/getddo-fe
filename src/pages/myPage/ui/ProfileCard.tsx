@@ -9,11 +9,11 @@ import { MEMBERSHIP_LABEL } from '@entities/event';
 import { TICKET_GRADES, TicketGradePill, type MyTickets } from '@entities/ticket';
 import { VirtualUserSwitcher } from '@features/switchVirtualUser';
 import profileAvatar from '@shared/assets/ui/profile-avatar.png';
-import { formatNumber } from '@shared/lib/format';
 import { Badge } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 import { SkeletonText } from '@shared/ui/skeleton';
 import { TICKET_OUTLINE_FILTER } from '@shared/ui/ticket-card';
+import { formatNumber } from '@shared/utils/format';
 
 export interface ProfileStats {
     /** 응모 중 — 발표를 기다리는 접수 건 */

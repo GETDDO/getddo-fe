@@ -14,7 +14,7 @@ import type {
 
 import { adminTicketHistorySchema } from '@entities/ticket';
 import { env } from '@shared/config/env';
-import { recentKstDays } from '@shared/lib/date';
+import { recentKstDays } from '@shared/utils/date';
 
 import { mockNow } from '../now';
 import { fail, ok } from './response';

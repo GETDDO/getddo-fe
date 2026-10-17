@@ -5,13 +5,13 @@ import { Link } from 'react-router-dom';
 import type { Event } from '@entities/event';
 
 import { useEntryStatistics } from '@entities/entry';
-import { KST_HOUR_MINUTE, formatKst } from '@shared/lib/date';
-import { formatNumber } from '@shared/lib/format';
 import { Badge } from '@shared/ui/badge';
 import { Button } from '@shared/ui/button';
 import { StatusDot } from '@shared/ui/status-dot';
+import { KST_HOUR_MINUTE, formatKst } from '@shared/utils/date';
+import { formatNumber } from '@shared/utils/format';
 
-import { kstDayLabel } from '../lib/raffleFormat';
+import { kstDayLabel } from '../utils/raffleFormat';
 import { RaffleThumbnail } from './RaffleThumbnail';
 
 /** 기본 화면에서 미리 보여 주는 줄 수 — 나머지는 '마감한 래플' 화면에서 본다 */
