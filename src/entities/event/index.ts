@@ -16,6 +16,7 @@ export {
     eventTypeSchema,
     membershipRuleSchema,
 } from './model/adminTypes';
+export { isFinalEventStatus } from './model/eventStatus';
 export type {
     AdminEvent,
     AdminEventStatus,

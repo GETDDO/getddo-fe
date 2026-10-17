@@ -11,7 +11,7 @@
 - `participantCount`·`usedTicketCount`는 spec의 `EventSummary`에 없는 필드다. spec은 현황을 E03 `GET /events/{eventId}/statistics`(`EntryStatistics`)로 분리했다
 - spec이 요구하는 "본인 차감 수"(`mySpentTicketCount`)를 표시할 경로가 없다
 
-spec 초안(`../getddo-spec/05-api/entry.md`)은 "E03 재조회 방식, 폴링 간격은 구현 담당자 설정, SSE·WebSocket은 필수 계약 아님"으로 제안한다. 전송 방식은 서버 협의 없이 폴링으로 확정할 수 있다.
+spec의 E03 계약(`../getddo-spec/05-api/entry.md`)은 GD-200 현행 구현으로 지표를 기록한다. `participantCount`는 접수 완료 응모자의 중복 제거 수, `totalSpentTicketCount`는 그 응모자들의 누적 차감 합계(반환은 빼지 않음), `mySpentTicketCount`는 본인 누적 차감(미응모·관리자는 0)이며 거절 이력은 포함하지 않는다. 재조회 방식은 제안이며 SSE·WebSocket은 필수 계약이 아니다. 갱신 주기는 기능 요구사항 7절에서 구현 담당자에게 위임했으므로 FE는 폴링을 선택한다.
 
 ## 결정
 
